@@ -1,0 +1,53 @@
+div.main {
+	border: none;
+	margin: 0;
+	padding: 0;
+	overflow: auto;
+}
+
+div.main table {
+	margin: 0;
+	margin-top: 5px;
+	font-size: 12pt;
+}
+
+div.main th {
+	text-align:center;
+	padding 5;
+}
+
+.centered {
+	text-align: center;
+}
+
+.tx {
+	width:100%;
+	font-family: monospace;
+}
+
+.lt {
+	width:5%;
+	text-align:center;
+	padding:1 5 1 5;
+}
+
+.ct {
+	width:30%;
+	text-align:left; 
+	padding:1 5 1 5;
+}
+
+.rt {
+	width:65%;
+	text-align:left; 
+	padding:1 5 1 5;
+}
+
+.textbox {
+	font-family: monospace;
+}
+
+.tag {
+	font-family: monospace;
+	font-size: 10pt;
+}	

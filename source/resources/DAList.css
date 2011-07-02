@@ -1,0 +1,35 @@
+body {
+	background-color:#c6d8f9; 
+	margin:0; 
+	overflow:hidden;
+}
+
+h1 {
+	text-align:center;
+	margin-top:10;
+}
+
+th {
+	text-align:center;
+	padding 5;
+}
+
+td {
+	text-align:left; 
+	padding:1 5 1 5;
+}
+
+#propsdiv {
+	overflow:auto;
+	border:thin solid blue;
+}
+
+#buttonsdiv {
+	padding:10;
+}
+
+input {width:100%;}
+.lt {width:10%;}
+.ct {width:50%;}
+.rt {width:40%;}
+.button {width:250;}

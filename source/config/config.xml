@@ -1,0 +1,186 @@
+<Configuration>
+
+   <Server port="80" />
+
+   <Pipeline name="Client Pipeline">
+
+        <ImportService
+            name="Client DICOM Import"
+            class="org.rsna.ctp.stdstages.DicomImportService"
+            root="test/roots/client/dicom-import"
+            port="1104"
+            quarantine="test/quarantines/client/dicom-import" />
+
+        <ImportService
+            name="Client HTTPS Import"
+            class="org.rsna.ctp.stdstages.HttpImportService"
+            root="test/roots/client/https-import"
+            ssl="yes"
+            port="5200"
+            quarantine="test/quarantines/client/https-import" />
+
+        <ImportService
+            name="Client HTTP Import"
+            class="org.rsna.ctp.stdstages.HttpImportService"
+            root="test/roots/client/http-import"
+            ssl="no"
+            port="5201"
+            quarantine="test/quarantines/client/http-import" />
+
+        <ImportService
+            name="Client Directory Import"
+            class="org.rsna.ctp.stdstages.DirectoryImportService"
+            root="test/roots/client/directory-import"
+            minAge="5000"
+            quarantine="test/quarantines/client/directory-import" />
+
+        <ObjectLogger
+            name="Client Object Logger"
+            class="org.rsna.ctp.stdstages.ObjectLogger"
+            verbose="no" />
+
+        <IDMap
+            name="Client ID Map"
+            class="org.rsna.ctp.stdstages.IDMap"
+            root="test/roots/client/idmap" />
+
+        <ObjectTracker
+            name="Client Object Tracker"
+            class="org.rsna.ctp.stdstages.ObjectTracker"
+            root="test/roots/client/objecttracker" />
+
+        <DicomAnonymizer
+            name="Client DICOM Anonymizer"
+            class="org.rsna.ctp.stdstages.DicomAnonymizer"
+            root="test/roots/client/dicom-anonymizer"
+            lookupTable="scripts/lookup-table.properties"
+            script="scripts/dicom-anonymizer.properties"
+            quarantine="test/quarantines/client/dicom-anonymizer" />
+
+        <XmlAnonymizer
+            name="Client XML Anonymizer"
+            class="org.rsna.ctp.stdstages.XmlAnonymizer"
+            root="test/roots/client/xml-anonymizer"
+            script="scripts/xml-anonymizer.script"
+            quarantine="test/quarantines/client/xml-anonymizer" />
+
+        <ZipAnonymizer
+            name="Client Zip Anonymizer"
+            class="org.rsna.ctp.stdstages.ZipAnonymizer"
+            root="test/roots/client/zip-anonymizer"
+            script="scripts/zip-anonymizer.script"
+            quarantine="test/quarantines/client/zip-anonymizer" />
+
+        <DatabaseVerifier
+        	name="Client Database Verifier"
+            class="org.rsna.ctp.stdstages.DatabaseVerifier"
+        	root="test/roots/client/database-verifier"
+        	interval="10000"
+        	url="https://127.0.0.1:5210"
+        	username="client"
+        	password="password" />
+
+        <ExportService
+            name="Client HTTPS Export"
+            class="org.rsna.ctp.stdstages.HttpExportService"
+            root="test/roots/client/https-export"
+            url="https://127.0.0.1:5300"
+            username="client"
+            password="password"
+            quarantine="test/quarantines/client/https-export" />
+
+        <ExportService
+            name="Client DICOM Export"
+            class="org.rsna.ctp.stdstages.DicomExportService"
+            root="test/roots/client/dicom-export"
+            url="dicom://DICOMSERVER:CLIENT@127.0.0.1:1105"
+            quarantine="test/quarantines/client/dicom-export" />
+
+   </Pipeline>
+
+   <Pipeline name="HTTP Server Pipeline">
+
+        <ImportService
+            name="HTTP Server Import"
+            class="org.rsna.ctp.stdstages.HttpImportService"
+            root="test/roots/httpserver/https-import"
+            ssl="yes"
+            port="5300"
+            requireAuthentication="yes"
+            quarantine="test/quarantines/httpserver/https-import" />
+
+        <DicomFilter
+            name="HTTP Server DICOM Filter"
+            class="org.rsna.ctp.stdstages.DicomFilter"
+            root="test/roots/httpserver/dicom-filter"
+            script="scripts/dicom-filter.script"
+            quarantine="test/quarantines/httpserver/dicom-filter" />
+
+        <XmlFilter
+            name="HTTP Server XML Filter"
+            class="org.rsna.ctp.stdstages.XmlFilter"
+            root="test/roots/httpserver/xml-filter"
+            script="scripts/xml-filter.script"
+            quarantine="test/quarantines/httpserver/xml-filter" />
+
+        <ZipFilter
+            name="HTTP Server Zip Filter"
+            class="org.rsna.ctp.stdstages.ZipFilter"
+            root="test/roots/httpserver/zip-filter"
+            script="scripts/zip-filter.script"
+            quarantine="test/quarantines/httpserver/zip-filter" />
+
+        <StorageService
+            name="HTTP Server File Storage"
+            class="org.rsna.ctp.stdstages.FileStorageService"
+            root="test/storage/httpserver/file"
+            port="1180"
+            returnStoredFile="no"
+            quarantine="test/quarantines/httpserver/file-storage" />
+
+        <StorageService
+            name="HTTP Server Basic File Storage"
+            id="sbfss"
+            class="org.rsna.ctp.stdstages.BasicFileStorageService"
+            index="test/storage/httpserver/basic"
+            root="test/storage/httpserver/basic/store"
+            nLevels="3"
+            maxSize="200"
+            quarantine="test/quarantines/httpserver/basic-file-storage" >
+          <jpeg wmax="10000" wmin="96" q="-1" />
+        </StorageService>
+
+        <ExportService
+            name="HTTP Server Database Export"
+            class="org.rsna.ctp.stdstages.DatabaseExportService"
+            adapterClass="org.rsna.ctp.stdstages.database.TestDatabaseAdapter"
+            poolSize="1"
+            fileStorageServiceID="sbfss"
+            root="test/roots/httpserver/database-export"
+            interval="10000"
+            ssl="yes"
+            port="5210"
+            quarantine="test/quarantines/httpserver/database-export" />
+
+   </Pipeline>
+
+   <Pipeline name="DICOM Server Pipeline">
+
+        <ImportService
+            name="DICOM Server Import"
+            class="org.rsna.ctp.stdstages.DicomImportService"
+            root="test/roots/dicomserver/dicom-import"
+            port="1105"
+            quarantine="test/quarantines/dicomserver/dicom-import" />
+
+        <StorageService
+            name="DICOM Server File Storage"
+            class="org.rsna.ctp.stdstages.FileStorageService"
+            root="test/storage/dicomserver/file"
+            port="1181"
+            returnStoredFile="no"
+            quarantine="test/quarantines/dicomserver/file-storage" />
+
+   </Pipeline>
+
+</Configuration>

@@ -1,0 +1,5 @@
+<script>
+ <e en="T" t="00700001" n="GraphicAnnotationSequence">@keep()</e>
+ <r en="F" t="curves">Remove curves</r>
+ <r en="F" t="overlays">Remove overlays</r>
+</script>

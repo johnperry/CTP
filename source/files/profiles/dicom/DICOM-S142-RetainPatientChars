@@ -1,0 +1,14 @@
+<script>
+ <e en="T" t="00101020" n="PatientsSize">@keep()</e>
+ <e en="T" t="00101030" n="PatientsWeight">@keep()</e>
+ <e en="T" t="00100040" n="PatientsSex">@keep()</e>
+ <e en="T" t="00101010" n="PatientsAge">@keep()</e>
+ <e en="T" t="00102110" n="Allergies">@keep()</e>
+ <e en="T" t="00102160" n="EthnicGroup">@keep()</e>
+ <e en="T" t="00102203" n="PatientSexNeutered">@keep()</e>
+ <e en="T" t="001021a0" n="SmokingStatus">@keep()</e>
+ <e en="T" t="001021c0" n="PregnancyStatus">@keep()</e>
+ <e en="T" t="00380050" n="SpecialNeeds">@keep()</e>
+ <e en="T" t="00380500" n="PatientState">@keep()</e>
+ <e en="T" t="00400012" n="Pre-Medication">@keep()</e>
+</script>

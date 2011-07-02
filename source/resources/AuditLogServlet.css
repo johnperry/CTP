@@ -1,0 +1,103 @@
+body {
+	background: #c6d8f9;
+	padding:0;
+	margin:0;
+	overflow: hidden;
+}
+
+div.closebox {
+	float: right;
+	margin: 2;
+}
+
+h1 {
+	text-align: center;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: large;
+	margin-top: 12px;
+	margin-bottom: 5px;
+}
+
+h2 {
+	margin-top: 0;
+	text-align: center;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: medium;
+}
+	
+p.instruction {
+	text-align: left;
+	font-size: x-small;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	margin-left: 15%;
+	margin-right: 15%;
+	margin-top: 6;
+	margin-bottom: 6;
+	padding: 0;
+}
+
+p.center {
+	margin-top: 0px;
+	margin-left: 15%;
+	margin-right: 15%;
+}
+
+table {
+	width:70%;
+	text-align: center;
+}
+
+td.text-field {
+	text-align: left;
+	font-size: xx-small;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	width:70%;
+	text-align:left;
+}
+
+td.text-label {
+	text-align: left;
+	font-size: x-small;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	width:30%;
+	text-align:left;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+input.fullwidth {
+	width:100%
+}
+
+div.entryselect {
+	margin-top: 0px;
+	margin-left: 15%;
+	margin-right: 15%;
+	margin-bottom: 10px;
+	border: thin solid #E8E8E8;
+	padding: 3px;
+	height: 100px;
+	overflow: auto;
+	background: white;
+	font-family: monospace;
+	font-size: small;
+}
+
+div.entryselect span {
+	cursor: hand;
+}
+
+div.entrydisplay {
+	margin-top: 0px;
+	margin-left: 15%;
+	margin-right: 15%;
+	border: thin solid #E8E8E8;
+	padding: 3px;
+	height: 30px;
+	overflow: auto;
+	background: white;
+	font-family: monospace;
+	font-size: small;
+}

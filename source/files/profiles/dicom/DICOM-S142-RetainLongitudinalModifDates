@@ -1,0 +1,26 @@
+<script>
+ <e en="T" t="00080020" n="StudyDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080021" n="SeriesDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080022" n="AcquisitionDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080023" n="ContentDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080024" n="OverlayDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080025" n="CurveDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0008002a" n="AcquisitionDatetime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080030" n="StudyTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080031" n="SeriesTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080032" n="AcquisitionTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080033" n="ContentTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080034" n="OverlayTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080035" n="CurveTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080201" n="TimezoneOffsetFromUTC">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="001021d0" n="LastMenstrualDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00280303" n="LongitudinalTemporalInformationModified">MODIFIED</e>
+ <e en="T" t="00380020" n="AdmittingDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00380021" n="AdmittingTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400002" n="ScheduledProcedureStepStartDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400003" n="ScheduledProcedureStepStartTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400004" n="ScheduledProcedureStepEndDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400005" n="ScheduledProcedureStepEndTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400244" n="PerformedProcedureStepStartDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400245" n="PerformedProcedureStepStartTime">@incrementdate(this,@DATEINC)</e>
+</script>

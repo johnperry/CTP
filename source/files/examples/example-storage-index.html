@@ -1,0 +1,52 @@
+<html>
+	<head>
+		<title>CTP Storage Service</title>
+		<script language="JavaScript" type="text/javascript" src="/JSAJAX.js">;</script>
+		<script language="JavaScript" type="text/javascript" src="/JSUser.js">;</script>
+		<style>
+			body {background-color:#c6d8f9}
+			p {text-align: center; font-family:sans-serif; font-size:12;}
+		</style>
+		<script>
+			var user;
+			function getUsername() {
+				user = new User();
+				var p = document.getElementById("up");
+				if (user.isLoggedIn) {
+					p.appendChild(document.createTextNode("You are logged in as "+user.name+"."));
+					p.appendChild(document.createElement("BR"));
+					var a = document.createElement("A");
+					a.setAttribute("href","/login?logout");
+					a.appendChild(document.createTextNode("logout"));
+					p.appendChild(document.createTextNode("( "));
+					p.appendChild(a);
+					p.appendChild(document.createTextNode(" )"));
+				}
+				else {
+					p.appendChild(document.createTextNode("You are not logged in."));
+				}
+			}
+			window.onload = getUsername;
+		</script>
+	</head>
+	<body>
+		<center>
+		<h1>CTP Storage Service</h1>
+		<table>
+			<tr>
+				<td><input style="width:300" type="button" value="Login"
+						onclick="window.open('login','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="View Studies"
+						onclick="window.open('storage','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="Manage Guests"
+						onclick="window.open('guests','_self');"></td>
+			</tr>
+		</table>
+		<p id="up"/>
+		</center>
+	</body>
+</html>

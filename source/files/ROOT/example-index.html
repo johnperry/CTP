@@ -1,0 +1,147 @@
+<html>
+	<head>
+		<title>RSNA CTP Main Page</title>
+		<style>
+			body {background-color:#c6d8f9}
+			p {text-align: center; font-family:sans-serif; font-size:12;}
+		</style>
+		<script language="JavaScript" type="text/javascript" src="/JSAJAX.js">;</script>
+		<script language="JavaScript" type="text/javascript" src="/JSUser.js">;</script>
+		<script>
+			var user;
+			function getUsername() {
+				user = new User();
+				var p = document.getElementById("up");
+				if (user.isLoggedIn) {
+					if (user.usersImpl != "xml") {
+						x = document.getElementById("usermanager");
+						if (x) x.parentNode.removeChild(x);
+					}
+					p.appendChild(document.createTextNode("You are logged in as "+user.name+"."));
+					p.appendChild(document.createElement("BR"));
+					var a = document.createElement("A");
+					a.setAttribute("href","/login?logout");
+					a.appendChild(document.createTextNode("logout"));
+					p.appendChild(document.createTextNode("( "));
+					p.appendChild(a);
+					p.appendChild(document.createTextNode(" )"));
+					if (!user.hasRole("admin")) hideAdmin();
+					if (!user.hasRole("shutdown") && !user.isLocal) hideShutdown();
+				}
+				else {
+					p.appendChild(document.createTextNode("You are not logged in."));
+					hideAdmin();
+					hideShutdown();
+				}
+			}
+			function hideAdmin() {
+				var x = document.getElementById("shutdown");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("usermanager");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("idmap");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("objecttracker");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("databaseverifier");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("daconfig");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("script");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("lookup");
+				if (x) x.parentNode.removeChild(x);
+				x = document.getElementById("spacer");
+				if (x) x.parentNode.removeChild(x);
+			}
+			function hideShutdown() {
+				var x = document.getElementById("shutdown");
+				if (x) x.parentNode.removeChild(x);
+			}
+			function loaded() { getUsername(); }
+			window.onload = loaded;
+		</script>
+	</head>
+	<body>
+		<center>
+		<h1>RSNA CTP</h1>
+		<table>
+			<tr>
+				<td><input style="width:300" type="button" value="Login"
+						onclick="window.open('login','_self');"></td>
+			</tr>
+			<tr id="usermanager">
+				<td><input style="width:300" type="button" value="User Manager"
+						onclick="window.open('users','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="Logs"
+						onclick="window.open('logs','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="Configuration"
+						onclick="window.open('configuration','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="Status"
+						onclick="window.open('status','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="Quarantines"
+						onclick="window.open('quarantines','_self');"></td>
+			</tr>
+			<tr id="idmap">
+				<td><input style="width:300" type="button" value="ID Map"
+						onclick="window.open('idmap','_self');"></td>
+			</tr>
+			<tr id="objecttracker">
+				<td><input style="width:300" type="button" value="Object Tracker"
+						onclick="window.open('objecttracker','_self');"></td>
+			</tr>
+			<tr id="databaseverifier">
+				<td><input style="width:300" type="button" value="Database Verifier"
+						onclick="window.open('databaseverifier','_self');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="System Properties"
+						onclick="window.open('system','_self');"></td>
+			</tr>
+			<tr id="daconfig">
+				<td><input style="width:300" type="button" value="DICOM Anonymizer Configurator"
+						onclick="window.open('daconfig','_self');"></td>
+			</tr>
+			<tr id="script">
+				<td><input style="width:300" type="button" value="Script Editor"
+						onclick="window.open('script','_self');"></td>
+			</tr>
+			<tr id="lookup">
+				<td><input style="width:300" type="button" value="Lookup Table Editor"
+						onclick="window.open('lookup','_self');"></td>
+			</tr>
+			</tr><td>&nbsp;</td></tr>
+			<tr>
+				<td><input style="width:300" type="button" value="CTP Documentation"
+						onclick="window.open('http://mircwiki.rsna.org/index.php?title=CTP-The_RSNA_Clinical_Trial_Processor','wiki');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="DicomFilter Script Documentation"
+						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Filter','wiki');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="DICOM Anonymizer Documentation"
+						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer','wiki');"></td>
+			</tr>
+			<tr>
+				<td><input style="width:300" type="button" value="XML Anonymizer Documentation"
+						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_XML_Anonymizer','wiki');"></td>
+			</tr>
+			<tr id="spacer"><td>&nbsp;</td></tr>
+			<tr id="shutdown">
+				<td><input style="width:300" type="button" value="Shutdown"
+						onclick="window.open('shutdown','_self');"></td>
+			</tr>
+		</table>
+		<p id="up"/>
+		</center>
+	</body>
+</html>
