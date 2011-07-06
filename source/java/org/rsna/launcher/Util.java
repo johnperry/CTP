@@ -345,7 +345,7 @@ public class Util {
 		String[] dirs = dirString.split(sep);
 		StringBuffer sb = new StringBuffer();
 		for (String s : dirs) {
-			if (s.contains(" ")) s = "\'" + s + "\'";
+			if (s.contains(" ")) s = "\"" + s + "\"";
 			sb.append(s + sep);
 		}
 		return sb.toString();
