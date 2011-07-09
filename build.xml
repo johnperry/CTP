@@ -82,7 +82,7 @@
 			<manifest>
 				<attribute name="Main-Class" value="org.rsna.ctp.ClinicalTrialProcessor"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
-	            <attribute name="Java-Version" value="${ant.java.version}"/>
+				<attribute name="Java-Version" value="${ant.java.version}"/>
 			</manifest>
 			<fileset dir="${build}"
 				includes="**"
@@ -123,6 +123,13 @@
 				 doctitle="${title}" windowtitle="${title}" bottom="${copyright}">
 			<package name="org.*"/>
 		</javadoc>
+	</target>
+
+	<target name="cleaninstaller" depends="clean, installer">
+		<tstamp>
+			<format property="end" pattern="HH:mm:ss"/>
+		</tstamp>
+		<echo message="Time now ${end}"/>
 	</target>
 
 	<target name="all" depends="clean, installer, javadocs">

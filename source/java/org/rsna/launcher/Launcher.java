@@ -27,6 +27,7 @@ public class Launcher extends JFrame implements ChangeListener {
 	JavaPanel		javaPanel;
 	VersionPanel	versionPanel;
 	SystemPanel		systemPanel;
+	ConfigPanel		configPanel;
 	IOPanel			ioPanel;
 	LogPanel		logPanel;
 
@@ -46,35 +47,21 @@ public class Launcher extends JFrame implements ChangeListener {
 	public Launcher() {
 		super();
 
-		long t0 = System.currentTimeMillis();
-		System.out.println("Start time: "+t0);
-
 		config = Configuration.getInstance();
-
-		System.out.println( (System.currentTimeMillis() - t0) +": after configuration load");
-
 		setTitle(config.windowTitle);
 
 		versionPanel = new VersionPanel();
-		System.out.println( (System.currentTimeMillis() - t0) +": after versionPanel creation");
-
 		javaPanel = new JavaPanel();
-		System.out.println( (System.currentTimeMillis() - t0) +": after javaPanel creation");
-
 		systemPanel = new SystemPanel();
-		System.out.println( (System.currentTimeMillis() - t0) +": after Panel creation");
-
+		configPanel = new ConfigPanel();
 		ioPanel = new IOPanel();
-		System.out.println( (System.currentTimeMillis() - t0) +": after ioPanel creation");
-
 		logPanel = new LogPanel();
-		System.out.println( (System.currentTimeMillis() - t0) +": after logPanel creation");
-
 		tp = new JTabbedPane();
 
 		tp.add("General", javaPanel);
 		tp.add("Version", versionPanel);
 		tp.add("System", systemPanel);
+		tp.add("Configuraton", configPanel);
 		tp.add("Console", ioPanel);
 		tp.add("Log", logPanel);
 
@@ -83,20 +70,20 @@ public class Launcher extends JFrame implements ChangeListener {
 		this.getContentPane().add( tp, BorderLayout.CENTER );
 		this.addWindowListener(new WindowCloser(this));
 
-		System.out.println( (System.currentTimeMillis() - t0) +": about to pack");
 		pack();
-		System.out.println( (System.currentTimeMillis() - t0) +": about to position frame");
 		positionFrame();
-		System.out.println( (System.currentTimeMillis() - t0) +": about to set visible");
 		setVisible(true);
-		System.out.println( (System.currentTimeMillis() - t0) +": done");
 
 		if (autostart) javaPanel.start();
 	}
 
 	public void stateChanged(ChangeEvent event) {
-		if (tp.getSelectedComponent().equals(logPanel)) {
+		Component comp = tp.getSelectedComponent();
+		if (comp.equals(logPanel)) {
 			logPanel.reload();
+		}
+		else if (comp.equals(configPanel)) {
+			configPanel.load();
 		}
 	}
 

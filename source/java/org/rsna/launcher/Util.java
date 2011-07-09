@@ -65,6 +65,16 @@ public class Util {
 		catch (Exception ex) { return null; }
 	}
 
+	public static Document getDocument() {
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			dbf.setNamespaceAware(true);
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			return db.newDocument();
+		}
+		catch (Exception ex) { return null; }
+	}
+
 	public static String getAttribute( Document doc, String eName, String aName ) {
 		Element root = doc.getDocumentElement();
 		NodeList nl = root.getElementsByTagName( eName );
@@ -345,7 +355,7 @@ public class Util {
 		String[] dirs = dirString.split(sep);
 		StringBuffer sb = new StringBuffer();
 		for (String s : dirs) {
-			if (s.contains(" ")) s = "\"" + s + "\"";
+			if (s.contains(" ")) s = "\'" + s + "\'";
 			sb.append(s + sep);
 		}
 		return sb.toString();
