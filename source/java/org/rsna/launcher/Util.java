@@ -326,7 +326,6 @@ public class Util {
 				String extDirs = props.getProperty("ext", "").trim();
 				if (!extDirs.equals("")) extDirs += sep;
 				ext = "libraries" + sep + "xml" + sep + extDirs + ext;
-				if (osIsWindows) ext = quoteDirs(ext, sep);
 				command.add("-Djava.ext.dirs="+ext);
 
 				//Set the program name
@@ -347,18 +346,6 @@ public class Util {
 			}
 			catch (Exception ex) { ex.printStackTrace(); }
 		}
-	}
-
-	private static String quoteDirs(String dirString, String sep) {
-		dirString = dirString.trim();
-		if (dirString.equals("")) return dirString;
-		String[] dirs = dirString.split(sep);
-		StringBuffer sb = new StringBuffer();
-		for (String s : dirs) {
-			if (s.contains(" ")) s = "\'" + s + "\'";
-			sb.append(s + sep);
-		}
-		return sb.toString();
 	}
 
 	static class Streamer extends Thread {

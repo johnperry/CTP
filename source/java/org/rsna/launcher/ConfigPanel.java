@@ -8,9 +8,13 @@
 package org.rsna.launcher;
 
 import java.awt.*;
+import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.Serializable;
+import java.util.*;
 import javax.swing.*;
+import javax.swing.TransferHandler;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 import org.w3c.dom.*;
@@ -137,20 +141,29 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			troot = new XMLTreeNode(root);
 			model = new DefaultTreeModel(troot);
 			tree = new JTree(model);
+			tree.setScrollsOnExpand(true);
 			addChildren(troot, root);
 			for (Component c : getComponents()) remove(c);
 			this.add(tree);
 			expandAll();
+
 			TreeSelectionModel tsm = tree.getSelectionModel();
+			//tsm.setSelectionMode(TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
 			tsm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 			tsm.addTreeSelectionListener(this);
 			tree.setSelectionModel(tsm);
+
+			//Set up for Drag and Drop
+			//tree.setDropMode(DropMode.ON_OR_INSERT);
+			//tree.setTransferHandler(new TreeTransferHandler());
 		}
 
 		public void valueChanged(TreeSelectionEvent event) {
 			XMLTreeNode tn = (XMLTreeNode)tree.getLastSelectedPathComponent();
-			String name = (String)tn.getUserObject();
-			dataPane.setText(name);
+			if (tn != null) {
+				String name = (String)tn.getUserObject();
+				dataPane.setText(name);
+			}
 		}
 
 		public void setText() {
@@ -195,26 +208,6 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				child = child.getNextSibling();
 			}
 		}
-
-		class XMLTreeNode extends DefaultMutableTreeNode {
-			public Element element;
-			public String className;
-
-			public XMLTreeNode(Element element) {
-				super();
-				this.element = element;
-				this.className = element.getAttribute("class");
-				String tag = element.getTagName();
-				if (tag.equals("Plugin")) {
-					String name = className.substring(className.lastIndexOf(".")+1);
-					tag += " ["+name+"]";
-				}
-				else if (tag.equals("Pipeline")) {
-					tag += " ["+element.getAttribute("name")+"]";
-				}
-				setUserObject(tag);
-			}
-		}
 	}
 
 	class DataPane extends JPanel {
@@ -237,5 +230,26 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		}
 	}
 
+	class XMLTreeNode extends DefaultMutableTreeNode implements /*Transferable,*/ Serializable, Cloneable {
+		public Element element;
+		public String className;
+
+		private static final long serialVersionUID = 9001L;
+
+		public XMLTreeNode(Element element) {
+			super();
+			this.element = element;
+			this.className = element.getAttribute("class");
+			String tag = element.getTagName();
+			if (tag.equals("Plugin")) {
+				String name = className.substring(className.lastIndexOf(".")+1);
+				tag += " ["+name+"]";
+			}
+			else if (tag.equals("Pipeline")) {
+				tag += " ["+element.getAttribute("name")+"]";
+			}
+			setUserObject(tag);
+		}
+	}
 
 }
