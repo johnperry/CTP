@@ -1,0 +1,80 @@
+<Components>
+
+	<Server>
+		<attr name="port" default="80" required="yes">
+			<comment>Server port (for Unix derivatives, use a value greater than 1024)</comment>
+		</attr>
+		<attr name="ssl" default="no" required="no">
+			<comment>Use secure sockets layer for connection to the server (yes/no)</comment>
+		</attr>
+		<attr name="requireAuthentication" default="no" required="no">
+			<comment>Require authentication for connection to the server (yes/no).</comment>
+		</attr>
+		<attr name="proxyIPAddress" default="" required="no">
+			<comment>The IP address of the proxy server (or blank if no proxy server)</comment>
+		</attr>
+		<attr name="proxyPort" default="" required="no">
+			<comment>The port of the proxy server (or blank if no proxy server)</comment>
+		</attr>
+		<attr name="proxyUsername" default="" required="no">
+			<comment>The username for proxy authentication (or blank if proxy authentication is not used)</comment>
+		</attr>
+		<attr name="proxyUsername" default="" required="no">
+			<comment>The password for proxy authentication (or blank if proxy authentication is not used)</comment>
+		</attr>
+		<attr name="usersClassName" default="org.rsna.server.UsersXmlFileImpl" required="no">
+			<comment>The Java class for user authentication. Do not change this unless you know what you're doing.</comment>
+		</attr>
+	</Server>
+
+	<ImportService>
+		<attr name="name" default="HttpImportService" required="yes">
+			<comment>This field should be unique, at least within its pipeline.</comment>
+		</attr>
+		<attr name="id" default="" required="no">
+			<comment>Not required for this stage</comment>
+		</attr>
+		<attr name="class" default="org.rsna.ctp.stdstages.HttpImportService" required="yes" editable="no"/>
+		<attr name="root" default="roots/HttpImportService" required="yes">
+			<comment>Must be unique in the entire configuration</comment>
+		</attr>
+		<attr name="port" default="7777" required="yes">
+			<comment>Port on which the HttpImportService listens for connections</comment>
+		</attr>
+		<attr name="ssl" default="no" required="no">
+			<comment>Use SSL for communication (yes/no)</comment>
+		</attr>
+		<attr name="zip" default="no" required="no">
+			<comment>Unzip received data objects (yes/no)</comment>
+		</attr>
+		<attr name="requireAuthentication" default="no" required="no">
+			<comment>Require credentials for all connections (yes/no)</comment>
+		</attr>
+		<attr name="acceptDicomObjects" default="yes" required="no">
+			<comment>Accept received DicomObjects (yes/no)</comment>
+		</attr>
+		<attr name="acceptXmlObjects" default="yes" required="no">
+			<comment>Accept received XmlObjects (yes/no)</comment>
+		</attr>
+		<attr name="acceptZipObjects" default="yes" required="no">
+			<comment>Accept received XmlObjects (yes/no)</comment>
+		</attr>
+		<attr name="acceptFileObjects" default="yes" required="no">
+			<comment>Accept received FileObjects (yes/no)</comment>
+		</attr>
+		<attr name="" default="no" required="yes">
+			<comment>xxx</comment>
+		</attr>
+		<attr name="" default="quarantine-directory"  required="yes">
+			<comment>xxx</comment>
+		</attr>
+
+
+		<accept ip="..."/>
+		<reject ip="..."/>
+
+	</ImportService>
+
+
+
+</Components>
