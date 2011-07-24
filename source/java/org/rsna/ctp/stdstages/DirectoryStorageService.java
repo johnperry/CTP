@@ -19,13 +19,14 @@ import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.stdstages.ObjectCache;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.StorageService;
+import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
 /**
  * A class to store objects in a directory system with no index.
  */
-public class DirectoryStorageService extends AbstractPipelineStage implements StorageService {
+public class DirectoryStorageService extends AbstractPipelineStage implements StorageService, Scriptable {
 
 	static final Logger logger = Logger.getLogger(DirectoryStorageService.class);
 
@@ -38,6 +39,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
     boolean returnStoredFile = true;
     int[] tags = null;
     String cacheID = "";
+	File dicomScriptFile = null;
 
 	/**
 	 * Construct a DirectoryStorageService for DicomObjects.
@@ -46,7 +48,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 */
 	public DirectoryStorageService(Element element) {
 		super(element);
+
 		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
+
+		//Set up for capturing the structure
 		cacheID = element.getAttribute("cacheID").trim();
 		String structure = element.getAttribute("structure").trim();
 		if (!structure.equals("")) {
@@ -62,8 +67,22 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			tags = new int[ x.length ];
 			for (int i=0; i<x.length; i++) tags[i] = x[i].intValue();
 		}
+
+		//See if there is a script, and if so, get the file
+		dicomScriptFile = null;
+		String dicomScript = element.getAttribute("dicomScript");
+		if (!dicomScript.equals("")) FileUtil.getFile(dicomScript, "examples/example-filter.script");
+
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
+	}
+
+	/**
+	 * Get the script files.
+	 * @return the script files used by this stage.
+	 */
+	public File[] getScriptFiles() {
+		return new File[] { dicomScriptFile, null, null };
 	}
 
 	/**
@@ -86,61 +105,61 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
 
-			//Count the accepted files
-			acceptedCount++;
+			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
 
-			//The object is acceptable; get a place to store it.
-			File destDir = root;
+				//Count the accepted objects
+				acceptedCount++;
 
-			//If there is a tags array, get the storage hierarchy/
-			//If there is a cache, get the cached object; otherwise,.
-			//use the current object to obtain the hierarchy.
-			//Store the object in a hierarchy based on the
-			//values of the elements identified by the tags;
-			//otherwise, store everything in the root directory.
-			//Note: the current object is always the one being stored;
-			//if the cached object is use, it is only used to define
-			//the hierarchy.
-			if (tags != null) {
-				//If there is not cache, use the current object.
-				if (!cacheID.equals("")) {
-					PipelineStage cache = Configuration.getInstance().getRegisteredStage(cacheID);
-					if ((cache != null) && (cache instanceof ObjectCache)) {
-						FileObject fob = ((ObjectCache)cache).getCachedObject();
-						if (fob instanceof DicomObject) dob = (DicomObject)fob;
+				//Get a place to store the object.
+				File destDir = root;
+
+				//If there is a tags array, get the storage hierarchy.
+				//If there is a cache, get the cached object; otherwise,
+				//use the current object to obtain the hierarchy.
+				//Store the object in a hierarchy based on the
+				//values of the elements identified by the tags;
+				//otherwise, store everything in the root directory.
+				//Note: the current object is always the one being stored;
+				//the cached object is only used to define the hierarchy.
+				if (tags != null) {
+					//If there is not cache, use the current object.
+					if (!cacheID.equals("")) {
+						PipelineStage cache = Configuration.getInstance().getRegisteredStage(cacheID);
+						if ((cache != null) && (cache instanceof ObjectCache)) {
+							FileObject fob = ((ObjectCache)cache).getCachedObject();
+							if (fob instanceof DicomObject) dob = (DicomObject)fob;
+						}
+					}
+					//Now construct the child directories under the root.
+					for (int tag : tags) {
+						String eValue = dob.getElementValue(tag);
+						String value = eValue.replaceAll("[\\\\/\\s]", "").trim();
+						if (value.equals("")) value = "UNKNOWN";
+						destDir = new File(destDir, value);
 					}
 				}
-				//Now construct the child directories under the root.
-				for (int tag : tags) {
-					String eValue = dob.getElementValue(tag);
-					String value = eValue.replaceAll("[\\\\/\\s]", "").trim();
-					if (value.equals("")) value = "UNKNOWN";
-					destDir = new File(destDir, value);
+
+				//At this point, destDir points to where the object is to be stored.
+				boolean ok;
+				File savedFile = new File(destDir, dob.getSOPInstanceUID());
+				destDir.mkdirs();
+				if (returnStoredFile)
+					ok = fileObject.moveTo(savedFile);
+				else
+					ok = fileObject.copyTo(savedFile);
+
+				//If the object was successfully saved, count it.
+				if (ok) {
+					storedCount++;
+					lastFileStored = savedFile;
+					lastTime = System.currentTimeMillis();
 				}
-			}
 
-			//At this point, destDir points to where the object is to be stored.
-			boolean ok;
-			File savedFile = new File(destDir, dob.getSOPInstanceUID());
-			destDir.mkdirs();
-			if (returnStoredFile)
-				ok = fileObject.moveTo(savedFile);
-			else
-				ok = fileObject.copyTo(savedFile);
-
-			//If the object was successfully saved, count it.
-			if (ok) {
-				storedCount++;
-				lastFileStored = savedFile;
-				lastTime = System.currentTimeMillis();
-			}
-
-			//If anything went wrong, quarantine the object and abort.
-			//Note: we can't do this with an else because ok may
-			//have been changed in the clause above.
-			if (!ok) {
-				if (quarantine != null) quarantine.insert(fileObject);
-				return null;
+				//If anything went wrong, quarantine the object and abort.
+				else {
+					if (quarantine != null) quarantine.insert(fileObject);
+					return null;
+				}
 			}
 		}
 		return fileObject;

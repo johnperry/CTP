@@ -133,9 +133,9 @@ public class Runner {
 				//Set the extensions directories
 				String extDirs = props.getProperty("ext", "").trim();
 				if (!extDirs.equals("")) extDirs += sep;
-				ext = "libraries" + sep + "xml" + sep + extDirs + ext;
-				if (osIsWindows) ext = quoteDirs(ext, sep);
-				command.add("-Djava.ext.dirs="+ext);
+				ext = "-Djava.ext.dirs=" + "libraries" + sep + "xml" + sep + extDirs + ext;
+				if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
+				command.add(ext);
 
 				//Set the program name
 				command.add("-jar");
@@ -155,18 +155,6 @@ public class Runner {
 			}
 			catch (Exception ex) { ex.printStackTrace(); }
 		}
-	}
-
-	private static String quoteDirs(String dirString, String sep) {
-		dirString = dirString.trim();
-		if (dirString.equals("")) return dirString;
-		String[] dirs = dirString.split(sep);
-		StringBuffer sb = new StringBuffer();
-		for (String s : dirs) {
-			if (s.contains(" ")) s = "\'" + s + "\'";
-			sb.append(s + sep);
-		}
-		return sb.toString();
 	}
 
 	static class Streamer extends Thread {

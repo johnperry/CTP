@@ -90,6 +90,7 @@ public class XmlObject extends FileObject {
 	 * several places it:
 	 * <ol>
 	 * <li>the uid attribute of the root element
+	 * <li>the uniqueIdentifier attribute of the root element (for AIM compatibility)
 	 * <li>the uid child element of the root element
 	 * <li>the uid attribute of the first child element of the root element
 	 * </ol>
@@ -103,7 +104,11 @@ public class XmlObject extends FileObject {
 		if (!uid.equals("")) return uid;
 
 		//Not in the uid attribute of the root.
-		//Look for a first-generation child named uid.
+		//Try the uniqueIdentifier attribute
+		uid = root.getAttribute("uniqueIdentifier").replaceAll("\\s","");
+		if (!uid.equals("")) return uid;
+
+		//No joy. Look for a first-generation child named uid.
 		//If it is present, it will be the first node in the list.
 		NodeList nl = root.getElementsByTagName("uid");
 		if (nl.getLength() > 0) {

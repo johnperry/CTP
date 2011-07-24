@@ -9,8 +9,10 @@ package org.rsna.launcher;
 
 import java.awt.*;
 import java.awt.datatransfer.*;
+import java.awt.dnd.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import javax.swing.*;
@@ -126,10 +128,10 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	class TreePane extends BasePanel implements TreeSelectionListener {
 
 		Document doc = null;
-		Element root =  null;
-		JTree tree = null;
-		XMLTreeNode troot = null;
-		TreeModel model = null;
+		Element root = null;
+		XMLTree tree = null;
+		TreeDragSource dragSource;
+		TreeDropTarget dropTarget;
 
 		public TreePane() {
 			super();
@@ -138,75 +140,31 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		public void load(Document doc) {
 			this.doc = doc;
 			root = doc.getDocumentElement();
-			troot = new XMLTreeNode(root);
-			model = new DefaultTreeModel(troot);
-			tree = new JTree(model);
-			tree.setScrollsOnExpand(true);
-			addChildren(troot, root);
+			tree = new XMLTree(root);
+			tree.getSelectionModel().addTreeSelectionListener(this);
 			for (Component c : getComponents()) remove(c);
 			this.add(tree);
-			expandAll();
-
-			TreeSelectionModel tsm = tree.getSelectionModel();
-			//tsm.setSelectionMode(TreeSelectionModel.CONTIGUOUS_TREE_SELECTION);
-			tsm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-			tsm.addTreeSelectionListener(this);
-			tree.setSelectionModel(tsm);
-
-			//Set up for Drag and Drop
-			//tree.setDropMode(DropMode.ON_OR_INSERT);
-			//tree.setTransferHandler(new TreeTransferHandler());
+			tree.expandAll();
+			dragSource = new TreeDragSource(tree, DnDConstants.ACTION_COPY_OR_MOVE);
+			dropTarget = new TreeDropTarget(tree);
 		}
 
 		public void valueChanged(TreeSelectionEvent event) {
-			XMLTreeNode tn = (XMLTreeNode)tree.getLastSelectedPathComponent();
-			if (tn != null) {
-				String name = (String)tn.getUserObject();
-				dataPane.setText(name);
+			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+			if (treeNode != null) {
+				Object object = treeNode.getUserObject();
+				if ((object != null) && (object instanceof XMLUserObject)) {
+					XMLUserObject xmlUserObject = (XMLUserObject)object;
+					Element el = (Element)xmlUserObject.element.cloneNode(false);
+					dataPane.setText( Util.toPrettyString( el ) );
+				}
 			}
 		}
 
 		public void setText() {
-			Document doc = Util.getDocument();
-			appendTreeNode(doc, troot);
+			Document doc = tree.getDocument();
 			dataPane.setText( Util.toPrettyString( doc.getDocumentElement() ) );
 			tree.clearSelection();
-		}
-
-		private void appendTreeNode(Node node, XMLTreeNode tnode) {
-			Document doc;
-			if (node instanceof Document) doc = (Document)node;
-			else doc = node.getOwnerDocument();
-			Element el = (Element)doc.importNode( tnode.element, false );
-			node.appendChild(el);
-			try {
-				TreeNode child = tnode.getFirstChild();
-				while (child != null) {
-					XMLTreeNode tchild = (XMLTreeNode)child;
-					appendTreeNode( el, tchild );
-					child = tchild.getNextSibling();
-				}
-			}
-			catch (Exception noKids) {  }
-		}
-
-		private void expandAll() {
-			for (int i=0; i<tree.getRowCount(); i++) {
-				if (tree.isCollapsed(i)) tree.expandRow(i);
-			}
-		}
-
-		private void addChildren(XMLTreeNode tnode, Element el) {
-			Node child = el.getFirstChild();
-			while (child != null) {
-				if (child instanceof Element) {
-					Element cel = (Element)child;
-					XMLTreeNode cnode = new XMLTreeNode( (Element)child );
-					tnode.add(cnode);
-					addChildren(cnode, cel);
-				}
-				child = child.getNextSibling();
-			}
 		}
 	}
 
@@ -218,7 +176,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			setLayout( new BorderLayout() );
 			cp = new ColorPane();
 			add( cp, BorderLayout.CENTER );
-			cp.setText("quack");
+			cp.setText("");
 		}
 
 		public void setText(String text) {
@@ -230,17 +188,35 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		}
 	}
 
-	class XMLTreeNode extends DefaultMutableTreeNode implements /*Transferable,*/ Serializable, Cloneable {
+	//The User Object that encapsultates the CTP configuration elements
+	class XMLUserObject {
+
 		public Element element;
 		public String className;
+		public String tag;
 
-		private static final long serialVersionUID = 9001L;
+		public boolean isConfiguration = false;
+		public boolean isServer = false;
+		public boolean isPlugin = false;
+		public boolean isPipeline = false;
+		public boolean isStage = false;
+		public boolean isChild = false;
 
-		public XMLTreeNode(Element element) {
+		public XMLUserObject(Element element) {
 			super();
 			this.element = element;
 			this.className = element.getAttribute("class");
-			String tag = element.getTagName();
+			tag = element.getTagName();
+
+			isConfiguration = tag.equals("Configuration");
+			isServer = tag.equals("Server");
+			isPlugin = tag.equals("Plugin");
+			isPipeline = tag.equals("Pipeline");
+			if (!isConfiguration && !isServer && !isPlugin && !isPipeline) {
+				isStage = element.getParentNode().getNodeName().equals("Pipeline");
+				isChild = !isStage;
+			}
+
 			if (tag.equals("Plugin")) {
 				String name = className.substring(className.lastIndexOf(".")+1);
 				tag += " ["+name+"]";
@@ -248,8 +224,274 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			else if (tag.equals("Pipeline")) {
 				tag += " ["+element.getAttribute("name")+"]";
 			}
-			setUserObject(tag);
+		}
+
+		public boolean isDragable() {
+			return !isConfiguration && !isServer && !isPipeline;
+		}
+
+		public String toString() {
+			return tag;
 		}
 	}
 
+	class XMLTree extends JTree {
+
+		DefaultTreeModel model = null;
+		DefaultMutableTreeNode troot = null;
+
+		public XMLTree(Element xmlRoot) {
+			super();
+			XMLUserObject xmlUserObject = new XMLUserObject(xmlRoot);
+			troot = new DefaultMutableTreeNode(xmlUserObject);
+			model = new DefaultTreeModel(troot);
+			setModel(model);
+			setScrollsOnExpand(true);
+			addChildren(troot, xmlRoot);
+
+			TreeSelectionModel tsm = getSelectionModel();
+			tsm.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		}
+
+		private void addChildren(DefaultMutableTreeNode tnode, Element el) {
+			Node child = el.getFirstChild();
+			while (child != null) {
+				if (child instanceof Element) {
+					Element cel = (Element)child;
+					XMLUserObject xmlUserObject = new XMLUserObject(cel);
+					DefaultMutableTreeNode cnode = new DefaultMutableTreeNode(xmlUserObject);
+					tnode.add(cnode);
+					addChildren(cnode, cel);
+				}
+				child = child.getNextSibling();
+			}
+		}
+
+		public Document getDocument() {
+			Document doc = Util.getDocument();
+			appendTreeNode(doc, troot);
+			return doc;
+		}
+
+		private void appendTreeNode(Node node, DefaultMutableTreeNode tnode) {
+			Document doc;
+			if (node instanceof Document) doc = (Document)node;
+			else doc = node.getOwnerDocument();
+			XMLUserObject xmlUserObject = (XMLUserObject)tnode.getUserObject();
+			Element el = (Element)doc.importNode( xmlUserObject.element, false );
+			node.appendChild(el);
+			try {
+				TreeNode child = tnode.getFirstChild();
+				while (child != null) {
+					DefaultMutableTreeNode tchild = (DefaultMutableTreeNode)child;
+					appendTreeNode( el, tchild );
+					child = tchild.getNextSibling();
+				}
+			}
+			catch (Exception noKids) { }
+		}
+
+		public void expandAll() {
+			for (int i=0; i<getRowCount(); i++) {
+				if (isCollapsed(i)) expandRow(i);
+			}
+		}
+
+		public void collapseAll() {
+			for (int i=getRowCount(); i>=0; i--) {
+				collapseRow(i);
+			}
+		}
+	}
+
+	class TreeDragSource implements DragSourceListener, DragGestureListener {
+
+		DragSource source;
+		DragGestureRecognizer recognizer;
+		TransferableObject transferable;
+		DefaultMutableTreeNode oldNode;
+		JTree sourceTree;
+
+		public TreeDragSource(JTree tree, int actions) {
+			sourceTree = tree;
+			source = new DragSource();
+			recognizer = source.createDefaultDragGestureRecognizer(sourceTree, actions, this);
+		}
+
+		//----------------------
+		//Drag Gesture Handler
+		//----------------------
+		public void dragGestureRecognized(DragGestureEvent dge) {
+			TreePath path = sourceTree.getSelectionPath();
+			if ((path == null) || (path.getPathCount() <= 1)) {
+				return;
+			}
+			oldNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+			XMLUserObject xmlUserObject = (XMLUserObject)oldNode.getUserObject();
+			if (xmlUserObject.isDragable()) {
+				transferable = new TransferableObject(xmlUserObject);
+				source.startDrag(dge, DragSource.DefaultMoveDrop, transferable, this);
+			}
+		}
+
+		//----------------------
+		//Drag Event Handlers
+		//----------------------
+		public void dragEnter(DragSourceDragEvent dsde) {
+			dragOver(dsde);
+		}
+
+		public void dragOver(DragSourceDragEvent dsde) {
+			DragSourceContext dsc = dsde.getDragSourceContext();
+			dsc.setCursor(DragSource.DefaultMoveDrop);
+		}
+
+		public void dragExit(DragSourceEvent dse) {
+			DragSourceContext dsc = dse.getDragSourceContext();
+			dsc.setCursor(DragSource.DefaultMoveNoDrop);
+		}
+
+		public void dropActionChanged(DragSourceDragEvent dsde) { }
+
+		public void dragDropEnd(DragSourceDropEvent dsde) {
+			if (dsde.getDropSuccess() && (dsde.getDropAction() == DnDConstants.ACTION_MOVE)) {
+				((DefaultTreeModel) sourceTree.getModel()).removeNodeFromParent(oldNode);
+			}
+		}
+	}
+
+	class TreeDropTarget implements DropTargetListener {
+
+		DropTarget target;
+		JTree targetTree;
+
+		public TreeDropTarget(JTree tree) {
+			targetTree = tree;
+			target = new DropTarget(targetTree, this);
+		}
+
+		//----------------------
+		//Drop Event Handlers
+		//----------------------
+		private boolean okToDrop(Transferable tr, DefaultMutableTreeNode target) {
+			XMLUserObject dest = (XMLUserObject)target.getUserObject();
+			DataFlavor[] flavors = tr.getTransferDataFlavors();
+			for (int i = 0; i < flavors.length; i++) {
+				if (tr.isDataFlavorSupported(flavors[i])) {
+					try {
+						XMLUserObject src = (XMLUserObject)tr.getTransferData(flavors[i]);
+						if (src.isStage && dest.isPipeline) return true;
+						if (src.isStage && dest.isStage) return true;
+						if (src.isPlugin && dest.isPlugin) return true;
+						return false;
+					}
+					catch (Exception skip) { }
+				}
+			}
+			return false;
+		}
+
+		private DefaultMutableTreeNode getNodeForEvent(DropTargetDragEvent dtde) {
+			Point p = dtde.getLocation();
+			DropTargetContext dtc = dtde.getDropTargetContext();
+			JTree tree = (JTree) dtc.getComponent();
+			TreePath path = tree.getClosestPathForLocation(p.x, p.y);
+			return (DefaultMutableTreeNode) path.getLastPathComponent();
+		}
+
+		private DefaultMutableTreeNode getNodeForEvent(DropTargetDropEvent dtde) {
+			Point p = dtde.getLocation();
+			DropTargetContext dtc = dtde.getDropTargetContext();
+			JTree tree = (JTree) dtc.getComponent();
+			TreePath path = tree.getClosestPathForLocation(p.x, p.y);
+			return (DefaultMutableTreeNode) path.getLastPathComponent();
+		}
+
+		public void dragEnter(DropTargetDragEvent dtde) {
+			dragOver(dtde);
+		}
+
+		public void dragOver(DropTargetDragEvent dtde) {
+			DefaultMutableTreeNode node = getNodeForEvent(dtde);
+			XMLUserObject xmlUserObject = (XMLUserObject)node.getUserObject();
+			if (okToDrop(dtde.getTransferable(), node)) {
+				dtde.acceptDrag(dtde.getDropAction());
+			}
+			else dtde.rejectDrag();
+		}
+
+		public void dragExit(DropTargetEvent dte) { }
+
+		public void dropActionChanged(DropTargetDragEvent dtde) { }
+
+		public void drop(DropTargetDropEvent dtde) {
+			DefaultMutableTreeNode targetNode = getNodeForEvent(dtde);
+			XMLUserObject targetUO = (XMLUserObject)targetNode.getUserObject();
+			Transferable tr = dtde.getTransferable();
+			DataFlavor[] flavors = tr.getTransferDataFlavors();
+			try {
+				for (int i = 0; i < flavors.length; i++) {
+					if (tr.isDataFlavorSupported(flavors[i])) {
+						dtde.acceptDrop(dtde.getDropAction());
+
+						XMLUserObject sourceUO = (XMLUserObject)tr.getTransferData(flavors[i]);
+						DefaultMutableTreeNode sourceNode = new DefaultMutableTreeNode(sourceUO);
+
+						DefaultTreeModel model = (DefaultTreeModel) targetTree.getModel();
+
+						int index = 0;
+						if (sourceUO.isStage && targetUO.isPipeline) {
+							index = model.getChildCount(targetNode);
+							model.insertNodeInto(sourceNode, targetNode, index);
+						}
+						else if (sourceUO.isStage && targetUO.isStage) {
+							DefaultMutableTreeNode targetParentNode = (DefaultMutableTreeNode)targetNode.getParent();
+							index = targetParentNode.getIndex(targetNode);
+							model.insertNodeInto(sourceNode, targetParentNode, index);
+						}
+						else if (sourceUO.isPlugin && targetUO.isPlugin) {
+							DefaultMutableTreeNode targetParentNode = (DefaultMutableTreeNode)targetNode.getParent();
+							index = targetParentNode.getIndex(targetNode);
+							model.insertNodeInto(sourceNode, targetParentNode, index);
+						}
+						else {
+							dtde.rejectDrop();
+							return;
+						}
+						dtde.dropComplete(true);
+						return;
+					}
+				}
+				dtde.rejectDrop();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				dtde.rejectDrop();
+			}
+		}
+	}
+
+	public static DataFlavor XML_FLAVOR = new DataFlavor(XMLUserObject.class, "XML_FLAVOR");
+	class TransferableObject implements Transferable {
+
+		DataFlavor flavors[] = { XML_FLAVOR };
+		XMLUserObject object;
+
+		public TransferableObject(XMLUserObject object) {
+			this.object = object;
+		}
+
+		public synchronized DataFlavor[] getTransferDataFlavors() {
+			return flavors;
+		}
+
+		public boolean isDataFlavorSupported(DataFlavor flavor) {
+			return (flavor.getRepresentationClass() == XMLUserObject.class);
+		}
+
+		public synchronized Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+			if (isDataFlavorSupported(flavor)) return object;
+			throw new UnsupportedFlavorException(flavor);
+		}
+	}
 }
