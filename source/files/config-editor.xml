@@ -1,4 +1,4 @@
-<Components name="main">
+<Components>
 
 	<Server>
 		<attr name="port" required="yes" default="80">
@@ -861,3 +861,4 @@
 	</ExportService>
 
 </Components>
+
