@@ -108,6 +108,8 @@ public class JavaPanel extends BasePanel implements ActionListener {
 
 		this.add(main, BorderLayout.CENTER);
 		this.add(new StatusPanel( status ), BorderLayout.SOUTH);
+
+		running = Util.isRunning();
 		setStatus();
 	}
 

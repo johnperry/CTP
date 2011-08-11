@@ -179,7 +179,8 @@ public class ScriptServlet extends Servlet {
 					if (stage instanceof Scriptable) {
 						File[] scriptFiles = ((Scriptable)stage).getScriptFiles();
 						for (int f=0; f<scriptFiles.length; f++) {
-							if ((scriptFiles[f] != null) && scriptFiles[f].exists()) {
+							File file = scriptFiles[f];
+							if ((file != null) && file.exists()) {
 								sb.append("<tr>");
 								sb.append("<td>"+pipe.getPipelineName()+"</td>");
 								sb.append("<td>"+stage.getName()+"</td>");
@@ -188,7 +189,7 @@ public class ScriptServlet extends Servlet {
 												+"&s="+s
 												+"&f="+f
 												+"\">"
-												+scriptFiles[f].getAbsolutePath()+"</a></td>");
+												+file.getAbsolutePath()+"</a></td>");
 								sb.append("</tr>");
 								count++;
 							}
@@ -197,7 +198,7 @@ public class ScriptServlet extends Servlet {
 				}
 			}
 			sb.append("</table>");
-			if (count == 0) sb.append("<p>The pipeline contains no editable scripts.</p>");
+			if (count == 0) sb.append("<p>The configuration contains no editable scripts.</p>");
 		}
 		return sb.toString();
 	}

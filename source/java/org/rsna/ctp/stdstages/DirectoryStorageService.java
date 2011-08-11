@@ -71,7 +71,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		//See if there is a script, and if so, get the file
 		dicomScriptFile = null;
 		String dicomScript = element.getAttribute("dicomScript");
-		if (!dicomScript.equals("")) FileUtil.getFile(dicomScript, "examples/example-filter.script");
+		if (!dicomScript.equals("")) {
+			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
+		}
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");

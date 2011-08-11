@@ -83,6 +83,7 @@
 				<attribute name="Main-Class" value="org.rsna.ctp.ClinicalTrialProcessor"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
 				<attribute name="Java-Version" value="${ant.java.version}"/>
+				<attribute name="Class-Path" value="util.jar"/>
 			</manifest>
 			<fileset dir="${build}"
 				includes="**"

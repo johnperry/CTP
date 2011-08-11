@@ -37,15 +37,15 @@ public class VersionPanel extends BasePanel {
 			+	"<tr><td>This computer's Java Data Model:</td><td>"+config.thisJavaBits+"</td></tr>"
 			+	"<tr><td>CTP Java Version:</td><td>"+config.ctpJava+"</td></tr>"
 			+	"<tr><td>CTP Date:</td><td>"+config.ctpDate+"</td></tr>"
-			+	"<tr><td>Utility library Java Version:</td><td>"+config.utilJava+"</td></tr>"
+			+	"<tr><td>Utility Library Java Version:</td><td>"+config.utilJava+"</td></tr>"
 			+	"<tr><td>Utility Library Date:</td><td>"+config.utilDate+"</td></tr>";
 
 		if (config.isMIRC) {
 
 			page +=
-				 (!config.mircJava.equals("") ? "<tr><td>MIRC plugin Java Version:</td><td>"+config.mircJava+"</td></tr>" : "")
-				+(!config.mircDate.equals("") ? "<tr><td>MIRC plugin Date:</td><td>"+config.mircDate+"</td></tr>" : "")
-				+(!config.mircJava.equals("") ? "<tr><td>MIRC plugin Version:</td><td>"+config.mircVersion+"</td></tr>" : "");
+				 (!config.mircJava.equals("") ? "<tr><td>MIRC Plugin Java Version:</td><td>"+config.mircJava+"</td></tr>" : "")
+				+(!config.mircDate.equals("") ? "<tr><td>MIRC Plugin Date:</td><td>"+config.mircDate+"</td></tr>" : "")
+				+(!config.mircJava.equals("") ? "<tr><td>MIRC Plugin Version:</td><td>"+config.mircVersion+"</td></tr>" : "");
 		}
 
 		page +=

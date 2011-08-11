@@ -27,6 +27,7 @@ import org.rsna.server.ServletSelector;
 import org.rsna.server.Users;
 import org.rsna.servlets.*;
 import org.rsna.util.AcceptAllHostnameVerifier;
+import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.JarClassLoader;
@@ -114,13 +115,16 @@ public class ClinicalTrialProcessor {
 	 */
 	public ClinicalTrialProcessor() {
 
-		Logger logger = Logger.getLogger(ClinicalTrialProcessor.class);
+		//Set up the classpath
+		File libraries = new File("libraries");
+		ClasspathUtil.addJARs(libraries);
 
 		//Initialize Log4J
 		File logs = new File("logs");
 		logs.mkdirs();
 		File logProps = new File("log4j.properties");
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
+		Logger logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
 		//Set the SSL params
 		System.setProperty("javax.net.ssl.keyStore","keystore");
