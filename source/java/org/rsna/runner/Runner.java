@@ -133,7 +133,7 @@ public class Runner {
 				//Set the extensions directories
 				String extDirs = props.getProperty("ext", "").trim();
 				if (!extDirs.equals("")) extDirs += sep;
-				ext = "-Djava.ext.dirs=" + /*"libraries" + sep +*/ "xml" + sep + extDirs + ext;
+				ext = "-Djava.ext.dirs=" + "xml" + sep + extDirs + ext;
 				if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
 				command.add(ext);
 
