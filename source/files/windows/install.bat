@@ -4,10 +4,10 @@ CTP.exe ^
  --Description="RSNA CTP Service" ^
  --Startup="auto" ^
  --Jvm=auto ^
- --JvmOptions=-Djava.ext.dirs="'${ext}'" ^
  --StartMode=jvm ^
  --JvmMs=128 ^
  --JvmMx=512 ^
+ --Classpath="libraries\CTP.jar" ^
  --StartPath="${home}" ^
  --StartClass=org.rsna.ctp.ClinicalTrialProcessor ^
  --StartMethod=startService ^

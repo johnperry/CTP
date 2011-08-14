@@ -25,6 +25,7 @@ import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.plugin.Plugin;
 import org.rsna.server.HttpServer;
+import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.IPUtil;
 import org.rsna.util.JarUtil;
@@ -101,9 +102,11 @@ public class Configuration {
 			configXML = db.parse(configFile);
 			Element root = configXML.getDocumentElement();
 
-			//If the log attribute is set to "yes", enter the configuration into the log.
-			if (root.getAttribute("log").toLowerCase().equals("yes"))
+			//Log the configuration.
+			if (!root.getAttribute("log").toLowerCase().equals("no")) {
+				logger.info("Classpath:\n"+ClasspathUtil.listClasspath());
 				logger.info("Configuration:\n" + XmlUtil.toPrettyString(root));
+			}
 
 			//Get the children and instantiate them.
 			//Save the parameters of the Server element.

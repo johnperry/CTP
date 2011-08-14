@@ -116,8 +116,8 @@ public class ClinicalTrialProcessor {
 	public ClinicalTrialProcessor() {
 
 		//Set up the classpath
-		File libraries = new File("libraries");
-		ClasspathUtil.addJARs(libraries);
+		ClasspathUtil.addJARs( new File("libraries") );
+		ClasspathUtil.addJARs( new File("xml") );
 
 		//Initialize Log4J
 		File logs = new File("logs");
@@ -136,8 +136,7 @@ public class ClinicalTrialProcessor {
 		//Set the Java System properties for the ProxyServer.
 		//Note: the ProxyServer is instantiated in the Configuration
 		//object as the config file is parsed.
-		ProxyServer proxy = ProxyServer.getInstance();
-		proxy.setSystemParameters();
+		ProxyServer.getInstance().setSystemParameters();
 
 		//Set up the default SSL socket factory
 		try { HttpUtil.setDefaultSSLSocketFactory(); }

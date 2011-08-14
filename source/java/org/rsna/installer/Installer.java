@@ -422,13 +422,6 @@ public class Installer extends JFrame {
 			home = home.replaceAll("\\\\", "\\\\\\\\");
 			props.put("home", home);
 
-			String ext = System.getProperty("java.ext.dirs");
-			String sep = ";";
-
-			ext = ext.replaceAll("\\\\", "\\\\\\\\");
-			ext = "libraries" + sep + "xml" + sep + ext;
-			props.put("ext", ext);
-
 			bat = replace(bat, props);
 			setFileText(install, bat);
 		}

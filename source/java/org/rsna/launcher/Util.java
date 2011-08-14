@@ -324,10 +324,12 @@ public class Util {
 
 				//Set the extensions directories
 				String extDirs = props.getProperty("ext", "").trim();
-				if (!extDirs.equals("")) extDirs += sep;
-				ext = "-Djava.ext.dirs=" + "xml" + sep + extDirs + ext;
-				if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
-				command.add(ext);
+				if (!extDirs.equals("")) {
+					extDirs += sep;
+					ext = "-Djava.ext.dirs=" + extDirs + ext;
+					if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
+					command.add(ext);
+				}
 
 				//Set the program name
 				command.add("-jar");
