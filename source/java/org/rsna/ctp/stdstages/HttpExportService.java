@@ -21,6 +21,7 @@ import org.rsna.ctp.pipeline.Status;
 import org.rsna.server.HttpResponse;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
+import org.rsna.util.Base64;
 import org.w3c.dom.Element;
 
 /**
@@ -37,6 +38,11 @@ public class HttpExportService extends AbstractExportService {
 	String password = null;
 	boolean authenticate = false;
 	boolean logUnauthorizedResponses = true;
+
+	private enum AuthType {
+		RSNA, HTTP_BASIC
+	}
+	AuthType authType = null;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -57,6 +63,17 @@ public class HttpExportService extends AbstractExportService {
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
 		authenticate = !username.equals("");
+		String authName = element.getAttribute("authorization").trim();
+		if ("".equals(authName)) {
+			authType = AuthType.RSNA;
+		} else if ("HTTP-Basic".equals(authName)) {
+			authType = AuthType.HTTP_BASIC;
+		} else if ("RSNA".equals(authName)) {
+			authType = AuthType.RSNA;
+		} else {
+			throw new Exception("Unrecognized authorization scheme "
+			      + authName);
+		}
 
 		//Get the destination url
 		url = new URL(element.getAttribute("url"));
@@ -85,7 +102,20 @@ public class HttpExportService extends AbstractExportService {
 		try {
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
-			if (authenticate) conn.setRequestProperty("RSNA",username+":"+password);
+			if (authenticate) {
+				switch (authType) {
+				case RSNA:
+					conn.setRequestProperty("RSNA",
+						username+":"+password);
+					break;
+
+				case HTTP_BASIC:
+					conn.setRequestProperty("Authorization",
+						"Basic " + Base64.encodeToString((username + ":" + password).getBytes()));
+					break;
+				}					
+			}
+
 			conn.connect();
 			svros = conn.getOutputStream();
 
