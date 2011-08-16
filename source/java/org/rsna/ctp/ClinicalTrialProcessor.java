@@ -117,7 +117,6 @@ public class ClinicalTrialProcessor {
 
 		//Set up the classpath
 		ClasspathUtil.addJARs( new File("libraries") );
-		ClasspathUtil.addJARs( new File("xml") );
 
 		//Initialize Log4J
 		File logs = new File("logs");

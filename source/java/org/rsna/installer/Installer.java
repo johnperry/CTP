@@ -300,6 +300,21 @@ public class Installer extends JFrame {
 			if (shutdown.exists()) shutdown.delete();
 			linux.delete();
 		}
+		//remove old versions of the slf4j libraries
+		File libraries = new File(dir, "libraries");
+		if (libraries.exists()) {
+			File[] files = libraries.listFiles();
+			for (File file : files) {
+				if (file.getName().startsWith("slf4j-")) file.delete();
+			}
+		}
+		//remove the xml library
+		File xml = new File(dir, "xml");
+		if (xml.exists()) {
+			File[] xmlFiles = xml.listFiles();
+			for (File file : xmlFiles) file.delete();
+			xml.delete();
+		}
 	}
 
 	//Let the user select an installation directory.

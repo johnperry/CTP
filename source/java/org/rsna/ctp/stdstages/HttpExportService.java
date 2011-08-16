@@ -19,6 +19,7 @@ import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractExportService;
 import org.rsna.ctp.pipeline.Status;
 import org.rsna.server.HttpResponse;
+import org.rsna.util.Base64;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.w3c.dom.Element;
@@ -36,6 +37,7 @@ public class HttpExportService extends AbstractExportService {
 	String username = null;
 	String password = null;
 	boolean authenticate = false;
+	String authHeader = null;
 	boolean logUnauthorizedResponses = true;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
@@ -57,6 +59,9 @@ public class HttpExportService extends AbstractExportService {
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
 		authenticate = !username.equals("");
+		if (authenticate) {
+			authHeader = "Basic " + Base64.encodeToString((username + ":" + password).getBytes());
+		}
 
 		//Get the destination url
 		url = new URL(element.getAttribute("url"));
@@ -85,7 +90,7 @@ public class HttpExportService extends AbstractExportService {
 		try {
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
-			if (authenticate) conn.setRequestProperty("RSNA",username+":"+password);
+			if (authenticate) conn.setRequestProperty("Authorization", authHeader);
 			conn.connect();
 			svros = conn.getOutputStream();
 
