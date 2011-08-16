@@ -278,15 +278,16 @@ public class Util {
 		catch (Exception ex) { }
 	}
 
-	public static Thread startup() {
-		Runner runner = new Runner();
+	public static Thread startup(boolean enableSSLDebugging) {
+		Runner runner = new Runner(enableSSLDebugging);
 		runner.start();
 		return runner;
 	}
 
 	static class Runner extends Thread {
-		public Runner() {
-			super();
+		boolean enableSSLDebugging = false;
+		public Runner(boolean enableSSLDebugging) {
+			super();this.enableSSLDebugging = enableSSLDebugging;
 		}
 		public void run() {
 			Runtime rt = Runtime.getRuntime();
@@ -320,6 +321,11 @@ public class Util {
 				if (!stackSize.equals("")) {
 					int ss = getInt(stackSize, 0);
 					if (ss > 32) command.add("-Xss"+ss+"k");
+				}
+
+				//Enable SSL debugging, if required
+				if (enableSSLDebugging) {
+					command.add("-Djavax.net.debug=ssl");
 				}
 
 				//Set the extensions directories

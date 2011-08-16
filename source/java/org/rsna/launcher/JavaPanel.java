@@ -25,6 +25,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	Row extDirs;
 	Row serverPort;
 	CBRow clearLogs;
+	CBRow debugSSL;
 
 	JButton start;
 	JButton stop;
@@ -63,6 +64,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		javaPanel.addRow( maxMemory = new Row("Maximum memory pool:", props.getProperty("mx","")) );
 		javaPanel.addRow( stackSize = new Row("Thread stack size:", props.getProperty("ss","")) );
 		javaPanel.addRow( extDirs = new Row("Extensions directory:", props.getProperty("ext","")) );
+		javaPanel.addRow( debugSSL = new CBRow("Enable SSL debugging:", props.getProperty("ssl","").equals("yes")) );
 
 		RowPanel serverPanel = new RowPanel("Server Parameters");
 		serverPanel.setBackground(bgColor);
@@ -142,6 +144,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		if (clearLogs.cb.isSelected()) {
 			File logs = new File("logs");
 			Util.deleteAll(logs);
+			IOPanel.out.clear();
 		}
 	}
 
@@ -159,7 +162,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		}
 		save();
 		if (!running) {
-			runner = Util.startup();
+			runner = Util.startup( debugSSL.cb.isSelected() );
 			Util.wait(500);
 			running = runner.isAlive();
 			if (running) {
@@ -210,6 +213,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		props.setProperty("ss", stackSize.tf.getText().trim());
 		props.setProperty("ext", extDirs.tf.getText().trim());
 		props.setProperty("clr", (clearLogs.cb.isSelected()?"yes":"no"));
+		props.setProperty("ssl", (debugSSL.cb.isSelected()?"yes":"no"));
 		config.save();
 	}
 
