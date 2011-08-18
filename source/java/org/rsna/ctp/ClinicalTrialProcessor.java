@@ -126,8 +126,8 @@ public class ClinicalTrialProcessor {
 		Logger logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
 		//Set the SSL params
-		System.setProperty("javax.net.ssl.keyStore","keystore");
-		System.setProperty("javax.net.ssl.keyStorePassword","ctpstore");
+		System.setProperty("javax.net.ssl.keyStore", "keystore");
+		System.setProperty("javax.net.ssl.keyStorePassword", "ctpstore");
 
 		//Get the configuration
 		Configuration config = Configuration.getInstance();
@@ -136,10 +136,6 @@ public class ClinicalTrialProcessor {
 		//Note: the ProxyServer is instantiated in the Configuration
 		//object as the config file is parsed.
 		ProxyServer.getInstance().setSystemParameters();
-
-		//Set up the default SSL socket factory
-		try { HttpUtil.setDefaultSSLSocketFactory(); }
-		catch (Exception e) { logger.warn("Unable to set the default SSL socket factory"); }
 
 		//Instantiate the singleton Users class
 		Users users = Users.getInstance(config.getUsersClassName());
