@@ -115,7 +115,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	//Get the list of qualifiers for jpeg child elements.
 	private List<ImageQualifiers> getJPEGQualifiers(Element el) {
 		LinkedList<ImageQualifiers> list = new LinkedList<ImageQualifiers>();
-		Node child = element.getFirstChild();
+		Node child = el.getFirstChild();
 		while (child != null) {
 			if ((child.getNodeType() == Node.ELEMENT_NODE)
 					&& child.getNodeName().equals("jpeg")) {

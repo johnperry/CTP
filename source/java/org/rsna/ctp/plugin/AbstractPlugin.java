@@ -24,11 +24,11 @@ import org.rsna.ctp.objects.*;
  */
 public abstract class AbstractPlugin implements Plugin {
 
-	public Element element;
-	public String name;
-	public String id;
-	public File root = null;
-	public boolean stop = false;
+	protected final Element element;
+	protected final String name;
+	protected String id; //Note: cannot be final because some plugins change the id
+	protected File root = null;
+	protected boolean stop = false;
 
 	/**
 	 * Construct a base plugin which does nothing.
@@ -97,6 +97,14 @@ public abstract class AbstractPlugin implements Plugin {
 	 */
 	public String getID() {
 		return id;
+	}
+
+	/**
+	 * Get the config file element for this plugin.
+	 * @return the config file element of the plugin.
+	 */
+	public Element getConfigElement() {
+		return element;
 	}
 
 	/**

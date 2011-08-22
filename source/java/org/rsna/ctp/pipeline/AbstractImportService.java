@@ -63,7 +63,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * Get the temp directory
 	 * @return the temp directory to use while receiving objects.
 	 */
-	public File getTempDirectory() {
+	public synchronized File getTempDirectory() {
 		return temp;
 	}
 
@@ -71,7 +71,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * Get the QueueManager.
 	 * @return the QueueManager.
 	 */
-	public QueueManager getQueueManager() {
+	public synchronized QueueManager getQueueManager() {
 		return queueManager;
 	}
 
@@ -79,7 +79,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * Enqueue a file and log it.
 	 * @param file the file that was received.
 	 */
-	public void fileReceived(File file) {
+	public synchronized void fileReceived(File file) {
 		count++; //Count the file
 		//The received file is in the temp directory.
 		File qFile = getQueueManager().enqueue(file);
@@ -150,7 +150,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * @param file the file to be released, which must be the original file
 	 * supplied by the ImportService.
 	 */
-	public void release(File file) {
+	public synchronized void release(File file) {
 		if ((file != null)
 				&& file.exists()
 					&& file.getParentFile().getAbsolutePath().equals(activePath)) {
@@ -165,7 +165,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * Get HTML text displaying the active status of the stage.
 	 * @return HTML text displaying the active status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		String stageUniqueStatus =
 			"<tr><td width=\"20%\">Files received:</td><td>" + count + "</td></tr>"
 			+ "<tr><td width=\"20%\">Queue size:</td>"

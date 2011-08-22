@@ -25,20 +25,20 @@ import org.rsna.ctp.objects.*;
  */
 public abstract class AbstractPipelineStage implements PipelineStage {
 
-	public Element element;
-	public String name;
-	public String id;
-	public Quarantine quarantine = null;
-	public File root = null;
-	public boolean acceptDicomObjects = true;
-	public boolean acceptXmlObjects = true;
-	public boolean acceptZipObjects = true;
-	public boolean acceptFileObjects = true;
-	public File lastFileIn = null;
-	public long lastTimeIn = 0;
-	public File lastFileOut = null;
-	public long lastTimeOut = 0;
-	public boolean stop = false;
+	protected final Element element;
+	protected final String name;
+	protected final String id;
+	protected Quarantine quarantine = null;
+	protected File root = null;
+	protected boolean acceptDicomObjects = true;
+	protected boolean acceptXmlObjects = true;
+	protected boolean acceptZipObjects = true;
+	protected boolean acceptFileObjects = true;
+	protected File lastFileIn = null;
+	protected long lastTimeIn = 0;
+	protected File lastFileOut = null;
+	protected long lastTimeOut = 0;
+	protected boolean stop = false;
 
 	/**
 	 * Construct a base pipeline stage which does no processing.
@@ -68,20 +68,20 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * This method is called by the Pipeline after all the stages have been
 	 * constructed.
 	 */
-	public void start() {
+	public synchronized void start() {
 	}
 
 	/**
 	 * Stop the pipeline stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		stop = true;
 	}
 
 	/**
 	 * Determine whether the pipeline stage has shut down.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		return stop;
 	}
 
@@ -90,7 +90,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * configuration element for the stage.
 	 * @return the name of the pipeline stage.
 	 */
-	public String getName() {
+	public synchronized String getName() {
 		return name;
 	}
 
@@ -98,7 +98,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * Get the root directory of this pipeline stage.
 	 * @return the root directory of the pipeline stage.
 	 */
-	public File getRoot() {
+	public synchronized File getRoot() {
 		return root;
 	}
 
@@ -107,7 +107,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * configuration element for the stage.
 	 * @return the ID of the pipeline stage.
 	 */
-	public String getID() {
+	public synchronized String getID() {
 		return id;
 	}
 
@@ -116,7 +116,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * configuration element for the stage.
 	 * @return the Quarantine, or null if no quarantine was specified.
 	 */
-	public Quarantine getQuarantine() {
+	public synchronized Quarantine getQuarantine() {
 		return quarantine;
 	}
 
@@ -125,7 +125,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * @param fileObject the object
 	 * @return true if the stage accepts the object; false otherwise.
 	 */
-	public boolean acceptable(FileObject fileObject) {
+	public synchronized boolean acceptable(FileObject fileObject) {
 		if (fileObject instanceof DicomObject) return acceptDicomObjects;
 		if (fileObject instanceof XmlObject) return acceptXmlObjects;
 		if (fileObject instanceof ZipObject) return acceptZipObjects;
@@ -141,7 +141,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * the values of username and password attributes.
 	 * @return HTML text describing the configuration of the stage.
 	 */
-	public String getConfigHTML(boolean admin) {
+	public synchronized String getConfigHTML(boolean admin) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");
@@ -201,7 +201,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML(String stageUniqueStatus) {
+	public synchronized String getStatusHTML(String stageUniqueStatus) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

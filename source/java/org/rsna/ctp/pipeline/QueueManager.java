@@ -23,17 +23,17 @@ public class QueueManager {
 
 	static final Logger logger = Logger.getLogger(QueueManager.class);
 
-	File root;
-	int nLevels;
-	int maxSize;
-	ActiveDirectory outDir;
-	File lastFileIn;
-	FileFilter dirsOnly;
-	FileFilter filesOnly;
-	int size;
-	int subNameLength;
-	int topNameLength = 10;
-	String zeroes = "0000000000000000";
+	private File root;
+	private int nLevels;
+	private int maxSize;
+	private ActiveDirectory outDir;
+	private File lastFileIn;
+	private FileFilter dirsOnly;
+	private FileFilter filesOnly;
+	private int size;
+	private int subNameLength;
+	private int topNameLength = 10;
+	private String zeroes = "0000000000000000";
 
 	/**
 	 * Create a QueueManager for a root directory.
@@ -62,7 +62,7 @@ public class QueueManager {
 	 * Get the size of the queue.
 	 * @return the number of objects in the queue..
 	 */
-	public int size() {
+	public synchronized int size() {
 		return size;
 	}
 

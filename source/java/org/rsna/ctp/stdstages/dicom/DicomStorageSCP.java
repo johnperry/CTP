@@ -149,7 +149,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 
 			//Log the connection if logging is enabled
 			if (logAllConnections || (!accept && logRejectedConnections)) {
-				logger.warn(dicomImportService.name
+				logger.warn(dicomImportService.getName()
 								+ (accept?" accepted ":" rejected ")
 									+ currentUID + " from " + connectionIP
 										+ "("+calledAET+":"+callingAET+")");
@@ -174,7 +174,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 					isDuplicate = recentUIDs.contains(currentUID);
 					if (isDuplicate) {
 						logger.warn("----------------------------------------------------------------");
-						logger.warn(dicomImportService.name);
+						logger.warn(dicomImportService.getName());
 						logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
 						logger.warn("DICOM command: " + rqCmd.cmdFieldAsString());
 						String s = "";

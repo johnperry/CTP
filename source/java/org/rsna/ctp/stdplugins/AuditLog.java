@@ -38,15 +38,15 @@ public class AuditLog extends AbstractPlugin {
 
 	String servletContext;
 
-	RecordManager recman;
+	private RecordManager recman;
 
-	private static HTree count = null;
-	private static HTree entryTable = null;
-	private static HTree contentTypeTable = null;
-	private static HTree timeTable = null;
-	private static HTree patientIDIndex = null;
-	private static HTree studyUIDIndex = null;
-	private static HTree objectUIDIndex = null;
+	private HTree count = null;
+	private HTree entryTable = null;
+	private HTree contentTypeTable = null;
+	private HTree timeTable = null;
+	private HTree patientIDIndex = null;
+	private HTree studyUIDIndex = null;
+	private HTree objectUIDIndex = null;
 
 	/**
 	 * Construct a plugin implementing an audit log repository .
@@ -105,7 +105,7 @@ public class AuditLog extends AbstractPlugin {
 	 * Get HTML text displaying the current status of the plugin.
 	 * @return HTML text displaying the current status of the plugin.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		int size;
 		try { size = ((Integer)count.get(lastIDName)).intValue(); }
 		catch (Exception mustBeZero) { size = 0; }
@@ -145,7 +145,7 @@ public class AuditLog extends AbstractPlugin {
 	}
 
 	//Get the next available ID for an entry
-	private synchronized Integer getNextID() throws Exception {
+	private Integer getNextID() throws Exception {
 		try {
 			Integer id = (Integer)count.get(lastIDName);
 			if (id == null) id = new Integer(0);
@@ -169,7 +169,7 @@ public class AuditLog extends AbstractPlugin {
 	 * @return the list of audit log entry IDs corresponding to the patient ID,
 	 * or an empty list if no entry appears in the patientID index for the UID.
 	 */
-	public LinkedList<Integer> getEntriesForPatientID(String patientID) {
+	public synchronized LinkedList<Integer> getEntriesForPatientID(String patientID) {
 		return getIDs(patientIDIndex, patientID);
 	}
 
@@ -179,7 +179,7 @@ public class AuditLog extends AbstractPlugin {
 	 * @return the list of audit log entry IDs corresponding to the study UID,
 	 * or an empty list if no entry appears in the studyUID index for the UID.
 	 */
-	public LinkedList<Integer> getEntriesForStudyUID(String studyUID) {
+	public synchronized LinkedList<Integer> getEntriesForStudyUID(String studyUID) {
 		return getIDs(studyUIDIndex, studyUID);
 	}
 
@@ -189,11 +189,11 @@ public class AuditLog extends AbstractPlugin {
 	 * @return the list of audit log entry IDs corresponding to the object UID,
 	 * or an empty list if no entry appears in the objectUID index for the UID.
 	 */
-	public LinkedList<Integer> getEntriesForObjectUID(String objectUID) {
+	public synchronized LinkedList<Integer> getEntriesForObjectUID(String objectUID) {
 		return getIDs(objectUIDIndex, objectUID);
 	}
 
-	private LinkedList<Integer> getIDs(HTree index, String key) {
+	private synchronized LinkedList<Integer> getIDs(HTree index, String key) {
 		LinkedList<Integer> list = null;
 		try { list = (LinkedList<Integer>)index.get(key); }
 		catch (Exception ex) { }
@@ -206,7 +206,7 @@ public class AuditLog extends AbstractPlugin {
 	 * @param id the ID of the entry.
 	 * @return the entry corresponding to the ID, or null if no entry appears in the log for the ID.
 	 */
-	public String getText(Integer id) {
+	public synchronized String getText(Integer id) {
 		try { return (String)entryTable.get(id); }
 		catch (Exception ex) { return null; }
 	}
@@ -218,7 +218,7 @@ public class AuditLog extends AbstractPlugin {
 	 * or null if no content type is available for the ID.
 	 * @throws Exception if an error occurs while reading the audit log.
 	 */
-	public String getContentType(Integer id) {
+	public synchronized String getContentType(Integer id) {
 		try { return (String)contentTypeTable.get(id); }
 		catch (Exception ex) { return null; }
 	}
@@ -229,7 +229,7 @@ public class AuditLog extends AbstractPlugin {
 	 * @return the time string in the form yyyymmdd hh:mm:ss.sss,
 	 * or null if no time is available.
 	 */
-	public String getTime(Integer id) {
+	public synchronized String getTime(Integer id) {
 		try {
 			Long time = (Long)timeTable.get(id);
 			long t = time.longValue();

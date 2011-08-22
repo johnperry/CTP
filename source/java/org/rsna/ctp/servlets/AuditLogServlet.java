@@ -61,7 +61,7 @@ public class AuditLogServlet extends Servlet {
 			//Make the search page.
 			AuditLog auditLog = (AuditLog)plugin;
 			Document doc = XmlUtil.getDocument();
-			Element root = (Element)doc.importNode(auditLog.element, true);
+			Element root = (Element)doc.importNode(auditLog.getConfigElement(), true);
 			doc.appendChild(root);
 			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/AuditLogServlet.xsl" ) );
 			Object[] params = { "context", context };

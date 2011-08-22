@@ -70,7 +70,7 @@ public class Pipeline extends Thread {
 	 * Get the name of this pipeline.
 	 * @return the name of this pipeline.
 	 */
-	public String getPipelineName() {
+	public synchronized String getPipelineName() {
 		return name;
 	}
 
@@ -78,7 +78,7 @@ public class Pipeline extends Thread {
 	 * Get the list of ImportService objects.
 	 * @return the list of ImportService objects.
 	 */
-	public List<ImportService> getImportServices() {
+	public synchronized List<ImportService> getImportServices() {
 		return importServices;
 	}
 
@@ -86,14 +86,14 @@ public class Pipeline extends Thread {
 	 * Get the list of PipelineStage objects.
 	 * @return the list of PipelineStage objects.
 	 */
-	public List<PipelineStage> getStages() {
+	public synchronized List<PipelineStage> getStages() {
 		return stages;
 	}
 
 	/**
 	 * Shut down the pipeline
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		stop = true;
 	}
 
@@ -101,7 +101,7 @@ public class Pipeline extends Thread {
 	 * Check whether the pipeline has shut down.
 	 * @return true if the pipeline has cleanly shut down; false otherwise.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		if (!this.getState().equals(Thread.State.TERMINATED)) return false;
 		for (PipelineStage stage: stages) {
 			if (!stage.isDown()) return false;
@@ -209,7 +209,7 @@ public class Pipeline extends Thread {
 	 * the values of username and password attributes.
 	 * @return HTML text describing the configuration of the pipeline.
 	 */
-	public String getConfigHTML(boolean admin) {
+	public synchronized String getConfigHTML(boolean admin) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h2>"+name+"</h2>");
 		Iterator<PipelineStage> sit = stages.iterator();
@@ -223,7 +223,7 @@ public class Pipeline extends Thread {
 	 * stages in turn. This method is called by the StatusServlet.
 	 * @return HTML text describing the status of the pipeline.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h2>"+name+"</h2>");
 		Iterator<PipelineStage> sit = stages.iterator();

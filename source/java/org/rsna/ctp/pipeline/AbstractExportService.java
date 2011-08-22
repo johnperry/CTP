@@ -69,7 +69,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	/**
 	 * Determine whether the pipeline stage has shut down.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		if (enableExport
 				&& (exporter != null)
 						&& !exporter.getState().equals(Thread.State.TERMINATED))
@@ -92,7 +92,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * returns Status.OK, but methods that override it should return the correct
 	 * result.
 	 */
-	public Status connect() {
+	public synchronized Status connect() {
 		return Status.OK;
 	}
 
@@ -104,7 +104,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * This method always returns Status.OK, but methods that override it should
 	 * return the correct result.
 	 */
-	public Status disconnect() {
+	public synchronized Status disconnect() {
 		return Status.OK;
 	}
 

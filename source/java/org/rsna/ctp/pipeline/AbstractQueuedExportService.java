@@ -30,13 +30,13 @@ public abstract class AbstractQueuedExportService
 
 	static final Logger logger = Logger.getLogger(AbstractQueuedExportService.class);
 
-	File active = null;
-	String activePath = "";
-	File temp = null;
-	QueueManager queueManager = null;
-	File dicomScriptFile = null;
-	File xmlScriptFile = null;
-	File zipScriptFile = null;
+	protected File active = null;
+	protected String activePath = "";
+	protected File temp = null;
+	protected QueueManager queueManager = null;
+	protected File dicomScriptFile = null;
+	protected File xmlScriptFile = null;
+	protected File zipScriptFile = null;
 
 	/**
 	 * Construct an ExportService.
@@ -66,7 +66,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the script files.
 	 * @return the script files used by this stage.
 	 */
-	public File[] getScriptFiles() {
+	public synchronized File[] getScriptFiles() {
 		return new File[] { dicomScriptFile, xmlScriptFile, zipScriptFile };
 	}
 
@@ -74,7 +74,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the temp directory
 	 * @return the temp directory to use while receiving objects.
 	 */
-	public File getTempDirectory() {
+	public synchronized File getTempDirectory() {
 		return temp;
 	}
 
@@ -82,7 +82,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the QueueManager.
 	 * @return the QueueManager.
 	 */
-	public QueueManager getQueueManager() {
+	public synchronized QueueManager getQueueManager() {
 		return queueManager;
 	}
 
@@ -94,7 +94,7 @@ public abstract class AbstractQueuedExportService
 	 * This method enqueues the object and returns immediately.
 	 * @param fileObject the object to be exported.
 	 */
-	public void export(FileObject fileObject) {
+	public synchronized void export(FileObject fileObject) {
 		if (fileObject instanceof DicomObject) {
 			if (acceptDicomObjects) {
 				if ((dicomScriptFile == null)
@@ -120,7 +120,7 @@ public abstract class AbstractQueuedExportService
 	}
 
 	//Add a fileObject to the export queue
-	void enqueue(FileObject fileObject) {
+	private void enqueue(FileObject fileObject) {
 		lastFileIn = fileObject.getFile();
 		lastTimeIn = System.currentTimeMillis();
 		if (queueManager.enqueue(lastFileIn) == null) {
@@ -132,7 +132,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the size of the export queue.
 	 * return the size of the export queue, or 0 if no QueueManager exists.
 	 */
-	protected int getQueueSize() {
+	protected synchronized int getQueueSize() {
 		if (queueManager != null) return queueManager.size();
 		return 0;
 	}
@@ -141,7 +141,7 @@ public abstract class AbstractQueuedExportService
 	 * Force a recount of the export queue.
 	 * return the size of the export queue, or 0 if no QueueManager exists.
 	 */
-	protected int recount() {
+	protected synchronized int recount() {
 		if (queueManager != null) return queueManager.recount();
 		return 0;
 	}
@@ -171,7 +171,7 @@ public abstract class AbstractQueuedExportService
 	 * @param file the file to be released, which must be the original file
 	 * supplied by the ExportService.
 	 */
-	protected void release(File file) {
+	protected synchronized void release(File file) {
 		if ((file != null)
 				&& file.exists()
 					&& file.getParentFile().getAbsolutePath().equals(activePath)) {
@@ -183,7 +183,7 @@ public abstract class AbstractQueuedExportService
 	 * Get HTML text displaying the active status of the stage.
 	 * @return HTML text displaying the active status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		String stageUniqueStatus =
 			"<tr><td width=\"20%\">Queue size:</td>"
 			+ "<td>"
