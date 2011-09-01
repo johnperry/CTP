@@ -22,6 +22,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.plugin.Plugin;
 import org.rsna.ctp.servlets.*;
+import org.rsna.server.Authenticator;
 import org.rsna.server.HttpServer;
 import org.rsna.server.ServletSelector;
 import org.rsna.server.Users;
@@ -94,7 +95,7 @@ public class ClinicalTrialProcessor {
 			URL url = new URL( "http" + (ssl?"s":"") + "://127.0.0.1:" + port + "/shutdown" );
 			HttpURLConnection conn = HttpUtil.getConnection(url);
 			conn.setRequestMethod("GET");
-			conn.setRequestProperty("servicemanager","stayalive");
+			conn.setRequestProperty("servicemanager", "stayalive");
 			conn.connect();
 
 			String result = FileUtil.getText( conn.getInputStream() );
@@ -143,6 +144,9 @@ public class ClinicalTrialProcessor {
 		//Add the CTP roles
 		String[] roles = { "read", "delete", "import", "qadmin", "guest", "proxy" };
 		for (String role : roles) users.addRole(role);
+
+		//Disable session timeouts for the server
+		Authenticator.getInstance().setSessionTimeout( 0L );
 
 		//Create the ServletSelector for the HttpServer
 		ServletSelector selector =
