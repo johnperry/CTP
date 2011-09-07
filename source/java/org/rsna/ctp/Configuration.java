@@ -83,7 +83,11 @@ public class Configuration {
 		try {
 			//Get the manifest from the program jar
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
-			logger.info("CTP build:     "+getManifestAttribute("Date"));
+
+			logManifestAttribute(new File("libraries/CTP.jar"),  "Date", "CTP build:     ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Date", "MIRC build:    ");
+			logManifestAttribute(new File("libraries/Util.jar"), "Date", "Util build:    ");
+
 			logger.info("Start time:    "+StringUtil.getDateTime(" at "));
 			logger.info("user.dir:      "+System.getProperty("user.dir"));
 			logger.info("java.ext.dirs: "+System.getProperty("java.ext.dirs") + "\n");
@@ -157,6 +161,16 @@ public class Configuration {
 		}
 		catch (Exception ex) {
 			logger.error("Error loading the configuration.", ex);
+		}
+	}
+
+	private void logManifestAttribute(File jarFile, String name, String prefix) {
+		if (jarFile.exists()) {
+			Hashtable<String,String> manifest = JarUtil.getManifestAttributes(jarFile);
+			if (manifest != null) {
+				String value = manifest.get(name);
+				if (value != null) logger.info(prefix + value);
+			}
 		}
 	}
 
