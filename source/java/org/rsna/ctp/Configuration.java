@@ -84,9 +84,10 @@ public class Configuration {
 			//Get the manifest from the program jar
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
 
-			logManifestAttribute(new File("libraries/CTP.jar"),  "Date", "CTP build:     ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Date", "MIRC build:    ");
-			logManifestAttribute(new File("libraries/Util.jar"), "Date", "Util build:    ");
+			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:     ");
+			logManifestAttribute(new File("libraries/Util.jar"), "Date",    "Util build:    ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:    ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:  ");
 
 			logger.info("Start time:    "+StringUtil.getDateTime(" at "));
 			logger.info("user.dir:      "+System.getProperty("user.dir"));
