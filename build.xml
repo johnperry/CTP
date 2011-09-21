@@ -34,7 +34,7 @@
 	<target name="init">
 		<tstamp>
 			<format property="today" pattern="yyyy-MM-dd"/>
-			<format property="now" pattern="HH:mm:ss"/>
+			<format property="now" pattern="HH:mm:ss z"/>
 		</tstamp>
 		<echo message="Time now ${now}"/>
 		<echo message="ant.java.version = ${ant.java.version}" />
@@ -111,6 +111,7 @@
 				<attribute name="Main-Class" value="org.rsna.installer.Installer"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
 	            <attribute name="Java-Version" value="${ant.java.version}"/>
+            	<attribute name="Description" value="CTP for clinical trials"/>
 			</manifest>
 			<fileset dir="${build}"
 				includes="${installer}/Installer** CTP/** config/**"/>
