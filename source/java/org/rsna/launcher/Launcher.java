@@ -71,6 +71,7 @@ public class Launcher extends JFrame implements ChangeListener {
 		this.addWindowListener(new WindowCloser(this));
 
 		pack();
+
 		positionFrame();
 		setVisible(true);
 
@@ -88,11 +89,16 @@ public class Launcher extends JFrame implements ChangeListener {
 	}
 
 	private void positionFrame() {
-		Toolkit t = getToolkit();
-		Dimension scr = t.getScreenSize ();
 		setSize( 500, 600 );
-		int x = (scr.width - getSize().width)/2;
-		int y = (scr.height - getSize().height)/2;
+		Properties props = Configuration.getInstance().props;
+		int x = Util.getInt( props.getProperty("x"), 0 );
+		int y = Util.getInt( props.getProperty("y"), 0 );
+		if ((x == 0) && (y == 0)) {
+			Toolkit t = getToolkit();
+			Dimension scr = t.getScreenSize ();
+			x = (scr.width - getSize().width)/2;
+			y = (scr.height - getSize().height)/2;
+		}
 		setLocation( new Point(x,y) );
 	}
 
@@ -112,12 +118,22 @@ public class Launcher extends JFrame implements ChangeListener {
 								"Are you sure?",
 								JOptionPane.YES_NO_OPTION);
 				if (response == JOptionPane.YES_OPTION) {
-					javaPanel.save();
+					save();
 					Util.shutdown();
 					System.exit(0);
 				}
 			}
-			else System.exit(0);
+			else {
+				save();
+				System.exit(0);
+			}
+		}
+		private void save() {
+			Properties props = Configuration.getInstance().props;
+			Point p = parent.getLocation();
+			props.setProperty("x", Integer.toString(p.x));
+			props.setProperty("y", Integer.toString(p.y));
+			javaPanel.save();
 		}
     }
 
