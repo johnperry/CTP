@@ -215,10 +215,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Initiate a shutdown for all the plugins.
+	 * Initiate a shutdown for all the plugins, in reverse order.
 	 */
 	public void shutdownPlugins() {
-		for (Plugin plugin : pluginsList) plugin.shutdown();
+		Plugin[] p = pluginsList.toArray( new Plugin[pluginsList.size()] );
+		for (int i=p.length-1; i>=0; i--) {
+			p[i].shutdown();
+		}
 	}
 
 	/**
