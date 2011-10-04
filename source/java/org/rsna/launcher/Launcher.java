@@ -61,7 +61,7 @@ public class Launcher extends JFrame implements ChangeListener {
 		tp.add("General", javaPanel);
 		tp.add("Version", versionPanel);
 		tp.add("System", systemPanel);
-		tp.add("Configuraton", configPanel);
+		tp.add("Configuration", configPanel);
 		tp.add("Console", ioPanel);
 		tp.add("Log", logPanel);
 
@@ -75,7 +75,9 @@ public class Launcher extends JFrame implements ChangeListener {
 		positionFrame();
 		setVisible(true);
 
+		UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
 		if (autostart) javaPanel.start();
+		else javaPanel.setFocusOnStart();
 	}
 
 	public void stateChanged(ChangeEvent event) {

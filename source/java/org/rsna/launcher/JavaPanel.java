@@ -123,6 +123,10 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		}
 	}
 
+	public void setFocusOnStart() {
+		start.requestFocusInWindow();
+	}
+
 	public void actionPerformed(ActionEvent event) {
 		if (event.getSource().equals(launchBrowser)) {
 			String ip = Util.getIPAddress();
@@ -137,6 +141,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		else if (event.getSource().equals(start)) {
 			clearLogsDir();
 			run();
+			launchBrowser.requestFocusInWindow();
 		}
 	}
 
