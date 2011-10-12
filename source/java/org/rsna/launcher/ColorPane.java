@@ -23,6 +23,7 @@ public class ColorPane extends JTextPane {
 		lineHeight = fm.getHeight();
 		setFont(font);
 		setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+		setScrollableTracksViewportWidth(false);
 	}
 
 	public boolean getScrollableTracksViewportWidth() {

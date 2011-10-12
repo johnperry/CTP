@@ -251,7 +251,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	private void startVerifierService(boolean ssl, int port, boolean requireAuthentication) {
 		try {
 			Verifier verifier = new Verifier(requireAuthentication);
-			verifierService = new HttpService(ssl, port, verifier);
+			verifierService = new HttpService(ssl, port, verifier, name);
 			verifierService.start();
 		}
 		catch (Exception ex) {

@@ -65,6 +65,7 @@ public class Configuration {
 	Hashtable<String,String> manifest = null;
 	Hashtable<String,PipelineStage> stages = null;
 	Hashtable<String,Plugin> plugins = null;
+	Element serverElement = null;
 
 	/**
 	 * Get the singleton instance of the Configuration, loading it
@@ -125,6 +126,7 @@ public class Configuration {
 					Element childElement = (Element)child;
 					String tagName = childElement.getTagName();
 					if (tagName.equals("Server")) {
+						serverElement = childElement;
 						serverPort = StringUtil.getInt(childElement.getAttribute("port"), 80);
 						ssl = childElement.getAttribute("ssl").equals("yes");
 						String temp = childElement.getAttribute("usersClassName").trim();
@@ -244,6 +246,14 @@ public class Configuration {
 		String value = manifest.get(name);
 		if (value == null) value = "";
 		return value;
+	}
+
+	/**
+	 * Get the Server element.
+	 * @return the Server element from the config file.
+	 */
+	public Element getServerElement() {
+		return serverElement;
 	}
 
 	/**

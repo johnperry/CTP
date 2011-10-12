@@ -81,7 +81,7 @@ public class HttpImportService extends AbstractImportService {
 		//Create the HttpReceiver
 		try {
 			Receiver receiver = new Receiver(requireAuthentication);
-			httpReceiver = new HttpService(ssl, port, receiver);
+			httpReceiver = new HttpService(ssl, port, receiver, name);
 		}
 		catch (Exception ex) {
 			logger.error(name + ": Unable to instantiate the VerifierService on port "+port);
