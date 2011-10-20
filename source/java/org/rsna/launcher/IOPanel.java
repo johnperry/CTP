@@ -26,6 +26,7 @@ public class IOPanel extends BasePanel implements ActionListener {
 
 		jsp = new JScrollPane();
 		jsp.setViewportView(out);
+		jsp.getViewport().setBackground(Color.white);
 		add(jsp, BorderLayout.CENTER);
 
 		Box footer = Box.createHorizontalBox();

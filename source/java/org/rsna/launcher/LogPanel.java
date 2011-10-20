@@ -30,6 +30,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 
 		jsp = new JScrollPane();
 		jsp.setViewportView(out);
+		jsp.getViewport().setBackground(Color.white);
 		add(jsp, BorderLayout.CENTER);
 
 		wrap = new JCheckBox("Wrap lines");

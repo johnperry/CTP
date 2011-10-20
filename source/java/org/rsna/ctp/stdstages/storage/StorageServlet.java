@@ -199,6 +199,7 @@ public class StorageServlet extends Servlet {
 								(user.getUsername().equals(fs.getName()) || user.hasRole("delete"))) {
 								fs.deleteStudyByUID(studyUID);
 							}
+							zipFile.delete();
 							return;
 						}
 					}
