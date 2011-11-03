@@ -209,7 +209,7 @@ public class Installer extends JFrame {
 	private File getInstallerProgramFile() {
 		cp.appendln(Color.black, "Looking for the installer program file");
 		boolean isMIRC = checkForMIRC();
-		String name = (isMIRC ? "MIRC" : "CTP");
+		String name = (isMIRC ? "TFS" : "CTP");
 		File programFile = new File(name+"-installer.jar");
 		programFile = new File( programFile.getAbsolutePath() );
 
@@ -283,15 +283,45 @@ public class Installer extends JFrame {
 		//Clean up from old installations, removing or renaming files.
 		//Note: directory is the parent of the CTP directory.
 		File dir = new File(directory, "CTP");
+
+		//This is a really old CTP main file - not used anymore
 		File ctp = new File(dir, "CTP.jar");
 		if (ctp.exists()) ctp.delete();
+
+		//These are old names for the Launcher.jar file
+		File launcher = new File(dir,"CTP-launcher.jar");
+		if (launcher.exists()) launcher.delete();
+		launcher = new File(dir,"TFS-launcher.jar");
+		if (launcher.exists()) launcher.delete();
+
+		//Delete the obsolete CTP-runner.jar file
+		File runner = new File(dir,"CTP-runner.jar");
+		if (runner.exists()) runner.delete();
+
+		//Delete the obsolete MIRC-copier.jar file
+		File copier = new File(dir,"MIRC-copier.jar");
+		if (copier.exists()) copier.delete();
+
+		//Rename the old versions of the properties files
 		File oldprops = new File(dir, "CTP-startup.properties");
 		File newprops = new File(dir, "CTP-launcher.properties");
-		if (oldprops.exists()) oldprops.renameTo(newprops);
+		File correctprops = new File(dir, "Launcher.properties");
+		if (oldprops.exists()) {
+			if (newprops.exists() || correctprops.exists()) oldprops.delete();
+			else oldprops.renameTo(correctprops);
+		}
+		if (newprops.exists()) {
+			if (correctprops.exists()) newprops.delete();
+			else newprops.renameTo(correctprops);
+		}
+
+		//Get rid of obsolete startup and shutdown programs
 		File startup = new File(dir, "CTP-startup.jar");
 		if (startup.exists()) startup.delete();
 		File shutdown = new File(dir, "CTP-shutdown.jar");
 		if (shutdown.exists()) shutdown.delete();
+
+		//Get rid of the obsolete linux directory
 		File linux = new File(dir, "linux");
 		if (linux.exists()) {
 			startup = new File(linux, "CTP-startup.jar");
@@ -300,7 +330,8 @@ public class Installer extends JFrame {
 			if (shutdown.exists()) shutdown.delete();
 			linux.delete();
 		}
-		//remove old versions of the slf4j libraries
+
+		//remove obsolete versions of the slf4j libraries
 		File libraries = new File(dir, "libraries");
 		if (libraries.exists()) {
 			File[] files = libraries.listFiles();
@@ -308,7 +339,7 @@ public class Installer extends JFrame {
 				if (file.getName().startsWith("slf4j-")) file.delete();
 			}
 		}
-		//remove the xml library
+		//remove the obsolete xml library
 		File xml = new File(dir, "xml");
 		if (xml.exists()) {
 			File[] xmlFiles = xml.listFiles();
@@ -499,7 +530,12 @@ public class Installer extends JFrame {
 			+	"Copyright 2011: RSNA<br><br>"
 
 			+	"<p>"
-			+	"<b>"+programName+"</b> is a tool for acquiring and managing data for medical imaging.<br>"
+
+			+ (programName.equals("TFS") ?
+				"<b>"+programName+"</b> is radiological teaching file system.<br>"
+				:
+				"<b>"+programName+"</b> is a tool for acquiring and managing data for medical imaging.<br>"
+			  )
 			+	"This program installs and configures all the required software components."
 			+	"</p>"
 

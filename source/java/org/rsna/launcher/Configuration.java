@@ -15,6 +15,7 @@ public class Configuration {
 
 	public String windowTitle = "";
 	public String programName = "";
+	public String browserButtonName = "";
 	public String ctpDate = "";
 	public String ctpJava = "";
 	public String utilJava = "";
@@ -35,7 +36,7 @@ public class Configuration {
 	public Document configXML;
 
 	File configFile = new File("config.xml");
-	File propsFile = new File("CTP-launcher.properties");
+	File propsFile = new File("Launcher.properties");
 	File ctp = new File("libraries/CTP.jar");
 
 	static Configuration config = null;
@@ -56,7 +57,8 @@ public class Configuration {
 		catch (Exception ex) { port = 0; }
 		ssl = Util.getAttribute(configXML, "Server", "ssl").equals("yes");
 
-		programName = isMIRC ? "MIRC" : "CTP";
+		programName = isMIRC ? "RSNA Teaching File System" : "RSNA CTP";
+		browserButtonName = isMIRC ? "TFS" : "CTP";
 		windowTitle = programName + " Launcher";
 
 		//Get the installation information

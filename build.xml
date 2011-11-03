@@ -54,7 +54,7 @@
 	<target name="jar" depends="compile">
 		<mkdir dir="${build}/CTP"/>
 
-		<jar jarfile="${build}/CTP/CTP-launcher.jar">
+		<jar jarfile="${build}/CTP/Launcher.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.rsna.launcher.Launcher"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
@@ -64,7 +64,7 @@
 				includes="${launcher}/**" />
 		</jar>
 
-		<jar jarfile="${build}/CTP/CTP-runner.jar">
+		<jar jarfile="${build}/CTP/Runner.jar">
 			<manifest>
 				<attribute name="Main-Class" value="org.rsna.runner.Runner"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
@@ -87,7 +87,7 @@
 			</manifest>
 			<fileset dir="${build}"
 				includes="**"
-				excludes="${installer}/**, ${launcher}/**, ${runner}/** CTP/CTP-launcher.jar CTP/CTP-runner.jar" />
+				excludes="${installer}/**, ${launcher}/**, ${runner}/** CTP/Launcher.jar CTP/Runner.jar" />
 		</jar>
 
 	</target>

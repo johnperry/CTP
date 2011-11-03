@@ -102,7 +102,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		stop.addActionListener(this);
 		sp.add(Box.createHorizontalStrut(70));
 
-		launchBrowser = new JButton(config.programName+ " Home Page");
+		launchBrowser = new JButton(config.browserButtonName+ " Home Page");
 		sp.add(launchBrowser);
 		launchBrowser.addActionListener(this);
 

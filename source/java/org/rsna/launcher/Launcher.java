@@ -107,19 +107,33 @@ public class Launcher extends JFrame implements ChangeListener {
     //Class to capture a window close event and give the
     //user a chance to change his mind.
     class WindowCloser extends WindowAdapter {
+		private boolean keyIsDown = false;
 		private Component parent;
 		public WindowCloser(JFrame parent) {
 			this.parent = parent;
 			parent.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+			//Set up to capture the modifier key
+			KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+			kfm.addKeyEventDispatcher(new KeyEventDispatcher() {
+				public boolean dispatchKeyEvent(KeyEvent e) {
+					keyIsDown = e.isControlDown();
+					return false; //let the event continue on.
+				}
+			});
 		}
 		public void windowClosing(WindowEvent evt) {
 			if (Util.isRunning()) {
-				int response = JOptionPane.showConfirmDialog(
-								parent,
-								"Are you sure you want to stop the "+config.programName+" server?",
-								"Are you sure?",
-								JOptionPane.YES_NO_OPTION);
-				if (response == JOptionPane.YES_OPTION) {
+				boolean close = keyIsDown;
+				if (!close) {
+					int response = JOptionPane.showConfirmDialog(
+									parent,
+									"Are you sure you want to stop the "+config.programName+" server?",
+									"Are you sure?",
+									JOptionPane.YES_NO_OPTION);
+					close = (response == JOptionPane.YES_OPTION);
+				}
+				if (close) {
 					save();
 					Util.shutdown();
 					System.exit(0);

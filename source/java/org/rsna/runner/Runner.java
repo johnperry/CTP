@@ -28,7 +28,7 @@ import org.w3c.dom.NamedNodeMap;
 public class Runner {
 
 	static File configFile = new File("config.xml");
-	static File propsFile = new File("CTP-launcher.properties");
+	static File propsFile = new File("Launcher.properties");
 	static File ctp = new File("libraries/CTP.jar");
 	static int port = 0;
 	static boolean ssl;
