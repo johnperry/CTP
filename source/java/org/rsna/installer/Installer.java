@@ -358,9 +358,13 @@ public class Installer extends JFrame {
 		File currentDirectory = new File( System.getProperty( "user.dir" ) );
 		File root = new File(File.separator);
 		File programDir = new File(root, "CTP");
+		File tfsDir = new File(root, "TFS");
 		File javaPrograms = new File(root, "JavaPrograms");
 		if (javaPrograms.exists() && javaPrograms.isDirectory()) {
 			currentDirectory = javaPrograms;
+		}
+		else if (tfsDir.exists() && tfsDir.isDirectory()) {
+			currentDirectory = tfsDir;
 		}
 		else if (programDir.exists() && programDir.isDirectory()) {
 			currentDirectory = programDir;
