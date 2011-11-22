@@ -33,7 +33,7 @@
 
 	<target name="init">
 		<tstamp>
-			<format property="today" pattern="yyyy-MM-dd"/>
+			<format property="today" pattern="yyyy.MM.dd"/>
 			<format property="now" pattern="HH:mm:ss z"/>
 		</tstamp>
 		<echo message="Time now ${now}"/>
