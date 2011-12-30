@@ -52,17 +52,16 @@ import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 
+import org.rsna.util.FileUtil;
+
 import org.apache.log4j.Logger;
 
 /**
  * The MIRC DICOM anonymizer. The anonymizer provides de-identification and
  * re-identification of DICOM objects for clinical trials. Each element
- * as well as certain groups of elements are scriptable. The script
- * language is defined in "How to Configure the Anonymizer for MIRC
- * Clinical Trial Services".
- * <p>
- * See the <a href="http://mirc.rsna.org/mircdocumentation">
- * MIRC documentation</a> for more more information.
+ * as well as certain groups of elements are scriptable.
+ * See the <a href="http://mircwiki.rsna.org">RSNA MIRC Wiki</a>
+ * for more more information.
  */
 public class DICOMAnonymizer {
 
@@ -71,6 +70,8 @@ public class DICOMAnonymizer {
 	static final DcmObjectFactory oFact = DcmObjectFactory.getInstance();
 	static final DictionaryFactory dFact = DictionaryFactory.getInstance();
 	static final TagDictionary tagDictionary = dFact.getDefaultTagDictionary();
+
+	static final String blanks = "                                                       ";
 
    /**
      * Anonymizes the input file, writing the result to the output file.
@@ -108,34 +109,47 @@ public class DICOMAnonymizer {
 		File tempFile = null;
 		byte[] buffer = new byte[4096];
 		try {
-			//Check that this is a known format.
+			//The strategy is to have two copies of the dataset.
+			//One (dataset) will be modified. The other (origds)
+			//will serve as the original data for reference during
+			//the anonymization process.
+
+			//Get the origds (up to the pixels), and close the input stream.
+			BufferedInputStream origin = new BufferedInputStream(new FileInputStream(inFile));
+			DcmParser origp = pFact.newDcmParser(origin);
+			FileFormat origff = origp.detectFileFormat();
+			Dataset origds = oFact.newDataset();
+			origp.setDcmHandler(origds.getDcmHandler());
+			origp.parseDcmFile(origff, Tags.PixelData);
+			origin.close();
+
+			//Get the dataset (excluding pixels) and leave the input stream open.
+			//This one needs to be left open so we can read the pixels and any
+			//data that comes afterward.
 			in = new BufferedInputStream(new FileInputStream(inFile));
 			DcmParser parser = pFact.newDcmParser(in);
 			FileFormat fileFormat = parser.detectFileFormat();
 			if (fileFormat == null) throw new IOException("Unrecognized file format: "+inFile);
-
-			//Get the dataset (excluding pixels) and leave the input stream open
 			Dataset dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
 
-			//Set up the replacements using the cmds properties and the dataset
-			Properties theReplacements = setUpReplacements(dataset, cmds, lkup, intTable);
+			//Encapsulate everything in a context
+			DICOMAnonymizerContext context = new DICOMAnonymizerContext(cmds, lkup, intTable, origds, dataset);
 
-			// get booleans to handle the global cases
-			boolean rpg = (cmds.getProperty("remove.privategroups") != null);
-			boolean rue = (cmds.getProperty("remove.unspecifiedelements") != null);
-			boolean rol = (cmds.getProperty("remove.overlays") != null);
-			boolean rc  = (cmds.getProperty("remove.curves") != null);
-			int[] keepGroups = getKeepGroups(cmds);
+			//There are two steps in anonymizing the dataset:
+			// 1. Insert any elements that are required by the script
+			//    but are missing from the dataset.
+			// 2. Walk the tree of the dataset and modify any elements
+			//    that have scripts or that match global modifiers.
 
-			//Modify the elements according to the commands
-			exceptions = doOverwrite(dataset, theReplacements, rpg, rue, rol, rc, keepGroups);
-			if (!exceptions.equals(""))
-				logger.error("DicomAnonymizer exceptions for "+inFile+"\n"+exceptions);
+			//Step 1: insert new elements
+			insertElements(context);
 
-			//Save the dataset.
-			//Write to a temporary file in the same directory, and rename at the end.
+			//Step 2: modify the remaining elements according to the commands
+			processElements(context);
+
+			//Write the dataset to a temporary file in the same directory
 			File tempDir = outFile.getParentFile();
 			tempFile = File.createTempFile("DCMtemp-", ".anon", tempDir);
             out = new BufferedOutputStream(new FileOutputStream(tempFile));
@@ -209,39 +223,40 @@ public class DICOMAnonymizer {
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && parser.getReadTag() != -1) {
-				dataset.writeHeader(
-					out,
-					encoding,
-					parser.getReadTag(),
-					parser.getReadVR(),
-					parser.getReadLength());
-				writeValueTo(parser, buffer, out, swap);
+			int tag;
+			while (!parser.hasSeenEOF() && ((tag=parser.getReadTag()) != -1)) {
+				int len = parser.getReadLength();
+				String script = context.getScriptFor(tag);
+				if ( ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()")) ) {
+					//skip this element
+					parser.setStreamPosition(parser.getStreamPosition() + len);
+				}
+				else {
+					//write this element
+					dataset.writeHeader(
+						out,
+						encoding,
+						tag,
+						len,
+						parser.getReadLength());
+					writeValueTo(parser, buffer, out, swap);
+				}
 				parser.parseHeader();
 			}
 			out.flush();
 			out.close();
 			in.close();
+
+			//Rename the temp file to the specified outFile.
 			if (renameToSOPIUID) outFile = new File(outFile.getParentFile(),sopiUID+".dcm");
 			outFile.delete();
 			tempFile.renameTo(outFile);
 		}
 
 		catch (Exception e) {
-			try {
-				//Close the input stream if it actually got opened.
-				if (in != null) in.close();
-			}
-			catch (Exception ignore) { logger.warn("Unable to close the input stream."); }
-			try {
-				//Close the output stream if it actually got opened,
-				//and delete the tempFile in case it is still there.
-				if (out != null) {
-					out.close();
-					tempFile.delete();
-				}
-			}
-			catch (Exception ignore) { logger.warn("Unable to close the output stream."); }
+			FileUtil.close(in);
+			FileUtil.close(out);
+			tempFile.delete();
 			//Now figure out what kind of response to return.
 			String msg = e.getMessage();
 			if (msg == null) {
@@ -313,88 +328,133 @@ public class DICOMAnonymizer {
 		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
-    /**
-     * Create a Properties object that contains all the replacement values defined
-     * by the scripts for each element. The value for an element is stored under
-     * the key "(gggg,eeee)".
-     * @param ds the DICOM dataset
-     * @param cmds the anonymization commands
-     * @param lkup the lookup table (or null if no lookup table is required)
-     * @return a Properties object containing all the replacement valules defined
-     * by the cmds scripts.
-     */
-    public static Properties setUpReplacements(
-			Dataset ds,
-			Properties cmds,
-			Properties lkup,
-			IntegerTable intTable) throws Exception {
-		Properties props = new Properties();
-		for (Enumeration it=cmds.keys(); it.hasMoreElements(); ) {
-			String key = (String) it.nextElement();
-			if (key.startsWith("set.")) {
-				try {
-					String replacement = makeReplacement(key, cmds, lkup, intTable, ds);
-					props.setProperty(getTagString(key), replacement);
+	//Insert any elements that are missing from the dataset but required by the script.
+	//Notes:
+	// 1. It is not possible to insert SQ elements.
+	// 2. It is not possible to insert elements in SQ elements.
+	private static void insertElements(DICOMAnonymizerContext context) throws Exception {
+		Dataset ds = context.outDS;
+		int vr = 0;
+		for (Integer intTag : context.scriptTable.keySet()) {
+			int tag = intTag.intValue();
+			if (!ds.contains(tag) && ((vr=getVR(tag)) != VRs.SQ)) {
+				String script = context.getScriptFor(tag);
+				String value = makeReplacement(script, context, tag);
+				if (value.equals("@keep()") || value.equals("@remove()")) {
+					//do nothing
 				}
-				catch (Exception e) {
-					String msg = e.getMessage();
-					if (msg == null) msg = "";
-					if (msg.indexOf("!skip!") != -1) throw e;
-					if (msg.indexOf("!quarantine!") != -1) throw e;
-					logger.error("Exception in setUpReplacements:",e);
-					throw new Exception(
-						"!error! during processing of:\n" + key + "=" + cmds.getProperty(key));
+				else if (value.startsWith("@blank(") || value.equals("@empty()")) {
+					try { context.putXX(tag, vr, ""); }
+					catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
+				}
+				else {
+					try { context.putXX(tag, vr, value); }
+					catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
 				}
 			}
 		}
-		return props;
 	}
 
-	//Get an int[] containing all the keep.groupXXXX
-	//elements' group numbers, sorted in order.
-	private static int[] getKeepGroups(Properties cmds) {
-		LinkedList<String> list = new LinkedList<String>();
-		for (Enumeration it=cmds.keys(); it.hasMoreElements(); ) {
-			String key = (String)it.nextElement();
-			if (key.startsWith("keep.group")) {
-				list.add(key.substring("keep.group".length()).trim());
+	//Walk the tree in the context dataset and modify the output dataset as required,
+	private static String processElements(DICOMAnonymizerContext context) throws Exception {
+		String exceptions = "";
+		String value;
+
+		//If the output dataset is null, don't do anything
+		Dataset ds = context.outDS;
+		if (ds == null) return "";
+
+		for (Iterator it=context.inDS.iterator(); it.hasNext(); ) {
+			DcmElement el = (DcmElement)it.next();
+			int tag = el.tag();
+
+			int group = tag & 0xFFFF0000;
+			boolean isOverlay = ((group & 0xFF000000) == 0x60000000);
+			boolean isCurve = ((group & 0xFF000000) == 0x50000000);
+			boolean isPrivate = ((tag & 0x10000) != 0);
+
+			String script = context.getScriptFor(tag);
+			boolean hasScript = (script != null);
+
+			boolean keep  = context.containsKeepGroup(group) ||
+							(tag == 0x00080016)   		|| 	//SopClassUID
+							(tag == 0x00080018)   		|| 	//SopInstanceUID
+							(tag == 0x0020000D)   		||	//StudyInstanceUID
+							(group == 0x00020000) 		||	//FMI group
+							(group == 0x00280000) 		||	//the image description
+							(group == 0x7FE00000) 		||	//the image
+							(isOverlay && !context.rol) ||	//overlays
+							(isCurve && !context.rc);		//curves
+
+			if (context.rpg && isPrivate && !hasScript && !keep) {
+				try { ds.remove(tag); }
+				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
+			}
+
+			else if (context.rue && !hasScript && !keep) {
+				try { ds.remove(tag); }
+				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
+			}
+
+			else if (context.rol && isOverlay) {
+				try { ds.remove(tag); }
+				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
+			}
+
+			else if (hasScript) {
+				//The element wasn't handled globally, process it now.
+				value = makeReplacement(script, context, tag);
+				value = (value != null) ? value.trim() : "";
+
+				if (value.equals("") || value.contains("@remove()")) {
+					try { ds.remove(tag); }
+					catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
+				}
+
+				else if (value.equals("@keep()")) ; //@keep() leaves the element in place
+
+				else if (value.startsWith("@blank(")) {
+					//@blank(n) inserts an element with n blank chars
+					String nString = value.substring("@blank(".length());
+					int paren = nString.indexOf(")");
+					int n = 0;
+					if (paren != -1) {
+						nString = "0" + nString.substring(0, paren).replaceAll("\\D","");
+						n = Integer.parseInt(nString);
+					}
+					if (n > blanks.length()) n = blanks.length();
+					try { context.putXX(tag, getVR(tag), blanks.substring(0,n)); }
+					catch (Exception e) {
+						String tagString = Tags.toString(tag);
+						logger.warn(tagString + " exception: " + e.toString()
+									+ "\nscript=" + script);
+						if (!exceptions.equals("")) exceptions += ", ";
+						exceptions += tagString;
+					}
+				}
+				else {
+					try {
+						if (value.equals("@empty()")) value = "";
+						context.putXX(tag, getVR(tag), value);
+					}
+					catch (Exception e) {
+						String tagString = Tags.toString(tag);
+						logger.warn(tagString + " exception:\n" + e.toString()
+									+ "\nscript=" + script
+									+ "\nvalue= \"" + value + "\"");
+						if (!exceptions.equals("")) exceptions += ", ";
+						exceptions += tagString;
+					}
+				}
 			}
 		}
-		Iterator iter = list.iterator();
-		int[] keepGroups = new int[list.size()];
-		for (int i=0; i<keepGroups.length; i++) {
-			try { keepGroups[i] = Integer.parseInt((String)iter.next(),16) << 16; }
-			catch (Exception ex) { keepGroups[i] = 0; }
-		}
-		Arrays.sort(keepGroups);
-		return keepGroups;
+		return exceptions;
 	}
 
-	//Find "[gggg,eeee]" in a String and
-	//return a tagString in the form "(gggg,eeee)".
-	static final String defaultTagString = "(0000,0000)";
-	private static String getTagString(String key) {
-		int k = key.indexOf("[");
-		if (k < 0) return defaultTagString;
-		int kk = key.indexOf("]",k);
-		if (kk < 0) return defaultTagString;
-		return ("(" + key.substring(k+1,kk) + ")").toLowerCase();
-	}
-
-	/**
-	 * Find "(gggg,eeee)" in a String and
-	 * return an int corresponding to the hex value.
-	 * @param key the string containing the DICOM group and element text.
-	 * @return the dcm4che tag corresponding to the key.
-	 */
-	public  static int getTagInt(String key) {
-		int k = key.indexOf("(");
-		if (k < 0) return 0;
-		int kk = key.indexOf(")",k);
-		if (kk < 0) return 0;
-		key = key.substring(k+1,kk).replaceAll("[^0-9a-fA-F]","");
-		try { return Integer.parseInt(key,16); }
-		catch (Exception e) { return 0; }
+	private static int getVR(int tag) {
+		TagDictionary.Entry entry = tagDictionary.lookup(tag);
+		try { return VRs.valueOf(entry.vr); }
+		catch (Exception ex) { return VRs.valueOf("SH"); }
 	}
 
 	static final char escapeChar 		= '\\';
@@ -409,6 +469,7 @@ public class DICOMAnonymizer {
 	static final String hashuidFn 		= "hashuid";
 	static final String hashptidFn 		= "hashptid";
 	static final String ifFn 			= "if";
+	static final String selectFn 		= "select";
 	static final String appendFn 		= "append";
 	static final String incrementdateFn = "incrementdate";
 	static final String modifydateFn	= "modifydate";
@@ -421,28 +482,12 @@ public class DICOMAnonymizer {
 	static final String roundFn 		= "round";
 	static final String skipFn	 		= "skip";
 	static final String timeFn 			= "time";
+	static final String processFn		= "process";
 
 
-	//Create the replacement for one element starting from a key.
-	private static String makeReplacement(
-			String key,
-			Properties cmds,
-			Properties lkup,
-			IntegerTable intTable,
-			Dataset ds)  throws Exception {
-		String cmd = cmds.getProperty(key);
-		int thisTag = getTagInt(getTagString(key));
-		return makeReplacement(cmd, cmds, lkup, intTable, ds,thisTag);
-	}
-
-	//Create the replacement for one element starting from a command.
-	private static String makeReplacement(
-			String cmd,
-			Properties cmds,
-			Properties lkup,
-			IntegerTable intTable,
-			Dataset ds,
-			int thisTag)  throws Exception {
+	//Create the replacement for one element.
+	public static String makeReplacement(String cmd, DICOMAnonymizerContext context, int thisTag) throws Exception {
+		if (cmd == null) return "";
 		String out = "";
 		char c;
 		int i = 0;
@@ -455,7 +500,7 @@ public class DICOMAnonymizer {
 			}
 			else if (c == escapeChar) escape = true;
 			else if (c == functionChar) {
-				FnCall fnCall = new FnCall(cmd.substring(i), cmds, lkup, intTable, ds,thisTag);
+				FnCall fnCall = new FnCall(cmd.substring(i), context, thisTag);
 				if (fnCall.length == -1) break;
 				i += fnCall.length;
 				if (fnCall.name.equals(contentsFn)) 		out += contents(fnCall);
@@ -467,6 +512,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(hashptidFn))	out += hashptid(fnCall);
 				else if (fnCall.name.equals(hashuidFn)) 	out += hashuid(fnCall);
 				else if (fnCall.name.equals(ifFn))			out += iffn(fnCall);
+				else if (fnCall.name.equals(selectFn))		out += selectfn(fnCall);
 				else if (fnCall.name.equals(appendFn))		out += appendfn(fnCall);
 				else if (fnCall.name.equals(incrementdateFn)) out += incrementdate(fnCall);
 				else if (fnCall.name.equals(modifydateFn))	out += modifydate(fnCall);
@@ -479,6 +525,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(roundFn))		out += round(fnCall);
 				else if (fnCall.name.equals(skipFn))		throw new Exception("!skip!");
 				else if (fnCall.name.equals(timeFn)) 		out += time(fnCall);
+				else if (fnCall.name.equals(processFn))		out += processfn(fnCall);
 				else out += functionChar + fnCall.getCall();
 			}
 			else out += c;
@@ -486,22 +533,59 @@ public class DICOMAnonymizer {
 		return out;
 	}
 
+	//Execute the process function call for an SQ element.
+	//This function loops through the items, calling processElements for each item dataset.
+	//To process an item dataset, it pushes the current context datasets and replaces them
+	//with the corresponding item's datasets. When it has completed processing all the items,
+	//it returns "@keep()" to force the processElements method to retain the SQ element in the
+	//output dataset.
+	private static String processfn(FnCall fn) throws Exception {
+		Dataset newInDS;
+		Dataset newOutDS;
+		int tag = fn.thisTag;
+		//Only do this for an SQ element
+		if ( getVR(tag) == VRs.SQ ) {
+			DICOMAnonymizerContext ctx = fn.context;
+			DcmElement inElement = ctx.inDS.get(tag);
+			DcmElement outElement = ctx.outDS.get(tag);
+
+			int item = 0;
+			while ( ((newInDS = inElement.getItem(item)) != null)
+						&& ((newOutDS = outElement.getItem(item)) != null) ) {
+				ctx.push(newInDS, newOutDS);
+				processElements(ctx);
+				ctx.pop();
+				item++;
+			}
+		}
+		return "@keep()";
+	}
+
 	//Execute the append function call
 	private static String appendfn(FnCall fn) throws Exception {
-		String value = makeReplacement(fn.trueCode, fn.cmds, fn.lkup, fn.intTable, fn.ds, fn.thisTag);
-		DcmElement el = fn.ds.get(fn.thisTag);
+		String value = makeReplacement(fn.trueCode, fn.context, fn.thisTag);
+		DcmElement el = fn.context.get(fn.thisTag);
 		if (el == null) return value;
-		SpecificCharacterSet cs = fn.ds.getSpecificCharacterSet();
+		SpecificCharacterSet cs = fn.context.getSpecificCharacterSet();
 		int vm = el.vm(cs);
 		if (vm == 0) return value;
-		return contents(fn.ds, fn.thisTag) + "\\" + value;
+		return fn.context.contents(fn.thisTag) + "\\" + value;
+	}
+
+	//Execute the select function call
+	private static String selectfn(FnCall fn) throws Exception {
+		if (fn.context.isRootDataset()) {
+			return makeReplacement(fn.trueCode, fn.context, fn.thisTag);
+		}
+		return makeReplacement(fn.falseCode, fn.context, fn.thisTag);
 	}
 
 	//Execute the if function call
 	private static String iffn(FnCall fn) throws Exception {
-		if (testCondition(fn))
-			return makeReplacement(fn.trueCode, fn.cmds, fn.lkup, fn.intTable, fn.ds, fn.thisTag);
-		return makeReplacement(fn.falseCode, fn.cmds, fn.lkup, fn.intTable, fn.ds, fn.thisTag);
+		if (testCondition(fn)) {
+			return makeReplacement(fn.trueCode, fn.context, fn.thisTag);
+		}
+		return makeReplacement(fn.falseCode, fn.context, fn.thisTag);
 	}
 
 	//Determine whether a condition in an if statement is met
@@ -509,7 +593,7 @@ public class DICOMAnonymizer {
 		if (fn.args.length < 2) return false;
 		String tagName = fn.getArg(0);
 		int tag = fn.getTag(tagName);
-		String element = contents(fn.ds, tagName, tag);
+		String element = fn.context.contents(tagName, tag);
 		if (fn.args[1].equals("isblank")) {
 			return (element == null) || element.trim().equals("");
 		}
@@ -526,7 +610,7 @@ public class DICOMAnonymizer {
 			return element.matches(getArg(fn, 2).trim());
 		}
 		else if (fn.args[1].equals("exists")) {
-			return fn.ds.contains(tag);
+			return fn.context.contains(tag);
 		}
 		return false;
 	}
@@ -534,7 +618,7 @@ public class DICOMAnonymizer {
 	private static String getArg(FnCall fn, int k) {
 		String arg = fn.getArg(k);
 		if (arg.startsWith("@")) {
-			String param = getParam(fn.cmds, arg);
+			String param = fn.context.getParam(arg);
 			if (param != null) return param;
 		}
 		return arg;
@@ -555,7 +639,7 @@ public class DICOMAnonymizer {
 	//   @contents(ElementName,"regex")
 	//   @contents(ElementName,"regex","replacement")
 	private static String contents(FnCall fn) {
-		String value = contents(fn.ds, fn.args[0], fn.thisTag);
+		String value = fn.context.contents(fn.args[0], fn.thisTag);
 		if (value == null) return null;
 		if (fn.args.length == 1) return value;
 		else if (fn.args.length == 2) return value.replaceAll(fn.getArg(1), "");
@@ -565,7 +649,7 @@ public class DICOMAnonymizer {
 
 	//Execute the truncate function call.
 	private static String truncate(FnCall fn) {
-		String value = contents(fn.ds, fn.args[0], fn.thisTag);
+		String value = fn.context.contents(fn.args[0], fn.thisTag);
 		if (value == null) return null;
 		if (fn.args.length == 1) return value;
 		else {
@@ -584,74 +668,19 @@ public class DICOMAnonymizer {
 		}
 	}
 
-	//Get the contents of a dataset element by tagName
-	private static String contents(Dataset ds, String tagName, int defaultTag) {
-		String value = "";
-		tagName = (tagName != null) ? tagName.trim() : "";
-		if (!tagName.equals("")) {
-			int tag = tagName.equals("this") ? defaultTag : Tags.forName(tagName);
-			try { value = contents(ds, tag); }
-			catch (Exception e) { value = null; };
-		}
-		if (value == null) value = "";
-		return value;
-	}
-
-	//Get the contents of a dataset element by tagName, returning null if it is missing
-	private static String contentsNull(Dataset ds, String tagName, int defaultTag) {
-		if (tagName == null) return null;
-		tagName = tagName.trim();
-		if (tagName.equals("")) return null;
-		String value = "";
-		int tag = tagName.equals("this") ? defaultTag : Tags.forName(tagName);
-		try { value = contents(ds, tag); }
-		catch (Exception e) { return null; };
-		return value;
-	}
-
-	//Get the contents of a dataset element by tag, handling
-	//CTP elements specially.
-	private static String contents(Dataset ds, int tag) throws Exception {
-		boolean ctp = false;
-		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
-			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
-			try { ctp = ds.getString(blk).equals("CTP"); }
-			catch (Exception notCTP) { ctp = false; }
-		}
-		DcmElement el = ds.get(tag);
-		if (el == null) throw new Exception(Tags.toString(tag) + " missing");
-
-		if (ctp) return new String(ds.getByteBuffer(tag).array());
-
-		SpecificCharacterSet cs = ds.getSpecificCharacterSet();
-		String[] s = el.getStrings(cs);
-		if (s.length == 1) return s[0];
-		if (s.length == 0) return "";
-		StringBuffer sb = new StringBuffer( s[0] );
-		for (int i=1; i<s.length; i++) {
-			sb.append( "\\" + s[i] );
-		}
-		return sb.toString();
-	}
-
-
 	//Execute the param function call
 	private static String param(FnCall fn) {
-		return getParam(fn.cmds,fn.args[0]);
+		return fn.context.getParam(fn.args[0]);
 	}
 
 	//Get the value of a parameter identified by a function call argument
 	private static String getParam(FnCall fn) {
-		return getParam(fn.cmds,fn.args[0]);
+		return fn.context.getParam(fn.args[0]);
 	}
 
 	//Get the value of a parameter from the script
-	private static String getParam(Properties cmds, String param) {
-		param = param.trim();
-		if (!param.equals("") && (param.charAt(0) == functionChar)) {
-			param = (String)cmds.getProperty("param." + param.substring(1));
-		}
-		return param;
+	private static String getParam(FnCall fn, String param) {
+		return fn.context.getParam(param);
 	}
 
 	//Execute the require function. This function checks whether the
@@ -659,7 +688,7 @@ public class DICOMAnonymizer {
 	//otherwise, it inserts an element with the specified value.
 	private static String require(FnCall fn) {
 		//Return a @keep() call if the element is present
-		if (fn.ds.contains(fn.thisTag)) return "@keep()";
+		if (fn.context.contains(fn.thisTag)) return "@keep()";
 
 		//The element was not present, return a value for a new element
 		//If there are no arguments, return an empty string.
@@ -669,9 +698,9 @@ public class DICOMAnonymizer {
 		//and see if it is in the dataset.
 		String value = null;
 		int tag = fn.getTag(fn.args[0]);
-		if (fn.ds.contains(tag)) {
+		if (fn.context.contains(tag)) {
 			//It is, get the value
-			try { value = fn.ds.getString(tag); }
+			try { value = fn.context.contents(tag); } //was getString!!!
 			catch (Exception e) { value = null; }
 		}
 		else {
@@ -696,8 +725,8 @@ public class DICOMAnonymizer {
 	//Values and replacements are trimmed before use.
 	private static String lookup(FnCall fn) throws Exception {
 		try {
-			String key = contents(fn.ds,fn.args[0],fn.thisTag);
-			String value = AnonymizerFunctions.lookup(fn.lkup, fn.args[1], key);
+			String key = fn.context.contents(fn.args[0],fn.thisTag);
+			String value = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key);
 			return value;
 		}
 		catch (Exception ex) {
@@ -720,14 +749,14 @@ public class DICOMAnonymizer {
 	//Values and replacements are trimmed before use.
 	private static String integer(FnCall fn) throws Exception {
 		try {
-			String text = contents(fn.ds, fn.args[0], fn.thisTag);
+			String text = fn.context.contents(fn.args[0], fn.thisTag);
 			String keyType = fn.args[1];
 			int width = 0;
 			if (fn.args.length > 2) {
 				try { width = Integer.parseInt(fn.args[2]); }
 				catch (Exception useDefault) { }
 			}
-			return AnonymizerFunctions.integer(fn.intTable, keyType, text, width);
+			return AnonymizerFunctions.integer(fn.context.intTable, keyType, text, width);
 		}
 		catch (Exception ex) {
 			throw new Exception("!quarantine! - "+ex.getMessage());
@@ -738,7 +767,7 @@ public class DICOMAnonymizer {
 	//to generate the initials of a patient from the contents of the
 	//PatientName element.
 	private static String initials(FnCall fn) {
-		String s = contents(fn.ds,fn.args[0],fn.thisTag);
+		String s = fn.context.contents(fn.args[0], fn.thisTag);
 		return AnonymizerFunctions.initials(s);
 	}
 
@@ -746,16 +775,16 @@ public class DICOMAnonymizer {
 	//to generate a numeric value from the contents of the PatientName element.
 	private static String hashname(FnCall fn) {
 		try {
-			String string = contents(fn.ds,fn.args[0],fn.thisTag);
+			String string = fn.context.contents(fn.args[0], fn.thisTag);
 
-			String lengthString = getParam(fn.cmds,fn.args[1]);
+			String lengthString = fn.context.getParam(fn.args[1]);
 			int length;
 			try { length = Integer.parseInt(lengthString); }
 			catch (Exception ex) { length = 4; }
 
 			int wordCount = Integer.MAX_VALUE;
 			if (fn.args.length > 2) {
-				String wordCountString = getParam(fn.cmds,fn.args[2]);
+				String wordCountString = fn.context.getParam(fn.args[2]);
 				try { wordCount = Integer.parseInt(wordCountString); }
 				catch (Exception keepDefault) { wordCount = Integer.MAX_VALUE; }
 			}
@@ -772,8 +801,8 @@ public class DICOMAnonymizer {
 	private static String round(FnCall fn) {
 		//arg must contain: AgeElementName, groupSize
 		try {
-			String ageString = contents(fn.ds,fn.args[0],fn.thisTag);
-			String sizeString = getParam(fn.cmds,fn.args[1]);
+			String ageString = fn.context.contents(fn.args[0], fn.thisTag);
+			String sizeString = fn.context.getParam(fn.args[1]);
 			int size = Integer.parseInt(sizeString);
 			return AnonymizerFunctions.round(ageString,size);
 		}
@@ -788,15 +817,15 @@ public class DICOMAnonymizer {
 		//args must contain: siteid, elementname, and optionally maxlen
 		try {
 			if (fn.args.length < 2) return fn.getArgs();
-			String siteid = getParam(fn.cmds,fn.args[0]);
-			String ptid = contents(fn.ds,fn.args[1],fn.thisTag);
+			String siteid = fn.context.getParam(fn.args[0]);
+			String ptid = fn.context.contents(fn.args[1], fn.thisTag);
 			if (ptid == null) ptid = "null";
 			String maxlenString = "";
-			if (fn.args.length >= 3) maxlenString = getParam(fn.cmds,fn.args[2]);
+			if (fn.args.length >= 3) maxlenString = fn.context.getParam(fn.args[2]);
 			int maxlen = Integer.MAX_VALUE;
 			try { maxlen = Integer.parseInt(maxlenString); }
 			catch (Exception ex) { maxlen = Integer.MAX_VALUE; }
-			return AnonymizerFunctions.hashPtID(siteid,ptid,maxlen);
+			return AnonymizerFunctions.hashPtID(siteid, ptid, maxlen);
 		}
 		catch (Exception e) {
 			logger.warn("Exception caught in hashptid"+fn.getArgs()+": "+e.getMessage());
@@ -810,11 +839,11 @@ public class DICOMAnonymizer {
 	private static String hash(FnCall fn) {
 		String remove = "@remove()";
 		try {
-			String value = contentsNull(fn.ds,fn.args[0],fn.thisTag);
+			String value = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (value == null) return remove;
 			int len = Integer.MAX_VALUE;
 			if (fn.args.length > 1) {
-				String lenString = getParam(fn.cmds,fn.args[1]);
+				String lenString = fn.context.getParam(fn.args[1]);
 				if (lenString.length() != 0) {
 					try { len = Integer.parseInt(lenString); }
 					catch (Exception ex) { len = Integer.MAX_VALUE; }
@@ -838,11 +867,11 @@ public class DICOMAnonymizer {
 		String emptyDate = "@empty()";
 		String removeDate = "@remove()";
 		try {
-			String date = contentsNull(fn.ds,fn.args[0],fn.thisTag);
+			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
-			String incString = getParam(fn.cmds,fn.args[1]);
+			String incString = fn.context.getParam(fn.args[1]);
 			long inc = Long.parseLong(incString);
-			return AnonymizerFunctions.incrementDate(date,inc);
+			return AnonymizerFunctions.incrementDate(date, inc);
 		}
 		catch (Exception e) {
 			logger.debug("Exception caught in incrementdate"+fn.getArgs()+": "+e.getMessage());
@@ -861,11 +890,11 @@ public class DICOMAnonymizer {
 		String removeDate = "@remove()";
 		String emptyDate = "@empty()";
 		try {
-			String date = contentsNull(fn.ds,fn.args[0],fn.thisTag);
+			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
-			int y = getReplacementValue(getParam(fn.cmds,fn.args[1]).trim());
-			int m = getReplacementValue(getParam(fn.cmds,fn.args[2]).trim());
-			int d = getReplacementValue(getParam(fn.cmds,fn.args[3]).trim());
+			int y = getReplacementValue(fn.context.getParam(fn.args[1]).trim());
+			int m = getReplacementValue(fn.context.getParam(fn.args[2]).trim());
+			int d = getReplacementValue(fn.context.getParam(fn.args[3]).trim());
 			return AnonymizerFunctions.modifyDate(date, y, m, d);
 		}
 		catch (Exception e) {
@@ -887,7 +916,7 @@ public class DICOMAnonymizer {
 		try {
 			if (fn.args.length != 2) return fn.getArgs();
 			String prefix = getParam(fn);
-			String uid = contentsNull(fn.ds,fn.args[1],fn.thisTag);
+			String uid = fn.context.contentsNull(fn.args[1], fn.thisTag);
 			//If there is no UID in the dataset, then return @remove().
 			if (uid == null) return removeUID;
 			//Make sure the prefix ends in a period
@@ -906,9 +935,9 @@ public class DICOMAnonymizer {
 	private static String encrypt(FnCall fn) {
 		if (fn.args.length < 2) return fn.getArgs();
 		try {
-			String value = contents(fn.ds,fn.args[0],fn.thisTag);
-			String key = getParam(fn.cmds,fn.args[1]);
-			return AnonymizerFunctions.encrypt(value,key);
+			String value = fn.context.contents(fn.args[0], fn.thisTag);
+			String key = fn.context.getParam(fn.args[1]);
+			return AnonymizerFunctions.encrypt(value, key);
 		}
 		catch (Exception e) {
 			logger.warn("Exception caught in encipher"+fn.getArgs()+": "+e.getMessage());
@@ -916,154 +945,13 @@ public class DICOMAnonymizer {
 		}
 	}
 
-	private static String time(FnCall fnCall) {
-		return AnonymizerFunctions.time(fnCall.getArg(0));
+	private static String time(FnCall fn) {
+		return AnonymizerFunctions.time(fn.getArg(0));
 	}
 
-	private static String date(FnCall fnCall) {
-		return AnonymizerFunctions.date(fnCall.getArg(0));
+	private static String date(FnCall fn) {
+		return AnonymizerFunctions.date(fn.getArg(0));
 	}
 
 //********************** End of function calls ***************************
-
-	//Remove and modify elements in the dataset.
-	private static String doOverwrite(
-			Dataset ds,
-			Properties theReplacements,
-				// These global flags deal with groups of elements.
-				// If anything appears in theReplacements for an element,
-				// it overrides the action of the global flags.
-				// A global keep flag overrides a global remove flag.
-			boolean rpg,	//remove private groups
-			boolean rue,	//remove unspecified elements
-			boolean rol,	//remove overlay groups
-			boolean rc,		//remove curve groups
-			int[] keepGroups
-			) throws Exception {
-		String exceptions = "";
-		String name;
-		String value;
-
-		//If we are removing anything globally, then go through the dataset
-		//and look at each element individually.
-		if (rpg || rue || rol) {
-			//Make a list of the elements to remove
-			LinkedList<Integer> list = new LinkedList<Integer>();
-			for (Iterator it=ds.iterator(); it.hasNext(); ) {
-				DcmElement el = (DcmElement)it.next();
-				int tag = el.tag();
-				int group = tag & 0xFFFF0000;
-				boolean overlay = ((group & 0xFF000000) == 0x60000000);
-				boolean curve = ((group & 0xFF000000) == 0x50000000);
-				if (rpg && ((tag & 0x10000) != 0)) {
-					if (theReplacements.getProperty(Tags.toString(tag).toLowerCase()) == null) {
-						if (Arrays.binarySearch(keepGroups,group) < 0) {
-							list.add(new Integer(tag));
-						}
-					}
-				}
-				if (rue) {
-					if (theReplacements.getProperty(Tags.toString(tag).toLowerCase()) == null) {
-						boolean keep  = (Arrays.binarySearch(keepGroups,group) >= 0) ||
-									    (tag == 0x00080016)   || 	//SopClassUID
-										(tag == 0x00080018)   || 	//SopInstanceUID
-										(tag == 0x0020000D)   ||	//StudyInstanceUID
-										(group == 0x00020000) ||	//FMI group
-										(group == 0x00280000) ||	//the image description
-										(group == 0x7FE00000) ||	//the image
-										(overlay && !rol)     ||	//overlays
-										(curve && !rc);				//curves
-						if (!keep) list.add(new Integer(tag));
-					}
-				}
-				if (rol && overlay) list.add(new Integer(tag));
-			}
-			//Okay, now remove them
-			Iterator it = list.iterator();
-			while (it.hasNext()) {
-				Integer tagInteger = (Integer)it.next();
-				int tag = tagInteger.intValue();
-				try { ds.remove(tag); }
-				catch (Exception ignore) {
-					logger.debug("Unable to remove "+tag+" from dataset.");
-				}
-			}
-		}
-
-		//Now go through theReplacements and handle the instructions there
-		for (Enumeration it = theReplacements.keys(); it.hasMoreElements(); ) {
-			String key = (String) it.nextElement();
-			int tag = getTagInt(key);
-			value = (String)theReplacements.getProperty(key);
-			value = (value != null) ? value.trim() : "";
-			if (value.equals("") || value.contains("@remove()")) {
-				try { ds.remove(tag); }
-				catch (Exception ignore) {
-					logger.debug("Unable to remove "+tag+" from dataset.");
-				}
-			}
-			else if (value.equals("@keep()")) ; //@keep() leaves the element in place
-			else if (value.startsWith("@blank(")) {
-				//@blank(n) inserts an element with n blank chars
-				String blanks = "                                                       ";
-				String nString = value.substring("@blank(".length());
-				int paren = nString.indexOf(")");
-				int n = 0;
-				if (paren != -1) {
-					nString = "0" + nString.substring(0,paren).replaceAll("\\D","");
-					n = Integer.parseInt(nString);
-				}
-				if (n > blanks.length()) n = blanks.length();
-				try { putXX(ds,tag,getVR(tag),blanks.substring(0,n)); }
-				catch (Exception e) {
-					logger.warn(key + " exception: " + e.toString());
-					if (!exceptions.equals("")) exceptions += ", ";
-					exceptions += key;
-				}
-			}
-			else {
-				try {
-					if (value.equals("@empty()")) value = "";
-					putXX(ds,tag,getVR(tag),value);
-				}
-				catch (Exception e) {
-					logger.warn(key + " exception:\n" + e.toString()
-								+ "\ntag=" + Integer.toHexString(tag)
-								+ ": value= \"" + value + "\"");
-					if (!exceptions.equals("")) exceptions += ", ";
-					exceptions += key;
-				}
-			}
-		}
-		return exceptions;
-	}
-
-	private static int getVR(int tag) {
-		TagDictionary.Entry entry = tagDictionary.lookup(tag);
-		try { return VRs.valueOf(entry.vr); }
-		catch (Exception ex) { return VRs.valueOf("SH"); }
-	}
-
-	//This method works around the bug in dcm4che which inserts the wrong
-	//VR (SH) when storing an empty element of VR = PN. It also handles the
-	//problem in older dcm4che versions which threw an exception when an
-	//empty DA element was created. It also forces the VR of private
-	//elements to UN unless they are in the private creator block, in which
-	//case they are LO. And finally, it handles multi-valued elements.
-	private static void putXX(Dataset ds, int tag, int vr, String value) throws Exception {
-		if ((value == null) || value.equals("")) {
-			if (vr == VRs.PN) ds.putXX(tag,vr," ");
-			else ds.putXX(tag,vr);
-		}
-		else if ((tag & 0x10000) != 0) {
-			if ((tag & 0xffff) < 0x100) ds.putLO(tag,value);
-			else ds.putUN(tag,value.getBytes("UTF-8"));
-		}
-		else {
-			//Do this in such a way that we handle multivalued elements.
-			String[] s = value.split("\\\\");
-			ds.putXX(tag,vr,s);
-		}
-	}
-
 }

@@ -29,6 +29,7 @@ import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizer;
+import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizerContext;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.JdbmUtil;
@@ -118,6 +119,7 @@ public class IDMap extends AbstractPipelineStage implements Processor {
 	 * @return the same FileObject if the result is true; otherwise null.
 	 */
 	public FileObject process(FileObject fileObject) {
+		String cmd;
 
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
@@ -136,24 +138,41 @@ public class IDMap extends AbstractPipelineStage implements Processor {
 					DAScript daScript = DAScript.getInstance(dcmScript);
 					Properties cmds = daScript.toProperties();
 					Properties lkup = LookupTable.getProperties(dcmLUT);
-					Properties replacements =
-						DICOMAnonymizer.setUpReplacements(dob.getDataset(), cmds, lkup, dcmIntTab);
+					DICOMAnonymizerContext context =
+								new DICOMAnonymizerContext(cmds, lkup, dcmIntTab, dob.getDataset(), null);
 
+					int sopiUIDtag		= 0x00080018;
 					String sopiUID		= dob.getSOPInstanceUID();
-					String sopiUIDrepl	= replacements.getProperty("(0008,0018)");
+					String sopiUIDscript= context.getScriptFor(sopiUIDtag);
+					String sopiUIDrepl	= DICOMAnonymizer.makeReplacement(sopiUIDscript, context, sopiUIDtag);
+
+					int siUIDtag		= 0x0020000d;
 					String siUID		= dob.getStudyInstanceUID();
-					String siUIDrepl	= replacements.getProperty("(0020,000d)");
+					String siUIDscript	= context.getScriptFor(siUIDtag);
+					String siUIDrepl	= DICOMAnonymizer.makeReplacement(siUIDscript, context, siUIDtag);
+
+					int ptIDtag			= 0x00100020;
 					String ptID			= dob.getPatientID();
-					String ptIDrepl		= replacements.getProperty("(0010,0020)");
+					String ptIDscript	= context.getScriptFor(ptIDtag);
+					String ptIDrepl		= DICOMAnonymizer.makeReplacement(ptIDscript, context, ptIDtag);
+
+					int seriesUIDtag	= 0x0020000e;
+					String seriesUID	= dob.getSeriesInstanceUID();
+					String seriesUIDscript= context.getScriptFor(seriesUIDtag);
+					String seriesUIDrepl= DICOMAnonymizer.makeReplacement(seriesUIDscript, context, seriesUIDtag);
+
+					int accNumbertag	= 0x0080050;
+					String accNumber	= dob.getAccessionNumber();
+					String accNumberscript= context.getScriptFor(accNumbertag);
+					String accNumberrepl= DICOMAnonymizer.makeReplacement(accNumberscript, context, accNumbertag);
 
 					index(sopiUID, sopiUIDrepl, uidIndex, uidInverseIndex);
 					index(siUID, siUIDrepl, uidIndex, uidInverseIndex);
-
 					index(ptID, ptIDrepl, ptIDIndex, ptIDInverseIndex);
-					index(dob.getSeriesInstanceUID(), replacements.getProperty("(0020,000e)"), uidIndex, uidInverseIndex);
-					index(dob.getAccessionNumber(), replacements.getProperty("(0008,0050)"), anIndex, anInverseIndex);
+					index(seriesUID, seriesUIDrepl, uidIndex, uidInverseIndex);
+					index(accNumber, accNumberrepl, anIndex, anInverseIndex);
 
-					//Now commit everthing
+					//Now commit everything
 					recman.commit();
 				}
 			}

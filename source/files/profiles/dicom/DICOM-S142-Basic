@@ -47,7 +47,7 @@
  <e en="T" t="00081111" n="RefPPSSeq">@remove()</e>
  <e en="T" t="00081120" n="RefPatientSeq">@remove()</e>
  <e en="T" t="00081140" n="RefImageSeq">@remove()</e>
- <e en="T" t="00081155" n="RefSOPInstanceUID">@hashuid(@UIDROOT,this)</e>
+ <e en="T" t="00081155" n="RefSOPInstanceUID">@keep()</e>
  <e en="T" t="00081195" n="TransactionUID">@hashuid(@UIDROOT,this)</e>
  <e en="T" t="00082111" n="DerivationDescription">@remove()</e>
  <e en="T" t="00082112" n="SourceImageSeq">@remove()</e>

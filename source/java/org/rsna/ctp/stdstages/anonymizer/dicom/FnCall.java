@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
-*
-*  This source software is released under the terms of the
-*  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
-*----------------------------------------------------------------*/
+ *  Copyright 2005 by the Radiological Society of North America
+ *
+ *  This source software is released under the terms of the
+ *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
+ *----------------------------------------------------------------*/
 
 package org.rsna.ctp.stdstages.anonymizer.dicom;
 
@@ -22,18 +22,10 @@ public class FnCall {
 	static final char escapeChar = '\\';
 	static final String ifFn	 = "if";
 	static final String appendFn = "append";
+	static final String selectFn = "select";
 
-	/** the script. */
-	public Properties cmds;
-
-	/** the local lookup table. */
-	public Properties lkup;
-
-	/** the IntegerTable. */
-	public IntegerTable intTable;
-
-	/** the DICOM object dataset. */
-	public Dataset ds;
+	/** the context. */
+	public DICOMAnonymizerContext context;
 
 	/** the function name. */
 	public String name = "";
@@ -56,15 +48,10 @@ public class FnCall {
    /**
 	 * Constructor; decodes one function call.
 	 * @param call the script of the function call.
-	 * @param cmds the complete set of scripts.
-	 * @param lkup the local lookup table.
-	 * @param ds the DICOM object dataset.
+	 * @param context the context of the call.
 	 */
-	public FnCall(String call, Properties cmds, Properties lkup, IntegerTable intTable, Dataset ds, int thisTag) {
-		this.cmds = cmds;
-		this.lkup = lkup;
-		this.intTable = intTable;
-		this.ds = ds;
+	public FnCall(String call, DICOMAnonymizerContext context, int thisTag) {
+		this.context = context;
 		this.thisTag = thisTag;
 
 		//find the function name
@@ -88,8 +75,8 @@ public class FnCall {
 		arglist.toArray(args);
 		length = kk + 1;
 
-		//if this is an ifFn call, get the conditional code
-		if (name.equals(ifFn)) {
+		//if this is an ifFn or selectFn call, get the conditional code
+		if (name.equals(ifFn) || name.equals(selectFn)) {
 			//get the true code
 			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
 				 ((kk = getDelimiter(call,k+1,"}"))  == -1) ) {

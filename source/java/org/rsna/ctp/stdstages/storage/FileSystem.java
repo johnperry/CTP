@@ -332,8 +332,8 @@ public class FileSystem {
 	private void setProtections(File d) {
 		/* disable this to make it build on Java 1.5
 		while ((d != null) && d.isDirectory() && !d.equals(dir)) {
-			if (setReadable) d.setReadable(true,false); //Java 1.6
-			if (setWritable) d.setWritable(true,false); //Java 1.6
+			if (setReadable) d.setReadable(true, false); //Java 1.6
+			if (setWritable) d.setWritable(true, false); //Java 1.6
 			d = d.getParentFile();
 		}
 		*/

@@ -13,7 +13,7 @@
 	<property name="products" value="${basedir}/products"/>
 	<property name="documentation" value="${basedir}/documentation"/>
 	<property name="title" value="CTP"/>
-	<property name="copyright" value="Copyright 2010 Radiological Society of North America"/>
+	<property name="copyright" value="Copyright 2011 Radiological Society of North America"/>
 
 	<path id="classpath">
 		<pathelement location="${libraries}/util.jar"/>
