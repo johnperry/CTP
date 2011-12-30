@@ -83,7 +83,7 @@
  <e en="F" t="00081145" n="RefCurveSeq"></e>
  <e en="F" t="0008114a" n="RefInstanceSeq"></e>
  <e en="T" t="00081150" n="RefSOPClassUID">@hashuid(@UIDROOT,this)</e>
- <e en="T" t="00081155" n="RefSOPInstanceUID">@hashuid(@UIDROOT,this)</e>
+ <e en="T" t="00081155" n="RefSOPInstanceUID">@keep()</e>
  <e en="F" t="0008115a" n="SOPClassesSupported"></e>
  <e en="F" t="00081160" n="RefFrameNumber"></e>
  <e en="T" t="00081195" n="TransactionUID">@hashuid(@UIDROOT,this)</e>
