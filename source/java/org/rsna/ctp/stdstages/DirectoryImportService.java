@@ -92,16 +92,29 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 					//Unfortunately, we have to parse the object again
 					//in order to be able to save it once we modify it.
 					DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
-					dob.setElementValue(fsNameTag, fsName);
 					File dobFile = dob.getFile();
+
+					//Modify the specified element.
+					//If the fsName is "@filename", use the name of the file;
+					//otherwise, use the value of the fsName attribute.
+					if (fsName.equals("@filename")) {
+						String name = dobFile.getName();
+						name = name.substring(0, name.length()-4).trim();
+						dob.setElementValue(fsNameTag, name);
+					}
+					else dob.setElementValue(fsNameTag, fsName);
+
+					//Save the modified object
 					File tFile = File.createTempFile("TMP-",".dcm",dobFile.getParentFile());
 					dob.saveAs(tFile, false);
 					dob.close();
 					dob.getFile().delete();
+
 					//Okay, we have saved the modified file in the temp file
 					//and deleted the original file; now rename the temp file
 					//to the original name so nobody is the wiser.
 					tFile.renameTo(dobFile);
+
 					//And finally parse it again so we have a real object to process;
 					return new DicomObject(dobFile);
 				}
