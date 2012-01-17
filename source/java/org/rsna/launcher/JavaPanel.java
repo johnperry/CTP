@@ -129,8 +129,10 @@ public class JavaPanel extends BasePanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent event) {
 		if (event.getSource().equals(launchBrowser)) {
+			Configuration config = Configuration.getInstance();
 			String ip = Util.getIPAddress();
-			String url = "http://" + ip + ":" + Configuration.getInstance().port;
+			String protocol = "http" + (config.ssl ? "s" : "");
+			String url = protocol + "://" + ip + ":" + config.port;
 			Util.openURL( url );
 		}
 		else if (event.getSource().equals(stop)) {

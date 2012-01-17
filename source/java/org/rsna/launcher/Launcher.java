@@ -91,15 +91,23 @@ public class Launcher extends JFrame implements ChangeListener {
 	}
 
 	private void positionFrame() {
-		setSize( 500, 600 );
 		Properties props = Configuration.getInstance().props;
 		int x = Util.getInt( props.getProperty("x"), 0 );
 		int y = Util.getInt( props.getProperty("y"), 0 );
+		int w = Util.getInt( props.getProperty("w"), 0 );
+		int h = Util.getInt( props.getProperty("h"), 0 );
+		int wmin = 500;
+		int hmin = 600;
+		if ((w < wmin) || (h < hmin)) {
+			w = wmin;
+			h = hmin;
+		}
+		setSize( w, h );
 		if ((x == 0) && (y == 0)) {
 			Toolkit t = getToolkit();
 			Dimension scr = t.getScreenSize ();
-			x = (scr.width - getSize().width)/2;
-			y = (scr.height - getSize().height)/2;
+			x = (scr.width - w)/2;
+			y = (scr.height - h)/2;
 		}
 		setLocation( new Point(x,y) );
 	}
@@ -149,6 +157,12 @@ public class Launcher extends JFrame implements ChangeListener {
 			Point p = parent.getLocation();
 			props.setProperty("x", Integer.toString(p.x));
 			props.setProperty("y", Integer.toString(p.y));
+
+			Toolkit t = getToolkit();
+			Dimension d = parent.getSize ();
+			props.setProperty("w", Integer.toString(d.width));
+			props.setProperty("h", Integer.toString(d.height));
+
 			javaPanel.save();
 		}
     }

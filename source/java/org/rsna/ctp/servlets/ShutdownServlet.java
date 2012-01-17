@@ -48,6 +48,10 @@ public class ShutdownServlet extends Servlet {
 		String serviceCommand = req.getHeader("servicemanager");
 		boolean serviceManager = (serviceCommand != null);
 
+		logger.warn(req.toString());
+		logger.warn("isFromLocalHost = "+req.isFromLocalHost());
+		logger.warn("serviceManager = "+serviceManager);
+
 		if ((serviceManager && req.isFromLocalHost()) ||
 			((user != null) && (req.userHasRole("shutdown") || req.isFromLocalHost())) ) {
 
@@ -57,6 +61,8 @@ public class ShutdownServlet extends Servlet {
 			res.write("Shutdown request received from "+username+" at "+ra+".<br>");
 
 			boolean clean = shutdown();
+
+			logger.warn("clean = "+clean);
 
 			res.write("Goodbye.");
 			res.send();

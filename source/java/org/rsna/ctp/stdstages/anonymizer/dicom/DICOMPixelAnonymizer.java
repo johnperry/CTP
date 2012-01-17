@@ -70,6 +70,10 @@ public class DICOMPixelAnonymizer {
 			File inFile,
 			File outFile,
 			Regions regions) {
+
+		long fileLength = inFile.length();
+		logger.debug("File length = "+fileLength);
+
 		BufferedInputStream in = null;
 		FileOutputStream out = null;
 		File tempFile = null;
@@ -87,7 +91,9 @@ public class DICOMPixelAnonymizer {
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
 
 			//Make sure this is an image
-            if (parser.getReadTag() != Tags.PixelData) return AnonymizerStatus.SKIP(inFile, "Not an image");
+            if (parser.getReadTag() != Tags.PixelData) {
+				return AnonymizerStatus.SKIP(inFile, "Not an image");
+			}
 
 			//Get the required parameters and make sure they are okay
 			int numberOfFrames = getInt(dataset, Tags.NumberOfFrames, 1);
@@ -114,7 +120,9 @@ public class DICOMPixelAnonymizer {
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
 
 /**/		//While in development, abort on encapsulated pixel data
-/**/		if (encoding.encapsulated) return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
+/**/		if (encoding.encapsulated) {
+				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
+			}
 
 			//Save the dataset to a temporary file, and rename at the end.
 			File tempDir = outFile.getParentFile();
@@ -170,13 +178,14 @@ public class DICOMPixelAnonymizer {
 								  numberOfFrames, samplesPerPixel, planarConfiguration,
 								  rows, columns, bitsAllocated,
 								  regions);
+					logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
                 }
-				parser.parseHeader(); //get ready for the next element
+				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
 			}
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && parser.getReadTag() != -1) {
+			while (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength) && parser.getReadTag() != -1) {
 				dataset.writeHeader(
 					out,
 					encoding,
@@ -195,6 +204,8 @@ public class DICOMPixelAnonymizer {
 		}
 
 		catch (Exception e) {
+			logger.debug("Exception while processing image.",e);
+
 			//Close the input stream if it actually got opened.
 			close(in);
 
@@ -240,6 +251,8 @@ public class DICOMPixelAnonymizer {
 							Regions regions) throws Exception {
 
 		int len = parser.getReadLength();
+		logger.debug("Read length = "+len);
+
 		int bytesPerPixel = bitsAllocated/8;
 
 		if (planarConfiguration == 0) {
