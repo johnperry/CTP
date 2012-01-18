@@ -66,6 +66,10 @@ public class DICOMDecompressor {
      * @return the static status result
      */
     public static AnonymizerStatus decompress(File inFile, File outFile) {
+
+		long fileLength = inFile.length();
+		logger.debug("File length      = "+fileLength);
+
 		BufferedInputStream in = null;
 		BufferedOutputStream out = null;
 		File tempFile = null;
@@ -89,6 +93,7 @@ public class DICOMDecompressor {
 			int numberOfFrames = getInt(dataset, Tags.NumberOfFrames, 1);
 			int rows = getInt(dataset, Tags.Rows, 0);
 			int columns = getInt(dataset, Tags.Columns, 0);
+			int samplesPerPixel = getInt(dataset, Tags.SamplesPerPixel, 1);
 			int bitsAllocated = getInt(dataset, Tags.BitsAllocated, 16);
 			if ((rows == 0) || (columns == 0)) {
 				close(in);
@@ -122,24 +127,41 @@ public class DICOMDecompressor {
 
 			//Process the pixels
             if (parser.getReadTag() == Tags.PixelData) {
+
+                //Get the number of bytes for all the pixels to be written
+                int bytesPerSample = bitsAllocated / 8;
+                int nPixelBytes = numberOfFrames * rows * columns * samplesPerPixel * bytesPerSample;
+                int pixelBytesLength = nPixelBytes + (nPixelBytes & 1);
+                logger.debug("numberOfFrames   = "+numberOfFrames);
+                logger.debug("rows             = "+rows);
+                logger.debug("columns          = "+columns);
+                logger.debug("samplesPerPixel  = "+samplesPerPixel);
+                logger.debug("bytesPerSample   = "+bytesPerSample);
+                logger.debug("nPixelBytes      = "+nPixelBytes);
+                logger.debug("pixelBytesLength = "+pixelBytesLength);
+
+                //Write the element header
                 dataset.writeHeader(
                     out,
                     encoding,
                     parser.getReadTag(),
                     VRs.OW,
-                    numberOfFrames * rows * columns * ((bitsAllocated + 7)/8));
+                    pixelBytesLength);
 
                 //Now put in the decompressed frames
 				FileImageInputStream fiis = new FileImageInputStream(inFile);
 				ImageReader reader = (ImageReader)ImageIO.getImageReadersByFormatName("DICOM").next();
 				reader.setInput(fiis);
 				for (int i=0; i<numberOfFrames; i++) {
+					logger.debug("Decompressing frame "+i);
 					BufferedImage bi = reader.read(i);
 					WritableRaster wr = bi.getRaster();
 					DataBuffer b = wr.getDataBuffer();
 					if (b.getDataType() == DataBuffer.TYPE_USHORT) {
+						logger.debug("  Datatype: DataBuffer.TYPE_USHORT");
 						DataBufferUShort bus = (DataBufferUShort)b;
 						short[] data = bus.getData();
+						logger.debug("    Buffer length = "+data.length);
 						for (int k=0; k<data.length; k++) {
 							int p = data[k] & 0xffff;
 							out.write(p & 0xff);
@@ -147,8 +169,10 @@ public class DICOMDecompressor {
 						}
 					}
 					else if (b.getDataType() == DataBuffer.TYPE_SHORT) {
+						logger.debug("    Datatype: DataBuffer.TYPE_SHORT");
 						DataBufferShort bs = (DataBufferShort)b;
 						short[] data = bs.getData();
+						logger.debug("    Buffer length = "+data.length);
 						for (int k=0; k<data.length; k++) {
 							int p = data[k] & 0xffff;
 							out.write(p & 0xff);
@@ -156,15 +180,24 @@ public class DICOMDecompressor {
 						}
 					}
 					else if (b.getDataType() == DataBuffer.TYPE_BYTE) {
+						logger.debug("    Datatype: DataBuffer.TYPE_BYTE");
 						DataBufferByte bb = (DataBufferByte)b;
 						byte[] data = bb.getData();
+						logger.debug("    Buffer length = "+data.length);
 						out.write(data);
 					}
 					else {
 						logger.warn("Unsupported DataBuffer type ("+b.getDataType()+") in "+inFile);
 						throw new Exception("Unsupported DataBuffer type: "+b.getDataType());
 					}
+					logger.debug("    Done decompressing frame "+i);
 				}
+				//Pad the pixels if necessary
+				if ((nPixelBytes & 1) != 0) {
+					logger.debug("Adding pixel data pad");
+					out.write(0);
+				}
+
 				fiis.close();
 				reader.dispose();
 
@@ -185,12 +218,12 @@ public class DICOMDecompressor {
                     }
                 }
                 else skip(parser);
-				parser.parseHeader(); //get ready for the next element
+				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
 			}
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && parser.getReadTag() != -1) {
+			while (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength) && parser.getReadTag() != -1) {
 				dataset.writeHeader(
 					out,
 					encoding,
@@ -209,6 +242,8 @@ public class DICOMDecompressor {
 		}
 
 		catch (Exception e) {
+			logger.debug("Exception while processing image.",e);
+
 			//Close the input stream if it actually got opened.
 			close(in);
 
