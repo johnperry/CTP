@@ -72,7 +72,7 @@ public class DICOMPixelAnonymizer {
 			Regions regions) {
 
 		long fileLength = inFile.length();
-		logger.debug("File length = "+fileLength);
+		logger.debug("File length       = "+fileLength);
 
 		BufferedInputStream in = null;
 		FileOutputStream out = null;
@@ -251,7 +251,7 @@ public class DICOMPixelAnonymizer {
 							Regions regions) throws Exception {
 
 		int len = parser.getReadLength();
-		logger.debug("Read length = "+len);
+		logger.debug("Read length       = "+len);
 
 		int bytesPerPixel = bitsAllocated/8;
 
@@ -281,6 +281,15 @@ public class DICOMPixelAnonymizer {
 				out.write(buffer, 0, bytesPerRow);
 			}
 		}
+		//Add a byte to the end if we have written an odd number of bytes
+		long nbytes = numberOfFrames * rows * bytesPerRow;
+		logger.debug("numberOfFrames    = "+numberOfFrames);
+		logger.debug("rows              = "+rows);
+		logger.debug("columns           = "+columns);
+		logger.debug("bytesPerPixel     = "+bytesPerPixel);
+		logger.debug("Total image bytes = "+nbytes);
+		if ((nbytes & 1) != 0) out.write(0);
+
 		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
