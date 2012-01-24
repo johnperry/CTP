@@ -94,13 +94,19 @@ public class DicomStorageSCU {
 
 	/**
 	 * Class constructor; creates a DICOM sender.
-	 * @param url the URL in the form "dicom://calledAET:callingAET@host:port".
+	 * @param url the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
+	 * @param forceClose true to force the closure of the association after sending an object; false to leave
+	 * the association open after a transmission.
+	 * @param calledAETTag the tag in the DicomObject from which to get the calledAET, or 0 if
+	 * the calledAET in the URL is to be used for all transmissions
+	 * @param callingAETTag the tag in the DicomObject from which to get the callingAET, or 0 if
+	 * the callingAET in the URL is to be used for all transmissions
 	 */
 	public DicomStorageSCU(String url, boolean forceClose, int calledAETTag, int callingAETTag) {
 		this.url = new DcmURL(url);
 		this.forceClose = forceClose;
 		this.calledAETTag = calledAETTag;
-		this.callingAETTag = calledAETTag;
+		this.callingAETTag = callingAETTag;
         buffer = new byte[bufferSize];
         initAssocParam(this.url);
 	}
@@ -119,7 +125,33 @@ public class DicomStorageSCU {
 	}
 
 	/**
+	 * Send one file to the URL specified in the constructor.
+	 * This method parses the file as a DicomObject and calls
+	 * the send(DicomObject) method.
+	 * @param file the file to parse and send
+	 * @return the Status from the send(DicomObject) method,
+	 * or Status.FAIL if the file does not parse as a DicomObject.
+	 */
+	public Status send(File file) {
+		DicomObject dob = null;
+		try {
+			dob = new DicomObject(file, true);
+			Status status = send(dob);
+			dob.close();
+			return status;
+		}
+		catch (Exception ex) {
+			logger.warn("Unable to parse file as DicomObject: "+file);
+			return Status.FAIL;
+		}
+	}
+
+	/**
 	 * Send one DicomObject to the URL specified in the constructor.
+	 * NOTE: the DicomObject must be instantiated with the file left
+	 * open so the sender can get at the whole dataset. Thus, the object
+	 * should be opened with the full constructor:
+	 *<br><br><tt>dicomObject = new DicomObject(fileToExport, true);</tt>
 	 */
 	public Status send(DicomObject dicomObject) {
 		DcmParser parser = dicomObject.getDcmParser();

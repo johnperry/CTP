@@ -311,7 +311,10 @@ public class DicomStorageSCP extends DcmServiceBase {
 		}
 
 		private File setAET() {
-			if ((calledAETTag == 0) && (callingAETTag == 0)) return file;
+			if ((calledAETTag == 0)
+					&& (callingAETTag == 0)
+						&& (connectionIPTag == 0)
+							&& (timeTag == 0)) return file;
 			DicomObject dob = null;
 			try {
 				dob = new DicomObject(file, true);

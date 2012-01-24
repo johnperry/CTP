@@ -461,6 +461,7 @@ public class DICOMAnonymizer {
 	static final char functionChar 		= '@';
 	static final char delimiterChar 	= '^';
 	static final String contentsFn 		= "contents";
+	static final String valueFn 		= "value";
 	static final String truncateFn 		= "truncate";
 	static final String dateFn 			= "date";
 	static final String encryptFn 		= "encrypt";
@@ -504,6 +505,7 @@ public class DICOMAnonymizer {
 				if (fnCall.length == -1) break;
 				i += fnCall.length;
 				if (fnCall.name.equals(contentsFn)) 		out += contents(fnCall);
+				else if (fnCall.name.equals(valueFn))		out += value(fnCall);
 				else if (fnCall.name.equals(truncateFn))	out += truncate(fnCall);
 				else if (fnCall.name.equals(dateFn)) 		out += date(fnCall);
 				else if (fnCall.name.equals(encryptFn))		out += encrypt(fnCall);
@@ -645,6 +647,16 @@ public class DICOMAnonymizer {
 		else if (fn.args.length == 2) return value.replaceAll(fn.getArg(1), "");
 		else if (fn.args.length == 3) return value.replaceAll(fn.getArg(1), fn.getArg(2));
 		return "";
+	}
+
+	//Execute the value function call.
+	//There are two possible calls:
+	//   @value(ElementName)
+	//   @value(ElementName,"default")
+	private static String value(FnCall fn) {
+		String value = fn.context.contents(fn.args[0], fn.thisTag);
+		String def = (fn.args.length == 1) ? "" : fn.getArg(1);
+		return (!value.equals("")) ? value : def;
 	}
 
 	//Execute the truncate function call.

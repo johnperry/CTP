@@ -16,12 +16,15 @@ import org.dcm4che.dict.UIDs;
 
 public class PCTable extends Hashtable<String,LinkedList<String>> {
 
-    final static Logger logger = Logger.getLogger(DicomStorageSCP.class);
+    final static Logger logger = Logger.getLogger(PCTable.class);
 
 	protected PCTable() {
 		super();
 		for (int i=0; i<pcs.length; i++) {
-			this.put(UIDs.forName(pcs[i].asName),pcs[i].list);
+			this.put(pcs[i].asUID, pcs[i].list);
+		}
+		for (int i=0; i<ext_pcs.length; i++) {
+			this.put(ext_pcs[i].asUID, ext_pcs[i].list);
 		}
 	}
 
@@ -30,12 +33,23 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 	}
 
 	static class PC {
-		public String asName;
+		public String asUID;
 		public LinkedList<String> list;
+
+		//This method always looks up asName in the dictionary.
 		public PC(String asName, String listString) {
-			this.asName = asName;
+			this.asUID = UIDs.forName(asName);
 			this.list = tokenize(listString, new LinkedList<String>());
 		}
+
+		//This method is for the ext_pcs, to allow UIDs to be added that
+		//are not in the dictionary. If ext is true, use asName as the UID;
+		//else look it up in the dictionary.
+		public PC(String asName, String listString, boolean ext) {
+			this.asUID = ext ? asName : UIDs.forName(asName);
+			this.list = tokenize(listString, new LinkedList<String>());
+		}
+
 		private static LinkedList<String> tokenize(String s, LinkedList<String> list) {
 			StringTokenizer stk = new StringTokenizer(s, ", ");
 			while (stk.hasMoreTokens()) {
@@ -119,6 +133,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("VLMultiframeImageStorageRetired","$ts-native"),
 		new PC("VLPhotographicImageStorage","$ts-jpeglossless,$ts-native"),
 		new PC("VLSlideCoordinatesMicroscopicImageStorage","$ts-jpeglossless,$ts-native"),
+		new PC("VLWholeSlideMicroscopyImageStorage","$ts-jpeglossless,JPEGBaseline,$ts-native"),
 		new PC("VideoEndoscopicImageStorage","MPEG2"),
 		new PC("VideoMicroscopicImageStorage","MPEG2"),
 		new PC("VideoPhotographicImageStorage","MPEG2"),
@@ -127,6 +142,9 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("XRayRadiofluoroscopicImageStorage","$ts-jpeglossless,$ts-native"),
 		new PC("XRayRadiationDoseSR","$ts-native")
 	};
+
+	//SOP Classes not in the dcm4che UID dictionary
+	static PC[] ext_pcs = { };
 
 	private static PCTable pcTable = new PCTable();
 

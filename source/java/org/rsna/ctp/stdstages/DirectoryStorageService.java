@@ -9,6 +9,8 @@ package org.rsna.ctp.stdstages;
 
 import java.io.File;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
@@ -16,9 +18,9 @@ import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.objects.ZipObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
-import org.rsna.ctp.stdstages.ObjectCache;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.StorageService;
+import org.rsna.ctp.stdstages.ObjectCache;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
@@ -37,9 +39,11 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
     int acceptedCount = 0;
     int storedCount = 0;
     boolean returnStoredFile = true;
-    int[] tags = null;
+    String[] dirs = null;
     String cacheID = "";
 	File dicomScriptFile = null;
+	String defaultString = "UNKNOWN";
+	String whitespaceReplacement = "_";
 
 	/**
 	 * Construct a DirectoryStorageService for DicomObjects.
@@ -55,18 +59,14 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		cacheID = element.getAttribute("cacheID").trim();
 		String structure = element.getAttribute("structure").trim();
 		if (!structure.equals("")) {
-			String[] strings = structure.split("/");
-			LinkedList<Integer> ints = new LinkedList<Integer>();
-			for (String s : strings) {
-				s = s.replaceAll("[\\[\\]\\(\\),\\s]", "");
-				int tagInt = StringUtil.getHexInt(s);
-				if (tagInt != 0) ints.add( new Integer(tagInt) );
-				else logger.warn("Illegal tag value: \""+s+"\"");
-			}
-			Integer[] x = ints.toArray( new Integer[ ints.size() ] );
-			tags = new int[ x.length ];
-			for (int i=0; i<x.length; i++) tags[i] = x[i].intValue();
+			dirs = structure.split("/");
 		}
+
+		String temp = element.getAttribute("defaultString").trim();;
+		if (!temp.equals("")) defaultString = temp;
+
+		temp = element.getAttribute("whitespaceReplacement").trim();
+		if (!temp.equals("")) whitespaceReplacement = temp;
 
 		//See if there is a script, and if so, get the file
 		dicomScriptFile = null;
@@ -115,7 +115,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//Get a place to store the object.
 				File destDir = root;
 
-				//If there is a tags array, get the storage hierarchy.
+				//If there is a dirs array, get the storage hierarchy.
 				//If there is a cache, get the cached object; otherwise,
 				//use the current object to obtain the hierarchy.
 				//Store the object in a hierarchy based on the
@@ -123,21 +123,27 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//otherwise, store everything in the root directory.
 				//Note: the current object is always the one being stored;
 				//the cached object is only used to define the hierarchy.
-				if (tags != null) {
-					//If there is not cache, use the current object.
+				if (dirs != null) {
+					//Get the object to be used to determine the storage hierarchy.
+
+					//If there is no cached object, then use the current object.
+					DicomObject xdob = dob;
+
+					//If there is a cached object, then use that one instead.
 					if (!cacheID.equals("")) {
 						PipelineStage cache = Configuration.getInstance().getRegisteredStage(cacheID);
 						if ((cache != null) && (cache instanceof ObjectCache)) {
 							FileObject fob = ((ObjectCache)cache).getCachedObject();
-							if (fob instanceof DicomObject) dob = (DicomObject)fob;
+							if (fob instanceof DicomObject) xdob = (DicomObject)fob;
 						}
 					}
+
 					//Now construct the child directories under the root.
-					for (int tag : tags) {
-						String eValue = dob.getElementValue(tag);
-						String value = eValue.replaceAll("[\\\\/\\s]", "").trim();
-						if (value.equals("")) value = "UNKNOWN";
-						destDir = new File(destDir, value);
+					for (String dir : dirs) {
+						dir = replace(dir, xdob);
+						dir = dir.replaceAll("[\\\\/\\s]", whitespaceReplacement).trim();
+						if (dir.equals("")) dir = defaultString;
+						destDir = new File(destDir, dir);
 					}
 				}
 
@@ -165,6 +171,28 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			}
 		}
 		return fileObject;
+	}
+
+	private String replace(String string, DicomObject dob) {
+		try {
+			Pattern pattern = Pattern.compile("[\\[\\(][0-9a-fA-F]{0,4}[,]?[0-9a-fA-F]{1,4}[\\]\\)]");
+			Matcher matcher = pattern.matcher(string);
+			StringBuffer sb = new StringBuffer();
+			while (matcher.find()) {
+				String group = matcher.group();
+				String key = group.substring(1, group.length()-1).replace(",","");
+				int tag = Integer.parseInt(key, 16);
+				String repl = dob.getElementValue(tag);
+				if (repl.equals("")) repl = defaultString;
+				matcher.appendReplacement(sb, repl);
+			}
+			matcher.appendTail(sb);
+			return sb.toString();
+		}
+		catch (Exception ex) {
+			logger.warn(ex);
+			return string;
+		}
 	}
 
 	/**
