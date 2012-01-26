@@ -47,6 +47,10 @@ public class Launcher extends JFrame implements ChangeListener {
 	public Launcher() {
 		super();
 
+		//Set the SSL params
+		System.setProperty("javax.net.ssl.keyStore", "keystore");
+		System.setProperty("javax.net.ssl.keyStorePassword", "ctpstore");
+
 		config = Configuration.getInstance();
 		setTitle(config.windowTitle);
 

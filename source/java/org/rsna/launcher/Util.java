@@ -10,19 +10,24 @@ package org.rsna.launcher;
 import java.io.*;
 import java.net.*;
 import java.net.HttpURLConnection;
+import java.security.cert.X509Certificate;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.jar.*;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
 
 public class Util {
 
@@ -135,18 +140,38 @@ public class Util {
 		if (!protocol.startsWith("https") && !protocol.startsWith("http")) {
 			throw new Exception("Unsupported protocol ("+protocol+")");
 		}
+
 		HttpURLConnection conn;
 		if (protocol.startsWith("https")) {
 			HttpsURLConnection httpsConn = (HttpsURLConnection)url.openConnection();
 			httpsConn.setHostnameVerifier(new AcceptAllHostnameVerifier());
 			httpsConn.setUseCaches(false);
 			httpsConn.setDefaultUseCaches(false);
+
+			//Set the socket factory
+			TrustManager[] trustAllCerts = new TrustManager[] { new AcceptAllX509TrustManager() };
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new SecureRandom());
+			httpsConn.setSSLSocketFactory(sc.getSocketFactory());
+
 			conn = httpsConn;
 		}
 		else conn = (HttpURLConnection)url.openConnection();
+
 		conn.setDoOutput(true);
 		conn.setDoInput(true);
 		return conn;
+	}
+
+	static class AcceptAllX509TrustManager implements X509TrustManager {
+
+		public X509Certificate[] getAcceptedIssuers() {
+			return null;
+		}
+
+		public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+
+		public void checkServerTrusted(X509Certificate[] certs, String authType) { }
 	}
 
 	static class AcceptAllHostnameVerifier implements HostnameVerifier {
@@ -237,7 +262,7 @@ public class Util {
 		try {
 			Configuration config = Configuration.getInstance();
 			String protocol = "http" + (config.ssl?"s":"");
-			URL url = new URL( protocol, "127.0.0.1", config.port, "shutdown");
+			URL url = new URL( protocol, "127.0.0.1", config.port, "/shutdown");
 
 			HttpURLConnection conn = getConnection( url );
 			conn.setRequestMethod("GET");
@@ -249,9 +274,14 @@ public class Util {
 			int n; char[] cbuf = new char[1024];
 			while ((n=br.read(cbuf, 0, cbuf.length)) != -1) sb.append(cbuf,0,n);
 			br.close();
+
 			IOPanel.out.println( sb.toString().replace("<br>","\n") );
 		}
-		catch (Exception ex) { }
+		catch (Exception ex) {
+			StringWriter sw = new StringWriter();
+			ex.printStackTrace(new PrintWriter(sw));
+			IOPanel.out.println("\n\n"+sw.toString());
+		}
 	}
 
 	public static boolean isRunning() {
