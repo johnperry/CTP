@@ -13,28 +13,6 @@ package org.rsna.ctp.objects;
   */
 public class SopClass {
 
-	/** The array of supported image SOP Classe UIDs. */
-	static final String[] sopClassUIDs = {
-		"1.2.840.10008.5.1.4.1.1.1",			//CR
-		"1.2.840.10008.5.1.4.1.1.2",			//CT
-		"1.2.840.10008.5.1.1.30",				//Hardcopy color
-		"1.2.840.10008.5.1.1.29",				//Hardcopy grayscale
-		"1.2.840.10008.5.1.4.1.1.4",			//MR
-		"1.2.840.10008.5.1.4.1.1.20",			//NM
-		"1.2.840.10008.5.1.4.1.1.128",			//PET
-		"1.2.840.10008.5.1.4.1.1.7",			//Secondary capture
-		"1.2.840.10008.5.1.4.1.1.6.1",			//US
-		"1.2.840.10008.5.1.4.1.1.12.1",			//X-ray angio
-		"1.2.840.10008.5.1.4.1.1.12.2",			//X-ray fluoro
-		"1.2.840.10008.5.1.4.1.1.1.1",			//DR
-		"1.2.840.10008.5.1.4.1.1.1.2",			//Digital mammo
-		"1.2.840.10008.5.1.4.1.1.1.3",			//Digital intra-oral X-ray
-		"1.2.840.10008.5.1.4.1.1.77.1.1",		//VL endoscope
-		"1.2.840.10008.5.1.4.1.1.77.1.2",		//VL microscope
-		"1.2.840.10008.5.1.4.1.1.77.1.3",		//VL slide-coordinates microscope
-		"1.2.840.10008.5.1.4.1.1.77.1.4"		//VL photograph
-	};
-
 	/** The array of SR SOP Classe UIDs. */
 	static final String[] srSopClassUIDs = {
 		"1.2.840.10008.5.1.4.1.1.88.11",		//basic
@@ -45,19 +23,8 @@ public class SopClass {
 	/** The KIN SOP Class UID. */
 	static final String kosSopClass = "1.2.840.10008.5.1.4.1.1.88.59";
 
-	/**
-	 * Tests whether a SOP Class corresponds to a supported image.
-	 * @param sop the SOPClassUID
-	 * @return true if sop corresponds to a supported image; false otherwise.
-	 */
-	public static boolean isImage(String sop) {
-		if (sop == null) return false;
-		sop = sop.trim();
-		for (int i=0; i<sopClassUIDs.length; i++) {
-			if (sop.equals(sopClassUIDs[i])) return true;
-		}
-		return false;
-	}
+	/** The DICOMDIR SOP Classx UID. */
+	static final String dicomdirClass = "1.2.840.10008.1.3.10";
 
 	/**
 	 * Tests whether a SOP Class corresponds to an SR.
@@ -82,6 +49,17 @@ public class SopClass {
 		if (sop == null) return false;
 		sop = sop.trim();
 		return sop.equals(kosSopClass);
+	}
+
+	/**
+	 * Tests whether a SOP Class corresponds to a dicomdir.
+	 * @param sop the SOPClassUID
+	 * @return true if sop corresponds to a DICOMDIR; false otherwise.
+	 */
+	public static boolean isDICOMDIR(String sop) {
+		if (sop == null) return false;
+		sop = sop.trim();
+		return sop.equals(dicomdirClass);
 	}
 
 }

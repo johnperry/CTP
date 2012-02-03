@@ -206,7 +206,8 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 			}
 			FileSystem fs = fsm.getFileSystem(fsName);
 			//Store the object
-			fs.store(fileObject, returnStoredFile);
+			File storedFile = fs.store(fileObject);
+			if (returnStoredFile) fileObject = FileObject.getInstance(storedFile);
 			if (autoCreateUser) createUserForFileSystem(fs);
 		}
 		catch (Exception ex) {

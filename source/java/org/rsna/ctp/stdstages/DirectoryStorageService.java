@@ -39,9 +39,12 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
     int acceptedCount = 0;
     int storedCount = 0;
     boolean returnStoredFile = true;
+    boolean setStandardExtensions = false;
     String[] dirs = null;
     String cacheID = "";
 	File dicomScriptFile = null;
+	File xmlScriptFile = null;
+	File zipScriptFile = null;
 	String defaultString = "UNKNOWN";
 	String whitespaceReplacement = "_";
 
@@ -62,18 +65,19 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			dirs = structure.split("/");
 		}
 
+		//See if we are to apply extensions to the stored files.
+		setStandardExtensions = element.getAttribute("setStandardExtensions").toLowerCase().equals("yes");
+
 		String temp = element.getAttribute("defaultString").trim();;
 		if (!temp.equals("")) defaultString = temp;
 
 		temp = element.getAttribute("whitespaceReplacement").trim();
 		if (!temp.equals("")) whitespaceReplacement = temp;
 
-		//See if there is a script, and if so, get the file
-		dicomScriptFile = null;
-		String dicomScript = element.getAttribute("dicomScript");
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
+		//See if there are scripts, and if so, get the files
+		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript"), "examples/example-filter.script");
+		xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript"), "examples/example-filter.script");
+		zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript"), "examples/example-filter.script");
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
@@ -84,7 +88,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * @return the script files used by this stage.
 	 */
 	public File[] getScriptFiles() {
-		return new File[] { dicomScriptFile, null, null };
+		return new File[] { dicomScriptFile, xmlScriptFile, zipScriptFile };
 	}
 
 	/**
@@ -104,16 +108,13 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		//Count all the files
 		totalCount++;
 
-		if (fileObject instanceof DicomObject) {
-			DicomObject dob = (DicomObject)fileObject;
+		if (acceptable(fileObject) && checkFilter(fileObject)) {
 
-			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
+			//Get a place to store the object.
+			File destDir = root;
 
-				//Count the accepted objects
-				acceptedCount++;
-
-				//Get a place to store the object.
-				File destDir = root;
+			if (fileObject instanceof DicomObject) {
+				DicomObject dob = (DicomObject)fileObject;
 
 				//If there is a dirs array, get the storage hierarchy.
 				//If there is a cache, get the cached object; otherwise,
@@ -123,7 +124,11 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//otherwise, store everything in the root directory.
 				//Note: the current object is always the one being stored;
 				//the cached object is only used to define the hierarchy.
-				if (dirs != null) {
+				//Note: DICOMDIR objects are always stored in the root
+				//directory because the structure can't apply to both
+				//images and DICOMDIRs and the root is as convenient a
+				//place as any for them.
+				if ((dirs != null) && !dob.isDICOMDIR()) {
 					//Get the object to be used to determine the storage hierarchy.
 
 					//If there is no cached object, then use the current object.
@@ -146,31 +151,51 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 						destDir = new File(destDir, dir);
 					}
 				}
+			}
 
-				//At this point, destDir points to where the object is to be stored.
-				boolean ok;
-				File savedFile = new File(destDir, dob.getSOPInstanceUID());
-				destDir.mkdirs();
-				if (returnStoredFile)
-					ok = fileObject.moveTo(savedFile);
-				else
-					ok = fileObject.copyTo(savedFile);
+			else {
+				//All other object types have already passed the filter, and they are
+				//always stored in the root, so we are now ready to store.
+			}
 
-				//If the object was successfully saved, count it.
-				if (ok) {
-					storedCount++;
-					lastFileStored = savedFile;
-					lastTime = System.currentTimeMillis();
-				}
+			//Count the accepted objects
+			acceptedCount++;
 
-				//If anything went wrong, quarantine the object and abort.
-				else {
-					if (quarantine != null) quarantine.insert(fileObject);
-					return null;
-				}
+			//At this point, destDir points to where the object is to be stored.
+			//Make a name for the stored object.
+			String name = fileObject.getSOPInstanceUID();
+			if (setStandardExtensions) name += fileObject.getStandardExtension();
+
+			//Store the object.
+			destDir.mkdirs();
+			File savedFile = new File(destDir, name);
+			if (fileObject.copyTo(savedFile)) {
+				//The object was successfully saved, count it.
+				storedCount++;
+				if (returnStoredFile) fileObject = FileObject.getInstance(savedFile);
+				lastFileStored = savedFile;
+				lastTime = System.currentTimeMillis();
+			}
+			//If anything went wrong, quarantine the object and abort.
+			else {
+				if (quarantine != null) quarantine.insert(fileObject);
+				return null;
 			}
 		}
 		return fileObject;
+	}
+
+	private boolean checkFilter(FileObject fileObject) {
+		if (fileObject instanceof DicomObject) {
+			return (dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile).getResult();
+		}
+		else if (fileObject instanceof XmlObject) {
+			return (xmlScriptFile == null) || ((XmlObject)fileObject).matches(xmlScriptFile);
+		}
+		else if (fileObject instanceof ZipObject) {
+			return (zipScriptFile == null) || ((ZipObject)fileObject).matches(zipScriptFile);
+		}
+		return true; //Don't filter on other object types.
 	}
 
 	private String replace(String string, DicomObject dob) {

@@ -68,10 +68,20 @@ public class FileObject {
 	 * @return the extension of the object's filename.
 	 */
 	public String getExtension() {
-		String ext = file.getName();
-		int k = ext.lastIndexOf(".");
+		return getExtension(file.getName());
+	}
+
+	/**
+	 * Get the extension of a file (the last period and the characters after
+	 * it in the file name). Thus, the method returns ".dcm" for a file
+	 * named "image.dcm".
+	 * @param name the filename.
+	 * @return the extension of the specified filename.
+	 */
+	public static String getExtension(String name) {
+		int k = name.lastIndexOf(".");
 		if (k == -1) return "";
-		return ext.substring(k);
+		return name.substring(k);
 	}
 
 	/**

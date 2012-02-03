@@ -58,6 +58,8 @@ public class DicomObject extends FileObject {
 	boolean isImage = false;
 	boolean isManifest = false;
 	boolean isAdditionalTFInfo = false;
+	boolean isDICOMDIR = false;
+	DcmElement directoryRecordSeq = null;
 	SpecificCharacterSet charset = null;
 	DcmParser parser = null;
 	FileFormat fileFormat = null;
@@ -96,19 +98,30 @@ public class DicomObject extends FileObject {
 			}
 			dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
+
 			//Parse the file, but don't get the pixels in order to save heap space.
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
-			//See if this is a real image.
-			isImage =  (parser.getReadTag() == Tags.PixelData);
-			//Get the decode parameter
-			fileParam = parser.getDcmDecodeParam();
-			//See if this is a TCE Manifest
-			isManifest = checkManifest();
-			//See if this is a TCE Additional Teaching File Info document
-			isAdditionalTFInfo = checkAdditionalTFInfo();
+
 			//Get the charset in case we need it for manifest processing.
 			charset = dataset.getSpecificCharacterSet();
 			fileMetaInfo = dataset.getFileMetaInfo();
+
+			//See if this is a real image.
+			isImage =  (parser.getReadTag() == Tags.PixelData);
+
+			//Get the decode parameter
+			fileParam = parser.getDcmDecodeParam();
+
+			//See if this is a DICOMDIR
+			isDICOMDIR = isDICOMDIR();
+			directoryRecordSeq = dataset.get(Tags.DirectoryRecordSeq);
+
+			//See if this is a TCE Manifest
+			isManifest = checkManifest();
+
+			//See if this is a TCE Additional Teaching File Info document
+			isAdditionalTFInfo = checkAdditionalTFInfo();
+
 			if (!leaveOpen) close();
 		}
 		catch (Exception ex) {
@@ -129,11 +142,11 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Get the standard extension for a DicomObject (".dcm").
-	 * @return ".dcm"
+	 * Get the standard extension for this DicomObject (".dcm" of ".DICOMDIR").
+	 * @return ".dcm" or ">DICOMDIR" as appropriate for this object.
 	 */
 	public String getStandardExtension() {
-		return ".dcm";
+		return isDICOMDIR ? ".DICOMDIR" : ".dcm";
 	}
 
 	/**
@@ -161,8 +174,9 @@ public class DicomObject extends FileObject {
 	 * @return true if the filename is a typical DICOM filename; false otherwise.
 	 */
 	public static boolean hasTypicalDicomFilename(String name) {
-		int k = name.lastIndexOf(".");
-		if ((k != -1) && name.substring(k).toLowerCase().equals(".dcm")) return true;
+		String ext = getExtension(name).toLowerCase();
+		if (ext.equals(".dcm")) return true;
+		if (ext.equals(".dicomdir")) return true;
 		if (name.matches("[\\d\\.]+")) return true;
 		return false;
 	}
@@ -542,8 +556,11 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Get the SOP Class name.
-	 * @return the name of the SOP Class.
+	 * Get the SOP Class name. See getSOPClassUID for the rules
+	 * used to obtain the SOP Class UID that is used as the key
+	 * in the UID dictionary for obtaining the name.
+	 * @return the name of the SOP Class, or "Unknown SOP Class"
+	 * if the UID or the name cannot be found.
 	 */
 	public String getSOPClassName() {
 		String sopClassUID = null;
@@ -659,6 +676,38 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Get the contents of the first element found in an SQ elkement's item datasets.
+	 * @param el the SQ element to search.
+	 * @param tag the tag specifying the element to find in the SQ element's item datasets.
+	 * @param defaultString the String to return if the element does not exist.
+	 * @return the text of the element, or defaultString if the element cannot be found
+	 * in any of the SQ element's item datasets.
+	 */
+	public String getElementValueFromSQ(DcmElement el, int tag, String defaultString) {
+		Dataset sq;
+		try {
+			if ((el != null) && (el.vr() == VRs.SQ)) {
+				int item = 0;
+				while ((sq=el.getItem(item++)) != null) {
+					DcmElement e = sq.get(tag);
+					if (e != null) {
+						String[] s = e.getStrings(charset);
+						if (s.length == 1) return s[0];
+						if (s.length == 0) return "";
+						StringBuffer sb = new StringBuffer( s[0] );
+						for (int i=1; i<s.length; i++) {
+							sb.append( "\\" + s[i] );
+						}
+						return sb.toString();
+					}
+				}
+			}
+		}
+		catch (Exception ex) { }
+		return defaultString;
+	}
+
+	/**
 	 * Get the contents of a DICOM element in the DicomObject's dataset as a
 	 * byte array. This method returns null if the element does not exist.
 	 * @param tag the tag specifying the element (in the form 0xggggeeee).
@@ -719,38 +768,54 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the contents of the PatientName element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first PatientName element.
 	 * @return the text of the element or the empty String if the
 	 * element does not exist.
 	 */
 	public String getPatientName() {
-		return getElementValue(Tags.PatientName);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.PatientName, "")
+							: getElementValue(Tags.PatientName);
 	}
 
 	/**
 	 * Convenience method to get the contents of the PatientID element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first PatientID element.
 	 * @return the text of the element or the empty String if the
 	 * element does not exist.
 	 */
 	public String getPatientID() {
-		return getElementValue(Tags.PatientID);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.PatientID, "")
+							: getElementValue(Tags.PatientID);
 	}
 
 	/**
 	 * Convenience method to get the contents of the AccessionNumber element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first AccessionNumber element.
 	 * @return the text of the element or the empty String if the
 	 * element does not exist.
 	 */
 	public String getAccessionNumber() {
-		return getElementValue(Tags.AccessionNumber);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.AccessionNumber, "")
+							: getElementValue(Tags.AccessionNumber);
 	}
 
 	/**
 	 * Convenience method to get the contents of the Modality element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first Modality element.
 	 * @return the text of the element or the empty String if the
 	 * element does not exist.
 	 */
 	public String getModality() {
-		return getElementValue(Tags.Modality);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.Modality, "")
+							: getElementValue(Tags.Modality);
 	}
 
 	/**
@@ -782,18 +847,42 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the contents of the SOPClassUID element.
+	 * If the DicomObject is a DICOMDIR, the contents of the
+	 * MediaStorageSOPClassUID are used as the SOPClassUID.
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getSOPClassUID() {
-		return getElementValue(Tags.SOPClassUID,null);
+		return isDICOMDIR ?
+					getMediaStorageSOPClassUID()
+							: getElementValue(Tags.SOPClassUID, null);
+	}
+
+	/**
+	 * Convenience method to get the contents of the MediaStorageSOPClassUID element.
+	 * @return the text of the element or null if the element does not exist.
+	 */
+	public String getMediaStorageSOPClassUID() {
+		return fileMetaInfo.getMediaStorageSOPClassUID();
+	}
+
+	/**
+	 * Convenience method to get the contents of the SOPInstanceUID element.
+	 * If the DicomObject is a DICOMDIR, the contents of the
+	 * MediaStorageSOPInstanceUID are used as the SOPInstanceUID.
+	 * @return the text of the element or null if the element does not exist.
+	 */
+	public String getSOPInstanceUID() {
+		return isDICOMDIR ?
+					getMediaStorageSOPInstanceUID()
+							: getElementValue(Tags.SOPInstanceUID, null);
 	}
 
 	/**
 	 * Convenience method to get the contents of the SOPInstanceUID element.
 	 * @return the text of the element or null if the element does not exist.
 	 */
-	public String getSOPInstanceUID() {
-		return getElementValue(Tags.SOPInstanceUID,null);
+	public String getMediaStorageSOPInstanceUID() {
+		return fileMetaInfo.getMediaStorageSOPInstanceUID();
 	}
 
 	/**
@@ -802,23 +891,31 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getUID() {
-		return getElementValue(Tags.SOPInstanceUID,null);
+		return getSOPInstanceUID();
 	}
 
 	/**
 	 * Convenience method to get the contents of the StudyDate element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first StudyDate element.
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getStudyDate() {
-		return getElementValue(Tags.StudyDate,null);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.StudyDate, null)
+							: getElementValue(Tags.StudyDate, null);
 	}
 
 	/**
 	 * Convenience method to get the contents of the StudyInstanceUID element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first StudyInstanceUID element.
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getStudyInstanceUID() {
-		return getElementValue(Tags.StudyInstanceUID,null);
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.StudyInstanceUID, null)
+							: getElementValue(Tags.StudyInstanceUID, null);
 	}
 
 	/**
@@ -827,7 +924,7 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getStudyUID() {
-		return getElementValue(Tags.StudyInstanceUID,null);
+		return getStudyInstanceUID();
 	}
 
 	/**
@@ -939,7 +1036,16 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Tests whether the DicomObject corresponds to a KIN that is an IHE TFCTE manifest.
+	 * Tests whether the DicomObject corresponds to a DICOMDIR.
+	 * The test is done by comparing the MediaStorageSOPClassUID to the DICOMDIR SOPClassUID.
+	 * @return true if the object corresponds to a DICOMDIR; false otherwise.
+	 */
+	public boolean isDICOMDIR() {
+		return SopClass.isDICOMDIR(getMediaStorageSOPClassUID());
+	}
+
+	/**
+	 * Tests whether the DicomObject corresponds to a KIN that is an IHE TCE manifest.
 	 * @return true if the object corresponds to a TCE Manifest; false otherwise.
 	 */
 	public boolean isManifest() {
@@ -983,7 +1089,7 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Get the IHE TFCTE additional teaching file info in a Hashtable.
+	 * Get the IHE TCE additional teaching file info in a Hashtable.
 	 * @return the additional teaching file info Hashtable, or null if
 	 * this object is not an IHE Additional Teaching File Info object.
 	 */
@@ -1003,7 +1109,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get an array of SOPInstanceUIDs for all the instances listed in the
-	 * Current Requested Procedure Evidence Sequence element in a manifest.
+	 * Current Requested Procedure Evidence Sequence element in an IHR TCE manifest.
 	 * @return the array if this object is a manifest; null otherwise.
 	 */
 	public String[] getInstanceList() {
@@ -1011,7 +1117,7 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Get an array of PersonNames from the Content Sequence element in a manifest
+	 * Get an array of PersonNames from the Content Sequence element in an IHE TCE manifest
 	 * @return the array if this object is a manifest; null otherwise.
 	 */
 	public String[] getObserverList() {
@@ -1020,7 +1126,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get the text of the Key Object Description from the Content Sequence of
-	 * an IHE TFCTE Manifest.
+	 * an IHE TCE Manifest.
 	 * @return the Key Object Description text if this object is a manifest; null otherwise.
 	 */
 	public String getKeyObjectDescription() {
@@ -1184,8 +1290,8 @@ public class DicomObject extends FileObject {
 						"<th>Length</th>" +
 						"<th style=\"text-align:left;\">Data</th>" +
 					"</tr>\n");
-		walkDataset(dataset.getFileMetaInfo(),cs,table,"",false);
-		walkDataset(dataset,cs,table,"",decipherLinks);
+		walkDataset(dataset.getFileMetaInfo(), cs, table, "", false);
+		walkDataset(dataset, cs, table, "", decipherLinks);
 		table.append("</table>\n");
 		return table.toString();
 	}
@@ -1421,7 +1527,7 @@ public class DicomObject extends FileObject {
 	 * compute based on the values in this DicomObject.
 	 * @return the computed boolean value of the script.
 	 */
-	public boolean matches(File scriptFile) {
+	public MatchResult matches(File scriptFile) {
 		String script = FileUtil.getText(scriptFile);
 		return matches(script);
 	}
@@ -1434,23 +1540,25 @@ public class DicomObject extends FileObject {
 	 * in this DicomObject.
 	 * @return the computed boolean value of the script.
 	 */
-	public boolean matches(String script) {
+	public MatchResult matches(String script) {
+		Properties props = new Properties();
 
-		Tokenizer tokenizer = new Tokenizer(script);
+		Tokenizer tokenizer = new Tokenizer(script, props);
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Token> tokens = new Stack<Token>();
 		operators.push(Operator.createSentinel());
 
 		//Get the expression, evaluate it, and return the result.
 		try {
-			expression(tokenizer,operators,tokens);
+			expression(tokenizer, operators, tokens);
 			tokenizer.expect(Token.END);
-			return unstack(tokens);
+			boolean result = unstack(tokens);
+			return new MatchResult( result, props );
 		}
 		catch (Exception ex) {
 			logger.error("",ex);
 		}
-		return false;
+		return new MatchResult( false, null );
 	}
 
 	boolean unstack(Stack<Token> tokens) {
@@ -1532,11 +1640,13 @@ public class DicomObject extends FileObject {
 	//The rest of the code is for parsing the script and evaluating the result.
 	class Tokenizer {
 		String script;
+		Properties props;
 		int index;
 		Token nextToken;
 
-		public Tokenizer(String script) {
+		public Tokenizer(String script, Properties props) {
 			this.script = script;
+			this.props = props;
 			index = 0;
 			nextToken = getToken();
 		}
@@ -1565,7 +1675,7 @@ public class DicomObject extends FileObject {
 				return new End();
 			char c = script.charAt(index);
 			if ((c == '[') || Character.isLetter(c))
-				return new Operand(this);
+				return new Operand(this, props);
 			else if (c == '(')
 				return new LP(this);
 			else if (c == ')')
@@ -1634,8 +1744,8 @@ public class DicomObject extends FileObject {
 	}
 
 	class Operand extends Token {
-		public boolean value = false;;
-		public Operand(Tokenizer t) {
+		public boolean value = false;
+		public Operand(Tokenizer t, Properties props) {
 			super(OPERAND);
 			String identifier = getField(t,'.').trim();
 			if (identifier.equals("true"))
@@ -1648,26 +1758,58 @@ public class DicomObject extends FileObject {
 				if ((match.length() > 1) &&
 						(match.charAt(0) == '"') &&
 							(match.charAt(match.length()-1) == '"')) {
-					String element = getElementValue(identifier,"");
+
+					//Update the properties for the value of the identifier.
+					//Get both the dcm4che tag and the dcm4che name, if possible.
+					int tag;
+					//Change square brackets to parentheses for the TagDictionary lookup.
+					if (identifier.startsWith("[") && identifier.endsWith("]"))
+						identifier = identifier.replace("[","(").replace("]",")");
+
+					//Do the lookup differently, based on whether the identifier is (gggg,eeee) or a name.
+					if (identifier.startsWith("(") && identifier.endsWith(")"))
+						tag = Tags.valueOf(identifier);
+					else
+						tag = Tags.forName(identifier);
+
+					//Now get the name from the dictonary, if possible.
+					String tagName = Tags.toString(tag);
+					tagName = tagName.replace("(","[").replace(")","]");
+					String name = "";
+					try { name = tagDictionary.lookup(tag).name; }
+					catch (Exception noname) { }
+
+					String element = getElementValue(tag, "");
+					props.setProperty(tagName + " " + name, element);
+
 					String elementLC = element.toLowerCase();
-					match = match.substring(1,match.length()-1);
+					match = match.substring(1, match.length()-1);
 					String matchLC = match.toLowerCase();
+
 					if (method.equals("equals"))
 						value = element.equals(match);
+
 					if (method.equals("equalsIgnoreCase"))
 						value = element.equalsIgnoreCase(match);
+
 					else if (method.equals("matches"))
 						value = element.matches(match);
+
 					else if (method.equals("contains"))
 						value = (element.contains(match));
+
 					else if (method.equals("containsIgnoreCase"))
 						value = (elementLC.contains(matchLC));
+
 					else if (method.equals("startsWith"))
 						value = element.startsWith(match);
+
 					else if (method.equals("startsWithIgnoreCase"))
 						value = elementLC.startsWith(matchLC);
+
 					else if (method.equals("endsWith"))
 						value = element.endsWith(match);
+
 					else if (method.equals("endsWithIgnoreCase"))
 						value = elementLC.endsWith(matchLC);
 				}

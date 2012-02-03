@@ -44,7 +44,7 @@ public class PixelScript {
 	public Regions getRegionsFor(DicomObject dicomObject) {
 		if (signatures != null) {
 			for (Signature sig : signatures) {
-				if (dicomObject.matches(sig.script)) return sig.regions;
+				if (dicomObject.matches(sig.script).getResult()) return sig.regions;
 			}
 		}
 		return null;

@@ -175,7 +175,7 @@ public class PollingHttpImportService extends AbstractPipelineStage implements I
 				}
 			}
 		}
-		catch (Exception ex) { logger.warn("Exception while polling", ex); }
+		catch (Exception ex) { logger.debug("Exception while polling", ex); }
 		close(socket);
 		return file;
 	}

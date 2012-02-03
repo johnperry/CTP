@@ -28,7 +28,7 @@ public class Pipeline extends Thread {
 	String name = "";
 	List<ImportService> importServices = null;
 	List<PipelineStage> stages = null;
-	boolean stop = false;
+	volatile boolean stop = false;
 
 	/**
 	 * A Thread representing a processing pipeline for FileObjects
@@ -104,7 +104,10 @@ public class Pipeline extends Thread {
 	public synchronized boolean isDown() {
 		if (!this.getState().equals(Thread.State.TERMINATED)) return false;
 		for (PipelineStage stage: stages) {
-			if (!stage.isDown()) return false;
+			if (!stage.isDown()) {
+				logger.warn(getPipelineName()+": "+stage.getName()+" is not down");
+				return false;
+			}
 		}
 		return true;
 	}

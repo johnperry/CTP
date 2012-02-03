@@ -194,24 +194,18 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 			}
 		}
 		else {
-			//This is a new file, get the next open location
-			//and store it in lastFileIn;
+			//This is a new file, get the next open location and remember it in lastFileIn;
 			lastFileIn = getNextFileIn(fileObject.getStandardExtension());
 			savedFile = lastFileIn;
 		}
 
+		//At this point, savedFile points to where the file is to be stored.
 		//Make sure the parent directory exists.
 		File parent = savedFile.getAbsoluteFile().getParentFile();
 		parent.mkdirs();
 
 		//Store the object
-		boolean ok;
-		if (returnStoredFile)
-			ok = fileObject.moveTo(savedFile);
-		else
-			ok = fileObject.copyTo(savedFile);
-
-		if (ok) {
+		if (fileObject.copyTo(savedFile)) {
 			//The store worked; update the index
 			try {
 				index.put(uid, savedFile.getPath());
@@ -220,6 +214,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 			catch (Exception ex) {
 				logger.warn("Unable to update the index for "+uid+" ("+savedFile.getAbsolutePath()+")", ex);
 			}
+			if (returnStoredFile) fileObject = FileObject.getInstance(savedFile);
 			makeJPEGs(fileObject, savedFile);
 		}
 		else {
@@ -301,7 +296,13 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 				if (i > 0) levels[i] = 0;
 			}
 		}
-		return makeFileForLevels(levels, suffix);
+		File nextFile = makeFileForLevels(levels, suffix);
+		//Update the index
+		try { index.put("__lastFile", nextFile.getPath()); }
+		catch (Exception ex) {
+			logger.warn("Unable to update the __lastFile key for "+nextFile.getPath());
+		}
+		return nextFile;
 	}
 
 	//Make a file out of a set of levels, starting at the root directory.
@@ -324,14 +325,27 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		return zeroes.substring(0, len - name.length()) + name;
 	}
 
-	//Find the last file in the store. This method requires
+	//Find the last file in the store.
+	//This method requires
 	//that the file be located at the bottom level of the tree
 	//and that the files and their directories are named numerically.
 	private File findLastFile(File dir, int level) {
+
+		//Start by looking in the index for the "__lastFile" key.
+		//If the key is present, then return a File for it.
+		try {
+			String path = (String)index.get("__lastFile");
+			if (path != null) return new File(path);
+		}
+		catch (Exception notThere) { }
+
+		//If we get here, there was no __lastFile key in the index.
+		//Search the directory tree to find the last entry.
 		//For this method, dir is the top of the directory tree below which
 		//to search. level is the level in the tree at which dir occurs.
 		//Start by qualifying dir.
 		if ((dir == null) || !dir.exists() || !dir.isDirectory()) return null;
+
 		//Okay, dir exists and is a directory.
 		if (level < nLevels-1) {
 			//We're not yet to the bottom; look at the directories

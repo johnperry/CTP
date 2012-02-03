@@ -236,12 +236,9 @@ public class Study implements Comparable {
 	/**
 	 * Store a FileObject in this Study.
 	 * @param fileObject the object to store.
-	 * @param move true if the FileObject is to be moved to the Study's directory
-	 * so that its getFile() method indicates the new location; false if the FileObject is
-	 * to be copied to the Study's directory so that its getFile() method indicates the original
-	 * location.
+	 * @return the file that was stored.
 	 */
-	public void store(FileObject fileObject, boolean acceptDuplicateUIDs, boolean move) throws Exception {
+	public File store(FileObject fileObject, boolean acceptDuplicateUIDs) throws Exception {
 
 		getIndex();
 
@@ -264,14 +261,8 @@ public class Study implements Comparable {
 		newFile.delete();
 
 		//Save the object
-		if (move) {
-			if (!fileObject.moveTo(newFile))
-				throw new Exception("Unable to move the FileObject to study directory");
-		}
-		else {
-			if (!fileObject.copyTo(newFile)) {
-				throw new Exception("Unable to copy the FileObject to study directory");
-			}
+		if (!fileObject.copyTo(newFile)) {
+			throw new Exception("Unable to copy the FileObject to study directory");
 		}
 //		if (fileSystem.getSetReadable()) newFile.setReadable(true,false); //Java 1.6
 //		if (fileSystem.getSetWritable()) newFile.setWritable(true,false); //Java 1.6
@@ -338,6 +329,7 @@ public class Study implements Comparable {
 				}
 			}
 		}
+		return newFile;
 	}
 
 	//Fix a text string that must be numeric.

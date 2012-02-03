@@ -187,12 +187,9 @@ public class FileSystem {
 	 * Store a FileObject in this FileSystem. If the Study for the FileObject does
 	 * not exist, create it and add it to the index of the FileSystem.
 	 * @param fileObject the object to store.
-	 * @param returnStoredFile true if the FileObject is to be moved to the Study's directory
-	 * so that its getFile() method indicates the new location; false if the FileObject is
-	 * to be copied to the Study's directory so that its getFile() method indicates the original
-	 * location.
+	 * @return the file that was stored.
 	 */
-	public synchronized void store(FileObject fileObject, boolean returnStoredFile) throws Exception {
+	public synchronized File store(FileObject fileObject) throws Exception {
 		getIndex();
 		String studyName = Study.makeStudyName(fileObject.getStudyUID());
 		Study study = uidTable.get(studyName);
@@ -211,7 +208,7 @@ public class FileSystem {
 			indexDoc.getDocumentElement().appendChild(s);
 			FileUtil.setText(indexFile, XmlUtil.toString(indexDoc));
 		}
-		study.store(fileObject, acceptDuplicateUIDs, returnStoredFile);
+		return study.store(fileObject, acceptDuplicateUIDs);
 	}
 
 	/**

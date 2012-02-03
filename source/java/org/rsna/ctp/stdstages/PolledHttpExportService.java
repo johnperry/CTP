@@ -26,8 +26,8 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 
 	Connector connector = null;
 	int port = 9100;
-	boolean waiting = false;
-	boolean handling = false;
+	volatile boolean waiting = false;
+	volatile boolean handling = false;
 
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
@@ -41,7 +41,11 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		catch (Exception ex) { logger.error(name+": Unparseable port value"); }
 
 		//Create the Connector
-		connector = new Connector();
+		try { connector = new Connector(); }
+		catch (Exception ex) {
+			logger.warn("Unable to instantiate the connector", ex);
+			throw ex;
+		}
 	}
 
 	/**
@@ -49,15 +53,14 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	 */
 	public void shutdown() {
 		stop = true;
-		if (waiting || !handling) connector.interrupt();
+		if (connector != null) connector.interrupt();
 	}
 
 	/**
 	 * Determine whether the pipeline stage has shut down.
 	 */
 	public boolean isDown() {
-		if ((connector != null) && !connector.getState().equals(Thread.State.TERMINATED)) return false;
-		return stop;
+		return stop && !handling;
 	}
 
 	/**
@@ -81,11 +84,11 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		 * Start the Connector and accept connections.
 		 */
 		public void run() {
-			while (!stop && !this.isInterrupted()) {
+			while (!stop && !isInterrupted()) {
 				try {
 					//Wait for a connection
 					waiting = true;
-					Socket socket = serverSocket.accept();
+					final Socket socket = serverSocket.accept();
 					handling = true;
 					waiting = false;
 
@@ -95,15 +98,21 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 					if (!socket.isClosed()) handle(socket);
 					handling = false;
 				}
-				catch (Exception ex) { break; }
+				catch (Exception ex) {
+					logger.warn("Shutting down");
+					break;
+				}
 			}
 			try { serverSocket.close(); }
 			catch (Exception ignore) { logger.warn("Unable to close the server socket"); }
 			serverSocket = null;
+			waiting = false;
+			handling = false;
 		}
 
 		//Handle one connection.
 		private void handle(Socket socket) {
+			//logger.warn("Entering handle method");
 			try {
 				//Set parameters on the socket
 				try {
@@ -120,6 +129,8 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 				//Get the file
 				File next = getNextFile();
 				if (next != null) {
+
+					logger.debug("Exporting "+next);
 
 					//Send the length
 					sendLong(out, next.length());
@@ -157,6 +168,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 			//Close everything.
 			try { socket.close(); }
 			catch (Exception ignore) { logger.warn("Unable to close the socket."); }
+			//logger.warn("Leaving handle method");
 		}
 
 		//Send a long as four bytes

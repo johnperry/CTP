@@ -57,9 +57,6 @@ public class ShutdownServlet extends Servlet {
 			res.write("Shutdown request received from "+username+" at "+ra+".<br>");
 
 			boolean clean = shutdown();
-
-			logger.warn("clean = "+clean);
-
 			res.write("Goodbye.");
 			res.send();
 
@@ -105,7 +102,7 @@ public class ShutdownServlet extends Servlet {
 		for (int k=0; k<20; k++) {
 			try { Thread.sleep(2000); }
 			catch (Exception quit) { break; }
-			if ( pluginsClean = config.pipelinesAreDown() ) break;
+			if ( pluginsClean = config.pluginsAreDown() ) break;
 		}
 
 		//Log the result

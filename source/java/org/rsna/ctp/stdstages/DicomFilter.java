@@ -11,6 +11,7 @@ import java.io.File;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
+import org.rsna.ctp.objects.MatchResult;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
 import org.rsna.util.FileUtil;
@@ -22,6 +23,7 @@ import org.w3c.dom.Element;
 public class DicomFilter extends AbstractPipelineStage implements Processor, Scriptable {
 
 	static final Logger logger = Logger.getLogger(DicomFilter.class);
+	boolean log = false;
 
 	public File scriptFile = null;
 
@@ -32,6 +34,7 @@ public class DicomFilter extends AbstractPipelineStage implements Processor, Scr
 	 */
 	public DicomFilter(Element element) {
 		super(element);
+		log = element.getAttribute("log").equals("yes");
 		scriptFile = FileUtil.getFile(element.getAttribute("script"), "examples/example-filter.script");
 	}
 
@@ -47,7 +50,9 @@ public class DicomFilter extends AbstractPipelineStage implements Processor, Scr
 
 		if (fileObject instanceof DicomObject) {
 			String script = FileUtil.getText(scriptFile);
-			if (!((DicomObject)fileObject).matches(script)) {
+			MatchResult match = ((DicomObject)fileObject).matches(script);
+			if (!match.getResult()) {
+				if (log) logger.info(name+": object quarantined\n"+match.getOperandValues());
 				if (quarantine != null) quarantine.insert(fileObject);
 				lastFileOut = null;
 				lastTimeOut = System.currentTimeMillis();

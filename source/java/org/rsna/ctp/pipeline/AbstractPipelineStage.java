@@ -38,7 +38,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	protected long lastTimeIn = 0;
 	protected File lastFileOut = null;
 	protected long lastTimeOut = 0;
-	protected boolean stop = false;
+	protected volatile boolean stop = false;
 
 	/**
 	 * Construct a base pipeline stage which does no processing.
