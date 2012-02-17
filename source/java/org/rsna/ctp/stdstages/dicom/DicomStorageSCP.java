@@ -166,13 +166,14 @@ public class DicomStorageSCP extends DcmServiceBase {
 
 				boolean isDuplicate = false;
 				boolean isRecent = false;
+
 				//*********************************************************************************************
 				//doCStore may be called from multiple threads in the DICOM library simultaneously.
 				//This section must be synchronized because the LinkedList class is not thread-safe.
 				synchronized (recentUIDs) {
 					//See if this object has the same UID as a recent one.
 					isDuplicate = recentUIDs.contains(currentUID);
-					if (isDuplicate) {
+					if (isDuplicate && dicomImportService.logDuplicates) {
 						logger.warn("----------------------------------------------------------------");
 						logger.warn(dicomImportService.getName());
 						logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
@@ -201,7 +202,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 				}
 				else {
 					skipObject(in);
-					logger.warn("...the duplicate object was suppressed.");
+					logger.warn("Duplicate object was suppressed.");
 				}
 			}
         }

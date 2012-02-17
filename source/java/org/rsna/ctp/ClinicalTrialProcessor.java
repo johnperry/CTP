@@ -173,6 +173,9 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("level",		LoggerLevelServlet.class);
 		selector.addServlet("shutdown",		ShutdownServlet.class);
 
+		//Instantiate the singleton Cache and clear it.
+		Cache.getInstance(new File("CACHE")).clear();
+
 		//Instantiate the server.
 		int port = config.getServerPort();
 		boolean ssl = config.getServerSSL();

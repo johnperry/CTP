@@ -65,7 +65,8 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 			}
 
 			logger.info(
-				fileObject.getClassName()
+				name
+				+ margin + fileObject.getClassName()
 				+ ": (" + (count+1) + ") "
 				+ fileObject.getFile().getName()
 				+ " @ " + StringUtil.getTime(":")

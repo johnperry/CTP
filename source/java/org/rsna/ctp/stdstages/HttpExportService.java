@@ -39,6 +39,7 @@ public class HttpExportService extends AbstractExportService {
 	boolean authenticate = false;
 	String authHeader = null;
 	boolean logUnauthorizedResponses = true;
+	boolean logDuplicates = false;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -55,6 +56,9 @@ public class HttpExportService extends AbstractExportService {
 		//are to be zipped before transmission.
 		zip = element.getAttribute("zip").equals("yes");
 
+		//See if we are to log duplicate transmissions
+		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
+
 		//Get the credentials, if they are present.
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
@@ -70,6 +74,11 @@ public class HttpExportService extends AbstractExportService {
 			logger.error(name+": Illegal protocol ("+protocol+")");
 			throw new Exception();
 		}
+		if (url.getPort() == -1) {
+			logger.error(name+": No port specified: "+element.getAttribute("url"));
+			throw new Exception();
+		}
+/**/	logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 	}
 
 	/**
@@ -94,31 +103,31 @@ public class HttpExportService extends AbstractExportService {
 			conn.connect();
 			svros = conn.getOutputStream();
 
-
-			//*********************************************************************************************
-			//See if this object has the same UID as a recent one.
-			FileObject fileObject = FileObject.getInstance( fileToExport );
-			String currentUID = fileObject.getUID();
-			if (recentUIDs.contains(currentUID)) {
-				logger.warn("----------------------------------------------------------------");
-				logger.warn(name);
-				logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
-				String s = "";
-				long time = 0;
-				for (int i=0; i<recentUIDs.size(); i++) {
-					String uid = recentUIDs.get(i);
-					s += uid.equals(currentUID) ? "!" : "*";
-					time = recentTimes.get(i).longValue();
+			if (logDuplicates) {
+				//*********************************************************************************************
+				//See if this object has the same UID as a recent one.
+				FileObject fileObject = FileObject.getInstance( fileToExport );
+				String currentUID = fileObject.getUID();
+				if (recentUIDs.contains(currentUID)) {
+					logger.warn("----------------------------------------------------------------");
+					logger.warn(name);
+					logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
+					String s = "";
+					long time = 0;
+					for (int i=0; i<recentUIDs.size(); i++) {
+						String uid = recentUIDs.get(i);
+						s += uid.equals(currentUID) ? "!" : "*";
+						time = recentTimes.get(i).longValue();
+					}
+					long deltaT = System.currentTimeMillis() - time;
+					logger.warn("[oldest] "+s+"! [newest]  deltaT = "+deltaT+"ms");
+					logger.warn("----------------------------------------------------------------");
 				}
-				long deltaT = System.currentTimeMillis() - time;
-				logger.warn("[oldest] "+s+"! [newest]  deltaT = "+deltaT+"ms");
-				logger.warn("----------------------------------------------------------------");
+				recentUIDs.add(currentUID);
+				recentTimes.add( new Long( System.currentTimeMillis() ) );
+				if (recentUIDs.size() > maxQueueSize) { recentUIDs.remove(); recentTimes.remove(); }
+				//*********************************************************************************************
 			}
-			recentUIDs.add(currentUID);
-			recentTimes.add( new Long( System.currentTimeMillis() ) );
-			if (recentUIDs.size() > maxQueueSize) { recentUIDs.remove(); recentTimes.remove(); }
-			//*********************************************************************************************
-
 
 			//Send the file to the server
 			if (!zip) FileUtil.streamFile(fileToExport, svros);

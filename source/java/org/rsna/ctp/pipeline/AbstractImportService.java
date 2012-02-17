@@ -33,6 +33,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	File temp = null;
 	QueueManager queueManager = null;
 	int count = 0;
+	public boolean logDuplicates = false;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -48,6 +49,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 		if (root == null)
 			logger.error(name+": No root directory was specified.");
 		else {
+			logDuplicates = element.getAttribute("logDuplicates").equals("yes");
 			temp = new File(root, "temp");
 			temp.mkdirs();
 			File queue = new File(root, "queue");
@@ -106,28 +108,30 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 				FileObject fileObject = FileObject.getInstance(lastFileOut);
 				fileObject.setStandardExtension();
 
-				//*********************************************************************************************
-				//See if this object has the same UID as a recent one.
-				String currentUID = fileObject.getUID();
-				if (recentUIDs.contains(currentUID)) {
-					logger.warn("----------------------------------------------------------------");
-					logger.warn(name);
-					logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
-					String s = "";
-					long time = 0;
-					for (int i=0; i<recentUIDs.size(); i++) {
-						String uid = recentUIDs.get(i);
-						s += uid.equals(currentUID) ? "!" : "*";
-						time = recentTimes.get(i).longValue();
+				if (logDuplicates) {
+					//*********************************************************************************************
+					//See if this object has the same UID as a recent one.
+					String currentUID = fileObject.getUID();
+					if (recentUIDs.contains(currentUID)) {
+						logger.warn("----------------------------------------------------------------");
+						logger.warn(name);
+						logger.warn("Duplicate UID in last "+maxQueueSize+" objects: "+currentUID);
+						String s = "";
+						long time = 0;
+						for (int i=0; i<recentUIDs.size(); i++) {
+							String uid = recentUIDs.get(i);
+							s += uid.equals(currentUID) ? "!" : "*";
+							time = recentTimes.get(i).longValue();
+						}
+						long deltaT = System.currentTimeMillis() - time;
+						logger.warn("[oldest] "+s+"! [newest]  deltaT = "+deltaT+"ms");
+						logger.warn("----------------------------------------------------------------");
 					}
-					long deltaT = System.currentTimeMillis() - time;
-					logger.warn("[oldest] "+s+"! [newest]  deltaT = "+deltaT+"ms");
-					logger.warn("----------------------------------------------------------------");
+					recentUIDs.add(currentUID);
+					recentTimes.add( new Long( System.currentTimeMillis() ) );
+					if (recentUIDs.size() > maxQueueSize) { recentUIDs.remove(); recentTimes.remove(); }
+					//*********************************************************************************************
 				}
-				recentUIDs.add(currentUID);
-				recentTimes.add( new Long( System.currentTimeMillis() ) );
-				if (recentUIDs.size() > maxQueueSize) { recentUIDs.remove(); recentTimes.remove(); }
-				//*********************************************************************************************
 
 				//Make sure we accept objects of this type.
 				if (acceptable(fileObject)) return fileObject;

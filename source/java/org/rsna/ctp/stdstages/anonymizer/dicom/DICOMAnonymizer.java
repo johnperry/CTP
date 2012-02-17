@@ -256,7 +256,7 @@ public class DICOMAnonymizer {
 		catch (Exception e) {
 			FileUtil.close(in);
 			FileUtil.close(out);
-			tempFile.delete();
+			FileUtil.deleteAll(tempFile);
 			//Now figure out what kind of response to return.
 			String msg = e.getMessage();
 			if (msg == null) {
