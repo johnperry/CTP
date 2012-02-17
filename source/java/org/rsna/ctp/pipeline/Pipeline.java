@@ -105,7 +105,7 @@ public class Pipeline extends Thread {
 		if (!this.getState().equals(Thread.State.TERMINATED)) return false;
 		for (PipelineStage stage: stages) {
 			if (!stage.isDown()) {
-				logger.warn(getPipelineName()+": "+stage.getName()+" is not down");
+				logger.info(getPipelineName()+": "+stage.getName()+" is not down");
 				return false;
 			}
 		}

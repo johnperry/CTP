@@ -106,6 +106,7 @@ public class HttpImportService extends AbstractImportService {
 	class Receiver implements Service {
 
 		boolean requireAuthentication;
+		boolean logAuthenticationFailures = true;
 
 		public Receiver(boolean requireAuthentication) {
 			this.requireAuthentication = requireAuthentication;
@@ -120,11 +121,23 @@ public class HttpImportService extends AbstractImportService {
 				logger.info(name
 								+ (accept?" accepted":" rejected")
 									+ " connection from " + connectionIP);
+				if (requireAuthentication && !req.userHasRole("import")) {
+					logger.info("Connection failed authentication requirement");
+					if (logAuthenticationFailures) {
+						logger.info("HTTP Request: "+req.toString() + "\n" +
+									"Headers:\n"+"-----------\n"+req.listHeaders("    ") +
+									"Cookies:\n"+"-----------\n"+req.listCookies("    ") );
+						logAuthenticationFailures = false;
+					}
+				}
 			}
 
 			if (accept) {
 				res.setContentType("txt");
 				if (!requireAuthentication || req.userHasRole("import")) {
+
+					//Good authentication, turn on auth logging again.
+					logAuthenticationFailures = true;
 
 					//Only accept POST requests have Content-Type = application/x-mirc.
 					if ( req.method.equals("POST") &&

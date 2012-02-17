@@ -99,7 +99,10 @@ public class HttpExportService extends AbstractExportService {
 		try {
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
-			if (authenticate) conn.setRequestProperty("Authorization", authHeader);
+			if (authenticate) {
+				conn.setRequestProperty("Authorization", authHeader);
+				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
+			}
 			conn.connect();
 			svros = conn.getOutputStream();
 
