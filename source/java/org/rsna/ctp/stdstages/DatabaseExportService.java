@@ -136,7 +136,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 		int id;
 
 		public Exporter(DatabaseAdapter dba, int id) {
-			super();
+			super("DatabaseExportService Exporter "+id);
 			this.dba = dba;
 			this.id = id;
 			dba.setID(id);

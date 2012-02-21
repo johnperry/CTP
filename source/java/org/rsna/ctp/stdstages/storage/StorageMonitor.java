@@ -30,6 +30,7 @@ public class StorageMonitor extends Thread {
 	 * from the shared file cabinet after they time out.
 	 */
 	public StorageMonitor(File root, int timeDepth) {
+		super("FileStorageService StorageMonitor");
 		this.root = root;
 		this.timeDepth = timeDepth;
 	}

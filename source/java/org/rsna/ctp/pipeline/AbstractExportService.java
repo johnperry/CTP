@@ -109,6 +109,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	}
 
 	class Exporter extends Thread {
+		public Exporter() {
+			super(name + " Exporter");
+		}
 		public void run() {
 			logger.info(name+": Exporter Thread: Started");
 			File file = null;

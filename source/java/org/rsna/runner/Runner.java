@@ -96,7 +96,7 @@ public class Runner {
 
 	static class CTPRunner extends Thread {
 		public CTPRunner() {
-			super();
+			super("CTP Runner");
 		}
 		public void run() {
 			Runtime rt = Runtime.getRuntime();

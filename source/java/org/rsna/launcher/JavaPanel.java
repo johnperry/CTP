@@ -26,6 +26,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	Row serverPort;
 	CBRow clearLogs;
 	CBRow debugSSL;
+	CBRow javaMonitor;
 
 	JButton start;
 	JButton stop;
@@ -65,6 +66,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		javaPanel.addRow( stackSize = new Row("Thread stack size:", props.getProperty("ss","")) );
 		javaPanel.addRow( extDirs = new Row("Extensions directory:", props.getProperty("ext","")) );
 		javaPanel.addRow( debugSSL = new CBRow("Enable SSL debugging:", props.getProperty("ssl","").equals("yes")) );
+		javaPanel.addRow( javaMonitor = new CBRow("Enable Java monitoring:", props.getProperty("mon","").equals("yes")) );
 
 		RowPanel serverPanel = new RowPanel("Server Parameters");
 		serverPanel.setBackground(bgColor);
@@ -169,7 +171,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		}
 		save();
 		if (!running) {
-			runner = Util.startup( debugSSL.cb.isSelected() );
+			runner = Util.startup( );
 			Util.wait(500);
 			running = runner.isAlive();
 			if (running) {
@@ -183,6 +185,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	class Monitor extends Thread {
 		Thread runner = null;
 		public Monitor(Thread runner) {
+			super("CTP Launcher Monitor");
 			this.runner = runner;
 		}
 		public void run() {
@@ -221,6 +224,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		props.setProperty("ext", extDirs.tf.getText().trim());
 		props.setProperty("clr", (clearLogs.cb.isSelected()?"yes":"no"));
 		props.setProperty("ssl", (debugSSL.cb.isSelected()?"yes":"no"));
+		props.setProperty("mon", (javaMonitor.cb.isSelected()?"yes":"no"));
 		config.save();
 	}
 

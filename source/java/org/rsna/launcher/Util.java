@@ -308,16 +308,15 @@ public class Util {
 		catch (Exception ex) { }
 	}
 
-	public static Thread startup(boolean enableSSLDebugging) {
-		Runner runner = new Runner(enableSSLDebugging);
+	public static Thread startup() {
+		Runner runner = new Runner();
 		runner.start();
 		return runner;
 	}
 
 	static class Runner extends Thread {
-		boolean enableSSLDebugging = false;
-		public Runner(boolean enableSSLDebugging) {
-			super();this.enableSSLDebugging = enableSSLDebugging;
+		public Runner() {
+			super("CTP Launcher Runner");
 		}
 		public void run() {
 			Runtime rt = Runtime.getRuntime();
@@ -354,8 +353,13 @@ public class Util {
 				}
 
 				//Enable SSL debugging, if required
-				if (enableSSLDebugging) {
+				if (props.getProperty("ssl", "no").equals("yes")) {
 					command.add("-Djavax.net.debug=ssl");
+				}
+
+				//Enable Java monitoring, if required
+				if (props.getProperty("mon", "no").equals("yes")) {
+					command.add("-Dcom.sun.management.jmxremote ");
 				}
 
 				//Set the extensions directories
@@ -392,6 +396,7 @@ public class Util {
 		String name;
 
 		public Streamer(InputStream is, String name) {
+			super("CTP Launcher Runner Streamer");
 			this.is = is;
 			this.name = name;
 		}

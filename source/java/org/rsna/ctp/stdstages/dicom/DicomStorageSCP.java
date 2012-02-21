@@ -299,6 +299,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 		long time;
 
 		public Handler(File file, String calledAET, String callingAET, String connectionIP, long time) {
+			super("DicomStorageSCP Handler");
 			this.file = file;
 			this.calledAET = calledAET;
 			this.callingAET = callingAET;

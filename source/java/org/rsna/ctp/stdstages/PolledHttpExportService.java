@@ -76,6 +76,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		ServerSocket serverSocket;
 
 		public Connector() throws Exception {
+			super(name + " Connector");
 			ServerSocketFactory serverSocketFactory = ServerSocketFactory.getDefault();
 			serverSocket = serverSocketFactory.createServerSocket(port);
 		}

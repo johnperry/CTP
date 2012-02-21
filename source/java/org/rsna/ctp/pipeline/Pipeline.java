@@ -38,7 +38,9 @@ public class Pipeline extends Thread {
 	 * specifying the stages in the pipeline.
 	 */
 	public Pipeline(Element pipeline) {
+		super();
 		name = pipeline.getAttribute("name");
+		setName(name);
 		stages = new ArrayList<PipelineStage>();
 		importServices = new ArrayList<ImportService>();
 		Node child = pipeline.getFirstChild();
