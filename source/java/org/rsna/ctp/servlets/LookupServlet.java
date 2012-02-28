@@ -175,9 +175,10 @@ public class LookupServlet extends Servlet {
 				for (int s=0; s<stages.size(); s++) {
 					PipelineStage stage = stages.get(s);
 					File file = null;
-					if (stage instanceof ScriptableDicom)
+					if (stage instanceof ScriptableDicom) {
 						file = ((ScriptableDicom)stage).getLookupTableFile();
-					if ((file != null) && file.exists()) {
+					}
+					if (file != null) {
 						sb.append("<tr>");
 						sb.append("<td>"+pipe.getPipelineName()+"</td>");
 						sb.append("<td>"+stage.getName()+"</td>");
