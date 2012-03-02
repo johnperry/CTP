@@ -23,6 +23,7 @@ public class FnCall {
 	static final String ifFn	 = "if";
 	static final String appendFn = "append";
 	static final String selectFn = "select";
+	static final String alwaysFn = "always";
 
 	/** the context. */
 	public DICOMAnonymizerContext context;
@@ -101,8 +102,8 @@ public class FnCall {
 			falseCode = call.substring(k+1,kk);
 			length = kk + 1;
 		}
-		//if not an if, maybe an append
-		else if (name.equals(appendFn)) {
+		//if not an if, maybe an appendFn or alwaysFn
+		else if (name.equals(appendFn) || name.equals(alwaysFn)) {
 			//get the clause and store it in the trueCode
 			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
 				 ((kk = getDelimiter(call,k+1,"}"))  == -1) ) {

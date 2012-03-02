@@ -70,6 +70,7 @@ public class DICOMAnonymizer {
 	static final DcmObjectFactory oFact = DcmObjectFactory.getInstance();
 	static final DictionaryFactory dFact = DictionaryFactory.getInstance();
 	static final TagDictionary tagDictionary = dFact.getDefaultTagDictionary();
+	static final CodeMeaningTable deIdentificationCodeMeanings = new CodeMeaningTable();
 
 	static final String blanks = "                                                       ";
 
@@ -337,20 +338,23 @@ public class DICOMAnonymizer {
 		int vr = 0;
 		for (Integer intTag : context.scriptTable.keySet()) {
 			int tag = intTag.intValue();
-			if (!ds.contains(tag) && ((vr=getVR(tag)) != VRs.SQ)) {
-				String script = context.getScriptFor(tag);
-				String value = makeReplacement(script, context, tag);
-				if (value.equals("@keep()") || value.equals("@remove()")) {
-					//do nothing
+			if (!ds.contains(tag)) {
+				String script = context.getScriptFor(tag).trim();
+				if (script.startsWith("@always()") && ((vr=getVR(tag)) != VRs.SQ)) {
+					String value = makeReplacement(script, context, tag);
+					if (value.equals("@keep()") || value.equals("@remove()")) {
+						//do nothing
+					}
+					else if (value.startsWith("@blank(") || value.equals("@empty()")) {
+						try { context.putXX(tag, vr, ""); }
+						catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
+					}
+					else {
+						try { context.putXX(tag, vr, value); }
+						catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
+					}
 				}
-				else if (value.startsWith("@blank(") || value.equals("@empty()")) {
-					try { context.putXX(tag, vr, ""); }
-					catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
-				}
-				else {
-					try { context.putXX(tag, vr, value); }
-					catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
-				}
+				else if (tag == 0x00120064) updateDeIdentificationMethodCodeSeq(ds, script);
 			}
 		}
 	}
@@ -402,53 +406,115 @@ public class DICOMAnonymizer {
 			}
 
 			else if (hasScript) {
-				//The element wasn't handled globally, process it now.
-				value = makeReplacement(script, context, tag);
-				value = (value != null) ? value.trim() : "";
+				if (tag != Tags.DeIdentificationMethodCodeSeq) {
+					//The element wasn't handled globally
+					//and it isn't DeIdentificationMethodCodeSeq,
+					//process it now.
+					value = makeReplacement(script, context, tag);
+					value = (value != null) ? value.trim() : "";
 
-				if (value.equals("") || value.contains("@remove()")) {
-					try { ds.remove(tag); }
-					catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
-				}
-
-				else if (value.equals("@keep()")) ; //@keep() leaves the element in place
-
-				else if (value.startsWith("@blank(")) {
-					//@blank(n) inserts an element with n blank chars
-					String nString = value.substring("@blank(".length());
-					int paren = nString.indexOf(")");
-					int n = 0;
-					if (paren != -1) {
-						nString = "0" + nString.substring(0, paren).replaceAll("\\D","");
-						n = Integer.parseInt(nString);
+					if (value.equals("") || value.contains("@remove()")) {
+						try { ds.remove(tag); }
+						catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
 					}
-					if (n > blanks.length()) n = blanks.length();
-					try { context.putXX(tag, getVR(tag), blanks.substring(0,n)); }
-					catch (Exception e) {
-						String tagString = Tags.toString(tag);
-						logger.warn(tagString + " exception: " + e.toString()
-									+ "\nscript=" + script);
-						if (!exceptions.equals("")) exceptions += ", ";
-						exceptions += tagString;
+
+					else if (value.equals("@keep()")) ; //@keep() leaves the element in place
+
+					else if (value.startsWith("@blank(")) {
+						//@blank(n) inserts an element with n blank chars
+						String nString = value.substring("@blank(".length());
+						int paren = nString.indexOf(")");
+						int n = 0;
+						if (paren != -1) {
+							nString = "0" + nString.substring(0, paren).replaceAll("\\D","");
+							n = Integer.parseInt(nString);
+						}
+						if (n > blanks.length()) n = blanks.length();
+						try { context.putXX(tag, getVR(tag), blanks.substring(0,n)); }
+						catch (Exception e) {
+							String tagString = Tags.toString(tag);
+							logger.warn(tagString + " exception: " + e.toString()
+										+ "\nscript=" + script);
+							if (!exceptions.equals("")) exceptions += ", ";
+							exceptions += tagString;
+						}
+					}
+					else {
+						try {
+							if (value.equals("@empty()")) value = "";
+							context.putXX(tag, getVR(tag), value);
+						}
+						catch (Exception e) {
+							String tagString = Tags.toString(tag);
+							logger.warn(tagString + " exception:\n" + e.toString()
+										+ "\nscript=" + script
+										+ "\nvalue= \"" + value + "\"");
+							if (!exceptions.equals("")) exceptions += ", ";
+							exceptions += tagString;
+						}
 					}
 				}
 				else {
-					try {
-						if (value.equals("@empty()")) value = "";
-						context.putXX(tag, getVR(tag), value);
-					}
-					catch (Exception e) {
-						String tagString = Tags.toString(tag);
-						logger.warn(tagString + " exception:\n" + e.toString()
-									+ "\nscript=" + script
-									+ "\nvalue= \"" + value + "\"");
-						if (!exceptions.equals("")) exceptions += ", ";
-						exceptions += tagString;
-					}
+					//Handle the DeIdentificationMethodCodeSeq element specially
+					updateDeIdentificationMethodCodeSeq(ds, script);
 				}
 			}
 		}
 		return exceptions;
+	}
+
+	private static void updateDeIdentificationMethodCodeSeq(Dataset ds, String script) {
+		int tag = Tags.DeIdentificationMethodCodeSeq;
+		if (!script.trim().equals("")) {
+			if (script.equals("@remove()")) {
+				if (ds.contains(tag)) ds.remove(tag);
+			}
+			else if (script.equals("@keep()")) {
+				return;
+			}
+			else {
+				DcmElement e = null;
+				try {
+					if (!ds.contains(tag)) e = ds.putSQ(tag);
+					else e = ds.get(tag);
+					String[] codes = script.split("/");
+					for (String code : codes) {
+						String scheme = "DCM";
+						code = code.trim();
+						String meaning = deIdentificationCodeMeanings.getProperty(code);
+						if (meaning == null) {
+							meaning = "UNKNOWN";
+							scheme = "UNKNOWN";
+						}
+						Dataset item = e.addNewItem();
+						item.putSH( Tags.CodingSchemeDesignator, scheme );
+						item.putSH( Tags.CodeValue, code );
+						item.putLO( Tags.CodeMeaning, meaning );
+					}
+				}
+				catch (Exception ex) {
+					logger.warn("Unable to update DeIdentificationMethodCodeSeq", ex);
+				}
+			}
+		}
+	}
+
+	static class CodeMeaningTable extends Properties {
+		public CodeMeaningTable() {
+			super();
+			setProperty("113100", "Basic Application Confidentiality Profile");
+			setProperty("113101", "Clean Pixel Data Option");
+			setProperty("113102", "Clean Recognizable Visual Features Option");
+			setProperty("113103", "Clean Graphics Option");
+			setProperty("113104", "Clean Structured Content Option");
+			setProperty("113105", "Clean Descriptors Option");
+			setProperty("113106", "Retain Longitudinal With Full Dates Option");
+			setProperty("113107", "Retain Longitudinal With Modified Dates Option");
+			setProperty("113108", "Retain Patient Characteristics Option");
+			setProperty("113109", "Retain Device Identity Option");
+			setProperty("113110", "Retain UIDs");
+			setProperty("113111", "Retain Safe Private Option");
+		}
 	}
 
 	private static int getVR(int tag) {
@@ -472,6 +538,7 @@ public class DICOMAnonymizer {
 	static final String ifFn 			= "if";
 	static final String selectFn 		= "select";
 	static final String appendFn 		= "append";
+	static final String alwaysFn 		= "always";
 	static final String incrementdateFn = "incrementdate";
 	static final String modifydateFn	= "modifydate";
 	static final String initialsFn 		= "initials";
@@ -516,6 +583,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(ifFn))			out += iffn(fnCall);
 				else if (fnCall.name.equals(selectFn))		out += selectfn(fnCall);
 				else if (fnCall.name.equals(appendFn))		out += appendfn(fnCall);
+				else if (fnCall.name.equals(alwaysFn))		out += alwaysfn(fnCall);
 				else if (fnCall.name.equals(incrementdateFn)) out += incrementdate(fnCall);
 				else if (fnCall.name.equals(modifydateFn))	out += modifydate(fnCall);
 				else if (fnCall.name.equals(initialsFn)) 	out += initials(fnCall);
@@ -572,6 +640,12 @@ public class DICOMAnonymizer {
 		int vm = el.vm(cs);
 		if (vm == 0) return value;
 		return fn.context.contents(fn.thisTag) + "\\" + value;
+	}
+
+	//Execute the slways function call
+	private static String alwaysfn(FnCall fn) throws Exception {
+		String value = makeReplacement(fn.trueCode, fn.context, fn.thisTag);
+		return value;
 	}
 
 	//Execute the select function call
