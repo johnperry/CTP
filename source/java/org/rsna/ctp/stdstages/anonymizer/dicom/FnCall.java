@@ -63,7 +63,7 @@ public class FnCall {
 		//now get the arguments
 		int kk = k;
 		LinkedList<String> arglist = new LinkedList<String>();
-		while ((kk = getDelimiter(call, kk+1, ",)")) != -1) {
+		while ((kk = getDelimiter(call, kk+1, ",)", '(')) != -1) {
 			arglist.add(call.substring(k+1,kk).trim());
 			k = kk;
 			if (call.charAt(kk) == ')') break;
@@ -80,7 +80,7 @@ public class FnCall {
 		if (name.equals(ifFn) || name.equals(selectFn)) {
 			//get the true code
 			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call,k+1,"}"))  == -1) ) {
+				 ((kk = getDelimiter(call, k+1, "}", '{'))  == -1) ) {
 				//this call is not coded correctly; return with
 				//a length set to ignore the rest of the line
 				length = call.length();
@@ -91,7 +91,7 @@ public class FnCall {
 
 			//now get the false code
 			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call,k+1,"}"))  == -1) ) {
+				 ((kk = getDelimiter(call, k+1, "}", '{')) == -1) ) {
 				//either this call is not coded correctly or there
 				//is no false code; return with a length set to
 				//ignore the rest of the line
@@ -102,11 +102,11 @@ public class FnCall {
 			falseCode = call.substring(k+1,kk);
 			length = kk + 1;
 		}
-		//if not an if, maybe an appendFn or alwaysFn
-		else if (name.equals(appendFn) || name.equals(alwaysFn)) {
+		//if not an if, maybe an appendFn
+		else if (name.equals(appendFn)) {
 			//get the clause and store it in the trueCode
 			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call,k+1,"}"))  == -1) ) {
+				 ((kk = getDelimiter(call, k+1, "}", '{'))  == -1) ) {
 				//this call is not coded correctly; return with
 				//a length set to ignore the rest of the line
 				length = call.length();
@@ -181,7 +181,8 @@ public class FnCall {
 	 * @param delims the list of delimiter characters.
 	 * @return the index of the delimiter.
 	 */
-	public int getDelimiter(String s, int k, String delims) {
+	public int getDelimiter(String s, int k, String delims, char open) {
+		int count = 1;
 		boolean inQuote = false;
 		boolean inEscape = false;
 		while (k < s.length()) {
@@ -192,7 +193,11 @@ public class FnCall {
 				if (c == '"') inQuote = false;
 			}
 			else if (c == '"') inQuote = true;
-			else if (delims.indexOf(c) != -1) return k;
+			else if (c == open) count++;
+			else if (delims.indexOf(c) != -1) {
+				count--;
+				if (count == 0) return k;
+			}
 			k++;
 		}
 		return -1;

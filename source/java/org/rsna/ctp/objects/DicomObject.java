@@ -573,6 +573,29 @@ public class DicomObject extends FileObject {
 		}
 	}
 
+	/**
+	 * Get the tag for the dcm4che name of a DICOM element. This
+	 * method supports dcm4che names as well as hex strings,
+	 * with or without enclosing parentheses or square brackets
+	 * and with or without a comma separating the group and the
+	 * element numbers. All four characters of a hex element
+	 * number are required.
+	 * @param name the dcm4che element name or coded hex value.
+	 * @return the tag, or zero if the name is not a dcm4che element name.
+	 */
+	public static int getElementTag(String name) {
+		if (name == null) return 0;
+		try { return Tags.forName(name.trim()); }
+		catch (Exception ex) {
+			//The name is not in the dictionary.
+			//See if the name parses as a hex integer.
+			name = name.replaceAll("[\\[\\(,\\)\\]]", "");
+			if (name.replaceAll("[0-9a-zA-Z]", "").length() == 0) {
+				return StringUtil.getHexInt(name);
+			}
+		}
+		return 0;
+	}
 
 	/**
 	 * Get the dcm4che name of a DICOM element.

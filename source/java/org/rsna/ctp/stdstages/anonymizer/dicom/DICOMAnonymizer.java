@@ -643,9 +643,8 @@ public class DICOMAnonymizer {
 	}
 
 	//Execute the slways function call
-	private static String alwaysfn(FnCall fn) throws Exception {
-		String value = makeReplacement(fn.trueCode, fn.context, fn.thisTag);
-		return value;
+	private static String alwaysfn(FnCall fn) {
+		return "";
 	}
 
 	//Execute the select function call

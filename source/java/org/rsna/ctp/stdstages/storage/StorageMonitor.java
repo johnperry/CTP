@@ -39,38 +39,33 @@ public class StorageMonitor extends Thread {
 	 * Start the thread. Check for timed out files every hour.
 	 */
 	public void run() {
-		try {
-			while (true) {
-				checkStudies();
-				sleep(aDay);
+		if (timeDepth > 0) {
+			try {
+				while (true) {
+					checkStudies();
+					sleep(aDay);
+				}
 			}
+			catch (Exception ex) { return; }
 		}
-		catch (Exception ex) { return; }
 	}
 
 	//Remove timed out studies.
 	private void checkStudies() {
 		long maxAge = timeDepth * aDay;
-		if (maxAge == 0) return;
+		if (maxAge <= 0) return;
 		long timeNow = System.currentTimeMillis();
 		long earliestAllowed = timeNow - maxAge;
 
 		//Get the FileSystemManager
 		FileSystemManager fsm = FileSystemManager.getInstance(root);
 
-		//Get the list of FileSystems
-		List<String> fsList = fsm.getFileSystems();
-
 		//Look at each FileSystem
-		Iterator<String> lit = fsList.iterator();
-		while (lit.hasNext()) {
-			String fsName = lit.next();
+		for (String fsName : fsm.getFileSystems()) {
 			FileSystem fs = fsm.getFileSystem(fsName, false);
 
-			//Get the studies in this FileSystem
-			Study[] studies = fs.getStudies();
-			for (int i=0; i<studies.length; i++) {
-				Study study = studies[i];
+			//Check the studies in this FileSystem
+			for (Study study : fs.getStudies()) {
 				File dir = study.getDirectory();
 				long lm = dir.lastModified();
 				if (lm < earliestAllowed) {
