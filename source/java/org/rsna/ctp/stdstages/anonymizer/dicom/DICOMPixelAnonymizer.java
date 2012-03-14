@@ -185,7 +185,11 @@ public class DICOMPixelAnonymizer {
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength) && parser.getReadTag() != -1) {
+			int tag;
+			while (!parser.hasSeenEOF()
+					&& (parser.getStreamPosition() < fileLength)
+						&& ((tag=parser.getReadTag()) != -1)
+							&& (tag != 0xFFFCFFFC)) {
 				dataset.writeHeader(
 					out,
 					encoding,

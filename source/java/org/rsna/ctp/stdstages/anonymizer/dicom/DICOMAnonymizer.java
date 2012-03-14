@@ -225,7 +225,11 @@ public class DICOMAnonymizer {
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
 			int tag;
-			while (!parser.hasSeenEOF() && ((tag=parser.getReadTag()) != -1)) {
+			long fileLength = inFile.length();
+			while (!parser.hasSeenEOF()
+					&& (parser.getStreamPosition() < fileLength)
+						&& ((tag=parser.getReadTag()) != -1)
+							&& (tag != 0xFFFCFFFC)) {
 				int len = parser.getReadLength();
 				String script = context.getScriptFor(tag);
 				if ( ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()")) ) {
