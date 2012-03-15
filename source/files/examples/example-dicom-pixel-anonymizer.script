@@ -1,0 +1,60 @@
+Burned-in Annotation Library
+
+This DicomPixelAnonymizer script file contains known regions in certain modality 
+images where PHI has been found to be present. This script has been compiled from
+the contributions of multiple users. Additional contributions are welcome.
+
+Important note: It is the responsibility of the user to review DICOM images to be 
+sure that all areas of PHI are removed from an image before it is considered
+anonymized.  If you have additional filetypes and signatures to add to this list,
+please send them to jperry@dls.net.
+
+For information on the DicomPixelAnonymizer and the format of this file,see:
+	http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Pixel_Anonymizer
+
+**************************** CT
+
+GE 
+
+ CT Dose Series
+  { CodeMeaning.containsIgnoreCase("IEC Body Dosimetry Phantom") }
+  (0,0,512,300)
+
+  { CommentsOnRadiationDose.containsIgnoreCase("DLP") }
+  (0,0,512,110)
+
+ AW Workstation
+
+  { BurnedInAnnotation.containsIgnoreCase("YES") 
+       * SeriesDescription.containsIgnoreCase("AW electronic film") }
+  (4,4,496,75)
+
+
+**************************** US
+
+GE 
+ Logiq US
+  { ManufacturerModelName.containsIgnoreCase("LOGIQ9") }
+  (0,0,640,40)
+
+  { [ManufacturerModelName.containsIgnoreCase("LOGIQE9") }
+  (0,0,960,70)
+
+Philips 
+ IU22
+  { ManufacturerModelName.containsIgnoreCase("iU22") }
+  (0,0,1024,100)
+
+Zonare
+  { ManufacturerModelName.containsIgnoreCase("Z_ONE") }
+  (0,0,800,65)
+
+
+**************************** MRI
+
+
+**************************** CR/DR
+
+
+**************************** OTHER
+
