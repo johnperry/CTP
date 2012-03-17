@@ -161,10 +161,8 @@ public class DicomStorageSCU {
         String sopClassUID = dicomObject.getSOPClassUID();
         String tsUID = dicomObject.getTransferSyntaxUID();
 
-        String requestedCalledAET =
-        			(calledAETTag == 0) ? url.getCalledAET() : getAET(dicomObject, calledAETTag);
-        String requestedCallingAET =
-        			(callingAETTag == 0) ? url.getCallingAET() : getAET(dicomObject, callingAETTag);
+        String requestedCalledAET = getAET(dicomObject, calledAETTag, url.getCalledAET());
+        String requestedCallingAET = getAET(dicomObject, callingAETTag, url.getCallingAET());
 
 		try {
 			//See if we have to make a new association for this request.
@@ -363,13 +361,17 @@ public class DicomStorageSCU {
         return (aet != null) ? aet : "DCMSND";
     }
 
-    private String getAET(DicomObject dicomObject, int tag) {
+    private String getAET(DicomObject dicomObject, int tag, String defaultAET) {
+		String aet = defaultAET;
 		try {
-			byte[] bytes = dicomObject.getElementBytes(tag);
-			String aet = new String(bytes);
-			return aet.trim();
+			if (tag != 0) {
+				byte[] bytes = dicomObject.getElementBytes(tag);
+				aet = new String(bytes).trim();
+				aet = (aet.equals("") ? defaultAET : aet);
+			}
 		}
-		catch (Exception ex) { return "MISSING_AET"; }
+		catch (Exception ex) { aet = defaultAET; }
+		return aet;
 	}
 
     private final void initAssocParam(DcmURL url) {
