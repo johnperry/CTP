@@ -1708,8 +1708,24 @@ public class DicomObject extends FileObject {
 			return new Unknown();
 		}
 		void skipWhitespace() {
-			while ((index < script.length()) && Character.isWhitespace(script.charAt(index)))
-				index++;
+			boolean inComment = false;
+			while (index < script.length()) {
+				char c = script.charAt(index);
+				if (inComment) {
+					if (c == '\n') inComment = false;
+					index++;
+				}
+				else if (c == '/') {
+					int k = index + 1;
+					if ((k < script.length()) && (script.charAt(k) == '/')) {
+						inComment = true;
+						index += 2;
+					}
+					else return;
+				}
+				else if (Character.isWhitespace(c)) index++;
+				else return;
+			}
 		}
 		public char getChar() {
 			if (index < script.length())
