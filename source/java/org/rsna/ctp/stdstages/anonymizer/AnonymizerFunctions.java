@@ -17,6 +17,7 @@ import javax.crypto.*;
 import javax.crypto.spec.*;
 import org.apache.log4j.Logger;
 import org.rsna.util.Base64;
+import org.rsna.util.DateUtil;
 import org.rsna.util.DigestUtil;
 
 /**
@@ -283,7 +284,7 @@ public class AnonymizerFunctions {
 	 */
 	public static String incrementDate(String date, long increment) throws Exception {
 		long inc = increment * 24 * 3600 * 1000;
-		GregorianCalendar dateCal = getCal(date);
+		GregorianCalendar dateCal = DateUtil.getCalendar(date);
 		dateCal.setTimeInMillis(dateCal.getTimeInMillis() + inc);
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
@@ -300,7 +301,7 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String modifyDate(String date, int y, int m, int d) throws Exception {
-		GregorianCalendar dateCal = getCal(date);
+		GregorianCalendar dateCal = DateUtil.getCalendar(date);
 
 		if (y < 0) y = dateCal.get(Calendar.YEAR);
 
@@ -314,19 +315,6 @@ public class AnonymizerFunctions {
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
 				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2);
-	}
-
-	//Get a GregorianCalendar for a specific date.
-	private static GregorianCalendar getCal(String date) throws Exception {
-		//do a little filtering to protect against the most common booboos
-		date = date.replaceAll("\\D","");
-		if (date.length() != 8) throw new Exception("Illegal date: "+date);
-		if (date.startsWith("00")) date = "19" + date.substring(2);
-		//now make the calendar
-		int year = Integer.parseInt(date.substring(0,4));
-		int month = Integer.parseInt(date.substring(4,6));
-		int day = Integer.parseInt(date.substring(6,8));
-		return new GregorianCalendar(year,month-1,day);
 	}
 
 	// A static integer for preventing two new uids created

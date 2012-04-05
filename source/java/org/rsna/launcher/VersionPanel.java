@@ -30,7 +30,7 @@ public class VersionPanel extends BasePanel {
 			+	"<body style=\"background:#c6d8f9;font-family:sans-serif;\">"
 			+	"<center>"
 			+	"<h1 style=\"color:blue\">" + config.programName + "</h1>"
-			+	"Copyright 2011: RSNA<br><br>"
+			+	"Copyright 2012: RSNA<br><br>"
 			+	"<p>"
 			+	"<table>"
 			+	"<tr><td>This computer's Java Version:</td><td>"+config.thisJava+"</td></tr>"

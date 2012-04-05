@@ -930,6 +930,18 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the StudyTime element.
+	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
+	 * is searched for the first StudyTime element.
+	 * @return the text of the element or null if the element does not exist.
+	 */
+	public String getStudyTime() {
+		return isDICOMDIR ?
+					getElementValueFromSQ(directoryRecordSeq, Tags.StudyTime, null)
+							: getElementValue(Tags.StudyTime, null);
+	}
+
+	/**
 	 * Convenience method to get the contents of the StudyInstanceUID element.
 	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
 	 * is searched for the first StudyInstanceUID element.
@@ -955,7 +967,7 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getSeriesInstanceUID() {
-		return getElementValue(Tags.SeriesInstanceUID,null);
+		return getElementValue(Tags.SeriesInstanceUID, null);
 	}
 
 	/**
@@ -963,7 +975,7 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element or null if the element does not exist.
 	 */
 	public String getSeriesDescription() {
-		return getElementValue(Tags.SeriesDescription,null);
+		return getElementValue(Tags.SeriesDescription, null);
 	}
 
 	/**

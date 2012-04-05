@@ -27,6 +27,12 @@
 		</attr>
 	</Server>
 
+	<Pipeline>
+		<attr name="name" required="yes" default="HttpImportService">
+			<comment>This field should be unique, at least within its pipeline.</comment>
+		</attr>
+	</Pipeline>
+
 	<ImportService>
 		<attr name="name" required="yes" default="HttpImportService">
 			<comment>This field should be unique, at least within its pipeline.</comment>
@@ -476,7 +482,7 @@
 		<attr name="name" required="yes" default="FileStorageService">
 			<comment>This field should be unique, at least within its pipeline.</comment>
 		</attr>
-		<attr name="id" required="yes" default="ObjectCache">
+		<attr name="id" required="yes" default="FileStorageService">
 			<comment>
 				This field is required only when the stage is to be referenced
 				by another stage. If present, it must be unique.
@@ -486,7 +492,7 @@
 		<attr name="root" required="yes" default="roots/FileStorageService">
 			<comment>Storage directory for use by the stage for data (must be unique)</comment>
 		</attr>
-		<attr name="type" required="yes" default="none" options="year|month|week|dat|none">
+		<attr name="type" required="yes" default="none" options="year|month|week|date|none">
 			<comment>Structure of the storage tree</comment>
 		</attr>
 		<attr name="timeDepth" required="no" default="0">
