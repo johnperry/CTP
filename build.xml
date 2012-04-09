@@ -127,13 +127,6 @@
 		</javadoc>
 	</target>
 
-	<target name="cleaninstaller" depends="clean, installer">
-		<tstamp>
-			<format property="end" pattern="HH:mm:ss"/>
-		</tstamp>
-		<echo message="Time now ${end}"/>
-	</target>
-
 	<target name="all" depends="clean, installer, javadocs">
 		<tstamp>
 			<format property="end" pattern="HH:mm:ss"/>

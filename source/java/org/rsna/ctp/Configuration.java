@@ -72,7 +72,7 @@ public class Configuration {
 	 * if necessary.
 	 * @return the Configuration.
 	 */
-	public static Configuration getInstance() {
+	public static synchronized Configuration getInstance() {
 		if (configuration == null) configuration = new Configuration();
 		return configuration;
 	}
@@ -184,9 +184,6 @@ public class Configuration {
 	public void start(HttpServer httpServer) {
 		this.httpServer = httpServer;
 
-		//Start the web server.
-		httpServer.start();
-
 		//Start the plugins.
 		for (Plugin plugin : pluginsList) {
 			plugin.start();
@@ -196,6 +193,10 @@ public class Configuration {
 		for (Pipeline pipe : pipelines) {
 			pipe.start();
 		}
+
+		//Start the web server.
+		httpServer.start();
+
 	}
 
 	/**

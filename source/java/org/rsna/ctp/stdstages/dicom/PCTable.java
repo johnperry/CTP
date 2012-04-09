@@ -28,7 +28,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		}
 	}
 
-	public static PCTable getInstance() {
+	public static synchronized PCTable getInstance() {
 		return pcTable;
 	}
 
