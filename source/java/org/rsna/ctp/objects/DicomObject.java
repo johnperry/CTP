@@ -590,7 +590,7 @@ public class DicomObject extends FileObject {
 			//The name is not in the dictionary.
 			//See if the name parses as a hex integer.
 			name = name.replaceAll("[\\[\\(,\\)\\]]", "");
-			if (name.replaceAll("[0-9a-zA-Z]", "").length() == 0) {
+			if (name.replaceAll("[0-9a-fA-F]", "").length() == 0) {
 				return StringUtil.getHexInt(name);
 			}
 		}

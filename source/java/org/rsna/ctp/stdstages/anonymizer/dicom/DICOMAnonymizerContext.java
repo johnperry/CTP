@@ -18,6 +18,7 @@ import org.dcm4che.data.DcmElement;
 import org.dcm4che.data.SpecificCharacterSet;
 import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.VRs;
+import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 
 import org.apache.log4j.Logger;
@@ -225,7 +226,7 @@ public class DICOMAnonymizerContext {
 		String value = "";
 		tagName = (tagName != null) ? tagName.trim() : "";
 		if (!tagName.equals("")) {
-			int tag = tagName.equals("this") ? defaultTag : Tags.forName(tagName);
+			int tag = tagName.equals("this") ? defaultTag : DicomObject.getElementTag(tagName);
 			try { value = contents(tag); }
 			catch (Exception e) { value = null; };
 		}

@@ -9,6 +9,7 @@ package org.rsna.ctp.stdstages.anonymizer.dicom;
 
 import java.util.Properties;
 import org.dcm4che.data.Dataset;
+import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 import java.util.LinkedList;
 import org.dcm4che.dict.Tags;
@@ -119,16 +120,23 @@ public class FnCall {
 	}
 
    /**
-	 * Get the tag corresponding to a tag name
-	 * allowing for the "this" keyword.
+	 * Get the tag corresponding to a tag name, allowing for the "this" keyword.
+	 * Allowed formats are:
+	 * <ul>
+	 * <li>this</li>
+	 * <li>ggggeeee</li>
+	 * <li>[ggggeeee]</li>
+	 * </ul>
+	 * Note: the underlying translation also supports wrapping in parentheses and
+	 * separating the group and element numbers with a comma, but the parser in
+	 * the FnCall constructor does not allow these formats. Maybe someday...
 	 * @param tagName the name of the tag.
 	 * @return the tag.
 	 */
 	public int getTag(String tagName) {
 		tagName = (tagName != null) ? tagName.trim() : "";
-		if (tagName.equals("") || tagName.equals("this"))
-			return thisTag;
-		return Tags.forName(tagName);
+		if (tagName.equals("") || tagName.equals("this")) return thisTag;
+		else return DicomObject.getElementTag(tagName);
 	}
 
    /**
@@ -141,8 +149,9 @@ public class FnCall {
 		if (args == null) return "";
 		if (arg >= args.length) return "";
 		String argString = args[arg].trim();
-		if (argString.startsWith("\"") && argString.endsWith("\""))
+		if (argString.startsWith("\"") && argString.endsWith("\"")) {
 			argString = argString.substring(1,argString.length()-1);
+		}
 		return argString;
 	}
 
