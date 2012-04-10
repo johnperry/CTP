@@ -44,7 +44,7 @@ public class DAScript {
 	 * if the script file has changed.
 	 * @param file the file containing the script.
 	 */
-	public static DAScript getInstance(File file) {
+	public static synchronized DAScript getInstance(File file) {
 		//First see if we already have an instance in the table
 		String path = file.getAbsolutePath().replaceAll("\\\\","/");
 		DAScript das = scripts.get(path);
@@ -207,7 +207,7 @@ public class DAScript {
 							else if (left.startsWith("set.") || left.startsWith("#set.")) {
 								root.appendChild(createElement(doc, left, right));
 							}
-							else if (left.startsWith("keep.") || left.startsWith("@keep.")) {
+							else if (left.startsWith("keep.") || left.startsWith("#keep.")) {
 								root.appendChild(createKeep(doc, left, right));
 							}
 							else if (left.startsWith("remove.") || left.startsWith("#remove.")) {
