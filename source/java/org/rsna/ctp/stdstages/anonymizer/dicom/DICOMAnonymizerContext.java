@@ -13,6 +13,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.dcm4che.data.Dataset;
 import org.dcm4che.data.DcmElement;
 import org.dcm4che.data.SpecificCharacterSet;
@@ -20,6 +22,7 @@ import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.VRs;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
+import org.rsna.util.StringUtil;
 
 import org.apache.log4j.Logger;
 
@@ -48,6 +51,7 @@ public class DICOMAnonymizerContext {
 
 	LinkedList<Dataset> inStack;
 	LinkedList<Dataset> outStack;
+	PrivateGroupsIndex pgIndex;
 
    /**
 	 * Organize all the data required for anonymization.
@@ -69,6 +73,9 @@ public class DICOMAnonymizerContext {
 		this.inDS = inDS;
 		this.outDS = outDS;
 
+		//Build the index of private groups
+		pgIndex = new PrivateGroupsIndex(inDS);
+
 		//Set up the booleans to handle the global cases
 		rpg = (cmds.getProperty("remove.privategroups") != null);
 		rue = (cmds.getProperty("remove.unspecifiedelements") != null);
@@ -83,22 +90,10 @@ public class DICOMAnonymizerContext {
 			String key = (String)it.nextElement();
 
 			if (key.startsWith("set.[")) {
-				int k = key.indexOf("]");
-				if (k > 5) {
-					String s = key.substring(5, k).replaceAll("[^0-9a-fA-F]","");
-					//Note: Integer.parseInt(s, 16) throws a NumberFormatException
-					//if s denotes a 32-bit value with a leading 1, so we treat
-					//the 8-character case separately.
-					Integer i;
-					if (s.length() < 8) {
-						i = new Integer( Integer.parseInt(s, 16) );
-					}
-					else {
-						int high = Integer.parseInt(s.substring(0,4), 16);
-						int low = Integer.parseInt(s.substring(4), 16);
-						i = new Integer( (high << 16) | low);
-					}
-					scriptTable.put( i, cmds.getProperty(key) );
+				int k = key.lastIndexOf("]");
+				if (k > 0) {
+					int tag = getElementTag(key.substring(5, k));
+					if (tag != 0) scriptTable.put( new Integer(tag), cmds.getProperty(key) );
 				}
 			}
 			else if (key.startsWith("keep.group")) {
@@ -226,7 +221,7 @@ public class DICOMAnonymizerContext {
 		String value = "";
 		tagName = (tagName != null) ? tagName.trim() : "";
 		if (!tagName.equals("")) {
-			int tag = tagName.equals("this") ? defaultTag : DicomObject.getElementTag(tagName);
+			int tag = tagName.equals("this") ? defaultTag : getElementTag(tagName);
 			try { value = contents(tag); }
 			catch (Exception e) { value = null; };
 		}
@@ -246,7 +241,7 @@ public class DICOMAnonymizerContext {
 		tagName = tagName.trim();
 		if (tagName.equals("")) return null;
 		String value = "";
-		int tag = tagName.equals("this") ? defaultTag : Tags.forName(tagName);
+		int tag = tagName.equals("this") ? defaultTag : getElementTag(tagName);
 		try { value = contents(tag); }
 		catch (Exception e) { return null; };
 		return value;
@@ -293,8 +288,8 @@ public class DICOMAnonymizerContext {
 	}
 
 	/*
-	 * Store a value in the output dataset.If the output dataset is null,
-	 * this method does nothing.
+	 * Store a value in the output dataset.
+	 * If the output dataset is null, this method does nothing.
 	 *
 	 * This method works around the bug in dcm4che which inserts the wrong
 	 * VR (SH) when storing an empty element of VR = PN. It also handles the
@@ -322,5 +317,129 @@ public class DICOMAnonymizerContext {
 			outDS.putXX(tag,vr,s);
 		}
 	}
+
+	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}\\[(.*)\\]([0-9a-fA-F]{2})");
+	/**
+	 * Get the tag for a DICOM element. This
+	 * method supports dcm4che names as well as hex strings,
+	 * with or without enclosing parentheses or square brackets
+	 * and with or without a comma separating the group and the
+	 * element numbers. This method differs from the DicomObject
+	 * method of the same name in that it also supports names for
+	 * private group elements in the form 0009[ID]02, where ID is
+	 * the block owner ID. Examples of element specifications
+	 * containing block owner IDs are:
+	 *<ul>
+	 *<li>9,[blockID]02
+	 *<li>(9,[blockID]02)
+	 *<li>[9,[blockID]02]
+	 *<li>0009[blockID]02
+	 *</ul>
+	 * @param name the dcm4che element name or coded hex value.
+	 * @return the tag, or zero if the name cannot be parsed as
+	 * an element specification
+	 */
+	public int getElementTag(String name) {
+		if (name == null) return 0;
+		name = name.trim();
+		int k = name.length() - 1;
+		if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
+		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
+
+		//Try it as a standard element specification
+		int tag = DicomObject.getElementTag(name);
+		if (tag != 0) return tag;
+
+		//Try to match it as a private group element with a block specification
+		Matcher matcher = pgPattern.matcher(name);
+		if (matcher.matches()) {
+			int group = StringUtil.getHexInt(matcher.group(1));
+			if ((group & 1) == 1) {
+
+				//It's a private group; get the block ID and the element offset
+				String blockID = matcher.group(2);
+				int elem = StringUtil.getHexInt(matcher.group(3));
+
+				//Now get the tag of the private group creator
+				int creatorTag = pgIndex.getTagForID(group, blockID);
+				if (creatorTag != 0) {
+					return (group << 16) | ((creatorTag & 0xFF) << 8) | (elem & 0xFF);
+				}
+			}
+		}
+		return 0;
+	}
+
+	class PrivateGroupsIndex {
+
+		Hashtable<Integer,PrivateGroupIndex> index;
+		Dataset ds;
+		SpecificCharacterSet cs;
+
+		public PrivateGroupsIndex( Dataset ds ) {
+			this.ds = ds;
+			cs = ds.getSpecificCharacterSet();
+			index = new Hashtable<Integer,PrivateGroupIndex>();
+
+			for (Iterator it=ds.iterator(); it.hasNext(); ) {
+				DcmElement el = (DcmElement)it.next();
+				int tag = el.tag();
+				int group = (tag >> 16) & 0xFFFF;
+				int element = tag & 0xFFFF;
+				if ( ((group & 1) != 0) && (element < 0x100)) {
+
+					//This is a private group element that claims a block.
+					try {
+						String blockOwnerID = el.getString(cs);
+						if ((blockOwnerID != null) && !(blockOwnerID=blockOwnerID.trim()).equals("")) {
+
+							//Get the index of this group
+							Integer gpInteger = new Integer(group);
+							PrivateGroupIndex idx = index.get( gpInteger );
+							if (idx == null) {
+								idx = new PrivateGroupIndex();
+								index.put( gpInteger, idx );
+							}
+
+							//Store the mapping for this block.
+							//Note: this implementation requires that all blocks
+							//within a single private group be claimed with unique IDs.
+							//The standard doesn't seem to require this constraint, but
+							//objects in practice seem to observe it. There is a CP
+							//inprocess to require it.
+							idx.put( blockOwnerID, new Integer(tag) );
+						}
+					}
+					catch (Exception skip) { }
+				}
+			}
+		}
+
+		public int getTagForID(int group, String id) {
+			if (id == null) return 0;
+			PrivateGroupIndex idx = index.get( new Integer(group) );
+			if (idx == null) return 0;
+			Integer tagInteger = idx.get(id.trim());
+			if (tagInteger == null) return 0;
+			return tagInteger.intValue();
+		}
+
+		class PrivateGroupIndex {
+			Hashtable<String,Integer> index;
+			public PrivateGroupIndex() {
+				index = new Hashtable<String,Integer>();
+			}
+			public void put(String id, Integer tag) {
+				if (id == null) return;
+				index.put(id.trim(), tag);
+			}
+			public Integer get(String id) {
+				if (id == null) return null;
+				return index.get(id.trim());
+			}
+		}
+	}
+
+
 
 }

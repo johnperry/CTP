@@ -380,9 +380,12 @@ public class DICOMAnonymizer {
 			boolean isOverlay = ((group & 0xFF000000) == 0x60000000);
 			boolean isCurve = ((group & 0xFF000000) == 0x50000000);
 			boolean isPrivate = ((tag & 0x10000) != 0);
+			boolean isCreatorBlock = isPrivate && ((tag & 0xFF) == 0);
 
 			String script = context.getScriptFor(tag);
 			boolean hasScript = (script != null);
+
+			if ( (tag & 0x10000) != 0) logger.warn("Processing ("+Integer.toHexString(tag)+"): script: "+script);
 
 			boolean keep  = context.containsKeepGroup(group) ||
 							(tag == 0x00080016)   		|| 	//SopClassUID
@@ -394,12 +397,12 @@ public class DICOMAnonymizer {
 							(isOverlay && !context.rol) ||	//overlays
 							(isCurve && !context.rc);		//curves
 
-			if (context.rpg && isPrivate && !hasScript && !keep) {
+			if (context.rpg && isPrivate && !hasScript && !keep && !isCreatorBlock) {
 				try { ds.remove(tag); }
 				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
 			}
 
-			else if (context.rue && !hasScript && !keep) {
+			else if (context.rue && !hasScript && !keep && !isCreatorBlock) {
 				try { ds.remove(tag); }
 				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
 			}

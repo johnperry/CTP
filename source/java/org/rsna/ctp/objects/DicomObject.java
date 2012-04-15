@@ -8,12 +8,12 @@
 package org.rsna.ctp.objects;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.geom.*;
+import java.awt.Graphics2D;
 import java.awt.image.*;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.*;
 import javax.imageio.*;
@@ -573,27 +573,55 @@ public class DicomObject extends FileObject {
 		}
 	}
 
+	static final Pattern hexPattern = Pattern.compile("([0-9a-fA-F]{1,8})");
+	static final Pattern hexCommaPattern = Pattern.compile("([0-9a-fA-F]{0,4}),([0-9a-fA-F]{1,4})");
 	/**
-	 * Get the tag for the dcm4che name of a DICOM element. This
+	 * Get the tag for a DICOM element. This
 	 * method supports dcm4che names as well as hex strings,
 	 * with or without enclosing parentheses or square brackets
 	 * and with or without a comma separating the group and the
-	 * element numbers. All four characters of a hex element
-	 * number are required.
-	 * @param name the dcm4che element name or coded hex value.
-	 * @return the tag, or zero if the name is not a dcm4che element name.
+	 * element numbers. Examples of element specifications are:
+	 *<ul>
+	 *<li>100020
+	 *<li>00100020
+	 *<li>[00100020]
+	 *<li>(00100020)
+	 *<li>0010,0020
+	 *<li>10,20
+	 *<li>(10,20)
+	 *<li>[10,20]
+	 </ul>
+	 * @param name the dcm4che element name or the coded hex value.
+	 * @return the tag, or zero if the name is not a parsable element specification.
 	 */
 	public static int getElementTag(String name) {
 		if (name == null) return 0;
-		try { return Tags.forName(name.trim()); }
-		catch (Exception ex) {
-			//The name is not in the dictionary.
-			//See if the name parses as a hex integer.
-			name = name.replaceAll("[\\[\\(,\\)\\]]", "");
-			if (name.replaceAll("[0-9a-fA-F]", "").length() == 0) {
-				return StringUtil.getHexInt(name);
-			}
+		name = name.trim();
+
+		//Try it as a dcm4che element name
+		try { return Tags.forName(name); }
+		catch (Exception notInDictionary) { }
+
+		//Not a name, set up to parse it as a hex specification
+		int k = name.length() - 1;
+		if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
+		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
+
+		//First try it as a pure hex integer, with no comma between the group and element
+		Matcher matcher = hexPattern.matcher(name);
+		if (matcher.matches()) {
+			return StringUtil.getHexInt(matcher.group(1));
 		}
+
+		//No luck there; try it as two comma-separated hex integers
+		matcher = hexCommaPattern.matcher(name);
+		if (matcher.matches()) {
+			int group = StringUtil.getHexInt(matcher.group(1));
+			int elem = StringUtil.getHexInt(matcher.group(2));
+			return (group << 16) | (elem & 0xFFFF);
+		}
+
+		//Not a valid specification
 		return 0;
 	}
 
