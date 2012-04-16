@@ -810,11 +810,12 @@ function createNewElement(event) {
 	if (div) div.parentNode.removeChild(div);
 
 	if (tag == null) {
-		alert("A tag must be in any of these forms:\n"
-			+ "    \"gggg,eeee\"\n"
-			+ "    \"ggggeeee\"\n"
-			+ "    \"gggg,[blockID]ee\"\n"
-			+ "    \"gggg[blockID]ee\"\n"
+		alert("A tag must be in any of these forms:\n\n"
+			+ "    ggggeeee\n"
+			+ "    gggg,eeee\n\n"
+			+ "and for private groups, also:\n\n"
+			+ "    gggg[blockID]ee\n"
+			+ "    gggg,[blockID]ee\n\n"
 			+ "where g and e are hexadecimal.");
 		return;
 	}
@@ -970,7 +971,10 @@ function fixTag(tag) {
 	}
 	x = tag.match(pgPattern);
 	if (x) {
-		return x[1].toLowerCase() + x[2].toUpperCase() + x[3].toLowerCase();
+		var g = parseInt(x[1], 16);
+		if ((g & 1) != 0) {
+			return x[1].toLowerCase() + x[2].toUpperCase() + x[3].toLowerCase();
+		}
 	}
 	return null;
 }
