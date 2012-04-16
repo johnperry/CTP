@@ -267,7 +267,7 @@ function createParamRow(tag, value) {
 
 function createElementRow(name, tag, value) {
 	var tr = document.createElement("TR");
-	tag = tag.toLowerCase();
+	tag = fixTag(tag);
 	tr.row_type = "e";
 	tr.row_n = name;
 	tr.row_t = tag;
@@ -286,7 +286,7 @@ function createElementRow(name, tag, value) {
 	var span = document.createElement("SPAN");
 	span.className = "tag";
 	td.appendChild(span);
-	span.appendChild(document.createTextNode(tag.substr(0,4) + "," + tag.substr(4,4)));
+	span.appendChild(document.createTextNode(tag.substring(0,4) + "," + tag.substring(4)));
 	td.appendChild(document.createTextNode("] "));
 	td.appendChild(document.createTextNode(name));
 
@@ -810,9 +810,12 @@ function createNewElement(event) {
 	if (div) div.parentNode.removeChild(div);
 
 	if (tag == null) {
-		alert("A tag must be in the form \"gggg,eeee\"\n"
-			+ "or \"ggggeeee\", where gggg and eeee\n"
-			+ "are hexadecimal.");
+		alert("A tag must be in any of these forms:\n"
+			+ "    \"gggg,eeee\"\n"
+			+ "    \"ggggeeee\"\n"
+			+ "    \"gggg,[blockID]ee\"\n"
+			+ "    \"gggg[blockID]ee\"\n"
+			+ "where g and e are hexadecimal.");
 		return;
 	}
 	if (name.length == 0) {
@@ -952,14 +955,24 @@ function deleteKeepGroup(event) {
 	}
 }
 
+hexPattern = /([0-9a-fA-F]{8})/;
+hexCommaPattern = /([0-9a-fA-F]{4}),([0-9a-fA-F]{4})/;
+pgPattern = /([0-9a-fA-F]{4})[,]{0,1}(\[.*\])([0-9a-fA-F]{2})/;
+
 function fixTag(tag) {
-	if (tag == null) return null;
-	tag = tag.toLowerCase().replace(/[^0-9a-f]/g, '');
-	if (tag.length < 5) return null;
-	var n = tag.length;
-	if (n == 8) return tag;
-	if (n < 8) return "00000000".substr(0, 8-n) + tag;
-	return tag.substr(0, 8);
+	var x = tag.match(hexPattern);
+	if (x) {
+		return x[0].toLowerCase();
+	}
+	x = tag.match(hexCommaPattern);
+	if (x) {
+		return (x[1] + x[2]).toLowerCase();
+	}
+	x = tag.match(pgPattern);
+	if (x) {
+		return x[1].toLowerCase() + x[2].toUpperCase() + x[3].toLowerCase();
+	}
+	return null;
 }
 
 function fixGroup(group) {

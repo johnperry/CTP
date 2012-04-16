@@ -357,7 +357,7 @@ public class DICOMAnonymizerContext {
 			if ((group & 1) == 1) {
 
 				//It's a private group; get the block ID and the element offset
-				String blockID = matcher.group(2);
+				String blockID = matcher.group(2).toUpperCase();
 				int elem = StringUtil.getHexInt(matcher.group(3));
 
 				//Now get the tag of the private group creator
@@ -431,11 +431,11 @@ public class DICOMAnonymizerContext {
 			}
 			public void put(String id, Integer tag) {
 				if (id == null) return;
-				index.put(id.trim(), tag);
+				index.put(id.trim().toUpperCase(), tag);
 			}
 			public Integer get(String id) {
 				if (id == null) return null;
-				return index.get(id.trim());
+				return index.get(id.trim().toUpperCase());
 			}
 		}
 	}
