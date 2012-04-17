@@ -52,6 +52,7 @@ public class DICOMAnonymizerContext {
 	LinkedList<Dataset> inStack;
 	LinkedList<Dataset> outStack;
 	PrivateGroupsIndex pgIndex;
+	Hashtable<String,Integer> privateElementNames;
 
    /**
 	 * Organize all the data required for anonymization.
@@ -76,6 +77,9 @@ public class DICOMAnonymizerContext {
 		//Build the index of private groups
 		pgIndex = new PrivateGroupsIndex(inDS);
 
+		//Make a table to hold locally defined names for private elements
+		privateElementNames = new Hashtable<String,Integer>();
+
 		//Set up the booleans to handle the global cases
 		rpg = (cmds.getProperty("remove.privategroups") != null);
 		rue = (cmds.getProperty("remove.unspecifiedelements") != null);
@@ -93,7 +97,17 @@ public class DICOMAnonymizerContext {
 				int k = key.lastIndexOf("]");
 				if (k > 0) {
 					int tag = getElementTag(key.substring(5, k));
-					if (tag != 0) scriptTable.put( new Integer(tag), cmds.getProperty(key) );
+					if (tag != 0) {
+						//Store the script
+						Integer tagInteger = new Integer(tag);
+						scriptTable.put( tagInteger, cmds.getProperty(key) );
+
+						//If this is a private group element with a name, index the name.
+						if ((tag & 0x10000) != 0) {
+							String name = key.substring(k+1).trim();
+							if (!name.equals("")) privateElementNames.put( name, tagInteger);
+						}
+					}
 				}
 			}
 			else if (key.startsWith("keep.group")) {
@@ -319,22 +333,25 @@ public class DICOMAnonymizerContext {
 	}
 
 	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}\\[(.*)\\]([0-9a-fA-F]{2})");
+	static final Pattern pcPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}00\\[(.*)\\]");
 	/**
 	 * Get the tag for a DICOM element. This
 	 * method supports dcm4che names as well as hex strings,
 	 * with or without enclosing parentheses or square brackets
 	 * and with or without a comma separating the group and the
-	 * element numbers. This method differs from the DicomObject
-	 * method of the same name in that it also supports names for
-	 * private group elements in the form 0009[ID]02, where ID is
-	 * the block owner ID. Examples of element specifications
-	 * containing block owner IDs are:
+	 * element numbers. This method also supports private group
+	 * names defined in the script. This method differs from the
+	 * DicomObject method of the same name in that it also supports
+	 * names for private group elements in the form 0009[ID]02,
+	 * where ID is the block owner ID. Examples of element
+	 * specifications containing block owner IDs are:
 	 *<ul>
 	 *<li>9,[blockID]02
 	 *<li>(9,[blockID]02)
 	 *<li>[9,[blockID]02]
 	 *<li>0009[blockID]02
 	 *</ul>
+	 *
 	 * @param name the dcm4che element name or coded hex value.
 	 * @return the tag, or zero if the name cannot be parsed as
 	 * an element specification
@@ -349,6 +366,10 @@ public class DICOMAnonymizerContext {
 		//Try it as a standard element specification
 		int tag = DicomObject.getElementTag(name);
 		if (tag != 0) return tag;
+
+		//Try it as a private element name
+		Integer tagInteger = privateElementNames.get(name);
+		if (tagInteger != null) return tagInteger.intValue();
 
 		//Try to match it as a private group element with a block specification
 		Matcher matcher = pgPattern.matcher(name);
@@ -365,6 +386,21 @@ public class DICOMAnonymizerContext {
 				if (creatorTag != 0) {
 					return (group << 16) | ((creatorTag & 0xFF) << 8) | (elem & 0xFF);
 				}
+			}
+		}
+
+		//Try to match it as a private creator element with a block specification
+		matcher = pcPattern.matcher(name);
+		if (matcher.matches()) {
+			int group = StringUtil.getHexInt(matcher.group(1));
+			if ((group & 1) == 1) {
+
+				//It's a private group; get the block ID
+				String blockID = matcher.group(2).toUpperCase();
+
+				//Now get the tag of the private group creator
+				int creatorTag = pgIndex.getTagForID(group, blockID);
+				if (creatorTag != 0) return creatorTag;
 			}
 		}
 		return 0;

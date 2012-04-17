@@ -83,7 +83,9 @@ public class DICOMPixelAnonymizer {
 			in = new BufferedInputStream(new FileInputStream(inFile));
 			DcmParser parser = pFact.newDcmParser(in);
 			FileFormat fileFormat = parser.detectFileFormat();
-			if (fileFormat == null) throw new IOException("Unrecognized file format: "+inFile);
+			if (fileFormat == null) {
+				throw new IOException("Unrecognized file format: "+inFile);
+			}
 
 			//Get the dataset (excluding pixels) and leave the input stream open
 			Dataset dataset = oFact.newDataset();
@@ -92,6 +94,7 @@ public class DICOMPixelAnonymizer {
 
 			//Make sure this is an image
             if (parser.getReadTag() != Tags.PixelData) {
+				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Not an image");
 			}
 
@@ -121,6 +124,7 @@ public class DICOMPixelAnonymizer {
 
 /**/		//While in development, abort on encapsulated pixel data
 /**/		if (encoding.encapsulated) {
+				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
 			}
 

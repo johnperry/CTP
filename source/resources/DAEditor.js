@@ -815,7 +815,9 @@ function createNewElement(event) {
 			+ "    gggg,eeee\n\n"
 			+ "and for private groups, also:\n\n"
 			+ "    gggg[blockID]ee\n"
-			+ "    gggg,[blockID]ee\n\n"
+			+ "    gggg00[blockID]\n\n"
+			+ "    gggg[blockID]ee\n"
+			+ "    gggg,00[blockID]\n\n"
 			+ "where g and e are hexadecimal.");
 		return;
 	}
@@ -958,7 +960,8 @@ function deleteKeepGroup(event) {
 
 hexPattern = /([0-9a-fA-F]{8})/;
 hexCommaPattern = /([0-9a-fA-F]{4}),([0-9a-fA-F]{4})/;
-pgPattern = /([0-9a-fA-F]{4})[,]{0,1}(\[.*\])([0-9a-fA-F]{2})/;
+pgPattern = /([0-9a-fA-F]{4})[,]{0,1}(\[.*\])([0-9a-fA-F]{2})/;  //private group data element
+pcPattern = /([0-9a-fA-F]{4})[,]{0,1}00(\[.*\])/;  //private creator element
 
 function fixTag(tag) {
 	var x = tag.match(hexPattern);
@@ -974,6 +977,13 @@ function fixTag(tag) {
 		var g = parseInt(x[1], 16);
 		if ((g & 1) != 0) {
 			return x[1].toLowerCase() + x[2].toUpperCase() + x[3].toLowerCase();
+		}
+	}
+	x = tag.match(pcPattern);
+	if (x) {
+		var g = parseInt(x[1], 16);
+		if ((g & 1) != 0) {
+			return x[1].toLowerCase() + "00" + x[2].toUpperCase();
 		}
 	}
 	return null;
