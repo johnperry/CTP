@@ -160,7 +160,7 @@ public class DAScript {
 		String elem = "[" + t.substring(0,4) + "," + t.substring(4) + "]";
 		String name = x.getAttribute("n");
 		String key = sel + "set." + elem + name;
-		String value = x.getTextContent();
+		String value = x.getTextContent().trim();
 		props.setProperty(key, value);
 	}
 
