@@ -385,8 +385,6 @@ public class DICOMAnonymizer {
 			String script = context.getScriptFor(tag);
 			boolean hasScript = (script != null);
 
-			if ( (tag & 0x10000) != 0) logger.warn("Processing ("+Integer.toHexString(tag)+"): script: "+script);
-
 			boolean keep  = context.containsKeepGroup(group) ||
 							isCreatorBlock ||
 							(tag == 0x00080016)   		|| 	//SopClassUID
