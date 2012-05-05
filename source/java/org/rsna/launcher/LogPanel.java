@@ -17,7 +17,6 @@ public class LogPanel extends BasePanel implements ActionListener {
 	public static ColorPane out;
 
 	JScrollPane jsp;
-	JCheckBox wrap;
 	JButton delete;
 	JButton refresh;
 	File log = new File("logs/ctp.log");
@@ -28,14 +27,13 @@ public class LogPanel extends BasePanel implements ActionListener {
 		out = new ColorPane();
 		out.setScrollableTracksViewportWidth(false);
 
+		BasePanel bp = new BasePanel();
+		bp.add(out, BorderLayout.CENTER);
+
 		jsp = new JScrollPane();
-		jsp.setViewportView(out);
+		jsp.setViewportView(bp);
 		jsp.getViewport().setBackground(Color.white);
 		add(jsp, BorderLayout.CENTER);
-
-		wrap = new JCheckBox("Wrap lines");
-		wrap.setBackground(bgColor);
-		wrap.addActionListener(this);
 
 		delete = new JButton("Delete");
 		delete.setToolTipText("Delete old logs");
@@ -45,7 +43,6 @@ public class LogPanel extends BasePanel implements ActionListener {
 		refresh.addActionListener(this);
 
 		Box footer = Box.createHorizontalBox();
-		footer.add(wrap);
 		footer.add(Box.createHorizontalGlue());
 		footer.add(delete);
 		footer.add(Box.createHorizontalStrut(3));
@@ -62,12 +59,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent event) {
-		if (event.getSource().equals(wrap)) {
-			out.setScrollableTracksViewportWidth( wrap.isSelected() );
-			jsp.invalidate();
-			jsp.validate();
-		}
-		else if (event.getSource().equals(refresh)) {
+		if (event.getSource().equals(refresh)) {
 			reload();
 		}
 		else if (event.getSource().equals(delete)) {

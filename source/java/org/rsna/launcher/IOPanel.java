@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class IOPanel extends BasePanel implements ActionListener {
+public class IOPanel extends BasePanel {
 
 	public static ColorPane out;
 
@@ -24,27 +24,13 @@ public class IOPanel extends BasePanel implements ActionListener {
 		out = new ColorPane();
 		out.setScrollableTracksViewportWidth(false);
 
+		BasePanel bp = new BasePanel();
+		bp.add(out, BorderLayout.CENTER);
+
 		jsp = new JScrollPane();
-		jsp.setViewportView(out);
+		jsp.setViewportView(bp);
 		jsp.getViewport().setBackground(Color.white);
 		add(jsp, BorderLayout.CENTER);
-
-		Box footer = Box.createHorizontalBox();
-		wrap = new JCheckBox("Wrap lines");
-		wrap.setBackground(bgColor);
-		wrap.addActionListener(this);
-
-		footer.add(wrap);
-		footer.add(Box.createHorizontalGlue());
-		add(footer, BorderLayout.SOUTH);
-	}
-
-	public void actionPerformed(ActionEvent event) {
-		if (event.getSource().equals(wrap)) {
-			out.setScrollableTracksViewportWidth( wrap.isSelected() );
-			jsp.invalidate();
-			jsp.validate();
-		}
 	}
 
 }

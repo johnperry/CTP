@@ -159,6 +159,17 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			saveItem.addActionListener( new SaveImpl() );
 			fileMenu.add(saveItem);
 
+			JMenu viewMenu = new JMenu("View");
+			JMenuItem formItem = new JMenuItem("Form");
+			formItem.setAccelerator( KeyStroke.getKeyStroke('F', InputEvent.CTRL_MASK) );
+			formItem.addActionListener( new FormImpl() );
+			viewMenu.add(formItem);
+
+			JMenuItem xmlItem = new JMenuItem("XML");
+			xmlItem.setAccelerator( KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK) );
+			xmlItem.addActionListener( new XmlImpl() );
+			viewMenu.add(xmlItem);
+
 			JMenu pluginMenu = new JMenu("Plugin");
 			pluginMenu.add( new JMenuItem("AuditLog") );
 			pluginMenu.add( new JMenuItem("MIRC") );
@@ -170,6 +181,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			stageMenu.add( new JMenuItem("New") );
 
 			menuBar.add(fileMenu);
+			menuBar.add(viewMenu);
 			menuBar.add(pluginMenu);
 			menuBar.add(pipeMenu);
 			menuBar.add(stageMenu);
@@ -180,6 +192,18 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				treePane.save();
+			}
+		}
+
+		class FormImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				dataPane.setView(false);
+			}
+		}
+
+		class XmlImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				dataPane.setView(true);
 			}
 		}
 	}
@@ -228,14 +252,30 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 
 	class DataPane extends ScrollableJPanel {
 
+		boolean viewAsXML = false;
+		XMLUserObject currentObject = null;
+
 		public DataPane() {
 			super();
 			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
 			setBackground(Color.white);
 		}
 
+		public void setView(boolean viewAsXML) {
+			this.viewAsXML = viewAsXML;
+			if (currentObject != null) edit(currentObject);
+		}
+
 		public void edit(XMLUserObject userObject) {
+			currentObject = userObject;
 			for (Component c : getComponents()) remove(c);
+			if (viewAsXML) displayXML(userObject);
+			else displayForm(userObject);
+		}
+
+		private void displayForm(XMLUserObject userObject) {
+			setTrackWidth(true);
+			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
 			Element template = userObject.getTemplate();
 			if (template != null) {
 				Node child = template.getFirstChild();
@@ -268,14 +308,28 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			}
 			revalidate();
 		}
+
+		private void displayXML(XMLUserObject userObject) {
+			setTrackWidth(false);
+			setLayout(new BorderLayout());
+			ColorPane cp = new ColorPane();
+			cp.setEditable(false);
+			cp.setScrollableTracksViewportWidth(false);
+			String xml = Util.toPrettyString(userObject.element);
+			cp.setText(xml);
+			add(cp, BorderLayout.CENTER);
+			revalidate();
+		}
 	}
 
 	class ScrollableJPanel extends JPanel implements Scrollable {
+		private boolean trackWidth = true;
 		public ScrollableJPanel() {
 			super();
 		}
+		public void setTrackWidth(boolean trackWidth) { this.trackWidth = trackWidth; }
 		public boolean getScrollableTracksViewportHeight() { return false; }
-		public boolean getScrollableTracksViewportWidth() { return true; }
+		public boolean getScrollableTracksViewportWidth() { return trackWidth; }
 		public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
 		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
 		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
