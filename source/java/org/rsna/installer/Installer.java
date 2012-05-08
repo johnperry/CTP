@@ -54,13 +54,7 @@ public class Installer extends JFrame {
 	/**
 	 * Class constructor; creates a new Installer object, displays a JFrame
 	 * introducing the program, allows the user to select an install directory,
-	 * backs up any properties files found in the directory, and copies files
-	 * from the jar into the directory.
-	 *<p>
-	 * If the selected directory has the same name as the program, the files are
-	 * installed in the selected directory. If the selected directory has any other
-	 * name, a directory with the name of the program is created in the selected
-	 * directory and the files are installed there.
+	 * and copies files from the jar into the directory.
 	 */
 	public Installer() {
 		super();
@@ -150,14 +144,23 @@ public class Installer extends JFrame {
 		//Get the directory for installing the program
 		if ((directory=getDirectory()) == null) exit();
 
-		//Point to the parent of the selected directory so the
-		//copy process works correctly for directory trees.
+		//Point to the parent of the directory in which to install the program.
+		//so the copy process works correctly for directory trees.
+		//
 		//If the user has selected a directory named "CTP",
 		//then assume that this is the directory in which
-		//to install the program; otherwise, assume that
-		//this is the parent of the directory in which to
-		//install the program
+		//to install the program.
+		//
+		//If the directory is not CTP, see if it is called "RSNA" and contains
+		//the Launcher program, in which case we can assume that it is an
+		//installation that was done with Bill Weadock's all-in-one installer for Windows.
+		//
+		//If neither of those cases is true, then this is already the parent of the
+		//directory in which to install the program
 		if (directory.getName().equals("CTP")) {
+			directory = directory.getParentFile();
+		}
+		else if (directory.getName().equals("RSNA") && (new File(directory, "Launcher.jar")).exists()) {
 			directory = directory.getParentFile();
 		}
 
@@ -281,7 +284,11 @@ public class Installer extends JFrame {
 
 	private void cleanup(File directory) {
 		//Clean up from old installations, removing or renaming files.
-		//Note: directory is the parent of the CTP directory.
+		//Note that directory is the parent of the CTP directory.
+		//Also note that if Bill Weadock's all-in-one installer for
+		//Windows was used to create the original installation,
+		//the cleanup doesn't work, but it doesn't matter since the
+		//cleanup is for installations that pre-date Bill's installer.
 		File dir = new File(directory, "CTP");
 
 		//This is a really old CTP main file - not used anymore

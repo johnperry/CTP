@@ -227,7 +227,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 			if ((users != null) && (users instanceof UsersXmlFileImpl)) {
 				User user = users.getUser(name);
 				if (user == null) {
-					user = new User(name, name);
+					user = new User(name, users.convertPassword(name));
 					((UsersXmlFileImpl)users).addUser(user);
 				}
 			}
