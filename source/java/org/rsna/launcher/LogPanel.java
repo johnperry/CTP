@@ -31,6 +31,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 		bp.add(out, BorderLayout.CENTER);
 
 		jsp = new JScrollPane();
+		jsp.getVerticalScrollBar().setUnitIncrement(10);
 		jsp.setViewportView(bp);
 		jsp.getViewport().setBackground(Color.white);
 		add(jsp, BorderLayout.CENTER);
