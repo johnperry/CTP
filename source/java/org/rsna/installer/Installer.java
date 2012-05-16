@@ -32,6 +32,7 @@ public class Installer extends JFrame {
 	JFileChooser	chooser;
 	File			installer;
 	File			directory;
+	boolean 		suppressFirstPathElement = false;
 	ColorPane		cp;
 
 	String windowTitle = "CTP Installer";
@@ -161,7 +162,7 @@ public class Installer extends JFrame {
 			directory = directory.getParentFile();
 		}
 		else if (directory.getName().equals("RSNA") && (new File(directory, "Launcher.jar")).exists()) {
-			directory = directory.getParentFile();
+			suppressFirstPathElement = true;
 		}
 
 		//Cleanup old releases
@@ -180,7 +181,7 @@ public class Installer extends JFrame {
 		}
 
 		//Now install the files
-		int count = unpackZipFile( installer, "CTP", directory.getAbsolutePath() );
+		int count = unpackZipFile( installer, "CTP", directory.getAbsolutePath(), suppressFirstPathElement );
 
 		//And report the results.
 		if (count > 0) {
@@ -230,7 +231,7 @@ public class Installer extends JFrame {
 
 	//Take a tree of files starting in a directory in a zip file
 	//and copy them to a disk directory, recreating the tree.
-	private int unpackZipFile(File inZipFile, String directory, String parent) {
+	private int unpackZipFile(File inZipFile, String directory, String parent, boolean suppressFirstPathElement) {
 		int count = 0;
 		if (!inZipFile.exists()) return count;
 		parent = parent.trim();
@@ -244,6 +245,7 @@ public class Installer extends JFrame {
 				ZipEntry entry = (ZipEntry)zipEntries.nextElement();
 				String name = entry.getName().replace('/',File.separatorChar);
 				if (name.startsWith(directory)) {
+					if (suppressFirstPathElement) name = name.substring(directory.length());
 					outFile = new File(parent + name);
 					//Create the directory, just in case
 					if (name.indexOf(File.separatorChar) >= 0) {
@@ -459,6 +461,7 @@ public class Installer extends JFrame {
 					int kk = text.indexOf("\"", k);
 					text = text.substring(0, k) + port + text.substring(kk);
 					File ctp = new File(directory, "CTP");
+					if (suppressFirstPathElement) ctp = ctp.getParentFile();
 					File config = new File(ctp, "config.xml");
 					setFileText(config, text);
 				}
@@ -473,6 +476,7 @@ public class Installer extends JFrame {
 	private void updateWindowsServiceInstaller() {
 		try {
 			File dir = new File(directory, "CTP");
+			if (suppressFirstPathElement) dir = dir.getParentFile();
 			File windows = new File(dir, "windows");
 			File install = new File(windows, "install.bat");
 			cp.appendln(Color.black, "install.bat: "+install.getAbsolutePath());
