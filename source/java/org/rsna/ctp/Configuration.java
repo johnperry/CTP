@@ -82,17 +82,40 @@ public class Configuration {
 	//only called once.
 	protected Configuration() {
 		try {
-			//Get the manifest from the program jar
+			//Log the environment
+			String thisOS = System.getProperty("os.name");
+			String thisJava = System.getProperty("java.version");
+			String thisJavaBits = System.getProperty("sun.arch.data.model") + " bits";
+
+			//Find the ImageIO Tools and get the version
+			String javaHome = System.getProperty("java.home");
+			File extDir = new File(javaHome);
+			extDir = new File(extDir, "lib");
+			extDir = new File(extDir, "ext");
+			File clib = new File(extDir, "clibwrapper_jiio.jar");
+			File jai = new File(extDir, "jai_imageio.jar");
+			boolean imageIOTools = clib.exists() && jai.exists();
+			String thisImageIOVersion = "not installed";
+			if (imageIOTools) {
+				Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);
+				thisImageIOVersion  = jaiManifest.get("Implementation-Version");
+			}
+			logger.info("Operating system: " + thisOS);
+			logger.info("Java version:     " + thisJava);
+			logger.info("Java data model:  " + thisJavaBits);
+			logger.info("ImageIO Tools:    " + thisImageIOVersion);
+
+			//Log the application libraries
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
 
-			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:     ");
-			logManifestAttribute(new File("libraries/Util.jar"), "Date",    "Util build:    ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:    ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:  ");
+			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:        ");
+			logManifestAttribute(new File("libraries/Util.jar"), "Date",    "Util build:       ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:       ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:     ");
 
-			logger.info("Start time:    "+StringUtil.getDateTime(" at "));
-			logger.info("user.dir:      "+System.getProperty("user.dir"));
-			logger.info("java.ext.dirs: "+System.getProperty("java.ext.dirs") + "\n");
+			logger.info("Start time:       "+StringUtil.getDateTime(" at "));
+			logger.info("user.dir:         "+System.getProperty("user.dir"));
+			logger.info("java.ext.dirs:    "+System.getProperty("java.ext.dirs") + "\n");
 
 			//Instantiate the stages table
 			stages = new Hashtable<String,PipelineStage>();
