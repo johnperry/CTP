@@ -288,7 +288,8 @@ public class AnonymizerFunctions {
 		dateCal.setTimeInMillis(dateCal.getTimeInMillis() + inc);
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
-				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2);
+				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2) +
+				((date.length() > 8) ? date.substring(8) : "");
 	}
 
 	/**
@@ -314,7 +315,8 @@ public class AnonymizerFunctions {
 
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
-				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2);
+				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2) +
+				((date.length() > 8) ? date.substring(8) : "");
 	}
 
 	// A static integer for preventing two new uids created
