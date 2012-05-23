@@ -390,7 +390,7 @@ function getInputText(row) {
 function checkSave(event, item) {
 	var xml = getXML(true);
 	if (xml != savedXML) {
-		showTextDialog("checkSave", 350, 225, "Are you sure?", closeboxURL, "Close",
+		showTextDialog("checkSave", 350, 225, "Are you sure?", "/icons/closebox.gif", "Close",
 			"The document has changed since it was last saved. "
 			+ "Are you sure you want to exit without saving it?", close, hidePopups);
 	}
@@ -431,7 +431,7 @@ function newProfileHandler(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 210, "New Profile", closeboxURL, "Create New Profile", div, createNewProfile, hidePopups);
+	showDialog("ediv", 400, 210, "New Profile", "/icons/closebox.gif", "Create New Profile", div, createNewProfile, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -679,7 +679,7 @@ function newParam(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 240, "New Parameter", closeboxURL, "Create New Parameter", div, createNewParam, hidePopups);
+	showDialog("ediv", 400, 240, "New Parameter", "/icons/closebox.gif", "Create New Parameter", div, createNewParam, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -717,7 +717,7 @@ function removeParam(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 205, "Remove Parameter", closeboxURL, "Remove Parameter", div, deleteParam, hidePopups);
+	showDialog("ediv", 400, 205, "Remove Parameter", "/icons/closebox.gif", "Remove Parameter", div, deleteParam, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -744,7 +744,7 @@ function removeAllParams(event, item) {
 	var div = document.getElementById("ediv");
 	if (div) div.parentNode.removeChild(div);
 
-	showTextDialog("eDiv", 375, 235, "Are you sure?", closeboxURL, "Remove All Parameters",
+	showTextDialog("eDiv", 375, 235, "Are you sure?", "/icons/closebox.gif", "Remove All Parameters",
 		"Are you sure you wish to remove all parameters? ", deleteAllParams, hidePopups);
 }
 
@@ -799,7 +799,7 @@ function newElement(event, item) {
 	text.className = "textbox";
 	td.appendChild(text);
 
-	showDialog("ediv", 400, 275, "New Element", closeboxURL, "Create New Element", div, createNewElement, hidePopups);
+	showDialog("ediv", 400, 275, "New Element", "/icons/closebox.gif", "Create New Element", div, createNewElement, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -858,7 +858,7 @@ function removeElement(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 210, "Remove Element", closeboxURL, "Remove Element", div, deleteElement, hidePopups);
+	showDialog("ediv", 400, 210, "Remove Element", "/icons/closebox.gif", "Remove Element", div, deleteElement, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -894,7 +894,7 @@ function newKeepGroup(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 240, "New Keep Group", closeboxURL, "Create New Keep Group", div, createNewKeepGroup, hidePopups);
+	showDialog("ediv", 400, 240, "New Keep Group", "/icons/closebox.gif", "Create New Keep Group", div, createNewKeepGroup, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 
@@ -936,7 +936,7 @@ function removeKeepGroup(event, item) {
 	p.appendChild(text);
 	div.appendChild(p);
 
-	showDialog("ediv", 400, 250, "Remove Keep Group", closeboxURL, "Remove Keep Group", div, deleteKeepGroup, hidePopups);
+	showDialog("ediv", 400, 250, "Remove Keep Group", "/icons/closebox.gif", "Remove Keep Group", div, deleteKeepGroup, hidePopups);
 	window.setTimeout("document.getElementById('etext1').focus()", 500);
 }
 

@@ -20,6 +20,10 @@ div.main th {
 	text-align: center;
 }
 
+.centeredblock {
+	text-align: center;
+}
+
 .tx {
 	width:100%;
 	font-family: monospace;
