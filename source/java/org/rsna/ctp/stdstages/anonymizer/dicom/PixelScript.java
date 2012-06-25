@@ -37,14 +37,14 @@ public class PixelScript {
    /**
 	* Get the Regions for a specific DicomObject. This method tests
 	* the supplied object against the individual signatures and returns the
-	* list or Regions associated with the first matching signature.
+	* list of Regions associated with the first matching signature.
 	* @param dicomObject the DicomObject for which to find the Regions.
 	* @return the regions associated with the DicomObject.
 	*/
-	public Regions getRegionsFor(DicomObject dicomObject) {
+	public Signature getMatchingSignature(DicomObject dicomObject) {
 		if (signatures != null) {
 			for (Signature sig : signatures) {
-				if (dicomObject.matches(sig.script).getResult()) return sig.regions;
+				if (dicomObject.matches(sig.script).getResult()) return sig;
 			}
 		}
 		return null;
@@ -81,35 +81,5 @@ public class PixelScript {
 			}
 		}
 		return signatures;
-	}
-
-	//A class to contain the information for a single signature.
-	class Signature {
-		public String script;
-		public Regions regions;
-
-		public Signature(String script) {
-			this.script = script;
-			this.regions = new Regions();
-		}
-
-		public void addRegion(int x, int y, int width, int length) {
-			this.regions.addRegion(x, y, width, length);
-		}
-
-		//add a region from a String in the form "( 1, 2, 3, 4 )"
-		public void addRegion(String s) {
-			s = s.substring(1, s.length()-1);
-			String[] ss = s.split(",");
-			if (ss.length == 4) {
-				this.regions.addRegion(
-						StringUtil.getInt(ss[0]),
-						StringUtil.getInt(ss[1]),
-						StringUtil.getInt(ss[2]),
-						StringUtil.getInt(ss[3])
-				);
-			}
-			else logger.warn("Skipping pixel region \""+s+"\"");
-		}
 	}
 }

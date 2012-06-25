@@ -51,37 +51,44 @@ public class Launcher extends JFrame implements ChangeListener {
 		System.setProperty("javax.net.ssl.keyStore", "keystore");
 		System.setProperty("javax.net.ssl.keyStorePassword", "ctpstore");
 
-		config = Configuration.getInstance();
-		setTitle(config.windowTitle);
+		try {
+			config = Configuration.load();
+			setTitle(config.windowTitle);
 
-		versionPanel = new VersionPanel();
-		javaPanel = new JavaPanel();
-		systemPanel = new SystemPanel();
-		configPanel = new ConfigPanel();
-		ioPanel = new IOPanel();
-		logPanel = new LogPanel();
-		tp = new JTabbedPane();
+			versionPanel = new VersionPanel();
+			javaPanel = new JavaPanel();
+			systemPanel = new SystemPanel();
+			configPanel = new ConfigPanel();
+			ioPanel = new IOPanel();
+			logPanel = new LogPanel();
+			tp = new JTabbedPane();
 
-		tp.add("General", javaPanel);
-		tp.add("Version", versionPanel);
-		tp.add("System", systemPanel);
-		tp.add("Configuration", configPanel);
-		tp.add("Console", ioPanel);
-		tp.add("Log", logPanel);
+			tp.add("General", javaPanel);
+			tp.add("Version", versionPanel);
+			tp.add("System", systemPanel);
+			tp.add("Configuration", configPanel);
+			tp.add("Console", ioPanel);
+			tp.add("Log", logPanel);
 
-		tp.addChangeListener(this);
+			tp.addChangeListener(this);
 
-		this.getContentPane().add( tp, BorderLayout.CENTER );
-		this.addWindowListener(new WindowCloser(this));
+			this.getContentPane().add( tp, BorderLayout.CENTER );
+			this.addWindowListener(new WindowCloser(this));
 
-		pack();
+			pack();
 
-		positionFrame();
-		setVisible(true);
+			positionFrame();
+			setVisible(true);
 
-		UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
-		if (autostart) javaPanel.start();
-		else javaPanel.setFocusOnStart();
+			UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
+			if (autostart) javaPanel.start();
+			else javaPanel.setFocusOnStart();
+		}
+		catch (Exception ex) {
+			setVisible(true);
+			JOptionPane.showMessageDialog(null, ex.getMessage());
+			System.exit(0);
+		}
 	}
 
 	public void stateChanged(ChangeEvent event) {

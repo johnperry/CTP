@@ -42,16 +42,20 @@ public class Configuration {
 	static Configuration config = null;
 
 	public static Configuration getInstance() {
-		if (config == null) {
-			config = new Configuration();
-		}
 		return config;
 	}
 
-	protected Configuration() {
+	public static Configuration load() throws Exception {
+		config = new Configuration();
+		return config;
+	}
+
+	protected Configuration() throws Exception {
 
 		//Get the configuration parameters from the CTP config file.
 		configXML = Util.getDocument(configFile);
+		if (configXML == null) throw new Exception("The config file is missing or does not parse.");
+
 		isMIRC = Util.containsAttribute(configXML, "Plugin", "class", "mirc.MIRC");
 		try { port = Integer.parseInt( Util.getAttribute(configXML, "Server", "port") ); }
 		catch (Exception ex) { port = 0; }

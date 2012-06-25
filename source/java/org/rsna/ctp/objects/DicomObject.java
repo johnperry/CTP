@@ -107,7 +107,7 @@ public class DicomObject extends FileObject {
 			fileMetaInfo = dataset.getFileMetaInfo();
 
 			//See if this is a real image.
-			isImage =  (parser.getReadTag() == Tags.PixelData);
+			isImage = (parser.getReadTag() == Tags.PixelData);
 
 			//Get the decode parameter
 			fileParam = parser.getDcmDecodeParam();
@@ -259,7 +259,12 @@ public class DicomObject extends FileObject {
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && parser.getReadTag() != -1) {
+			int tag;
+			long fileLength = file.length();
+			while (!parser.hasSeenEOF()
+					&& (parser.getStreamPosition() < fileLength)
+						&& ((tag=parser.getReadTag()) != -1)
+							&& (tag != 0xFFFCFFFC)) {
 				dataset.writeHeader(
 					out,
 					encoding,
@@ -359,6 +364,7 @@ public class DicomObject extends FileObject {
 			reader.setInput(fiis);
 			bufferedImage = reader.read(frame);
 		}
+		catch (Exception ex) { logger.warn("Unable to read the image", ex); }
 		finally {
 			try { if (fiis != null) fiis.close(); }
 			catch (Exception ignore) { }
@@ -366,25 +372,29 @@ public class DicomObject extends FileObject {
 			catch (Exception ignore) { }
 		}
 		if (bufferedImage == null) throw new Exception("Could not read "+file);
-		currentFrame = frame;
 
-		// Burn in the overlays to keep the JPEG converter
-		// from throwing an array out of bounds exception
+		burnInOverlays();
+		currentFrame = frame;
+		return bufferedImage;
+	}
+
+	// Burn in the overlays to keep the JPEG converter
+	// from throwing an array out of bounds exception
+	private void burnInOverlays() {
 		int bitsStored = getBitsStored();
 		if (bitsStored < 16) {
 			WritableRaster wr = bufferedImage.getRaster();
 			DataBuffer b = wr.getDataBuffer();
 			if (b.getDataType() == DataBuffer.TYPE_USHORT) {
-				int maxPixelInt = (1 << bitsStored) - 1;
-				short maxPixel = (short)(0xffff & maxPixelInt);
+				int maxPixel = (1 << bitsStored) - 1;
+				int highBitsMask = 0xffff & (maxPixel ^ -1);
 				DataBufferUShort bs = (DataBufferUShort)b;
 				short[] data = bs.getData();
 				for (int i=0; i<data.length; i++) {
-					if (data[i] > maxPixel) data[i] = maxPixel;
+					if ((data[i] & highBitsMask) != 0) data[i] = (short)maxPixel;
 				}
 			}
 		}
-		return bufferedImage;
 	}
 
 	/**

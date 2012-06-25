@@ -18,6 +18,7 @@ import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMPixelAnonymizer;
 import org.rsna.ctp.stdstages.anonymizer.dicom.PixelScript;
 import org.rsna.ctp.stdstages.anonymizer.dicom.Regions;
+import org.rsna.ctp.stdstages.anonymizer.dicom.Signature;
 import org.rsna.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -31,6 +32,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	public File scriptFile = null;
 	PixelScript script = null;
 	long lastModified = 0;
+	boolean log = false;
 
 	/**
 	 * Construct the DicomPixelAnonymizer PipelineStage.
@@ -39,6 +41,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	 */
 	public DicomPixelAnonymizer(Element element) {
 		super(element);
+		log = element.getAttribute("log").equals("yes");
 		scriptFile = FileUtil.getFile(element.getAttribute("script"), "examples/example-dicom-pixel-anonymizer.script");
 	}
 
@@ -58,19 +61,23 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 			File file = fileObject.getFile();
 			getScript();
 			if (script != null) {
-				Regions regions = script.getRegionsFor((DicomObject)fileObject);
-				if ((regions != null) && (regions.size() > 0)) {
-					AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions);
-					if (status.isOK()) {
-						fileObject = FileObject.getInstance(file);
+				Signature signature = script.getMatchingSignature((DicomObject)fileObject);
+				log(fileObject, signature);
+				if (signature != null) {
+					Regions regions = signature.regions;
+					if ((regions != null) && (regions.size() > 0)) {
+						AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions);
+						if (status.isOK()) {
+							fileObject = FileObject.getInstance(file);
+						}
+						else if (status.isQUARANTINE()) {
+							if (quarantine != null) quarantine.insert(fileObject);
+							lastFileOut = null;
+							lastTimeOut = System.currentTimeMillis();
+							return null;
+						}
+						else if (status.isSKIP()) ; //keep the input object
 					}
-					else if (status.isQUARANTINE()) {
-						if (quarantine != null) quarantine.insert(fileObject);
-						lastFileOut = null;
-						lastTimeOut = System.currentTimeMillis();
-						return null;
-					}
-					else if (status.isSKIP()) ; //keep the input object
 				}
 			}
 		}
@@ -78,6 +85,15 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
+	}
+
+	private void log(FileObject fileObject, Signature signature) {
+		if (log) {
+			if (signature != null)
+				logger.info(name+": DicomObject "+fileObject.getUID()+" matched:\n"+signature.script);
+			else
+				logger.info(name+": DicomObject "+fileObject.getUID()+" did not match any signature.");
+		}
 	}
 
 	/**

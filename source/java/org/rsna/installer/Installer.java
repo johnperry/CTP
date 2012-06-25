@@ -212,8 +212,7 @@ public class Installer extends JFrame {
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
 	private File getInstallerProgramFile() {
 		cp.appendln(Color.black, "Looking for the installer program file");
-		boolean isMIRC = checkForMIRC();
-		String name = (isMIRC ? "TFS" : "CTP");
+		String name = getProgramName();
 		File programFile = new File(name+"-installer.jar");
 		programFile = new File( programFile.getAbsolutePath() );
 
@@ -591,12 +590,15 @@ public class Installer extends JFrame {
 		setLocation( new Point(x,y) );
 	}
 
-	private boolean checkForMIRC() {
+	private String getProgramName() {
 		try {
-			InputStream is = getClass().getResourceAsStream("/CTP/libraries/MIRC.jar");
-			return (is != null);
+			InputStream mirc = getClass().getResourceAsStream("/CTP/libraries/MIRC.jar");
+			if (mirc != null) return "TFS";
+			InputStream isn = getClass().getResourceAsStream("/CTP/libraries/isp/ISN.jar");
+			if (isn != null) return "ISN";
 		}
-		catch (Exception ex) { return false; }
+		catch (Exception ex) { }
+		return "CTP";
 	}
 
 	private Hashtable<String,String>  getJarManifestAttributes(String path) {

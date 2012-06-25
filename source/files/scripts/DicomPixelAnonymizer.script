@@ -1,0 +1,129 @@
+Burned-in Annotation Library
+
+This DicomPixelAnonymizer script file contains known regions in certain modality 
+images where PHI has been found to be present. This script has been compiled from
+the contributions of many users. Additional contributions are welcome.
+
+Important note: It is the responsibility of the user to review DICOM images to be 
+sure that all areas of PHI are removed from an image before it is considered
+anonymized.  If you have additional filetypes and signatures to add to this list,
+please send them to johnperry@dls.net.
+
+For information on the DicomPixelAnonymizer and the format of this file,see:
+	http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Pixel_Anonymizer
+
+**************
+     CT
+**************
+GE 
+
+ CT Dose Series
+  { [0008,0104].containsIgnoreCase("IEC Body Dosimetry Phantom") }
+  (0,0,512,200)
+
+  { [0008,103e].containsIgnoreCase("Dose Report") }
+  (0,0,512,110)
+
+  { [0040,0310].containsIgnoreCase("DLP") }
+  (0,0,512,110)
+
+ AW Workstation
+
+  { [0028,0301].containsIgnoreCase("YES") * 
+    [0008,0070].containsIgnoreCase("GE MEDICAL") *
+    [0008,103E].containsIgnoreCase("AW electronic film") 
+  }
+  (0,0,512,80)
+
+ 512 x 512 screen captures
+  { [0028,0301].containsIgnoreCase("YES") * 
+    [0008,0070].containsIgnoreCase("GE MEDICAL") *
+    [0028,0010].containsIgnoreCase("512") }
+  (0,0,512,25)
+
+ 512 x 512 screen captures - Vessel analysis
+  { [0028,0301].containsIgnoreCase("YES") * 
+    [0008,0070].containsIgnoreCase("GE MEDICAL") *
+    [0008,103e].containsIgnoreCase("AVA Report") *
+    [0028,0010].containsIgnoreCase("512") }
+  (0,0,200,250)
+
+ 1024 x 1024 screen captures
+  { [0028,0301].containsIgnoreCase("YES") * 
+    [0008,0070].containsIgnoreCase("GE MEDICAL") *
+    [0028,0010].containsIgnoreCase("1024") }
+  (0,0,300,150)   (724,0,300,150)
+
+VITREA
+
+ Stent Planning Worksheet
+  { [0008,0070].containsIgnoreCase("VITAL Images") *
+    [0008,103e].containsIgnoreCase("AAA") *
+    [0028,0010].containsIgnoreCase("1041") }
+  (0,0,795,150)
+
+SIEMENS
+
+ CT Dose Series - This removes PHI from Top of Dose image but rest of image is all white. Window Width and Center need to be set correctly.
+  { [0008,0008].containsIgnoreCase("SECONDARY") * 
+    [0008,0070].containsIgnoreCase("SIEMENS") * 
+    [0028,0010].containsIgnoreCase("860") }
+  (0,0,1132,60)
+
+**************
+     PET/CT
+**************
+SIEMENS 
+  This file creates a totally black JPG image
+  { [6000,0022].containsIgnoreCase("Siemens MedCom Object Graphics") }
+  (0,0,512,90)
+
+**************
+     US
+**************
+GE 
+ Logiq US
+  { [0008,1090].containsIgnoreCase("LOGIQ9") }
+  (0,0,640,40)
+
+  { [0008,1090].containsIgnoreCase("LOGIQE9") }
+  (0,0,960,70)
+
+Philips 
+ IU22
+  { [0008,1090].containsIgnoreCase("iU22") *
+    [0028,0010].containsIgnoreCase("480")}
+  (0,0,640,47)
+
+ IU22
+  { [0008,1090].containsIgnoreCase("iU22") *
+    [0028,0010].containsIgnoreCase("768")}
+  (0,0,1024,75)
+
+
+ IU22
+  { [0008,1090].containsIgnoreCase("iU22") *
+    [0028,0010].containsIgnoreCase("600")}
+  (0,0,800,59)
+
+Zonare
+  { [0008,1090].containsIgnoreCase("Z_ONE") }
+  (0,0,800,65)
+
+**************
+     MRI
+**************
+
+**************
+   CR / DR 
+**************
+
+Canon
+  { [0008,0070].containsIgnoreCase("Canon") * 
+    [0008,1090].containsIgnoreCase("CXDI") * 
+    [0028,0010].containsIgnoreCase("2592")}
+  (0,0,2208,80) (0,2512,2208,80)
+
+**************
+    OTHER
+**************

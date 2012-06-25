@@ -75,7 +75,7 @@ public class Runner {
 					try { Thread.sleep(1000); }
 					catch (Exception ex) { }
 				}
-				System.out.println("CTP-runner: exit.");
+				System.out.println("Runner: exit.");
 			}
 			else System.out.println("CTP is already stopped");
 			System.exit(0);
@@ -83,7 +83,7 @@ public class Runner {
 	}
 
 	private static void help() {
-		System.out.println("Usage: java -jar CTP-runner.jar [command]");
+		System.out.println("Usage: java -jar Runner.jar [command]");
 		System.out.println("   [command]: start | stop | toggle");
 		System.out.println("   default command: toggle");
 	}
@@ -96,7 +96,7 @@ public class Runner {
 
 	static class CTPRunner extends Thread {
 		public CTPRunner() {
-			super("CTP Runner");
+			super("Runner");
 		}
 		public void run() {
 			Runtime rt = Runtime.getRuntime();
