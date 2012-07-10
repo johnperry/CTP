@@ -76,22 +76,6 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 			boolean requireAuthentication = element.getAttribute("requireAuthentication").equals("yes");
 			if (port != 0) startVerifierService(ssl, port, requireAuthentication);
 
-			//Now that everything is set up, instantiate and start the Exporters.
-			exporters = new Exporter[poolSize];
-			for (int i=0; i<poolSize; i++) {
-				//Instantiate the adapter class
-				DatabaseAdapter dba;
-				try {
-					Class adapterClass = Class.forName(adapterClassName);
-					dba = (DatabaseAdapter)adapterClass.newInstance();
-				}
-				catch (Exception ex) {
-					logger.error(name+": Unable to load the Database class: " + adapterClassName);
-					throw ex;
-				}
-				//Create the Exporter and start it.
-				exporters[i] = new Exporter(dba, i);
-			}
 		}
 		else {
 			logger.error(name+": Missing root directory attribute.");
@@ -111,8 +95,18 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	 * Start the Exporter threads.
 	 */
 	public void start() {
-		for (int i=0; i<exporters.length; i++) {
-			exporters[i].start();
+		exporters = new Exporter[poolSize];
+		for (int i=0; i<poolSize; i++) {
+			DatabaseAdapter dba = null;
+			try {
+				Class adapterClass = Class.forName(adapterClassName);
+				dba = (DatabaseAdapter)adapterClass.newInstance();
+				exporters[i] = new Exporter(dba, i);
+				exporters[i].start();
+			}
+			catch (Exception ex) {
+				logger.error(name+": Unable to load the Database class: " + adapterClassName);
+			}
 		}
 	}
 
