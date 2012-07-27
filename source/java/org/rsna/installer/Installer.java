@@ -594,7 +594,7 @@ public class Installer extends JFrame {
 		try {
 			InputStream mirc = getClass().getResourceAsStream("/CTP/libraries/MIRC.jar");
 			if (mirc != null) return "TFS";
-			InputStream isn = getClass().getResourceAsStream("/CTP/libraries/isp/ISN.jar");
+			InputStream isn = getClass().getResourceAsStream("/CTP/libraries/isn/ISN.jar");
 			if (isn != null) return "ISN";
 		}
 		catch (Exception ex) { }
