@@ -28,7 +28,7 @@ public class Pipeline extends Thread {
 	String name = "";
 	List<ImportService> importServices = null;
 	List<PipelineStage> stages = null;
-	volatile boolean stop = false;
+	protected volatile boolean stop = false;
 
 	/**
 	 * A Thread representing a processing pipeline for FileObjects

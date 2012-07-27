@@ -28,7 +28,7 @@ public abstract class AbstractPlugin implements Plugin {
 	protected final String name;
 	protected String id; //Note: cannot be final because some plugins change the id
 	protected File root = null;
-	protected boolean stop = false;
+	protected volatile boolean stop = false;
 
 	/**
 	 * Construct a base plugin which does nothing.
