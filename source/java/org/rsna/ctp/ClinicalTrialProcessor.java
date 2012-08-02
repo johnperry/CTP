@@ -127,6 +127,9 @@ public class ClinicalTrialProcessor {
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
 		Logger logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
+		//Instantiate the singleton Cache and clear it.
+		Cache.getInstance(new File("CACHE")).clear();
+
 		//Set the SSL params
 		System.setProperty("javax.net.ssl.keyStore", "keystore");
 		System.setProperty("javax.net.ssl.keyStorePassword", "ctpstore");
@@ -173,9 +176,6 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("lookup",		LookupServlet.class);
 		selector.addServlet("level",		LoggerLevelServlet.class);
 		selector.addServlet("shutdown",		ShutdownServlet.class);
-
-		//Instantiate the singleton Cache and clear it.
-		Cache.getInstance(new File("CACHE")).clear();
 
 		//Instantiate the server.
 		int port = config.getServerPort();
