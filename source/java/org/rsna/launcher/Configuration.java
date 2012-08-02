@@ -23,12 +23,16 @@ public class Configuration {
 	public String mircJava = "";
 	public String mircDate = "";
 	public String mircVersion = "";
+	public String isnJava = "";
+	public String isnDate = "";
+	public String isnVersion = "";
 	public String imageIOVersion  = "";
 	public String thisJava = "";
 	public String thisJavaBits = "";
 	public boolean imageIOTools = false;
 
 	public boolean isMIRC;
+	public boolean isISN;
 	public int port;
 	public boolean ssl;
 	public Properties props;
@@ -57,12 +61,17 @@ public class Configuration {
 		if (configXML == null) throw new Exception("The config file is missing or does not parse.");
 
 		isMIRC = Util.containsAttribute(configXML, "Plugin", "class", "mirc.MIRC");
+		isISN = (new File("libraries/isn/ISN.jar")).exists();
+
 		try { port = Integer.parseInt( Util.getAttribute(configXML, "Server", "port") ); }
 		catch (Exception ex) { port = 0; }
 		ssl = Util.getAttribute(configXML, "Server", "ssl").equals("yes");
 
-		programName = isMIRC ? "RSNA Teaching File System" : "RSNA CTP";
-		browserButtonName = isMIRC ? "TFS" : "CTP";
+		if (isMIRC) programName = "RSNA Teaching File System";
+		else if (isISN) programName = "RSNA ISN";
+		else programName = "RSNA CTP";
+
+		browserButtonName = isMIRC ? "TFS" : (isISN ? "ISN" : "CTP");
 		windowTitle = programName + " Launcher";
 
 		//Get the installation information
@@ -98,6 +107,14 @@ public class Configuration {
 			mircJava = mircManifest.get("Java-Version");
 			mircDate = mircManifest.get("Date");
 			mircVersion = mircManifest.get("Version");
+		}
+
+		//Get the ISN.jar parameters
+		Hashtable<String,String> isnManifest = Util.getManifestAttributes("libraries/isn/ISN.jar");
+		if (isnManifest != null) {
+			isnJava = isnManifest.get("Java-Version");
+			isnDate = isnManifest.get("Date");
+			isnVersion = isnManifest.get("Version");
 		}
 
 		//Set up the installation information for display

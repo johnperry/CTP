@@ -113,7 +113,7 @@ public class Util {
 			Manifest manifest = jar.getManifest();
 			h = getManifestAttributes(manifest);
 		}
-		catch (Exception ex) { }
+		catch (Exception ex) { h = null; }
 		if (jar != null) {
 			try { jar.close(); }
 			catch (Exception ignore) { }
