@@ -466,7 +466,7 @@ public class DicomObject extends FileObject {
 	 * @param minSize the minimum width of the created JPEG.
 	 * @param quality the quality parameter, ranging from 0 to 100;
 	 * a negative value uses the default setting supplied by by ImageIO.
-	 * @return the dimensions of the JPEG that was create, or null if an error occurred.
+	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
 	 */
 	public Dimension saveAsJPEG(File file, int frame, int maxSize, int minSize, int quality) {
 		FileImageOutputStream out = null;
@@ -474,8 +474,8 @@ public class DicomObject extends FileObject {
 		Dimension result = null;
 		try {
 			BufferedImage scaledImage = getScaledBufferedImage(frame, maxSize, minSize);
-			result = new Dimension(scaledImage.getWidth(), scaledImage.getHeight());
 			if (scaledImage == null) return null;
+			result = new Dimension(scaledImage.getWidth(), scaledImage.getHeight());
 
 			// JPEG-encode the image and write it in the specified file.
 			writer = ImageIO.getImageWritersByFormatName("jpeg").next();
@@ -489,6 +489,91 @@ public class DicomObject extends FileObject {
 			out = new FileImageOutputStream(file);
 			writer.setOutput(out);
 			IIOImage image = new IIOImage(scaledImage, null, null);
+			writer.write(null, image, iwp);
+		}
+		catch (Exception ex) { result = null; logger.warn("Unable to save the image as a JPEG", ex); }
+		finally {
+			if (out != null) {
+				try { out.flush(); out.close(); }
+				catch (Exception ignore) { }
+			}
+			if (writer != null) writer.dispose();
+		}
+		return result;
+	}
+
+	/**
+	 * Save the specified frame as a JPEG, scaling it to a specified size,
+	 * using the specified quality setting, and setting the window level and width.
+	 * This method only operates on images with bitsStored values from 12 through 16.
+	 * This method only operates on images with ColorModel pixel sizes of 16 bits or less.
+	 * All other sizes are returned without window level and width processing.
+	 * @param file the file into which to write the encoded image.
+	 * @param frame the frame to save (the first frame is zero).
+	 * @param windowLevel the window level in absolute pixel values (0 through 2^bitsStored - 1),
+	 * not in the native pixel scaling of the modality e.g. Hounsfield values).
+	 * @param windowWidth the window width in absolute pixel values.
+	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
+	 */
+	public Dimension saveAsWindowLeveledJPEG(File file, int frame, int quality, int windowLevel, int windowWidth) {
+		FileImageOutputStream out = null;
+		ImageWriter writer = null;
+		Dimension result = null;
+		try {
+			BufferedImage originalImage = getBufferedImage(frame, false);
+			if (originalImage == null) return null;
+			result = new Dimension(originalImage.getWidth(), originalImage.getHeight());
+
+			//Do the window level/width operation, if possible.
+			int bitsStored = getBitsStored();
+			int cmPixelSize = originalImage.getColorModel().getPixelSize();
+			if ((bitsStored >= 12) && (bitsStored <= 16) && (cmPixelSize <= 16)) {
+				int size = 1 << bitsStored;
+				byte[] rgb = new byte[size];
+
+				if (windowWidth < 2) windowWidth = 2;
+				int bottom = windowLevel - windowWidth/2;
+				int top = bottom + windowWidth;
+				bottom = Math.min( Math.max(0, bottom), size-1 );
+				top = Math.max( Math.min(size-1, top), 0 );
+				if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)0);
+				if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)255);
+
+				double scale = 255.0 / ((double)(top - bottom));
+				for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
+					rgb[i] = (byte)(scale * (i - bottom));
+				}
+				ColorModel cm = new IndexColorModel(cmPixelSize, size, rgb, rgb, rgb);
+				originalImage = new BufferedImage( cm, originalImage.getRaster(), false, null);
+			}
+
+			// Make a destination image with the original resolution,
+			// but with 8-bit pixels so we can convert the result to JPEG.
+			int width = originalImage.getWidth();
+			int height = originalImage.getHeight();
+			BufferedImage rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+
+			// Get an identity transform
+			AffineTransform at = new AffineTransform();
+			AffineTransformOp atop = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+
+			// Paint the ,original (possibly window leveled) image onto the RGB image.
+			Graphics2D g2d = rgbImage.createGraphics();
+			g2d.drawImage(originalImage, atop, 0, 0);
+			g2d.dispose();
+
+			// JPEG-encode the image and write it in the specified file.
+			writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+			ImageWriteParam iwp = writer.getDefaultWriteParam();
+			if (quality >= 0) {
+				quality = Math.min(quality,100);
+				float fQuality = ((float)quality) / 100.0F;
+				iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+				iwp.setCompressionQuality(fQuality);
+			}
+			out = new FileImageOutputStream(file);
+			writer.setOutput(out);
+			IIOImage image = new IIOImage(rgbImage, null, null);
 			writer.write(null, image, iwp);
 		}
 		catch (Exception ex) { result = null; logger.warn("Unable to save the image as a JPEG", ex); }
