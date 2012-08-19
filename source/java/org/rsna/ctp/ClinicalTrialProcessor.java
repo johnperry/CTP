@@ -174,6 +174,7 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("daconfig",		DicomAnonymizerServlet.class);
 		selector.addServlet("script",		ScriptServlet.class);
 		selector.addServlet("lookup",		LookupServlet.class);
+		selector.addServlet("webstart",		ApplicationServer.class);
 		selector.addServlet("level",		LoggerLevelServlet.class);
 		selector.addServlet("shutdown",		ShutdownServlet.class);
 
