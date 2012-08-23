@@ -111,7 +111,10 @@ public class ScriptServlet extends Servlet {
 
 		//Make sure the user is authorized to do this.
 		String home = req.getParameter("home", "/");
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+			res.redirect(home);
+			return;
+		}
 
 		//Get the parameters from the form.
 		String script = req.getParameter("script");

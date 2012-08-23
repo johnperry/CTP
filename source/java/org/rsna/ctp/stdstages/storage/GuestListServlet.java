@@ -142,12 +142,20 @@ public class GuestListServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doPost(HttpRequest req, HttpResponse res) {
+
+		//Require that the post came from this servlet.
+		if (!req.isReferredFrom(context)) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
 		//Update the guest list from the form
 
 		//Get the user
 		User user = req.getUser();
 		if (user == null) {
-			res.setResponseCode(403);
+			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
@@ -167,7 +175,7 @@ public class GuestListServlet extends Servlet {
 		FileSystemManager fsm = FileSystemManager.getInstance(root);
 		if (fsm == null) {
 			//There is no FileSystemManager for this root, return a 404.
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 		}
 
@@ -175,7 +183,7 @@ public class GuestListServlet extends Servlet {
 		FileSystem fs = fsm.getFileSystem(user.getUsername());
 		if (fs == null) {
 			//There is no FileSystem for this user, return a 404.
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 		}
 

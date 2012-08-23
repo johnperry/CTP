@@ -35,7 +35,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * A Servlet which provides web access to the indexed data stored by an ObjectTracker pipeline stage.
+ * A Servlet that provides web access to the indexed data stored by an ObjectTracker pipeline stage.
  */
 public class ObjectTrackerServlet extends Servlet {
 
@@ -104,7 +104,10 @@ public class ObjectTrackerServlet extends Servlet {
 
 		//Make sure the user is authorized to do this.
 		String home = req.getParameter("home", "/");
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+			res.redirect(home);
+			return;
+		}
 
 		//Get the parameters from the form.
 		String keyType = req.getParameter("keytype");

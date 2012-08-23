@@ -96,7 +96,10 @@ public class AuditLogServlet extends Servlet {
 		//Get the AuditLog plugin.
 		Plugin plugin = Configuration.getInstance().getRegisteredPlugin(context);
 
-		if (req.userHasRole("admin") && (plugin != null) && (plugin instanceof AuditLog)) {
+		if (req.userHasRole("admin")
+				&& (plugin != null)
+					&& (plugin instanceof AuditLog)
+						&& req.isReferredFrom(context)) {
 			AuditLog auditLog = (AuditLog)plugin;
 
 			String entry = req.getParameter("entry");

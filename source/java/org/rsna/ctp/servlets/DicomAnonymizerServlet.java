@@ -137,10 +137,14 @@ public class DicomAnonymizerServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = req.getParameter("home", "/");
-		if (!req.userHasRole("admin")) { res.setResponseCode(res.forbidden); res.send(); return; }
+		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
 
 		//Set up the response
+		String home = req.getParameter("home", "/");
 		res.disableCaching();
 		res.setContentType("txt");
 
