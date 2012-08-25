@@ -30,6 +30,7 @@ import org.rsna.util.FileUtil;
 import org.rsna.util.IPUtil;
 import org.rsna.util.JarUtil;
 import org.rsna.util.ProxyServer;
+import org.rsna.util.SSLConfiguration;
 import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
@@ -150,6 +151,11 @@ public class Configuration {
 					String tagName = childElement.getTagName();
 					if (tagName.equals("Server")) {
 						serverElement = childElement;
+
+						//Set the SSL params
+						SSLConfiguration sslConfig = SSLConfiguration.getInstance(serverElement);
+						sslConfig.setSystemParameters();
+
 						serverPort = StringUtil.getInt(childElement.getAttribute("port"), 80);
 						ssl = childElement.getAttribute("ssl").equals("yes");
 						String temp = childElement.getAttribute("usersClassName").trim();

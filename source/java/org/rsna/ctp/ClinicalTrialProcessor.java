@@ -34,7 +34,6 @@ import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.JarClassLoader;
 import org.rsna.util.ProxyServer;
-import org.rsna.util.SSLConfiguration;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -139,10 +138,6 @@ public class ClinicalTrialProcessor {
 		//Note: the ProxyServer is instantiated in the Configuration
 		//object as the config file is parsed.
 		ProxyServer.getInstance().setSystemParameters();
-
-		//Set the SSL params
-		SSLConfiguration sslConfig = SSLConfiguration.getInstance(config.getServerElement());
-		sslConfig.setSystemParameters();
 
 		//Instantiate the singleton Users class
 		Users users = Users.getInstance(config.getUsersClassName(), config.getServerElement());
