@@ -92,16 +92,10 @@ public class LookupTable {
 			props.load(fis);
 		}
 		catch (Exception ex) {
-			logger.warn("Unable to load the properties file: "+propFile);
 			props = null;
 		}
 		finally {
-			if (fis != null) {
-				try { fis.close(); }
-				catch (Exception ex) {
-					logger.warn("Unable to close the FileInputStream for loading "+propFile);
-				}
-			}
+			FileUtil.close(fis);
 		}
 		return props;
 	}

@@ -46,10 +46,22 @@ public class AnonymizerFunctions {
 		if (table == null) throw new Exception("missing lookup table");
 		if (table.size() == 0) throw new Exception("empty lookup table");
 		if (key == null) throw new Exception("lookup key missing");
-		key = keyType + "/" + key.trim();
+		key = keyType.trim() + "/" + key.trim();
 		String value = table.getProperty(key);
 		if (value == null) throw new Exception("missing key ("+key+") in lookup table");
-		return value.trim();
+
+		value = value.trim();
+		int maxIndirects = 10;
+		while (value.startsWith("@") && value.contains("/") && (maxIndirects > 0)) {
+			//This is an indirection
+			key = value.substring(1).trim();
+			value = table.getProperty(key);
+			if (value == null) throw new Exception("missing key ("+key+") in lookup table");
+			value = value.trim();
+			maxIndirects--;
+		}
+		if (maxIndirects <= 0) throw new Exception("more than 10 indirects");
+		return value;
 	}
 
 	/**

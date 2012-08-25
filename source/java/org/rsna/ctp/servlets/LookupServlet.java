@@ -299,15 +299,8 @@ public class LookupServlet extends Servlet {
 			stream = new FileInputStream(file);
 			props.load(stream);
 		}
-		catch (Exception e) {
-			logger.warn("Unable to load the properties file "+file);
-		}
-		if (stream != null) {
-			try { stream.close(); }
-			catch (Exception ignore) {
-				logger.warn("Unable to close the properties file "+file);
-			}
-		}
+		catch (Exception ignore) { }
+		FileUtil.close(stream);
 		return props;
 	}
 
@@ -321,12 +314,7 @@ public class LookupServlet extends Servlet {
 		catch (Exception e) {
 			logger.warn("Unable to save the properties file "+file);
 		}
-		if (stream != null) {
-			try { stream.close(); }
-			catch (Exception ignore) {
-				logger.warn("Unable to close the properties file "+file);
-			}
-		}
+		FileUtil.close(stream);
 	}
 
 }

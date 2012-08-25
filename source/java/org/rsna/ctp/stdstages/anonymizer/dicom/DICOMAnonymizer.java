@@ -269,10 +269,10 @@ public class DICOMAnonymizer {
 				logger.info("Error call from "+inFile);
 				return AnonymizerStatus.QUARANTINE(inFile,msg);
 			}
-			if (msg.indexOf("!skip!") != -1) {
+			if (msg.contains("!skip!")) {
 				return AnonymizerStatus.SKIP(inFile,msg);
 			}
-			if (msg.indexOf("!quarantine!") != -1) {
+			if (msg.contains("!quarantine!")) {
 				logger.info("Quarantine call from "+inFile);
 				logger.info("...Message: "+msg);
 				return AnonymizerStatus.QUARANTINE(inFile,msg);
@@ -817,7 +817,14 @@ public class DICOMAnonymizer {
 	//Values and replacements are trimmed before use.
 	private static String lookup(FnCall fn) throws Exception {
 		try {
-			String key = fn.context.contents(fn.args[0],fn.thisTag);
+			String[] names = fn.args[0].split("\\|");
+			String key = "";
+			boolean first = true;
+			for (String name : names) {
+				if (!first) key += "|";
+				key += fn.context.contents(name.trim(), fn.thisTag);
+				first = false;
+			}
 			String value = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key);
 			return value;
 		}
@@ -827,6 +834,7 @@ public class DICOMAnonymizer {
 				if (action.equals("keep")) return "@keep()";
 				if (action.equals("remove")) return "@remove()";
 				if (action.equals("empty")) return "@empty()";
+				if (action.equals("skip")) throw new Exception("!skip! - "+ex.getMessage());
 			}
 			throw new Exception("!quarantine! - "+ex.getMessage());
 		}
