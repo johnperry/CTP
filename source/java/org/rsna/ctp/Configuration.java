@@ -152,17 +152,20 @@ public class Configuration {
 					if (tagName.equals("Server")) {
 						serverElement = childElement;
 
-						//Set the SSL params
-						SSLConfiguration sslConfig = SSLConfiguration.getInstance(serverElement);
-						sslConfig.setSystemParameters();
-
 						serverPort = StringUtil.getInt(childElement.getAttribute("port"), 80);
 						ssl = childElement.getAttribute("ssl").equals("yes");
 						String temp = childElement.getAttribute("usersClassName").trim();
 						if (!temp.equals("")) usersClassName = temp;
 						temp = childElement.getAttribute("requireAuthentication");
 						requireAuthentication = temp.equals("yes");
-						ProxyServer.getInstance(childElement);  //set up the proxy server
+
+						//Set the proxy parameters
+						ProxyServer proxy = ProxyServer.getInstance(childElement);  //set up the proxy server
+						proxy.setSystemParameters();
+
+						//Set the SSL params
+						SSLConfiguration sslConfig = SSLConfiguration.getInstance(serverElement);
+						sslConfig.setSystemParameters();
 					}
 					else if (tagName.equals("Pipeline")) {
 						Pipeline pipe = new Pipeline(childElement);

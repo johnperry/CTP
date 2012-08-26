@@ -134,11 +134,6 @@ public class ClinicalTrialProcessor {
 		//Get the configuration
 		Configuration config = Configuration.getInstance();
 
-		//Set the Java System properties for the ProxyServer.
-		//Note: the ProxyServer is instantiated in the Configuration
-		//object as the config file is parsed.
-		ProxyServer.getInstance().setSystemParameters();
-
 		//Instantiate the singleton Users class
 		Users users = Users.getInstance(config.getUsersClassName(), config.getServerElement());
 
