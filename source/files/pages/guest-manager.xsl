@@ -9,7 +9,6 @@
 <xsl:param name="proxy"/>
 
 <xsl:template match="/guests">
-	<xsl:variable name="users" select="document('../users.xml')"/>
 	<html>
 		<head>
 			<title><xsl:value-of select="$user"/> Guest List</title>
