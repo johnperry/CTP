@@ -71,7 +71,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		RowPanel serverPanel = new RowPanel("Server Parameters");
 		serverPanel.setBackground(bgColor);
 		serverPanel.addRow( serverPort = new Row("Server port:", Integer.toString(config.port)) );
-		serverPanel.addRow( clearLogs = new CBRow("Clear logs on start:", props.getProperty("clr","").equals("yes")) );
+		serverPanel.addRow( clearLogs = new CBRow("Clear logs on start:", !props.getProperty("clr","").equals("no")) );
 
 		JPanel cp = new JPanel();
 		cp.setLayout(new RowLayout());
