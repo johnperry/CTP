@@ -952,6 +952,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the BodyPartExamined element.
+	 * @return the text of the element or the empty String if the
+	 * element does not exist.
+	 */
+	public String getBodyPartExamined() {
+		return getElementValue(Tags.BodyPartExamined);
+	}
+
+	/**
 	 * Convenience method to get the contents of the Modality element.
 	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
 	 * is searched for the first Modality element.
