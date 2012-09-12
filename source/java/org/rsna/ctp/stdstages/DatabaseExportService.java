@@ -100,7 +100,9 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 			DatabaseAdapter dba = null;
 			try {
 				Class adapterClass = Class.forName(adapterClassName);
-				dba = (DatabaseAdapter)adapterClass.newInstance();
+				Class[] signature = { Element.class };
+				Object[] args = { element };
+				dba = (DatabaseAdapter)adapterClass.getConstructor(signature).newInstance(args);
 				exporters[i] = new Exporter(dba, i);
 				exporters[i].start();
 			}

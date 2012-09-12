@@ -760,7 +760,7 @@ public class DicomObject extends FileObject {
 			tag = Tags.valueOf(tagName);
 		else
 			tag = Tags.forName(tagName);
-		return getElementValue(tag,defaultString);
+		return getElementValue(tag, defaultString);
 	}
 
 	/**

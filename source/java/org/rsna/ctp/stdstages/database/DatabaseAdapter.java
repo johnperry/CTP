@@ -16,6 +16,7 @@ import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.objects.ZipObject;
 import org.rsna.ctp.pipeline.Status;
+import org.w3c.dom.Element;
 
 /**
  * An adapter for accessing an external database.
@@ -27,8 +28,20 @@ public class DatabaseAdapter {
 
 	static final Logger logger = Logger.getLogger(DatabaseAdapter.class);
 
+	Element element = null;
 	int adapterNumber = 0;
 	String id = "";
+
+	/**
+	 * DatabaseAdapter constructor, providing the ability to obtain
+	 * configuration information from the DatabaseExportsService's
+	 * config file element.
+	 * @param element the configuration element
+	 */
+	public DatabaseAdapter(Element element) {
+		this(); //For backward compatibility, call the empty constructor
+		this.element = element;
+	}
 
 	/**
 	 * Empty DatabaseAdapter constructor.

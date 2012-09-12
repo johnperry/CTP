@@ -188,7 +188,7 @@ class XmlScript {
 							try { len = Integer.parseInt(maxlen); }
 							catch (Exception keepDefault) { len = Integer.MAX_VALUE; }
 						}
-						value += AnonymizerFunctions.hashPtID(string, siteID, len);
+						value += AnonymizerFunctions.hashPtID(siteID, string, len);
 					}
 
 					else if (name.equals("$round")) {
