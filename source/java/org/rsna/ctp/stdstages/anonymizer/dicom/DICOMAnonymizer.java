@@ -482,21 +482,28 @@ public class DICOMAnonymizer {
 			else {
 				DcmElement e = null;
 				try {
+					String[] codes = script.split("/");
+					if ((codes.length > 0)
+							&& codes[0].trim().toLowerCase().equals("reset")
+								&& ds.contains(tag)) {
+						ds.remove(tag);
+					}
 					if (!ds.contains(tag)) e = ds.putSQ(tag);
 					else e = ds.get(tag);
-					String[] codes = script.split("/");
 					for (String code : codes) {
-						String scheme = "DCM";
 						code = code.trim();
-						String meaning = deIdentificationCodeMeanings.getProperty(code);
-						if (meaning == null) {
-							meaning = "UNKNOWN";
-							scheme = "UNKNOWN";
+						if (!code.toLowerCase().equals("reset")) {
+							String scheme = "DCM";
+							String meaning = deIdentificationCodeMeanings.getProperty(code);
+							if (meaning == null) {
+								meaning = "UNKNOWN";
+								scheme = "UNKNOWN";
+							}
+							Dataset item = e.addNewItem();
+							item.putSH( Tags.CodingSchemeDesignator, scheme );
+							item.putSH( Tags.CodeValue, code );
+							item.putLO( Tags.CodeMeaning, meaning );
 						}
-						Dataset item = e.addNewItem();
-						item.putSH( Tags.CodingSchemeDesignator, scheme );
-						item.putSH( Tags.CodeValue, code );
-						item.putLO( Tags.CodeMeaning, meaning );
 					}
 				}
 				catch (Exception ex) {
