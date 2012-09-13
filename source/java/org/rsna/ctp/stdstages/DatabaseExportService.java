@@ -100,14 +100,24 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 			DatabaseAdapter dba = null;
 			try {
 				Class adapterClass = Class.forName(adapterClassName);
-				Class[] signature = { Element.class };
-				Object[] args = { element };
-				dba = (DatabaseAdapter)adapterClass.getConstructor(signature).newInstance(args);
-				exporters[i] = new Exporter(dba, i);
-				exporters[i].start();
+				try {
+					Class[] signature = { Element.class };
+					Object[] args = { element };
+					dba = (DatabaseAdapter)adapterClass.getConstructor(signature).newInstance(args);
+				}
+				catch (Exception unableWithElement) {
+					try { dba = (DatabaseAdapter)adapterClass.newInstance(); }
+					catch (Exception unableWithEmptyContstructor) {
+						logger.error(name+": Unable to load the Database class: " + adapterClassName);
+					}
+				}
+				if (dba != null) {
+					exporters[i] = new Exporter(dba, i);
+					exporters[i].start();
+				}
 			}
 			catch (Exception ex) {
-				logger.error(name+": Unable to load the Database class: " + adapterClassName);
+				logger.warn("DatabaseAdapter class not found: "+adapterClassName);
 			}
 		}
 	}
