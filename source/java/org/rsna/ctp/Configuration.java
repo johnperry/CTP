@@ -340,13 +340,24 @@ public class Configuration {
 	}
 
 	/**
-	 * Register a PipelineStage so that other components can access it.
-	 * The stage is registered only if its id is not null and has at least
-	 * one non-whitespace character.
+	 * Register a PipelineStage using its id attribute so that other
+	 * components can access it. The stage is registered only if its
+	 * id attribute is not null and has at least one non-whitespace
+	 * character.
 	 * @param stage the stage to be registered.
 	 */
 	public void registerStage(PipelineStage stage) {
-		String id = stage.getID();
+		registerStage(stage, stage.getID());
+	}
+
+	/**
+	 * Register a PipelineStage using a supplied id value.
+	 * The stage is registered only if the supplied id is
+	 * not null and has at least one non-whitespace character.
+	 * @param stage the stage to be registered.
+	 * @param id the id under which to register the stage.
+	 */
+	public void registerStage(PipelineStage stage, String id) {
 		if (id != null) {
 			id = id.trim();
 			if (!id.equals("")) stages.put(id, stage);
