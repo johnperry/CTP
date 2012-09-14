@@ -47,6 +47,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	File zipScriptFile = null;
 	String defaultString = "UNKNOWN";
 	String whitespaceReplacement = "_";
+	String periodAndParenthesisReplacement = "";
 
 	/**
 	 * Construct a DirectoryStorageService for DicomObjects.
@@ -73,6 +74,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 		temp = element.getAttribute("whitespaceReplacement").trim();
 		if (!temp.equals("")) whitespaceReplacement = temp;
+		periodAndParenthesisReplacement = element.getAttribute("whitespaceReplacement").trim();
 
 		//See if there are scripts, and if so, get the files
 		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript"), "examples/example-filter.script");
@@ -147,6 +149,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 					for (String dir : dirs) {
 						dir = replace(dir, xdob);
 						dir = dir.replaceAll("[\\\\/\\s]", whitespaceReplacement).trim();
+						if (!periodAndParenthesisReplacement.equals("")) {
+							dir = dir.replaceAll("[\\.\\(\\)]", periodAndParenthesisReplacement).trim();
+						}
 						if (dir.equals("")) dir = defaultString;
 						destDir = new File(destDir, dir);
 					}
