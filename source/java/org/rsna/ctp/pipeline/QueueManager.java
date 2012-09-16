@@ -68,7 +68,8 @@ public class QueueManager {
 
 	/**
 	 * Insert a file into the queue directory tree,
-	 * preserving the embedded filename, if present.
+	 * preserving the embedded filename, if present,
+	 * and leaving the file in its original directory.
 	 * @param file the file to be inserted.
 	 * @return a File pointing to the object in the queue.
 	 */
@@ -85,7 +86,8 @@ public class QueueManager {
 	 * directory tree, preserving the embedded filename, if present.
 	 * this method does not walk a deep tree; it only takes the
 	 * first-generation children of the specified directory,
-	 * ignoring any child directories.
+	 * ignoring any child directories. This method deletes any
+	 * files that it enqueues from the original directory.
 	 * @param dir the directory whose contents are to be inserted.
 	 */
 	public synchronized void enqueueDir(File dir) {
