@@ -402,12 +402,13 @@ public class Installer extends JFrame {
 	private int getPort() {
 		//Note: directory points to the parent of the CTP directory.
 		File ctp = new File(directory, "CTP");
+		if (suppressFirstPathElement) ctp = ctp.getParentFile();
 		File config = new File(ctp, "config.xml");
 		if (!config.exists()) {
 			//No config file - must be a new installation.
 			//Figure out whether this is Windows or something else.
 			String os = System.getProperty("os.name").toLowerCase();
-			int defPort = (os.contains("windows") ? 80 : 1080);
+			int defPort = ((os.contains("windows") && !programName.equals("ISN")) ? 80 : 1080);
 			int userPort = 0;
 			while (userPort == 0) {
 				String port = JOptionPane.showInputDialog(null,
