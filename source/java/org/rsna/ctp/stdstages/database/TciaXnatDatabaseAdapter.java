@@ -103,12 +103,29 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 			if (session.equals("")) session = "UNKNOWN";
 
 			//Construct the XML document for transmission to the XNAT data service.
+			/*
+			Example:
+				<?xml version="1.0" encoding="UTF-8"?>
+				<DICOMResource
+						xsi:noNamespaceSchemaLocation="dicom-resource.xsd"
+						xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+						patient="TCIA0001"
+						session="TCIA0001_CT01"
+						studyUID="1.2.3.4.5"
+						seriesUID="1.2.3.4.5.3"
+						seriesNumber="3"
+						instanceUID="1.2.3.4.5.3.42"
+						instanceNumber="42"
+						classUID="1.2.840.10008.5.1.4.1.1.2">
+						<URI>/path/to/my/object.dcm</URI>
+				</DICOMResource>
+			*/
 			Document doc = XmlUtil.getDocument();
 			Element root = doc.createElement("DICOMResource");
 			doc.appendChild(root);
 
-			root.setAttributeNS("xsi", "DICOMResource", "dicom-resource.xsd");
-			root.setAttributeNS("xmlns", "xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			root.setAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation", "dicom-resource.xsd");
 
 			root.setAttribute("patient", dicomObject.getPatientID());
 			root.setAttribute("session", session);
@@ -128,7 +145,10 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 
 			return send(data);
 		}
-		catch (Exception ex) { return Status.RETRY; }
+		catch (Exception ex) {
+			logger.warn("Unable to create and send the XML object", ex);
+			return Status.RETRY;
+		}
 	}
 
 	private Status send(String data) {

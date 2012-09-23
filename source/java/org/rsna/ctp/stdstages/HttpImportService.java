@@ -142,12 +142,23 @@ public class HttpImportService extends AbstractImportService {
 					//Only accept POST requests have Content-Type = application/x-mirc.
 					if ( req.method.equals("POST") &&
 							req.getContentType().contains("application/x-mirc") ) {
-						if (getPostedFile(req)) res.write("OK");
-						else res.setResponseCode(res.notfound); //error during transmission
+						if (getPostedFile(req)) {
+							res.write("OK");
+							if (logAllConnections) logger.info("Posted file received successfully");
+						}
+						else {
+							res.setResponseCode(res.notfound); //error during transmission
+							if (logAllConnections || logRejectedConnections) {
+								logger.info("Unable to obtain the posted file");
+							}
+						}
 					}
 					else {
 						discardPostedFile(req);
 						res.setResponseCode(res.notfound); //error - wrong method or content type
+						if (logAllConnections || logRejectedConnections) {
+							logger.info("Unacceptable method or Content-Type");
+						}
 					}
 				}
 				else {

@@ -128,8 +128,7 @@ public class Configuration {
 			configFile = FileUtil.getFile(configFN, exconfigFN);
 
 			//Parse the configuration file
-			DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			configXML = db.parse(configFile);
+			configXML = XmlUtil.getDocument(configFile);
 			Element root = configXML.getDocumentElement();
 
 			//Log the configuration.
@@ -153,14 +152,13 @@ public class Configuration {
 						serverElement = childElement;
 
 						serverPort = StringUtil.getInt(childElement.getAttribute("port"), 80);
-						ssl = childElement.getAttribute("ssl").equals("yes");
+						ssl = serverElement.getAttribute("ssl").equals("yes");
 						String temp = childElement.getAttribute("usersClassName").trim();
 						if (!temp.equals("")) usersClassName = temp;
-						temp = childElement.getAttribute("requireAuthentication");
-						requireAuthentication = temp.equals("yes");
+						requireAuthentication = serverElement.getAttribute("requireAuthentication").equals("yes");
 
 						//Set the proxy parameters
-						ProxyServer proxy = ProxyServer.getInstance(childElement);  //set up the proxy server
+						ProxyServer proxy = ProxyServer.getInstance(serverElement);
 						proxy.setSystemParameters();
 
 						//Set the SSL params

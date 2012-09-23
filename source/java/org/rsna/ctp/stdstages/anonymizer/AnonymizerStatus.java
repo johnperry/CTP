@@ -69,7 +69,7 @@ public class AnonymizerStatus {
 	 * @return the status message.
 	 */
 	public String toString() {
-		return "("+status+","+file+","+message+")";
+		return "("+status+","+file+",\""+message+"\")";
 	}
 
 	/**
