@@ -111,6 +111,7 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 						xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 						patient="TCIA0001"
 						session="TCIA0001_CT01"
+						studyDate="19460201"
 						studyUID="1.2.3.4.5"
 						seriesUID="1.2.3.4.5.3"
 						seriesNumber="3"
@@ -129,6 +130,7 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 
 			root.setAttribute("patient", dicomObject.getPatientID());
 			root.setAttribute("session", session);
+			root.setAttribute("studyDate", dicomObject.getStudyDate());
 			root.setAttribute("studyUID", dicomObject.getStudyInstanceUID());
 			root.setAttribute("seriesUID", dicomObject.getSeriesInstanceUID());
 			root.setAttribute("seriesNumber", dicomObject.getSeriesNumber());
