@@ -45,6 +45,9 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 	String sessionTag;
 	String sessionName;
 
+	String projectTag;
+	String projectName;
+
 	/**
 	 * DatabaseAdapter constructor, providing the ability to obtain
 	 * configuration information from the DatabaseExportsService's
@@ -54,9 +57,11 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 	public TciaXnatDatabaseAdapter(Element element) throws Exception {
 		super(element);
 
-		//Get the session identifiers
+		//Get the project and session identifiers
 		sessionTag = element.getAttribute("sessionTag").trim();
 		sessionName = element.getAttribute("sessionName").trim();
+		projectTag = element.getAttribute("projectTag").trim();
+		projectName = element.getAttribute("projectName").trim();
 
 		//Get the credentials, if they are present.
 		username = element.getAttribute("username").trim();
@@ -97,6 +102,11 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 				return Status.FAIL;
 			}
 
+			String project = projectName;
+			if (!projectTag.equals("")) project = dicomObject.getElementValue(projectTag, project);
+			project = project.replaceAll("[^a-zA-Z0-9_]", "_");
+			if (project.equals("")) project = "UNKNOWN";
+
 			String session = sessionName;
 			if (!sessionTag.equals("")) session = dicomObject.getElementValue(sessionTag, session);
 			session = session.replaceAll("[^a-zA-Z0-9_]", "_");
@@ -109,7 +119,8 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 				<DICOMResource
 						xsi:noNamespaceSchemaLocation="dicom-resource.xsd"
 						xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-						patient="TCIA0001"
+						subject="TCIA0001"
+						project="thePROJECT"
 						session="TCIA0001_CT01"
 						studyDate="19460201"
 						studyUID="1.2.3.4.5"
@@ -128,7 +139,8 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 			root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
 			root.setAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation", "dicom-resource.xsd");
 
-			root.setAttribute("patient", dicomObject.getPatientID());
+			root.setAttribute("subject", dicomObject.getPatientID());
+			root.setAttribute("project", project);
 			root.setAttribute("session", session);
 			root.setAttribute("studyDate", dicomObject.getStudyDate());
 			root.setAttribute("studyUID", dicomObject.getStudyInstanceUID());
