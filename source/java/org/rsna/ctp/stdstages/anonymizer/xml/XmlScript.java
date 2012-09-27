@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Hashtable;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
+import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.apache.log4j.Logger;
@@ -133,6 +134,10 @@ class XmlScript {
 
 					else if (name.equals("$remove")) {
 						return "";
+					}
+
+					else if (name.equals("$text")) {
+						return XmlUtil.toString(document);
 					}
 
 					else if (name.equals("$uid")) {
