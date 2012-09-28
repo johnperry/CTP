@@ -180,9 +180,12 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 			out.flush();
 			out.close();
 
-			//Get the response code
+			//Get the response code and return an appropriate status
 			int responseCode = conn.getResponseCode();
-			return (responseCode == HttpResponse.ok) ? Status.OK : Status.FAIL;
+			if (responseCode == HttpResponse.ok) return Status.OK;
+
+			logger.warn("Unexpected response code received from the XNAT Server: "+responseCode);
+			return (responseCode == HttpResponse.unauthorized) ? Status.RETRY : Status.FAIL;
 		}
 		catch (Exception e) {
 			logger.warn("Export failed: " + e.getMessage());

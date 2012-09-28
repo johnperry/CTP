@@ -43,6 +43,8 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	long lastTime = 0;
 	boolean returnStoredFile = true;
 	boolean logDuplicates = false;
+	boolean rejectDuplicates = false;
+	boolean acceptClones = true;
 	File lastFileIn;
 	FileFilter dirsOnly;
 	FileFilter filesOnly;
@@ -67,6 +69,8 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		super(element);
 		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
 		logDuplicates = element.getAttribute("logDuplicates").toLowerCase().equals("yes");
+		rejectDuplicates = element.getAttribute("rejectDuplicates").toLowerCase().equals("yes");
+		acceptClones = !element.getAttribute("acceptClones").toLowerCase().equals("no");
 		nLevels = StringUtil.getInt(element.getAttribute("nLevels"));
 		maxSize = StringUtil.getInt(element.getAttribute("maxSize"));
 		nLevels = Math.max(nLevels, 3);
@@ -176,21 +180,32 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		catch (Exception notThere) { path = null; }
 
 		if (path != null) {
-			//The file already exists; overwrite it.
+			//The file already exists; see if we should overwrite it or reject the object.
 			savedFile = new File(path);
 			duplicateCount++;
-			if (logDuplicates) {
-				String margin = "                                         ";
-				String warning = "Duplicate SOPInstanceUID: "+uid + "\n";
+
+			if (logDuplicates || rejectDuplicates) {
 				FileObject prevObject = FileObject.getInstance(savedFile);
-				warning += margin + "Previous StudyUID:  "+prevObject.getStudyInstanceUID() + "\n";
-				warning += margin + "Current StudyUID:   "+fileObject.getStudyInstanceUID() + "\n";
-				if ((fileObject instanceof DicomObject) && (prevObject instanceof DicomObject)) {
-					warning += margin + "Previous SeriesUID: "+((DicomObject)prevObject).getSeriesInstanceUID() + "\n";
-					warning += margin + "Current SeriesUID:  "+((DicomObject)fileObject).getSeriesInstanceUID() + "\n";
+				boolean isClone = prevObject.getDigest().equals(fileObject.getDigest());
+
+				if (logDuplicates) {
+					String margin = "                                         ";
+					String warning = "Duplicate SOPInstanceUID: "+uid + "\n";
+					warning += margin + "Previous StudyUID:  "+prevObject.getStudyInstanceUID() + "\n";
+					warning += margin + "Current StudyUID:   "+fileObject.getStudyInstanceUID() + "\n";
+					if ((fileObject instanceof DicomObject) && (prevObject instanceof DicomObject)) {
+						warning += margin + "Previous SeriesUID: "+((DicomObject)prevObject).getSeriesInstanceUID() + "\n";
+						warning += margin + "Current SeriesUID:  "+((DicomObject)fileObject).getSeriesInstanceUID() + "\n";
+					}
+					warning += margin + "Storage location:   "+path + "\n";
+					warning += margin + "The two files are " + (isClone ? "" : "not ") + "identical.";
+					logger.warn(warning);
 				}
-				warning += margin + "Storage location:   "+path;
-				logger.warn(warning);
+
+				if (rejectDuplicates && !(isClone && acceptClones)) {
+					if (quarantine != null) quarantine.insert(fileObject);
+					return null;
+				}
 			}
 		}
 		else {
