@@ -444,9 +444,9 @@ public class QuarantineServlet extends Servlet {
 	private String getStyles() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("\n<style>\n");
-		sb.append("body {background-color:#c6d8f9; margin-top:0; margin-right:0; padding:0;}\n");
+		sb.append("body {background-color:white; margin-top:0; margin-right:0; padding:0;}\n");
 		sb.append("td {background-color:white; padding:5;}\n");
-		sb.append("td span {background-color:#c6d8f9;}\n");
+		sb.append("td span {background-color:white;}\n");
 		sb.append("h1 {margin-top:10; margin-bottom:10;}\n");
 		sb.append("</style>\n");
 		return sb.toString();

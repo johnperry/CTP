@@ -542,7 +542,7 @@ public class Installer extends JFrame {
 		return
 				"<html>"
 			+	"<head></head>"
-			+	"<body style=\"background:#c6d8f9;font-family:sans-serif;\">"
+			+	"<body style=\"background:white;font-family:sans-serif;\">"
 			+	"<center>"
 			+	"<h1 style=\"color:blue\">" + windowTitle + "</h1>"
 			+	"Version: " + programDate + "<br>"

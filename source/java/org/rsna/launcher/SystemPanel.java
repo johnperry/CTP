@@ -28,9 +28,9 @@ public class SystemPanel extends BasePanel {
 		String page =
 				"<html>\n"
 			+	" <head></head>\n"
-			+	"<body style=\"background:#c6d8f9;font-family:sans-serif;\">"
+			+	"<body style=\"background:white;font-family:sans-serif;\">"
 			+	" <center>\n"
-			+ 	"  <h1 style=\"color:blue\">System Properties</h1>\n"
+			+ 	"  <h1 style=\"color:#2977b9\">System Properties</h1>\n"
 			+	"   <table border=\"1\">\n"
 			+	     displayProperties()
 			+	"   </table>\n"

@@ -53,7 +53,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		np.setBackground(bgColor);
 		JLabel title = new JLabel(config.programName);
 		title.setFont( new Font( "SansSerif", Font.BOLD, 24 ) );
-		title.setForeground( Color.BLUE );
+		title.setForeground( titleColor );
 		np.add(title);
 		np.setBorder(BorderFactory.createEmptyBorder(10,0,20,0));
 		main.add(np, BorderLayout.NORTH);

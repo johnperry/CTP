@@ -285,7 +285,7 @@ public class IDMapServlet extends Servlet {
 			+	" <head>\n"
 			+	"  <title>"+title+"</title>\n"
 			+	"   <style>\n"
-			+	"    body {background-color:#c6d8f9; margin-top:0; margin-right:0;}\n"
+			+	"    body {background-color:white; margin-top:0; margin-right:0;}\n"
 			+	"    h1 {text-align:center; margin-top:10;}\n"
 			+	"    textarea {width:600px; height:300px;}\n"
 			+	"    select {width:600px;}\n"

@@ -27,9 +27,9 @@ public class VersionPanel extends BasePanel {
 		String page =
 				"<html>"
 			+	"<head></head>"
-			+	"<body style=\"background:#c6d8f9;font-family:sans-serif;\">"
+			+	"<body style=\"background:white;font-family:sans-serif;\">"
 			+	"<center>"
-			+	"<h1 style=\"color:blue\">" + config.programName + "</h1>"
+			+	"<h1 style=\"color:#2977b9\">" + config.programName + "</h1>"
 			+	"Copyright 2012: RSNA<br><br>"
 			+	"<p>"
 			+	"<table>"

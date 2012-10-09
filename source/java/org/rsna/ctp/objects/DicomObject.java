@@ -1478,7 +1478,7 @@ public class DicomObject extends FileObject {
 						StringBuffer table,
 						String prefix,
 						boolean decipherLinks) {
-		int maxLength = 64;
+		int maxLength = 70;
 		DcmElement el;
 		String tagString;
 		String tagName;
@@ -1518,7 +1518,7 @@ public class DicomObject extends FileObject {
 			}
 			if (decipher) {
 				table.append("<td onclick=\"decipher();\">");
-				table.append("<font color=\"green\">"+prefix+tagString+"</font>");
+				table.append("<font color=\"#2977b9\">"+prefix+tagString+"</font>");
 				table.append("</td>");
 			}
 			else table.append("<td>"+prefix+tagString+"</td>");

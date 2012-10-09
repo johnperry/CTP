@@ -62,6 +62,8 @@ public class Launcher extends JFrame implements ChangeListener {
 			ioPanel = new IOPanel();
 			logPanel = new LogPanel();
 			tp = new JTabbedPane();
+			tp.setBackground( Color.white );
+			tp.setForeground( new Color(0x2977b9) );
 
 			tp.add("General", javaPanel);
 			tp.add("Version", versionPanel);

@@ -52,7 +52,7 @@ public class ConfigurationServlet extends Servlet {
 		sb.append("<head>");
 		sb.append("<title>Configuration</title>");
 		sb.append("<style>");
-		sb.append("body {background-color:#c6d8f9; margin-top:0; margin-right:0; padding:0;}");
+		sb.append("body {background-color:white; margin-top:0; margin-right:0; padding:0;}");
 		sb.append("td {background-color:white;}");
 		sb.append("h1 {margin-top:10; margin-bottom:0;}");
 		sb.append("</style>");
