@@ -12,7 +12,7 @@
 			<title>Study List for <xsl:value-of select="@fileSystemName"/></title>
 			<style>
 				th,td {padding-left:10px; padding-right:10px; cursor:target;}
-				body {background-color:#c6d8f9;}
+				body {background-color:white;}
 				td {background-color:white;}
 				th a {text-decoration: none; color:black;}
 				th a:visited {color: black;}

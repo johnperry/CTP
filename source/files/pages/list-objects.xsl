@@ -10,7 +10,7 @@
 			<title>Object List for <xsl:value-of select="@studyName"/></title>
 			<style>
 				th,td{padding-left:10px; padding-right:10px;}
-				body{background-color:#c6d8f9;}
+				body{background-color:white;}
 				td{background-color:white;}
 			</style>
 		</head>

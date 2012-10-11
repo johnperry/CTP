@@ -15,7 +15,8 @@ import javax.swing.*;
  */
 public class BasePanel extends JPanel {
 
-	static Color bgColor = new Color(0xc6d8f9);
+	static Color bgColor = new Color(0xb9d0ed);
+	static Color titleColor = new Color(0x2977b9);
 
 	public BasePanel() {
 		super();

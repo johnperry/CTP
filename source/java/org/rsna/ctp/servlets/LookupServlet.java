@@ -261,7 +261,7 @@ public class LookupServlet extends Servlet {
 			+	" <head>\n"
 			+	"  <title>"+title+"</title>\n"
 			+	"   <style>\n"
-			+	"    body {background-color:#c6d8f9; margin-top:0; margin-right:0;}\n"
+			+	"    body {background-color:white; margin-top:0; margin-right:0;}\n"
 			+	"    h1 {text-align:center; margin-top:10;}\n"
 			+	"    h2 {text-align:center; font-size:12pt; margin:0; padding:0; font-weight:normal; font-family: Arial, Helvetica, Verdana, sans-serif;}\n"
 			+	"    textarea {width:75%; height:300px;}\n"

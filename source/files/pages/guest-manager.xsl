@@ -14,7 +14,7 @@
 			<title><xsl:value-of select="$user"/> Guest List</title>
 			<style>
 				td {padding-left:10px; padding-right:10px; background-color:white;}
-				body {background-color:#c6d8f9; margin-right:0px; margin-top:0px;}
+				body {background-color:white; margin-right:0px; margin-top:0px;}
 				.box {border:thin solid gray; width:500px; padding:20px; margin:10px; margin-bottom:30px;}
 				h1 {margin-top:15px;}
 			</style>

@@ -46,6 +46,7 @@ public class Launcher extends JFrame implements ChangeListener {
 	 */
 	public Launcher() {
 		super();
+		setBackground( BasePanel.bgColor );
 
 		//Set the SSL params
 		System.setProperty("javax.net.ssl.keyStore", "keystore");
@@ -62,6 +63,8 @@ public class Launcher extends JFrame implements ChangeListener {
 			ioPanel = new IOPanel();
 			logPanel = new LogPanel();
 			tp = new JTabbedPane();
+			tp.setBackground( Color.white );
+			tp.setForeground( BasePanel.titleColor );
 
 			tp.add("General", javaPanel);
 			tp.add("Version", versionPanel);

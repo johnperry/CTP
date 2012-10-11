@@ -92,7 +92,7 @@ public class StorageServlet extends Servlet {
 			sb.append("<html><head>");
 			sb.append("<title>Storage Service</title>");
 			sb.append("<style>");
-			sb.append("body {background-color:#c6d8f9;}");
+			sb.append("body {background-color:white;}");
 			sb.append("th,td{padding-left:10px; padding-right:10px;}");
 			sb.append("td{background-color:white;}");
 			sb.append("</style>");

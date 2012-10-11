@@ -386,7 +386,7 @@ public class DBVerifierServlet extends Servlet {
 			+	"  <title>"+title+"</title>\n"
 			+	"  <link rel=\"stylesheet\" href=\"/JSTableSort.css\" type=\"text/css\"/>\n"
 			+	"  <style>\n"
-			+	"    body {background-color:#c6d8f9; margin-top:0; margin-right:0;}\n"
+			+	"    body {background-color:white; margin-top:0; margin-right:0;}\n"
 			+	"    h1 {text-align:center; margin-top:10;}\n"
 			+	"    table.footer td {padding:5;}\n"
 			+	"  </style>\n"
