@@ -16,6 +16,7 @@ public class VersionPanel extends BasePanel {
 		super();
 		Configuration config = Configuration.getInstance();
 		JEditorPane vp = new JEditorPane( "text/html", getPage(config) );
+		vp.setBackground(BasePanel.bgColor);
 		vp.setEditable(false);
 
 		JScrollPane jsp = new JScrollPane();
@@ -27,7 +28,7 @@ public class VersionPanel extends BasePanel {
 		String page =
 				"<html>"
 			+	"<head></head>"
-			+	"<body style=\"background:white;font-family:sans-serif;\">"
+			+	"<body style=\"background:#b9d0ed;font-family:sans-serif;margin:0;padding:0;\">"
 			+	"<center>"
 			+	"<h1 style=\"color:#2977b9\">" + config.programName + "</h1>"
 			+	"Copyright 2012: RSNA<br><br>"

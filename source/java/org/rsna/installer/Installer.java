@@ -34,6 +34,7 @@ public class Installer extends JFrame {
 	File			directory;
 	boolean 		suppressFirstPathElement = false;
 	ColorPane		cp;
+	Color			bgColor = new Color(0xb9d0ed);
 
 	String windowTitle = "CTP Installer";
 	String programName = "CTP";
@@ -130,6 +131,7 @@ public class Installer extends JFrame {
 
 		textPane = new JEditorPane( "text/html", getWelcomePage() );
 		textPane.setEditable(false);
+		textPane.setBackground(bgColor);
 		splitPane.setTopComponent(textPane);
 
 		JScrollPane jsp = new JScrollPane();
@@ -542,9 +544,9 @@ public class Installer extends JFrame {
 		return
 				"<html>"
 			+	"<head></head>"
-			+	"<body style=\"background:white;font-family:sans-serif;\">"
+			+	"<body style=\"background:#b9d0ed;font-family:sans-serif;\">"
 			+	"<center>"
-			+	"<h1 style=\"color:blue\">" + windowTitle + "</h1>"
+			+	"<h1 style=\"color:#2977b9\">" + windowTitle + "</h1>"
 			+	"Version: " + programDate + "<br>"
 			+	"Copyright 2011: RSNA<br><br>"
 
