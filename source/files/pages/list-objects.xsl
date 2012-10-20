@@ -9,9 +9,11 @@
 		<head>
 			<title>Object List for <xsl:value-of select="@studyName"/></title>
 			<style>
-				th,td{padding-left:10px; padding-right:10px;}
-				body{background-color:white;}
-				td{background-color:white;}
+				th,td {padding-left:10px; padding-right:10px;}
+				body {background-color:#b9d0ed;}
+				td {background-color:white;}
+				td a {color:black;}
+				td a:visited {color: black;}
 			</style>
 		</head>
 		<body><center>

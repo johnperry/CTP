@@ -12,10 +12,12 @@
 			<title>Study List for <xsl:value-of select="@fileSystemName"/></title>
 			<style>
 				th,td {padding-left:10px; padding-right:10px; cursor:target;}
-				body {background-color:white;}
+				body {background-color:#b9d0ed;}
 				td {background-color:white;}
 				th a {text-decoration: none; color:black;}
 				th a:visited {color: black;}
+				td a {color:black;}
+				td a:visited {color: black;}
 			</style>
 			<xsl:call-template name="script"/>
 		</head>

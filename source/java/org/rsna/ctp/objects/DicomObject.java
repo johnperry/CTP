@@ -1516,14 +1516,13 @@ public class DicomObject extends FileObject {
 					if ((v.length() % 4) == 0) decipher = decipherLinks;
 				}
 			}
-			if (decipher) {
-				table.append("<td onclick=\"decipher();\">");
-				table.append("<font color=\"#2977b9\">"+prefix+tagString+"</font>");
-				table.append("</td>");
-			}
-			else table.append("<td>"+prefix+tagString+"</td>");
 
-			table.append("<td><font color=\"blue\">"+tagName+"</font></td>");
+			if (decipher) table.append("<td onclick=\"decipher();\">");
+			else table.append("<td>");
+			table.append(prefix+tagString);
+			table.append("</td>");
+
+			table.append("<td>"+tagName+"</td>");
 			table.append("<td align=center>"+vrString+"</td>");
 			table.append("<td align=center>"+vm+"</td>");
 			table.append("<td align=center>"+el.length()+"</td>");

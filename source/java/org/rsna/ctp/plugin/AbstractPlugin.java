@@ -118,7 +118,7 @@ public abstract class AbstractPlugin implements Plugin {
 	 */
 	public String getConfigHTML(boolean admin) {
 		StringBuffer sb = new StringBuffer();
-		sb.append("<h3>"+name+"</h3>");
+		sb.append("<h2>"+name+"</h2>");
 		sb.append("<table border=\"1\" width=\"100%\">");
 		NamedNodeMap attrs = element.getAttributes();
 		for (int i=0; i<attrs.getLength(); i++) {
