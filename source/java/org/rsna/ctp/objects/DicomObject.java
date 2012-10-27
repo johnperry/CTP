@@ -822,7 +822,7 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Get the contents of the first element found in an SQ elkement's item datasets.
+	 * Get the contents of the first element found in an SQ element's item datasets.
 	 * @param el the SQ element to search.
 	 * @param tag the tag specifying the element to find in the SQ element's item datasets.
 	 * @param defaultString the String to return if the element does not exist.
@@ -851,6 +851,42 @@ public class DicomObject extends FileObject {
 		}
 		catch (Exception ex) { }
 		return defaultString;
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset as a
+	 * byte array. This method supports accessing the item datasets of SQ elements,
+	 * but it only searches the first item dataset at each level.
+	 * It returns null if the element cannot be obtained.
+	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
+	 * where all the tags but the last must refer to an SQ element.
+	 * @return the byte array containing the value of the element, or null
+	 * if the element does not exist.
+	 */
+	public byte[] getElementBytes(int[] tags) {
+		try {
+			if (tags.length == 0) return null;
+
+			DcmElement de = null;
+			Dataset ds = dataset;
+			//Walk the SQ datasets to get to the last one
+			for (int k=0; k<tags.length-1; k++) {
+				de = ds.get(tags[k]);
+				if (de == null) return null;
+				if (!VRs.toString(de.vr()).equals("SQ")) return null;
+				ds = de.getItem(0);
+				if (ds == null) return null;
+			}
+			//Now get the element specified by the last tag
+			de = ds.get(tags[tags.length -1]);
+			if (de == null) return null;
+			int len = de.length();
+			ByteBuffer bb = de.getByteBuffer();
+			byte[] bytes = new byte[len];
+			for (int i=0; i<len; i++) bytes[i] = bb.get(i);
+			return bytes;
+		}
+		catch (Exception e) { return null; }
 	}
 
 	/**

@@ -54,7 +54,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	long lastTime = 0;
 	boolean returnStoredFile = true;
 	FileSystemManager fsm = null;
-	int fsNameTag = 0;
+	int[] fsNameTag;
 	boolean autoCreateUser = false;
 	int port = 0;
 	boolean ssl = false;
@@ -82,7 +82,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		setReadable = element.getAttribute("setWorldReadable").toLowerCase().equals("yes");
 		setWritable = element.getAttribute("setWorldWritable").toLowerCase().equals("yes");
 		qualifiers = getJPEGQualifiers(element);
-		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag"));
+		fsNameTag = getFSNameTag(element.getAttribute("fsNameTag"));
 		autoCreateUser = element.getAttribute("auto-create-user").toLowerCase().equals("yes");
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").toLowerCase().equals("no");
 		port = StringUtil.getInt(element.getAttribute("port"));
@@ -115,20 +115,26 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		return list;
 	}
 
+	//Get the array of ints identifying the fsNameTag.
+	//Tags must be separated by "::".
+	//If no fsNameTag is specified, return an empty int array.
+	private int[] getFSNameTag(String fsNameTagString) {
+		fsNameTagString = fsNameTagString.trim();
+		if (fsNameTagString.equals("")) return new int[0];
+		String[] tagNames = fsNameTagString.split("::");
+		int[] tagInts = new int[tagNames.length];
+		for (int i=0; i<tagNames.length; i++) {
+			tagInts[i] = DicomObject.getElementTag(tagNames[i]);
+		}
+		return tagInts;
+	}
+
 	/**
 	 * Stop the pipeline stage.
 	 */
 	public void shutdown() {
 		if (httpServer != null) httpServer.stopServer();
 		stop = true;
-	}
-
-	/**
-	 * Get the value of the fsNameTag, which may be zero, indicating that that no tag has been specified.
-	 * @return fsNameTag
-	 */
-	public int getFSNameTag() {
-		return fsNameTag;
 	}
 
 	/**
@@ -144,17 +150,11 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 */
 	public StoredObject getStoredObject(FileObject fileObject, String filename) {
 		try {
-			//Get the file system name for the object.
-			String fsName = "";
-			if ((fileObject instanceof DicomObject) && (fsNameTag != 0)) {
-				byte[] bytes = ((DicomObject)fileObject).getElementBytes(fsNameTag);
-				fsName = new String(bytes);
-				fsName = fsName.trim();
-			}
 			//Now get the FileSystem. Note: the second argument in the getFileSystem
 			//call is false to prevent creating a FileSystem if the FileSystem for
 			//this object doesn't exist.
-			FileSystem fs = fsm.getFileSystem(fsName,false);
+			String fsName = getFSName(fileObject);
+			FileSystem fs = fsm.getFileSystem(fsName, false);
 			if (fs == null) return null;
 			//Get the Study
 			String studyName = Study.makeStudyName(fileObject.getStudyUID());
@@ -198,12 +198,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		//The object is acceptable.
 		try {
 			//Get the file system for the object.
-			String fsName = "";
-			if ((fileObject instanceof DicomObject) && (fsNameTag != 0)) {
-				byte[] bytes = ((DicomObject)fileObject).getElementBytes(fsNameTag);
-				fsName = new String(bytes);
-				fsName = fsName.trim();
-			}
+			String fsName = getFSName(fileObject);
 			FileSystem fs = fsm.getFileSystem(fsName);
 			//Store the object
 			File storedFile = fs.store(fileObject);
@@ -218,6 +213,19 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		lastFileStored = fileObject.getFile();
 		lastTime = System.currentTimeMillis();
 		return fileObject;
+	}
+
+
+	//Get the file system name for the object.
+	private String getFSName(FileObject fileObject) throws Exception {
+		String fsName = "";
+		if ((fileObject instanceof DicomObject) && (fsNameTag.length != 0)) {
+			DicomObject dob = (DicomObject)fileObject;
+			byte[] bytes = dob.getElementBytes(fsNameTag);
+			fsName = new String(bytes);
+			fsName = fsName.trim();
+		}
+		return fsName;
 	}
 
 	private void createUserForFileSystem(FileSystem fs) {
