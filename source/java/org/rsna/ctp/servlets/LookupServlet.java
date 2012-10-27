@@ -7,10 +7,13 @@
 
 package org.rsna.ctp.servlets;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -21,6 +24,7 @@ import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.ScriptableDicom;
 import org.rsna.ctp.stdstages.XmlAnonymizer;
+import org.rsna.multipart.UploadedFile;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
 import org.rsna.server.User;
@@ -67,22 +71,37 @@ public class LookupServlet extends Servlet {
 		//Now make either the page listing the various editable stages
 		//or the page listing the contents of the specified file.
 		int p,s;
+		String format;
 		File file = null;
 		try {
 			p = Integer.parseInt(req.getParameter("p"));
 			s = Integer.parseInt(req.getParameter("s"));
-			file = getLookupTableFile(p,s);
+			format = req.getParameter("format", "html").toLowerCase();
+			file = getLookupTableFile(p, s);
 
-			if (file != null)
-				res.write(getEditorPage(p, s, file, home));
-			else
+			if (file != null) {
+				if (format.equals("csv")) {
+					res.write(getCSV(file));
+					res.setContentType("csv");
+					res.setContentDisposition(new File(file.getName()+".csv"));
+				}
+				else {
+					res.write(getEditorPage(p, s, file, home));
+					res.setContentType("html");
+				}
+			}
+			else {
 				res.write(getListPage(home));
+				res.setContentType("html");
+			}
 		}
-		catch (Exception ex) { res.write(getListPage(home)); }
+		catch (Exception ex) {
+			res.write(getListPage(home));
+			res.setContentType("html");
+		}
 
 		//Return the page
 		res.disableCaching();
-		res.setContentType("html");
 		res.send();
 	}
 
@@ -100,32 +119,35 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = req.getParameter("home", "/");
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
-			res.redirect(home);
+			res.setResponseCode(res.forbidden);
+			res.send();
 			return;
 		}
 
-		//Get the parameters from the form.
-		String phi = req.getParameter("phi");
-		String replacement = req.getParameter("replacement");
-		int p,s;
-		File file = null;
-		try {
-			p = Integer.parseInt(req.getParameter("p"));
-			s = Integer.parseInt(req.getParameter("s"));
-			file = getLookupTableFile(p,s);
+		File dir = null;
+		String contentType = req.getContentType().toLowerCase();
+		if (contentType.contains("multipart/form-data")) {
+			//This is a CSV submission
+			try {
+				//Make a temporary directory to receive the files
+				dir = File.createTempFile("CSV-", ".dir");
+				dir.delete();
+				dir.mkdirs();
 
-			//Update the file if possible.
-			if ((phi != null) && (replacement != null) && (file != null)) {
+				//Get the parts. Note: this must be done before getting the parameters.
+				LinkedList<UploadedFile> files = req.getParts(dir, 10*1024*1024);
+				String home = req.getParameter("home", "/");
+				int p = Integer.parseInt(req.getParameter("p"));
+				int s = Integer.parseInt(req.getParameter("s"));
+				File file = getLookupTableFile(p,s);
 
-				synchronized (this) {
-					Properties props = getProperties(file);
-					phi = phi.trim();
-					replacement = replacement.trim();
-					if (!phi.equals("")) {
-						props.setProperty(phi,replacement);
-						saveProperties(props,file);
+				//Convert and save the file
+				if ((file != null) && (files.size() > 0)) {
+					File csvFile = files.getFirst().getFile();
+					String props = getProps(csvFile);
+					synchronized (this) {
+						FileUtil.setText(file, props);
 					}
 				}
 
@@ -136,9 +158,47 @@ public class LookupServlet extends Servlet {
 				res.send();
 				return;
 			}
+			catch (Exception ex) { }
+			FileUtil.deleteAll(dir);
 		}
-		catch (Exception ex) { }
-		res.setResponseCode(500); //Unable to perform the function.
+		else {
+			//This is a post of the form from the page itself.
+			//Get the parameters from the form.
+			String phi = req.getParameter("phi");
+			String replacement = req.getParameter("replacement");
+			int p,s;
+			File file = null;
+			try {
+				String home = req.getParameter("home", "/");
+				p = Integer.parseInt(req.getParameter("p"));
+				s = Integer.parseInt(req.getParameter("s"));
+				file = getLookupTableFile(p,s);
+
+				//Update the file if possible.
+				if ((phi != null) && (replacement != null) && (file != null)) {
+
+					synchronized (this) {
+						Properties props = getProperties(file);
+						phi = phi.trim();
+						replacement = replacement.trim();
+						if (!phi.equals("")) {
+							props.setProperty(phi, replacement);
+							saveProperties(props,file);
+						}
+					}
+
+					//Make a new page from the new data and send it out
+					res.disableCaching();
+					res.setContentType("html");
+					res.write(getEditorPage(p, s, file, home));
+					res.send();
+					return;
+				}
+			}
+			catch (Exception ex) { }
+		}
+		//If we get here, we couldn't handle the submission
+		res.setResponseCode(res.notfound); //Unable to perform the function.
 		res.send();
 	}
 
@@ -158,9 +218,52 @@ public class LookupServlet extends Servlet {
 		return null;
 	}
 
+	//Convert the lookup table file to a string.
+	private String getCSV(File file) {
+		StringBuffer sb = new StringBuffer();
+		try {
+			BufferedReader br = new BufferedReader(
+									new InputStreamReader(new FileInputStream(file), "UTF-8") );
+			String line;
+			while ( (line=br.readLine()) != null ) {
+				int k;
+				line = line.trim();
+				if (!line.startsWith("#") && ((k=line.indexOf("=")) != -1)) {
+					sb.append( line.substring(0,k).trim() );
+					sb.append(",");
+					sb.append( line.substring(k+1).trim() );
+					sb.append("\n");
+				}
+			}
+		}
+		catch (Exception returnWhatWeHaveSoFar) { }
+		return sb.toString();
+	}
+
+	//Get the properties from a CSV file
+	private String getProps(File csvFile) {
+		StringBuffer sb = new StringBuffer();
+		try {
+			BufferedReader br = new BufferedReader(
+									new InputStreamReader(new FileInputStream(csvFile), "UTF-8") );
+			String line;
+			while ( (line=br.readLine()) != null ) {
+				String[] s = line.split(",");
+				if (s.length == 2) {
+					sb.append(s[0].trim());
+					sb.append("=");
+					sb.append(s[1].trim() );
+					sb.append("\n");
+				}
+			}
+		}
+		catch (Exception returnWhatWeHaveSoFar) { }
+		return sb.toString();
+	}
+
 	//Create an HTML page containing the list of files.
 	private String getListPage(String home) {
-		return responseHead("Select the Lookup Table File to Edit", "", home)
+		return responseHead("Select the Lookup Table File to Edit", "", home, false)
 				+ makeList()
 					+ responseTail();
 	}
@@ -203,7 +306,7 @@ public class LookupServlet extends Servlet {
 
 	//Create an HTML page containing the form for configuring the file.
 	private String getEditorPage(int p, int s, File file, String home) {
-		return responseHead("Lookup Table Editor", file.getAbsolutePath(), home)
+		return responseHead("Lookup Table Editor", file.getAbsolutePath(), home, true)
 				+ makeForm(p, s, file, home)
 					+ responseTail();
 	}
@@ -252,32 +355,48 @@ public class LookupServlet extends Servlet {
 	}
 
 	private String hidden(String name, String text) {
-		return "<input type=\"hidden\" name=\"" + name + "\" value=\"" + text + "\"/>";
+		return "<input type=\"hidden\" id=\"" + name + "\" name=\"" + name + "\" value=\"" + text + "\"/>";
 	}
 
-	private String responseHead(String title, String subtitle, String home) {
+	private String responseHead(String title, String subtitle, String home, boolean includeCSVLinks) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
 			+	"  <title>"+title+"</title>\n"
 			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/BaseStyles.css\"></link>\n"
-			+	"   <style>\n"
-			+	"    body {margin-top:0; margin-right:0;}\n"
-			+	"    h1 {text-align:center; margin-top:10;}\n"
-			+	"    h2 {text-align:center; font-size:12pt; margin:0; padding:0; font-weight:normal;}\n"
-			+	"    textarea {width:75%; height:300px;}\n"
-			+	"    .button {width:250}\n"
-			+	"   </style>\n"
-			+	"   <script>\n"
-			+	"    function setFocus() {\n"
-			+	"     var x = document.getElementById('phi');\n"
-			+	"     if (x) x.focus();\n"
-			+	"    }\n"
-			+	"    window.onload = setFocus;\n"
-			+	"   </script>\n"
+			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/JSPopup.css\"></link>\n"
+			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/LookupServlet.css\"></link>\n"
+			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSUtil.js\">;</script>\n"
+			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSAJAX.js\">;</script>\n"
+			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSPopup.js\">;</script>\n"
+			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/LookupServlet.js\">;</script>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-			+	HtmlUtil.getCloseBox(home)
+
+			+	"  <div style=\"float:right;\">\n"
+			+	"   <img src=\"/icons/home.png\"\n"
+			+	"    onclick=\"window.open('"+home+"','_self');\"\n"
+			+	"    style=\"margin-right:2px;\"\n"
+			+	"    title=\"Return to the home page\"/>\n"
+			+	"   <br>\n";
+
+		if (includeCSVLinks) {
+			head +=
+				    "   <br>\n"
+				+	"   <img src=\"/icons/arrow-up.png\"\n"
+				+	"    onclick=\"uploadCSV();\"\n"
+				+	"    style=\"margin-left:4px; width:28px;\"\n"
+				+	"    title=\"Upload CSV Lookup Table File\"/>\n"
+				+	"   <br>\n"
+				+	"   <img src=\"/icons/arrow-down.png\"\n"
+				+	"    onclick=\"downloadCSV();\"\n"
+				+	"    style=\"margin-left:4px; width:28px;\"\n"
+				+	"    title=\"Download CSV Lookup Table File\"/>\n";
+		}
+
+		head +=
+			    "  </div>\n"
+
 			+	"  <h1>"+title+"</h1>\n"
 			+	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>")
 			+	"  <center>\n";
