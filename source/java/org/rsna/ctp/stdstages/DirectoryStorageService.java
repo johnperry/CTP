@@ -205,14 +205,15 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private String replace(String string, DicomObject dob) {
 		try {
-			Pattern pattern = Pattern.compile("[\\[\\(][0-9a-fA-F]{0,4}[,]?[0-9a-fA-F]{1,4}[\\]\\)]");
+
+			String singleTag = "[\\[\\(][0-9a-fA-F]{0,4}[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
+			Pattern pattern = Pattern.compile( singleTag + "(::"+singleTag+")*" );
+
 			Matcher matcher = pattern.matcher(string);
 			StringBuffer sb = new StringBuffer();
 			while (matcher.find()) {
 				String group = matcher.group();
-				String key = group.substring(1, group.length()-1).replace(",","");
-				int tag = Integer.parseInt(key, 16);
-				String repl = dob.getElementValue(tag);
+				String repl = getElementValue(dob, group);
 				if (repl.equals("")) repl = defaultString;
 				matcher.appendReplacement(sb, repl);
 			}
@@ -223,6 +224,20 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			logger.warn(ex);
 			return string;
 		}
+	}
+
+	private String getElementValue(DicomObject dob, String group) {
+		String value = "";
+		try {
+			int[] tags = FileStorageService.getTagArray(group);
+			if (tags.length != 0) {
+				byte[] bytes = dob.getElementBytes(tags);
+				value = new String(bytes);
+				value = value.trim();
+			}
+		}
+		catch (Exception ex) { }
+		return value;
 	}
 
 	/**

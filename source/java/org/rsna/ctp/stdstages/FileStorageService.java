@@ -82,7 +82,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		setReadable = element.getAttribute("setWorldReadable").toLowerCase().equals("yes");
 		setWritable = element.getAttribute("setWorldWritable").toLowerCase().equals("yes");
 		qualifiers = getJPEGQualifiers(element);
-		fsNameTag = getFSNameTag(element.getAttribute("fsNameTag"));
+		fsNameTag = getTagArray(element.getAttribute("fsNameTag"));
 		autoCreateUser = element.getAttribute("auto-create-user").toLowerCase().equals("yes");
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").toLowerCase().equals("no");
 		port = StringUtil.getInt(element.getAttribute("port"));
@@ -118,7 +118,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	//Get the array of ints identifying the fsNameTag.
 	//Tags must be separated by "::".
 	//If no fsNameTag is specified, return an empty int array.
-	private int[] getFSNameTag(String fsNameTagString) {
+	public static int[] getTagArray(String fsNameTagString) {
 		fsNameTagString = fsNameTagString.trim();
 		if (fsNameTagString.equals("")) return new int[0];
 		String[] tagNames = fsNameTagString.split("::");
