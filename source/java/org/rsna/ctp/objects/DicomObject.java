@@ -510,12 +510,12 @@ public class DicomObject extends FileObject {
 	 * All other sizes are returned without window level and width processing.
 	 * @param file the file into which to write the encoded image.
 	 * @param frame the frame to save (the first frame is zero).
-	 * @param windowLevel the window level in absolute pixel values (0 through 2^bitsStored - 1),
-	 * not in the native pixel scaling of the modality e.g. Hounsfield values).
-	 * @param windowWidth the window width in absolute pixel values.
+	 * @param windowLevel the window level in display values (e.g. Hounsfield values).
+	 * @param windowWidth the window width in display values.
+	 * @param inverse true if the grayscale is to be inverted, false otherwise.
 	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
 	 */
-	public Dimension saveAsWindowLeveledJPEG(File file, int frame, int quality, int windowLevel, int windowWidth) {
+	public Dimension saveAsWindowLeveledJPEG(File file, int frame, int quality, int windowLevel, int windowWidth, boolean inverse) {
 		FileImageOutputStream out = null;
 		ImageWriter writer = null;
 		Dimension result = null;
@@ -524,10 +524,20 @@ public class DicomObject extends FileObject {
 			if (originalImage == null) return null;
 			result = new Dimension(originalImage.getWidth(), originalImage.getHeight());
 
+			//Convert from display units to pixel units.
+			//windowLevel and windowWidth are in display units.
+			//The conversion is: (DisplayUnit) = (RescaleSlope) * (PixelUnit) + (RescaleIntercept)
+			//so we have to invert this relationship to get the pixel units.
+			//To make clear in what domain the arithmetic is being done, we explicitly cast the values:
+			float slope = getFloat("RescaleSlope", 1.0f);
+			float intercept = getFloat("RescaleIntercept", 0.0f);
+			windowLevel = (int)( ( (float)windowLevel - intercept ) / slope );
+			windowWidth = (int)( (float)windowWidth / slope );
+
 			//Do the window level/width operation, if possible.
 			int bitsStored = getBitsStored();
 			int cmPixelSize = originalImage.getColorModel().getPixelSize();
-			if ((bitsStored >= 12) && (bitsStored <= 16) && (cmPixelSize <= 16)) {
+			if ((bitsStored >= 8) && (bitsStored <= 16) && (cmPixelSize <= 16)) {
 				int size = 1 << bitsStored;
 				byte[] rgb = new byte[size];
 
@@ -536,12 +546,21 @@ public class DicomObject extends FileObject {
 				int top = bottom + windowWidth;
 				bottom = Math.min( Math.max(0, bottom), size-1 );
 				top = Math.max( Math.min(size-1, top), 0 );
-				if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)0);
-				if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)255);
-
-				double scale = 255.0 / ((double)(top - bottom));
-				for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
-					rgb[i] = (byte)(scale * (i - bottom));
+				if (!inverse) {
+					if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)0);
+					if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)255);
+					double scale = 255.0 / ((double)(top - bottom));
+					for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
+						rgb[i] = (byte)(scale * (i - bottom));
+					}
+				}
+				else {
+					if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)255);
+					if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)0);
+					double scale = 255.0 / ((double)(top - bottom));
+					for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
+						rgb[i] = (byte)(255 - (int)(scale * (i - bottom)));
+					}
 				}
 				ColorModel cm = new IndexColorModel(cmPixelSize, size, rgb, rgb, rgb);
 				originalImage = new BufferedImage( cm, originalImage.getRaster(), false, null);
@@ -729,6 +748,39 @@ public class DicomObject extends FileObject {
 		TagDictionary.Entry entry = tagDictionary.lookup(tag);
 		if (entry == null) return null;
 		return entry.name;
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset
+	 * as a floating point number
+	 * @param tagName the dcm4che name of the element.
+	 * @return the value of the element as a floating point number.
+	 */
+	public float getFloat(String tagName) {
+		return getFloat(tagName, 0.0F);
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset
+	 * as a floating point number
+	 * @param tagName the dcm4che name of the element.
+	 * @param defaultValue the value returned if the object does not have the element.
+	 * @return the value of the element as a floating point number.
+	 */
+	public float getFloat(String tagName, float defaultValue) {
+		return getFloat(Tags.forName(tagName), defaultValue);
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset
+	 * as a floating point number
+	 * @param tag the identifier of the element.
+	 * @param defaultValue the value returned if the object does not have the element.
+	 * @return the value of the element as a floating point number.
+	 */
+	public float getFloat(int tag, float defaultValue) {
+		try { return dataset.getFloat(tag, defaultValue); }
+		catch (Exception e) { return defaultValue; }
 	}
 
 	/**

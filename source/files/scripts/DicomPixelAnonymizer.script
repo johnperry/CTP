@@ -109,6 +109,16 @@ Philips
 Zonare
   { [0008,1090].containsIgnoreCase("Z_ONE") }
   (0,0,800,65)
+  
+ATL
+  { Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("ATL") *
+    [0008,1090].containsIgnoreCase("HDI 5000") *
+    [0028,0010].equals("476") *
+    [0028,0011].equals("640") }
+  (40,0,200,40) (240,0,190,16)
+  
+
 
 **************
      MRI
