@@ -509,20 +509,35 @@ public class DicomObject extends FileObject {
 	 * This method only operates on images with ColorModel pixel sizes of 16 bits or less.
 	 * All other sizes are returned without window level and width processing.
 	 * @param file the file into which to write the encoded image.
+	 * @param w the width of the saved image, or -1 to use the original image width.
+	 * @param h the height of the saved image, or -1 to use the original image height.
 	 * @param frame the frame to save (the first frame is zero).
 	 * @param windowLevel the window level in display values (e.g. Hounsfield values).
 	 * @param windowWidth the window width in display values.
-	 * @param inverse true if the grayscale is to be inverted, false otherwise.
 	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
 	 */
-	public Dimension saveAsWindowLeveledJPEG(File file, int frame, int quality, int windowLevel, int windowWidth, boolean inverse) {
+	public Dimension saveAsWindowLeveledJPEG(File file, int w, int h, int frame, int quality, int windowLevel, int windowWidth) {
 		FileImageOutputStream out = null;
 		ImageWriter writer = null;
 		Dimension result = null;
 		try {
-			BufferedImage originalImage = getBufferedImage(frame, false);
+
+			BufferedImage originalImage = null;
+			if ((w == -1) || (h == -1)) {
+				originalImage = getBufferedImage(frame, false);
+			}
+			else {
+				originalImage = getScaledBufferedImage(frame, w, w); //Note: w,w is correct; we are forcing the size.
+			}
 			if (originalImage == null) return null;
-			result = new Dimension(originalImage.getWidth(), originalImage.getHeight());
+			w = originalImage.getWidth();
+			h = originalImage.getHeight();
+
+			result = new Dimension(w, h);
+
+			//See whether the LUT is inverted
+			String lutShape = getElementValue("PresentationLUTShape").toLowerCase().trim();
+			boolean inverse = lutShape.equals("inverse");
 
 			//Convert from display units to pixel units.
 			//windowLevel and windowWidth are in display units.
@@ -568,9 +583,7 @@ public class DicomObject extends FileObject {
 
 			// Make a destination image with the original resolution,
 			// but with 8-bit pixels so we can convert the result to JPEG.
-			int width = originalImage.getWidth();
-			int height = originalImage.getHeight();
-			BufferedImage rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			BufferedImage rgbImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 
 			// Get an identity transform
 			AffineTransform at = new AffineTransform();
