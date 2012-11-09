@@ -517,21 +517,26 @@ public class DicomObject extends FileObject {
 	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
 	 */
 	public Dimension saveAsWindowLeveledJPEG(File file, int w, int h, int frame, int quality, int windowLevel, int windowWidth) {
+		int maxCubic = 1100; //The maximum dimension for which bicubic interpolation is done.
 		FileImageOutputStream out = null;
 		ImageWriter writer = null;
 		Dimension result = null;
 		try {
 
-			BufferedImage originalImage = null;
+			BufferedImage originalImage = getBufferedImage(frame, false);
+			if (originalImage == null) return null;
+
+			// Set the scale for the output image.
+			int origW = originalImage.getWidth();
+			int origH = originalImage.getHeight();
+			double imageScale = 1.0;
 			if ((w == -1) || (h == -1)) {
-				originalImage = getBufferedImage(frame, false);
+				w = origW;
+				h = origH;
 			}
 			else {
-				originalImage = getScaledBufferedImage(frame, w, w); //Note: w,w is correct; we are forcing the size.
+				imageScale = (double)w / (double)origW;
 			}
-			if (originalImage == null) return null;
-			w = originalImage.getWidth();
-			h = originalImage.getHeight();
 
 			result = new Dimension(w, h);
 
@@ -585,11 +590,18 @@ public class DicomObject extends FileObject {
 			// but with 8-bit pixels so we can convert the result to JPEG.
 			BufferedImage rgbImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 
-			// Get an identity transform
-			AffineTransform at = new AffineTransform();
-			AffineTransformOp atop = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+			// Set up the transform
+			AffineTransform at;
+			if (imageScale == 1.0d) at = new AffineTransform(); //identity transform
+			else at = AffineTransform.getScaleInstance(imageScale, imageScale);
+			int pixelSize = originalImage.getColorModel().getPixelSize();
+			AffineTransformOp atop;
+			if ((pixelSize == 8) || (w > maxCubic) || (h > maxCubic) )
+				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+			else
+				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_BICUBIC);
 
-			// Paint the ,original (possibly window leveled) image onto the RGB image.
+			// Paint the original (possibly window leveled) image onto the RGB image.
 			Graphics2D g2d = rgbImage.createGraphics();
 			g2d.drawImage(originalImage, atop, 0, 0);
 			g2d.dispose();
