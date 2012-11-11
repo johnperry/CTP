@@ -32,6 +32,7 @@ public class FileSystemManager {
 	boolean acceptDuplicateUIDs;
 	boolean setReadable;
 	boolean setWritable;
+	File exportDirectory;
 	List<ImageQualifiers> qualifiers;
 	boolean loaded = false;
 
@@ -46,6 +47,8 @@ public class FileSystemManager {
 	 * root require authentication; false otherwise.
 	 * @param setReadable true if files and directories in this root are to be world readable.
 	 * @param setWritable true if files and directories in this root are to be world writable.
+	 * @param exportDirectory the directory into which to copy files during an export copy operation
+	 * or null if export copying is not configured.
 	 * @param qualifiers the list of qualifiers for the creation of JPEG images when a
 	 * DICOM image is stored.
 	 */
@@ -56,6 +59,7 @@ public class FileSystemManager {
 											boolean acceptDuplicateUIDs,
 											boolean setReadable,
 											boolean setWritable,
+											File exportDirectory,
 											List<ImageQualifiers> qualifiers) {
 		FileSystemManager fsm = fileSystemManagers.get(root);
 		if (fsm == null) {
@@ -66,6 +70,7 @@ public class FileSystemManager {
 						acceptDuplicateUIDs,
 						setReadable,
 						setWritable,
+						exportDirectory,
 						qualifiers);
 			fileSystemManagers.put(root,fsm);
 		}
@@ -93,6 +98,8 @@ public class FileSystemManager {
 	 * root require authentication; false otherwise.
 	 * @param setReadable true if files and directories in this root are to be world readable.
 	 * @param setWritable true if files and directories in this root are to be world writable.
+	 * @param exportDirectory the directory into which to copy files during an export copy operation
+	 * or null if export copying is not configured.
 	 * @param qualifiers the list of qualifiers for the creation of JPEG images when a
 	 * DICOM image is stored.
 	 */
@@ -102,6 +109,7 @@ public class FileSystemManager {
 								boolean acceptDuplicateUIDs,
 								boolean setReadable,
 								boolean setWritable,
+								File exportDirectory,
 								List<ImageQualifiers> qualifiers) {
 		this.root = root;
 		this.type = type;
@@ -110,6 +118,7 @@ public class FileSystemManager {
 		this.setReadable = setReadable;
 		this.setWritable = setWritable;
 		this.qualifiers = qualifiers;
+		this.exportDirectory = exportDirectory;
 		fileSystems = new Hashtable<String,FileSystem>();
 //		if (setReadable) root.setReadable(true,false); //Java 1.6
 //		if (setWritable) root.setWritable(true,false); //Java 1.6
@@ -131,6 +140,14 @@ public class FileSystemManager {
 			if (fs.allowsAccessBy(user)) allowedFileSystems.add(fsName);
 		}
 		return allowedFileSystems;
+	}
+
+	/**
+	 * Get the export directory configured for this FileSystemManager.
+	 * @return the export directory.
+	 */
+	public File getExportDirectory() {
+		return exportDirectory;
 	}
 
 	/**

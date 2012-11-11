@@ -8,6 +8,7 @@
 	<html>
 		<head>
 			<title>Audit Log Service - (<xsl:value-of select="$context"/>)</title>
+			<link rel="Stylesheet" type="text/css" media="all" href="/BaseStyles.css"></link>
 			<link rel="Stylesheet" type="text/css" media="all" href="/AuditLogServlet.css"></link>
 			<script language="JavaScript" type="text/javascript" src="/JSUtil.js">;</script>
 			<script language="JavaScript" type="text/javascript" src="/JSAJAX.js">;</script>
@@ -50,6 +51,14 @@
 				<tr>
 					<td class="text-label">
 						<input id="object" type="radio" name="searchfield" value="object">Object UID:</input>
+					</td>
+					<td class="text-field">
+						<input type="text" class="fullwidth"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="text-label">
+						<input id="object" type="radio" name="searchfield" value="entry">Entry ID:</input>
 					</td>
 					<td class="text-field">
 						<input type="text" class="fullwidth"/>

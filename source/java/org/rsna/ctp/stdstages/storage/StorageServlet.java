@@ -91,8 +91,8 @@ public class StorageServlet extends Servlet {
 			StringBuffer sb = new StringBuffer();
 			sb.append("<html><head>");
 			sb.append("<title>Storage Service</title>");
+			sb.append("<link rel=\"stylesheet\" href=\"/BaseStyles.css\" type=\"text/css\"/>");
 			sb.append("<style>");
-			sb.append("body {background-color:#b9d0ed;}");
 			sb.append("th,td{padding-left:10px; padding-right:10px;}");
 			sb.append("td{background-color:white;}");
 			sb.append("</style>");
@@ -126,17 +126,20 @@ public class StorageServlet extends Servlet {
 	//List all studies in one file system.
 	private void listStudies(HttpRequest req, HttpResponse res, Path path, FileSystemManager fsm) {
 		String admin = req.userHasRole("admin") ? "yes" : "no";
+		String dir = (fsm.getExportDirectory() != null) ? "yes" : "no";
 		String delete = req.userHasRole("delete") ? "yes" : "no";
 		String key = req.getParameter("key");
 		if (key == null) key = "storageDate";
 		String fsName = path.element(1);
 		FileSystem fs = fsm.getFileSystem(fsName, false);
+
 		String page = "Access to the requested File System is not allowed.";
 		if ((fs != null) && fs.allowsAccessBy(req.getUser())) {
 			File xslFile = new File("pages/list-studies.xsl");
 			if (fs != null) {
 				String[] params = new String[] {
 					"context", "/storage/"+fsName,
+					"dir",		dir,
 					"delete",	delete,
 					"key",		key
 				};
@@ -166,7 +169,7 @@ public class StorageServlet extends Servlet {
 			if (study != null) {
 				String format = req.getParameter("format");
 				format = (format==null) ? "list" : format;
-				if (!format.equals("zip") && !format.equals("delete")) {
+				if (!format.equals("zip") && !format.equals("delete") & !format.equals("dir")) {
 					if (format.equals("list"))
 						xslFile = new File("pages/list-objects.xsl");
 					else
@@ -208,15 +211,42 @@ public class StorageServlet extends Servlet {
 					res.send();
 					return;
 				}
+				else if (format.equals("dir")) {
+					File expdir = fsm.getExportDirectory();
+					if ((expdir != null) && user.hasRole("admin")) {
+						try {
+							expdir.mkdirs();
+							File studyDir = study.getDirectory();
+							File[] files = studyDir.listFiles();
+							for (File file : files) {
+								String name = file.getName();
+								if (!name.startsWith("__")) {
+									File outfile = new File(expdir, name);
+									FileUtil.copy(file, outfile);
+								}
+							}
+							//Redirect to the level above.
+							String subpath = path.subpath(0, path.length()-2);
+							res.redirect(subpath);
+							return;
+						}
+						catch (Exception ex) {
+							logger.debug("Internal server error in directory export.", ex);
+							res.setResponseCode( res.servererror );
+							res.send();
+						}
+					}
+					res.setResponseCode( res.forbidden ); //Not authorized
+					res.send();
+					return;
+				}
 				else if (format.equals("delete")) {
 					if ((user != null) &&
 						(user.getUsername().equals(fs.getName()) || user.hasRole("delete"))) {
 						fs.deleteStudyByUID(studyUID);
 						//Redirect to the level above.
 						String subpath = path.subpath(0, path.length()-2);
-						res.setResponseCode(302);
-						res.setHeader("Location", subpath);
-						res.send();
+						res.redirect(subpath);
 						return;
 					}
 					res.setResponseCode( res.forbidden ); //Not authorized

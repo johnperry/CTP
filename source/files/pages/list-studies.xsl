@@ -3,6 +3,7 @@
 <xsl:output method="xml" encoding="utf-8" omit-xml-declaration="yes" />
 
 <xsl:param name="context"/>
+<xsl:param name="dir"/>
 <xsl:param name="delete"/>
 <xsl:param name="key">date</xsl:param>
 
@@ -75,6 +76,14 @@
 				<xsl:text>Display</xsl:text>
 			</a>
 		</td>
+		<xsl:if test="$dir='yes'">
+			<td>
+				<a href="{$context}/{studyName}?format=dir"
+					title="Export the study to a directory">
+					<xsl:text>Dir</xsl:text>
+				</a>
+			</td>
+		</xsl:if>
 		<td>
 			<a href="{$context}/{studyName}?format=zip"
 				title="Export the study as a zip file">
@@ -85,7 +94,7 @@
 			<td>
 				<a href="{$context}/{studyName}?format=zip&amp;delete=yes"
 					onclick="hideRow(event);"
-					title="Export the study and then delete it">
+					title="Export the study as a zip file and then delete the study">
 					<xsl:text>Exp&amp;Del</xsl:text>
 				</a>
 			</td>

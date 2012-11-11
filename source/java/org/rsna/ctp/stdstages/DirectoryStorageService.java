@@ -229,7 +229,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	private String getElementValue(DicomObject dob, String group) {
 		String value = "";
 		try {
-			int[] tags = FileStorageService.getTagArray(group);
+			int[] tags = DicomObject.getTagArray(group);
 			if (tags.length != 0) {
 				byte[] bytes = dob.getElementBytes(tags);
 				value = new String(bytes);

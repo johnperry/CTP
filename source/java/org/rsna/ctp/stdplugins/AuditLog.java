@@ -193,6 +193,30 @@ public class AuditLog extends AbstractPlugin {
 		return getIDs(objectUIDIndex, objectUID);
 	}
 
+	/**
+	 * Get a list of entries with IDs around a specified ID.
+	 * @param id the id of the entry.
+	 * @return the list of audit log entry IDs around a specified ID,
+	 * or an empty list if no entry appears in the objectUID index for the UID.
+	 */
+	public synchronized LinkedList<Integer> getEntriesForID(String id) {
+		int lastID = 0;
+		try {
+			Integer lastIDInt = (Integer)count.get(lastIDName);
+			if (lastIDInt != null) lastID = lastIDInt.intValue();
+		}
+		catch (Exception useZero) { }
+		int x = StringUtil.getInt(id, 0);
+		x = Math.min(x, lastID);
+		int min = Math.max(x - 25, 1);
+		int max = Math.max(x + 25, 1);
+		LinkedList<Integer> ids = new LinkedList<Integer>();
+		for (int k=min; (k<max) && (k<=lastID); k++) {
+			ids.add(new Integer(k));
+		}
+		return ids;
+	}
+
 	private synchronized LinkedList<Integer> getIDs(HTree index, String key) {
 		LinkedList<Integer> list = null;
 		try { list = (LinkedList<Integer>)index.get(key); }

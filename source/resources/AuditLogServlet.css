@@ -1,5 +1,4 @@
 body {
-	background: white;
 	padding:0;
 	margin:0;
 	overflow: hidden;
@@ -27,7 +26,7 @@ h2 {
 	
 p.instruction {
 	text-align: left;
-	font-size: x-small;
+	font-size: 10pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: bold;
 	margin-left: 15%;
@@ -50,7 +49,7 @@ table {
 
 td.text-field {
 	text-align: left;
-	font-size: xx-small;
+	font-size: 11pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: normal;
 	width:70%;
@@ -59,7 +58,7 @@ td.text-field {
 
 td.text-label {
 	text-align: left;
-	font-size: x-small;
+	font-size: 11pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: normal;
 	width:30%;
@@ -82,7 +81,7 @@ div.entryselect {
 	overflow: auto;
 	background: white;
 	font-family: monospace;
-	font-size: small;
+	font-size: 12pt;
 }
 
 div.entryselect span {
@@ -99,5 +98,5 @@ div.entrydisplay {
 	overflow: auto;
 	background: white;
 	font-family: monospace;
-	font-size: small;
+	font-size: 12pt;
 }

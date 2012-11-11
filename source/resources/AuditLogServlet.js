@@ -92,10 +92,11 @@ function displayEntryText(req) {
 			var cdata = entry.firstChild;
 
 			var text = cdata.nodeValue;
-			text = time+"\nContent Type: "+ctype+"\nEntry ID: "+id+"\n"+text;
+			text = time+"\nContent Type: "+ctype+"\nEntry ID: "+id+"\n\n"+text;
 
 			var lines = text.split("\n");
 			for (var i=0; i<lines.length; i++) {
+				lines[i] = lines[i].replace(/\s/g, "\u00a0");
 				disdiv.appendChild( document.createTextNode( lines[i] ) );
 				disdiv.appendChild( document.createElement( "BR" ) );
 			}

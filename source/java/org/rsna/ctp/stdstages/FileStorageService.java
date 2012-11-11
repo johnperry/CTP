@@ -67,6 +67,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	List<ImageQualifiers> qualifiers = null;
 	StorageMonitor storageMonitor = null;
 	HttpServer httpServer = null;
+	File exportDirectory = null;
 
 	/**
 	 * Construct a FileStorageService.
@@ -78,11 +79,13 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		type = element.getAttribute("type").toLowerCase();
 		timeDepth = StringUtil.getInt(element.getAttribute("timeDepth"));
 		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
+		String expDirString = element.getAttribute("exportDirectory").trim();
+		if (!expDirString.equals("")) exportDirectory = new File(expDirString);
 		requireAuthentication = element.getAttribute("requireAuthentication").toLowerCase().equals("yes");
 		setReadable = element.getAttribute("setWorldReadable").toLowerCase().equals("yes");
 		setWritable = element.getAttribute("setWorldWritable").toLowerCase().equals("yes");
 		qualifiers = getJPEGQualifiers(element);
-		fsNameTag = getTagArray(element.getAttribute("fsNameTag"));
+		fsNameTag = DicomObject.getTagArray(element.getAttribute("fsNameTag"));
 		autoCreateUser = element.getAttribute("auto-create-user").toLowerCase().equals("yes");
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").toLowerCase().equals("no");
 		port = StringUtil.getInt(element.getAttribute("port"));
@@ -96,9 +99,8 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 					acceptDuplicateUIDs,
 					setReadable,
 					setWritable,
+					exportDirectory,
 					qualifiers);
-		startServer();
-		startStorageMonitor();
 	}
 
 	//Get the list of qualifiers for jpeg child elements.
@@ -115,18 +117,13 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		return list;
 	}
 
-	//Get the array of ints identifying the fsNameTag.
-	//Tags must be separated by "::".
-	//If no fsNameTag is specified, return an empty int array.
-	public static int[] getTagArray(String fsNameTagString) {
-		fsNameTagString = fsNameTagString.trim();
-		if (fsNameTagString.equals("")) return new int[0];
-		String[] tagNames = fsNameTagString.split("::");
-		int[] tagInts = new int[tagNames.length];
-		for (int i=0; i<tagNames.length; i++) {
-			tagInts[i] = DicomObject.getElementTag(tagNames[i]);
-		}
-		return tagInts;
+	/**
+	 * Start the pipeline stage. This method is called by the
+	 * Pipeline after all the stages have been constructed.
+	 */
+	public synchronized void start() {
+		startServer();
+		startStorageMonitor();
 	}
 
 	/**
@@ -135,6 +132,13 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	public void shutdown() {
 		if (httpServer != null) httpServer.stopServer();
 		stop = true;
+	}
+
+	/**
+	 * Get the export directory specified in the configuration.
+	 */
+	public File getExportDirectory() {
+		return exportDirectory;
 	}
 
 	/**

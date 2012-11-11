@@ -46,7 +46,7 @@ public class DicomExportService extends AbstractExportService {
 		acceptFileObjects = false;
 
 		//Get the destination url
-		String url = element.getAttribute("url").trim();
+		url = element.getAttribute("url").trim();
 
 		//See if we are to force a close of the
 		//association on every transfer
@@ -63,11 +63,11 @@ public class DicomExportService extends AbstractExportService {
 
 		//Get the AuditLog parameters
 		auditLogID = element.getAttribute("auditLogID").trim();
-		String[] alts = element.getAttribute("auditLogTags").split("/");
+		String[] alts = element.getAttribute("auditLogTags").split(";");
 		auditLogTags = new LinkedList<Integer>();
 		for (String alt :alts) {
 			int tag = DicomObject.getElementTag(alt);
-			if (tag == 0) auditLogTags.add(new Integer(tag));
+			if (tag != 0) auditLogTags.add(new Integer(tag));
 			else logger.warn(name+": Unknown DICOM element tag: "+alt);
 		}
 	}
@@ -118,19 +118,29 @@ public class DicomExportService extends AbstractExportService {
 				for (Integer tag : auditLogTags) {
 					int tagint = tag.intValue();
 					String elementName = DicomObject.getElementName(tagint);
-					if (elementName == null) {
+					if (elementName != null) {
+						elementName = elementName.replaceAll("\\s", "");
+					}
+					else {
 						int g = (tagint >> 16) & 0xFFFF;
 						int e = tagint &0xFFFF;
-						elementName = String.format("g%04Xe&04X", g, e);
+						elementName = String.format("g%04Xe%04X", g, e);
 					}
+					logger.debug("About to call setAttribute");
+					logger.debug("name: "+elementName);
+					logger.debug("value: \""+dicomObject.getElementValue(tagint, "")+"\"\n");
 					root.setAttribute(elementName, dicomObject.getElementValue(tagint, ""));
 				}
 				entry = XmlUtil.toPrettyString(root);
+				logger.debug("AuditLog entry:\n"+entry);
 			}
-			catch (Exception ex) { entry = "<DicomExportService/>"; }
+			catch (Exception ex) {
+				logger.warn("Unable to construct the AuditLog entry", ex);
+				entry = "<DicomExportService/>";
+			}
 
 			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
-			catch (Exception ex) { logger.warn("Unable to make AuditLog entry"); }
+			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
 		}
 		return status;
 	}

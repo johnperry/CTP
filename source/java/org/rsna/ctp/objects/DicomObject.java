@@ -712,6 +712,24 @@ public class DicomObject extends FileObject {
 		}
 	}
 
+	/**
+	 * Get the array of ints identifying an element.
+	 * To specify an element in an SQ item dataset,
+	 * tags must be separated by "::".
+	 * If no tagString is specified, return an empty int array.
+	 * @param tagString the list of tags identifying an element
+	 */
+	public static int[] getTagArray(String tagString) {
+		tagString = tagString.trim();
+		if (tagString.equals("")) return new int[0];
+		String[] tagNames = tagString.split("::");
+		int[] tagInts = new int[tagNames.length];
+		for (int i=0; i<tagNames.length; i++) {
+			tagInts[i] = getElementTag(tagNames[i]);
+		}
+		return tagInts;
+	}
+
 	static final Pattern hexPattern = Pattern.compile("([0-9a-fA-F]{1,8})");
 	static final Pattern hexCommaPattern = Pattern.compile("([0-9a-fA-F]{0,4}),([0-9a-fA-F]{1,4})");
 	/**

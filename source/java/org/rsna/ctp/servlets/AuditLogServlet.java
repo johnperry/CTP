@@ -134,6 +134,7 @@ public class AuditLogServlet extends Servlet {
 					if (type.equals("ptid")) ids = auditLog.getEntriesForPatientID(text);
 					else if (type.equals("study")) ids = auditLog.getEntriesForStudyUID(text);
 					else if (type.equals("object")) ids = auditLog.getEntriesForObjectUID(text);
+					else if (type.equals("entry")) ids = auditLog.getEntriesForID(text);
 
 					for (Integer id : ids) {
 						String entryTime = auditLog.getTime(id);
@@ -143,7 +144,7 @@ public class AuditLogServlet extends Servlet {
 						el.setAttribute("time", entryTime);
 					}
 				}
-				res.write( XmlUtil.toPrettyString( result ) );
+				res.write( XmlUtil.toString( result ) );
 				res.send();
 			}
 			catch (Exception returnEmptyResult) { }
