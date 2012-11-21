@@ -544,6 +544,9 @@ public class DicomObject extends FileObject {
 			String lutShape = getElementValue("PresentationLUTShape").toLowerCase().trim();
 			boolean inverse = lutShape.equals("inverse");
 
+			//Get the pixel representation
+			boolean isUnsigned = !getElementValue("PixelRepresentation").trim().equals("1");
+
 			//Convert from display units to pixel units.
 			//windowLevel and windowWidth are in display units.
 			//The conversion is: (DisplayUnit) = (RescaleSlope) * (PixelUnit) + (RescaleIntercept)
@@ -581,6 +584,9 @@ public class DicomObject extends FileObject {
 					for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
 						rgb[i] = (byte)(255 - (int)(scale * (i - bottom)));
 					}
+				}
+				if (!isUnsigned) { //blank out the negative pixel values
+					Arrays.fill(rgb, size/2 + 1, size-1, (byte)0);
 				}
 				ColorModel cm = new IndexColorModel(cmPixelSize, size, rgb, rgb, rgb);
 				originalImage = new BufferedImage( cm, originalImage.getRaster(), false, null);

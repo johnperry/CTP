@@ -48,15 +48,14 @@ public class DicomExportService extends AbstractExportService {
 		//Get the destination url
 		url = element.getAttribute("url").trim();
 
-		//See if we are to force a close of the
-		//association on every transfer
+		//See if we are to force a close of the association on every transfer
 		boolean forceClose = element.getAttribute("forceClose").equals("yes");
 
 		//Get the calledAETTag, if any
-		int calledAETTag = StringUtil.getHexInt(element.getAttribute("calledAETTag"));
+		int calledAETTag = DicomObject.getElementTag(element.getAttribute("calledAETTag"));
 
 		//Get the callingAETTag, if any
-		int callingAETTag = StringUtil.getHexInt(element.getAttribute("callingAETTag"));
+		int callingAETTag = DicomObject.getElementTag(element.getAttribute("callingAETTag"));
 
 		//Get the DicomSender
 		dicomSender = new DicomStorageSCU(url, forceClose, calledAETTag, callingAETTag);
@@ -66,9 +65,12 @@ public class DicomExportService extends AbstractExportService {
 		String[] alts = element.getAttribute("auditLogTags").split(";");
 		auditLogTags = new LinkedList<Integer>();
 		for (String alt :alts) {
-			int tag = DicomObject.getElementTag(alt);
-			if (tag != 0) auditLogTags.add(new Integer(tag));
-			else logger.warn(name+": Unknown DICOM element tag: "+alt);
+			alt = alt.trim();
+			if (!alt.equals("")) {
+				int tag = DicomObject.getElementTag(alt);
+				if (tag != 0) auditLogTags.add(new Integer(tag));
+				else logger.warn(name+": Unknown DICOM element tag: \""+alt+"\"");
+			}
 		}
 	}
 
