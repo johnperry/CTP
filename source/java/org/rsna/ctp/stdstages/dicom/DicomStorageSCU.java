@@ -92,6 +92,9 @@ public class DicomStorageSCU {
 
     private DcmURL url = null;
 
+    private long lastFailureMessageTime = 0;
+    private static long anHour = 60 * 60 * 1000;
+
 	/**
 	 * Class constructor; creates a DICOM sender.
 	 * @param url the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
@@ -193,6 +196,11 @@ public class DicomStorageSCU {
 				assocRQ.setCallingAET(maskNull(requestedCallingAET));
 				initPresContext(sopClassUID);
 				active = openAssoc();
+				if (active == null) {
+					logger.warn("Unable to establish association for "+dicomObject.getSOPInstanceUID());
+					logger.warn("...SOPClass: "+dicomObject.getSOPClassName());
+					return Status.FAIL;
+				}
 				assoc = active.getAssociation();
 
 				//Negotiate the transfer syntax
@@ -223,13 +231,25 @@ public class DicomStorageSCU {
 			Dimse response = active.invoke(request).get();
 			int status = response.getCommand().getStatus();
 			if (forceClose) close();
-			if (status == 0) return Status.OK;
+			if (status == 0) { lastFailureMessageTime = 0; return Status.OK; }
 			else { close(); return Status.FAIL; }
 		}
 		catch (Exception ex) {
-			logger.warn(ex);
-			logger.warn("..."+dicomObject.getSOPInstanceUID());
 			close();
+			if (ex.getMessage().contains("Connection refused")) {
+				long time = System.currentTimeMillis();
+				if ((time - lastFailureMessageTime) > anHour) {
+					logger.warn(ex);
+					logger.warn("..."+url.toString());
+					lastFailureMessageTime = time;
+				}
+			}
+			else {
+				logger.warn(ex);
+				logger.warn("..."+dicomObject.getSOPInstanceUID());
+				logger.warn("..."+dicomObject.getSOPClassName());
+				if (ex.getMessage().contains("NullPointerException")) return Status.FAIL;
+			}
 		}
 		return Status.RETRY;
     }
