@@ -52,15 +52,16 @@ public class AnonymizerFunctions {
 
 		value = value.trim();
 		int maxIndirects = 10;
-		while (value.startsWith("@") && value.contains("/") && (maxIndirects > 0)) {
+		int indirects = maxIndirects;
+		while (value.startsWith("@") && value.contains("/") && (indirects > 0)) {
 			//This is an indirection
 			key = value.substring(1).trim();
 			value = table.getProperty(key);
 			if (value == null) throw new Exception("missing key ("+key+") in lookup table");
 			value = value.trim();
-			maxIndirects--;
+			indirects--;
 		}
-		if (maxIndirects <= 0) throw new Exception("more than 10 indirects");
+		if (indirects <= 0) throw new Exception("more than "+maxIndirects+" indirects");
 		return value;
 	}
 

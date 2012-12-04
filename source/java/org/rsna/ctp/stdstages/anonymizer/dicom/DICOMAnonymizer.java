@@ -170,8 +170,9 @@ public class DICOMAnonymizer {
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
         	String prefEncodingUID = UIDs.ImplicitVRLittleEndian;
 			FileMetaInfo fmi = dataset.getFileMetaInfo();
-            if ((fmi != null) && (fileParam.encapsulated || !forceIVRLE))
+            if ((fmi != null) && (fileParam.encapsulated || !forceIVRLE)) {
             	prefEncodingUID = fmi.getTransferSyntaxUID();
+			}
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(prefEncodingUID);
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
 

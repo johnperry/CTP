@@ -34,7 +34,7 @@ import org.rsna.util.HtmlUtil;
 import org.rsna.util.StringUtil;
 
 /**
- * The Lookup Table Configurator servlet.
+ * The Lookup Table Editor servlet.
  * This servlet provides a browser-accessible user interface for
  * configuring the lookup table file for an anonymizer.
  * This servlet responds to both HTTP GET and POST.
