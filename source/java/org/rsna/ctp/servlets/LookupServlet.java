@@ -13,14 +13,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
+import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.ScriptableDicom;
 import org.rsna.ctp.stdstages.XmlAnonymizer;
@@ -202,20 +206,50 @@ public class LookupServlet extends Servlet {
 		res.send();
 	}
 
-	//Get the lookup table file, if possible
-	private File getLookupTableFile(int p, int s) {
+	//Get the referenced PipelineStage, if possible
+	private PipelineStage getPipelineStage(int p, int s) {
 		try {
 			Configuration config = Configuration.getInstance();
 			List<Pipeline> pipelines = config.getPipelines();
 			Pipeline pipe = pipelines.get(p);
 			List<PipelineStage> stages = pipe.getStages();
-			PipelineStage stage = stages.get(s);
-			if (stage instanceof DicomAnonymizer) {
-				return ((DicomAnonymizer)stage).lookupTableFile;
-			}
+			return stages.get(s);
 		}
 		catch (Exception ex) { }
 		return null;
+	}
+
+	//Get the lookup table file
+	private File getLookupTableFile(int p, int s) {
+		PipelineStage stage = getPipelineStage(p, s);
+		if ((stage != null) && (stage instanceof DicomAnonymizer)) {
+			return ((DicomAnonymizer)stage).lookupTableFile;
+		}
+		return null;
+	}
+
+	//Get the lookup table file
+	private HashSet<String> getKeyTypes(int p, int s) {
+		HashSet<String> set = new HashSet<String>();
+		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^)]+)\\)");
+		try {
+			PipelineStage stage = getPipelineStage(p, s);
+			if ((stage != null) && (stage instanceof DicomAnonymizer)) {
+				DicomAnonymizer anonymizer = (DicomAnonymizer)stage;
+				DAScript script = DAScript.getInstance(anonymizer.scriptFile);
+				Properties props = script.toProperties();
+				for (Object replObject : props.values()) {
+					String repl = (String)replObject;
+					Matcher matcher = pattern.matcher(repl);
+					while (matcher.find()) {
+						String group = matcher.group(1);
+						set.add(group);
+					}
+				}
+			}
+		}
+		catch (Exception ex) { logger.warn(ex.getMessage(), ex); }
+		return set;
 	}
 
 	//Convert the lookup table file to a string.
@@ -263,7 +297,7 @@ public class LookupServlet extends Servlet {
 
 	//Create an HTML page containing the list of files.
 	private String getListPage(String home) {
-		return responseHead("Select the Lookup Table File to Edit", "", home, false)
+		return responseHead("Select the Lookup Table File to Edit", "", home, false, null)
 				+ makeList()
 					+ responseTail();
 	}
@@ -306,7 +340,8 @@ public class LookupServlet extends Servlet {
 
 	//Create an HTML page containing the form for configuring the file.
 	private String getEditorPage(int p, int s, File file, String home) {
-		return responseHead("Lookup Table Editor", file.getAbsolutePath(), home, true)
+		HashSet<String> keyTypes = getKeyTypes(p, s);
+		return responseHead("Lookup Table Editor", file.getAbsolutePath(), home, true, keyTypes)
 				+ makeForm(p, s, file, home)
 					+ responseTail();
 	}
@@ -319,7 +354,7 @@ public class LookupServlet extends Servlet {
 		Arrays.sort(keys);
 
 		StringBuffer form = new StringBuffer();
-		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
+		form.append("<form id=\"URLEncodedFormID\" method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
 		form.append(hidden("home", home));
 		form.append(hidden("p", p + ""));
 		form.append(hidden("s", s + ""));
@@ -327,9 +362,15 @@ public class LookupServlet extends Servlet {
 		form.append("<center>\n");
 		form.append("<table>\n");
 		form.append("<tr>");
-		form.append("<td><b><u>PHI value</u></b></td>");
+		form.append("<td><b><u>KeyType/PHI value</u></b></td>");
 		form.append("<td/>");
 		form.append("<td><b><u>Replacement value</u></b></td>");
+		form.append("</tr>");
+
+		form.append("<tr>");
+		form.append("<td><input id=\"phi\" name=\"phi\"/></td>");
+		form.append("<td>&nbsp;=&nbsp;</td>");
+		form.append("<td><input name=\"replacement\"/></td>");
 		form.append("</tr>");
 
 		for (int i= 0; i<keys.length; i++) {
@@ -340,11 +381,6 @@ public class LookupServlet extends Servlet {
 			form.append("<td>"+props.getProperty(key)+"</td>");
 			form.append("</tr>\n");
 		}
-		form.append("<tr>");
-		form.append("<td><input id=\"phi\" name=\"phi\"/></td>");
-		form.append("<td>&nbsp;=&nbsp;</td>");
-		form.append("<td><input name=\"replacement\"/></td>");
-		form.append("</tr>");
 
 		form.append("</table>\n");
 		form.append("</center>");
@@ -358,7 +394,7 @@ public class LookupServlet extends Servlet {
 		return "<input type=\"hidden\" id=\"" + name + "\" name=\"" + name + "\" value=\"" + text + "\"/>";
 	}
 
-	private String responseHead(String title, String subtitle, String home, boolean includeCSVLinks) {
+	private String responseHead(String title, String subtitle, String home, boolean includeCSVLinks, HashSet<String> keyTypes) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -378,6 +414,11 @@ public class LookupServlet extends Servlet {
 			+	"    onclick=\"window.open('"+home+"','_self');\"\n"
 			+	"    style=\"margin-right:2px;\"\n"
 			+	"    title=\"Return to the home page\"/>\n"
+			+	"   <br>\n"
+			+	"   <img src=\"/icons/save.png\"\n"
+			+	"    onclick=\"submitURLEncodedForm();\"\n"
+			+	"    style=\"margin-right:2px;\"\n"
+			+	"    title=\"Update the file\"/>\n"
 			+	"   <br>\n";
 
 		if (includeCSVLinks) {
@@ -396,10 +437,26 @@ public class LookupServlet extends Servlet {
 
 		head +=
 			    "  </div>\n"
+			 +	"  <h1>"+title+"</h1>\n"
+			 +	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>\n")
+			 +	"  <center>\n"
+			 +	(subtitle.equals("") ? "" : "  <p>For instructions, see <a href=\""
+			 +   "http://mircwiki.rsna.org/index.php?title=Assigning_Subject_Identifiers_in_Clinical_Trials_with_CTP\""
+			 +   "target=\"wiki\">this article</a>.</p>\n");
 
-			+	"  <h1>"+title+"</h1>\n"
-			+	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>")
-			+	"  <center>\n";
+		if (keyTypes != null) {
+			if (keyTypes.size() == 0) {
+				head += "<p>There are no KeyTypes specified in this DicomAnonymizer script.</p>\n";
+			}
+			else {
+				head += "<p>KeyTypes used in this DicomAnonymizer script: ";
+				boolean first = true;
+				for (String kt : keyTypes) {
+					head += (first ? "" : ", ") + kt;
+				}
+			}
+		}
+
 		return head;
 	}
 

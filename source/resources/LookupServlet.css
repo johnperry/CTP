@@ -15,11 +15,10 @@ h2 {
 	font-weight:normal;
 }
 
-textarea {
-	width:75%;
-	height:300px;
+input {
+	width:200px;
 }
 
 .button {
-	width:250
+	width:250px;
 }

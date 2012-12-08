@@ -555,6 +555,8 @@ public class DICOMAnonymizer {
 	static final String appendFn 		= "append";
 	static final String alwaysFn 		= "always";
 	static final String incrementdateFn = "incrementdate";
+	static final String lowercaseFn		= "lowercase";
+	static final String uppercaseFn		= "uppercase";
 	static final String modifydateFn	= "modifydate";
 	static final String initialsFn 		= "initials";
 	static final String lookupFn		= "lookup";
@@ -600,6 +602,8 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(appendFn))		out += appendfn(fnCall);
 				else if (fnCall.name.equals(alwaysFn))		out += alwaysfn(fnCall);
 				else if (fnCall.name.equals(incrementdateFn)) out += incrementdate(fnCall);
+				else if (fnCall.name.equals(lowercaseFn))	out += lowercase(fnCall);
+				else if (fnCall.name.equals(uppercaseFn))	out += uppercase(fnCall);
 				else if (fnCall.name.equals(modifydateFn))	out += modifydate(fnCall);
 				else if (fnCall.name.equals(initialsFn)) 	out += initials(fnCall);
 				else if (fnCall.name.equals(lookupFn)) 		out += lookup(fnCall);
@@ -869,6 +873,20 @@ public class DICOMAnonymizer {
 		catch (Exception ex) {
 			throw new Exception("!quarantine! - "+ex.getMessage());
 		}
+	}
+
+	//Execute the lowercase function. This function is returns
+	//the value of an element, converted to lower case.
+	private static String lowercase(FnCall fn) {
+		String s = fn.context.contents(fn.args[0], fn.thisTag);
+		return s.toLowerCase();
+	}
+
+	//Execute the uppercase function. This function is returns
+	//the value of an element, converted to upper case.
+	private static String uppercase(FnCall fn) {
+		String s = fn.context.contents(fn.args[0], fn.thisTag);
+		return s.toUpperCase();
 	}
 
 	//Execute the initials function. This function is typically used

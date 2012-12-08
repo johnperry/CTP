@@ -5,6 +5,11 @@ function setFocus() {
 
 window.onload = setFocus;
 
+function submitURLEncodedForm() {
+	var form = document.getElementById("URLEncodedFormID");
+	form.submit();
+}
+
 function downloadCSV() {
 	var p = document.getElementById("p").value;
 	var s = document.getElementById("s").value;
