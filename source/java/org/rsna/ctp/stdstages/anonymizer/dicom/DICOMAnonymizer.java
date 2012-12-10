@@ -316,6 +316,8 @@ public class DICOMAnonymizer {
 			while (remain > 0) {
 				c = in.read(buffer, 0, Math.min(buffer.length, remain));
 				if (c == -1) {
+					logger.warn("Unable to read element "+Integer.toHexString(parser.getReadTag()));
+					logger.warn("...remain = "+remain);
 					throw new EOFException("EOF while reading element value");
 				}
 				if (swap) {

@@ -103,6 +103,7 @@ public class DICOMDecompressor {
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
 			}
+			int planarConfig = getInt(dataset, Tags.PlanarConfiguration, 0);
 
 			//Set the encoding of the output file
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
@@ -122,6 +123,10 @@ public class DICOMDecompressor {
             dataset.setFileMetaInfo(fmi);
             fmi.write(out);
 
+            //Set the PhotometricInterpretation to RGB - TEST **********
+            if (planarConfig == 0) dataset.putXX(Tags.PhotometricInterpretation, "RGB");
+            //dataset.putXX(Tags.PlanarConfiguration, "0");
+
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);
 
@@ -132,6 +137,7 @@ public class DICOMDecompressor {
                 int bytesPerSample = bitsAllocated / 8;
                 int nPixelBytes = numberOfFrames * rows * columns * samplesPerPixel * bytesPerSample;
                 int pixelBytesLength = nPixelBytes + (nPixelBytes & 1);
+                logger.debug("planarConfig     = "+planarConfig);
                 logger.debug("numberOfFrames   = "+numberOfFrames);
                 logger.debug("rows             = "+rows);
                 logger.debug("columns          = "+columns);
@@ -157,38 +163,43 @@ public class DICOMDecompressor {
 					BufferedImage bi = reader.read(i);
 					WritableRaster wr = bi.getRaster();
 					DataBuffer b = wr.getDataBuffer();
-					if (b.getDataType() == DataBuffer.TYPE_USHORT) {
-						logger.debug("  Datatype: DataBuffer.TYPE_USHORT");
-						DataBufferUShort bus = (DataBufferUShort)b;
-						short[] data = bus.getData();
-						logger.debug("    Buffer length = "+data.length);
-						for (int k=0; k<data.length; k++) {
-							int p = data[k] & 0xffff;
-							out.write(p & 0xff);
-							out.write(p >> 8);
+					int numBanks = b.getNumBanks();
+					logger.debug("    Number of banks = "+numBanks);
+					for (int bank=0; bank<numBanks; bank++) {
+						logger.debug("Reading bank "+bank);
+						if (b.getDataType() == DataBuffer.TYPE_USHORT) {
+							logger.debug("  Datatype: DataBuffer.TYPE_USHORT");
+							DataBufferUShort bus = (DataBufferUShort)b;
+							short[] data = bus.getData(bank);
+							logger.debug("    Buffer length = "+data.length);
+							for (int k=0; k<data.length; k++) {
+								int p = data[k] & 0xffff;
+								out.write(p & 0xff);
+								out.write(p >> 8);
+							}
 						}
-					}
-					else if (b.getDataType() == DataBuffer.TYPE_SHORT) {
-						logger.debug("    Datatype: DataBuffer.TYPE_SHORT");
-						DataBufferShort bs = (DataBufferShort)b;
-						short[] data = bs.getData();
-						logger.debug("    Buffer length = "+data.length);
-						for (int k=0; k<data.length; k++) {
-							int p = data[k] & 0xffff;
-							out.write(p & 0xff);
-							out.write(p >> 8);
+						else if (b.getDataType() == DataBuffer.TYPE_SHORT) {
+							logger.debug("    Datatype: DataBuffer.TYPE_SHORT");
+							DataBufferShort bs = (DataBufferShort)b;
+							short[] data = bs.getData(bank);
+							logger.debug("    Buffer length = "+data.length);
+							for (int k=0; k<data.length; k++) {
+								int p = data[k] & 0xffff;
+								out.write(p & 0xff);
+								out.write(p >> 8);
+							}
 						}
-					}
-					else if (b.getDataType() == DataBuffer.TYPE_BYTE) {
-						logger.debug("    Datatype: DataBuffer.TYPE_BYTE");
-						DataBufferByte bb = (DataBufferByte)b;
-						byte[] data = bb.getData();
-						logger.debug("    Buffer length = "+data.length);
-						out.write(data);
-					}
-					else {
-						logger.warn("Unsupported DataBuffer type ("+b.getDataType()+") in "+inFile);
-						throw new Exception("Unsupported DataBuffer type: "+b.getDataType());
+						else if (b.getDataType() == DataBuffer.TYPE_BYTE) {
+							logger.debug("    Datatype: DataBuffer.TYPE_BYTE");
+							DataBufferByte bb = (DataBufferByte)b;
+							byte[] data = bb.getData(bank);
+							logger.debug("    Buffer length = "+data.length);
+							out.write(data);
+						}
+						else {
+							logger.warn("Unsupported DataBuffer type ("+b.getDataType()+") in "+inFile);
+							throw new Exception("Unsupported DataBuffer type: "+b.getDataType());
+						}
 					}
 					logger.debug("    Done decompressing frame "+i);
 				}
@@ -220,6 +231,7 @@ public class DICOMDecompressor {
                 else skip(parser);
 				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
 			}
+			/*
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -233,6 +245,7 @@ public class DICOMDecompressor {
 				writeValueTo(parser, buffer, out, swap);
 				parser.parseHeader();
 			}
+			*/
 			out.flush();
 			out.close();
 			in.close();

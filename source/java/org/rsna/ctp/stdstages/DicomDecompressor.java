@@ -61,6 +61,9 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 					AnonymizerStatus status = DICOMDecompressor.decompress(file,file);
 					if (status.isOK()) {
 						fileObject = FileObject.getInstance(file);
+						if (!(fileObject instanceof DicomObject)) {
+							logger.warn("After decompression, the object does not parse as a DicomObject");
+						}
 					}
 					else if (status.isQUARANTINE()) {
 						if (quarantine != null) quarantine.insert(fileObject);

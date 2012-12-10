@@ -350,7 +350,7 @@ public class DicomObject extends FileObject {
 	 * @return the BufferedImage after burning in the overlays.
 	 * @throws Exception if the image could not be loaded.
 	 */
-	public BufferedImage getBufferedImage(int frame, boolean forceReload) throws Exception {
+	public synchronized BufferedImage getBufferedImage(int frame, boolean forceReload) throws Exception {
 		if (!isImage) throw new IOException("Not an image: "+file);
 		if (!forceReload && (bufferedImage != null) && (currentFrame == frame)) return bufferedImage;
 
@@ -378,20 +378,22 @@ public class DicomObject extends FileObject {
 		return bufferedImage;
 	}
 
-	// Burn in the overlays to keep the JPEG converter
-	// from throwing an array out of bounds exception
+	//Burn in the overlays to keep the JPEG converter
+	//from throwing an array out of bounds exception
 	private void burnInOverlays() {
-		int bitsStored = getBitsStored();
-		if (bitsStored < 16) {
-			WritableRaster wr = bufferedImage.getRaster();
-			DataBuffer b = wr.getDataBuffer();
-			if (b.getDataType() == DataBuffer.TYPE_USHORT) {
-				int maxPixel = (1 << bitsStored) - 1;
-				int highBitsMask = 0xffff & (maxPixel ^ -1);
-				DataBufferUShort bs = (DataBufferUShort)b;
-				short[] data = bs.getData();
-				for (int i=0; i<data.length; i++) {
-					if ((data[i] & highBitsMask) != 0) data[i] = (short)maxPixel;
+		if ((getSamplesPerPixel() == 1) && (getPlanarConfiguration() == 0)) {
+			int bitsStored = getBitsStored();
+			if ((bitsStored > 8) && (bitsStored < 16)) {
+				WritableRaster wr = bufferedImage.getRaster();
+				DataBuffer b = wr.getDataBuffer();
+				if (b.getDataType() == DataBuffer.TYPE_USHORT) {
+					int maxPixel = (1 << bitsStored) - 1;
+					int highBitsMask = 0xffff & (maxPixel ^ -1);
+					DataBufferUShort bs = (DataBufferUShort)b;
+					short[] data = bs.getData();
+					for (int i=0; i<data.length; i++) {
+						if ((data[i] & highBitsMask) != 0) data[i] = (short)maxPixel;
+					}
 				}
 			}
 		}
@@ -404,7 +406,8 @@ public class DicomObject extends FileObject {
 	 * @return a Buffered Image scaled to the required size, or null if the image
 	 * could not be created.
 	 */
-	public BufferedImage getScaledBufferedImage(int frame, int maxSize, int minSize) {
+	public synchronized BufferedImage getScaledBufferedImage(int frame, int maxSize, int minSize) {
+
 		int maxCubic = 1100; //The maximum dimension for which bicubic interpolation is done.
 		try {
 			//Check that all is well
@@ -414,13 +417,8 @@ public class DicomObject extends FileObject {
 			int height = bufferedImage.getHeight();
 			if (minSize > maxSize) minSize = maxSize;
 
-			int pixelSize = bufferedImage.getColorModel().getPixelSize();
-
-			//See if we need to do anything at all
-			if ((pixelSize == 24) && (minSize <= width) && (width <= maxSize)) return bufferedImage;
-
 			// Set the scale.
-			double scale;
+			double scale = 1.0D;
 			double minScale = (double)minSize/(double)width;
 			double maxScale = (double)maxSize/(double)width;
 
@@ -429,14 +427,19 @@ public class DicomObject extends FileObject {
 			else
 				scale = minScale;
 
+			int pixelSize = bufferedImage.getColorModel().getPixelSize();
+			int planarConfig = getPlanarConfiguration();
+
 			// Set up the transform
-			AffineTransform at = AffineTransform.getScaleInstance(scale,scale);
+			AffineTransform at = AffineTransform.getScaleInstance(scale, scale);
 			AffineTransformOp atop;
 
-			if ((pixelSize == 8) || (width > maxCubic) || (height > maxCubic) )
-				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-			else
-				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_BICUBIC);
+			if ((pixelSize == 8) || (width > maxCubic) || (height > maxCubic) || (planarConfig == 1) ) {
+				atop = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+			}
+			else {
+				atop = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
+			}
 
 			// Make a destination image
 			BufferedImage scaledImage =
@@ -481,7 +484,7 @@ public class DicomObject extends FileObject {
 			writer = ImageIO.getImageWritersByFormatName("jpeg").next();
 			ImageWriteParam iwp = writer.getDefaultWriteParam();
 			if (quality >= 0) {
-				quality = Math.min(quality,100);
+				quality = Math.min(quality, 100);
 				float fQuality = ((float)quality) / 100.0F;
 				iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				iwp.setCompressionQuality(fQuality);

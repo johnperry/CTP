@@ -72,6 +72,7 @@ public class DICOMPixelAnonymizer {
 			Regions regions) {
 
 		long fileLength = inFile.length();
+		logger.debug("Entering DICOMPixelAnonymizer.anonymize");
 		logger.debug("File length       = "+fileLength);
 
 		BufferedInputStream in = null;
@@ -124,6 +125,7 @@ public class DICOMPixelAnonymizer {
 
 /**/		//While in development, abort on encapsulated pixel data
 /**/		if (encoding.encapsulated) {
+				logger.debug("Encapsulated pixel data found");
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
 			}
@@ -186,6 +188,7 @@ public class DICOMPixelAnonymizer {
                 }
 				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
 			}
+			logger.debug("Finished writing the pixels");
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -194,6 +197,7 @@ public class DICOMPixelAnonymizer {
 					&& (parser.getStreamPosition() < fileLength)
 						&& ((tag=parser.getReadTag()) != -1)
 							&& (tag != 0xFFFCFFFC)) {
+				logger.debug("About to write post-pixels element "+Integer.toHexString(tag));
 				dataset.writeHeader(
 					out,
 					encoding,
@@ -203,6 +207,7 @@ public class DICOMPixelAnonymizer {
 				writeValueTo(parser, buffer, out, swap);
 				parser.parseHeader();
 			}
+			logger.debug("Finished writing the post-pixels elements");
 			out.flush();
 			out.close();
 			in.close();
