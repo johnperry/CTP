@@ -123,9 +123,15 @@ public class DICOMDecompressor {
             dataset.setFileMetaInfo(fmi);
             fmi.write(out);
 
-            //Set the PhotometricInterpretation to RGB - TEST **********
+            //********************************************************************************
+            //Set the PhotometricInterpretation to RGB if the PlanarConfiguration is zero.
+            //This is a kludge to avoid the green image problem. It is not clear why this
+            //is required when the PlanarConfiguration is zero, but unless you do it, you
+            //get green images. BUT, if you do it when the PlanarConfiguration is one, you
+            //also get green images. There has to be something more going on, but I can't
+            //figure it out.
             if (planarConfig == 0) dataset.putXX(Tags.PhotometricInterpretation, "RGB");
-            //dataset.putXX(Tags.PlanarConfiguration, "0");
+            //********************************************************************************
 
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);
@@ -212,7 +218,7 @@ public class DICOMDecompressor {
 				fiis.close();
 				reader.dispose();
 
-                //skip the pixel data in the input stream
+                //Skip the pixel data in the input stream
                 if (fileParam.encapsulated) {
                     parser.parseHeader();
                     while (parser.getReadTag() == Tags.Item) {
@@ -231,7 +237,6 @@ public class DICOMDecompressor {
                 else skip(parser);
 				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
 			}
-			/*
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -245,7 +250,6 @@ public class DICOMDecompressor {
 				writeValueTo(parser, buffer, out, swap);
 				parser.parseHeader();
 			}
-			*/
 			out.flush();
 			out.close();
 			in.close();

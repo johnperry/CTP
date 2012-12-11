@@ -106,6 +106,7 @@ public class DICOMPixelAnonymizer {
 			int bitsAllocated = getInt(dataset, Tags.BitsAllocated, 16);
 			int samplesPerPixel = getInt(dataset, Tags.SamplesPerPixel, 1);
 			int planarConfiguration = getInt(dataset, Tags.PlanarConfiguration, 0);
+			String photometricInterpretation = getString(dataset, Tags.PhotometricInterpretation, "");
 			if ((rows == 0) || (columns == 0)) {
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Unable to get the rows and columns");
@@ -181,7 +182,7 @@ public class DICOMPixelAnonymizer {
 					processPixels(parser,
 								  out,
 								  swap && (parser.getReadVR() == VRs.OW),
-								  numberOfFrames, samplesPerPixel, planarConfiguration,
+								  numberOfFrames, samplesPerPixel, planarConfiguration, photometricInterpretation,
 								  rows, columns, bitsAllocated,
 								  regions);
 					logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
@@ -251,6 +252,11 @@ public class DICOMPixelAnonymizer {
 		catch (Exception ex) { return defaultValue; }
 	}
 
+    private static String getString(Dataset ds, int tag, String defaultValue) {
+		try { return ds.getString(tag); }
+		catch (Exception ex) { return defaultValue; }
+	}
+
     private static void processPixels(
 							DcmParser parser,
 							OutputStream out,
@@ -258,6 +264,7 @@ public class DICOMPixelAnonymizer {
 							int numberOfFrames,
 							int samplesPerPixel,
 							int planarConfiguration,
+							String photometricInterpretation,
 							int rows,
 							int columns,
 							int bitsAllocated,
@@ -282,14 +289,17 @@ public class DICOMPixelAnonymizer {
 			numberOfFrames *= samplesPerPixel;
 		}
 
+		boolean isYBR = photometricInterpretation.toUpperCase().startsWith("YBR");
+
 		int bytesPerRow = bytesPerPixel * columns;
 		byte[] buffer = new byte[bytesPerRow];
 		InputStream in = parser.getInputStream();
+		byte value = (byte)(isYBR ? 127 : 16);
 		for (int frame=0; frame<numberOfFrames; frame++) {
 			for (int row=0; row<rows; row++) {
 				int c = in.read(buffer, 0, buffer.length);
 				if ((c == -1) || (c != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
-				blankRegions(buffer, row, columns, bytesPerPixel, regions);
+				blankRegions(buffer, row, columns, bytesPerPixel, regions, value);
 				if (swap) swapBytes(buffer);
 				out.write(buffer, 0, bytesPerRow);
 			}
@@ -306,12 +316,12 @@ public class DICOMPixelAnonymizer {
 		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
-	private static void blankRegions(byte[] bytes, int row, int columns, int bytesPerPixel, Regions regions) {
+	private static void blankRegions(byte[] bytes, int row, int columns, int bytesPerPixel, Regions regions, byte value) {
 		int[] ranges = regions.getRangesFor(row);
 		for (int i=0; i<ranges.length; i+=2) {
 			int left = bytesPerPixel * ranges[i];
 			int right = Math.min( bytesPerPixel * (ranges[i+1] + 1), bytes.length );
-			for (int k=left; k<right; k++) bytes[k] = 0;
+			for (int k=left; k<right; k++) bytes[k] = value;
 		}
 	}
 

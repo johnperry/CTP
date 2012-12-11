@@ -280,7 +280,7 @@ public class DICOMAnonymizer {
 			}
 			logger.info("Unknown exception from "+inFile);
 			logger.info("...Message: "+msg);
-			logger.info("...Stack trace: ",e); //************************** change back to debug
+			logger.info("...Stack trace: ",e);
 			return AnonymizerStatus.QUARANTINE(inFile,msg);
 		}
 		return AnonymizerStatus.OK(outFile, exceptions);

@@ -428,13 +428,12 @@ public class DicomObject extends FileObject {
 				scale = minScale;
 
 			int pixelSize = bufferedImage.getColorModel().getPixelSize();
-			int planarConfig = getPlanarConfiguration();
 
 			// Set up the transform
 			AffineTransform at = AffineTransform.getScaleInstance(scale, scale);
 			AffineTransformOp atop;
 
-			if ((pixelSize == 8) || (width > maxCubic) || (height > maxCubic) || (planarConfig == 1) ) {
+			if ((pixelSize == 8) || (width > maxCubic) || (height > maxCubic)) {
 				atop = new AffineTransformOp(at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 			}
 			else {
@@ -1856,8 +1855,10 @@ public class DicomObject extends FileObject {
 	 * @return the computed boolean value of the script.
 	 */
 	public MatchResult matches(String script) {
-		Properties props = new Properties();
 
+		logger.debug("Entering matches method with script:\n"+script);
+
+		Properties props = new Properties();
 		Tokenizer tokenizer = new Tokenizer(script, props);
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Token> tokens = new Stack<Token>();
@@ -1867,7 +1868,10 @@ public class DicomObject extends FileObject {
 		try {
 			expression(tokenizer, operators, tokens);
 			tokenizer.expect(Token.END);
+
 			boolean result = unstack(tokens);
+			logger.debug("result = "+result);
+
 			return new MatchResult( result, props );
 		}
 		catch (Exception ex) {
@@ -2079,13 +2083,16 @@ public class DicomObject extends FileObject {
 		public Operand(Tokenizer t, Properties props) {
 			super(OPERAND);
 			String identifier = getField(t,'.').trim();
+			logger.debug("identifier: \""+identifier+"\"");
 			if (identifier.equals("true"))
 				value = true;
 			else if (identifier.equals("false"))
 				value = false;
 			else {
 				String method = getField(t,'(').trim();
+				logger.debug("method: \""+method+"\"");
 				String match = getField(t,')').trim();
+				logger.debug("match: \""+match+"\"");
 				if ((match.length() > 1) &&
 						(match.charAt(0) == '"') &&
 							(match.charAt(match.length()-1) == '"')) {
@@ -2098,17 +2105,24 @@ public class DicomObject extends FileObject {
 						identifier = identifier.replace("[","(").replace("]",")");
 
 					//Do the lookup differently, based on whether the identifier is (gggg,eeee) or a name.
-					if (identifier.startsWith("(") && identifier.endsWith(")"))
-						tag = Tags.valueOf(identifier);
-					else
-						tag = Tags.forName(identifier);
+					try {
+						if (identifier.startsWith("(") && identifier.endsWith(")"))
+							tag = Tags.valueOf(identifier);
+						else
+							tag = Tags.forName(identifier);
+					}
+					catch (Exception notFound) { tag = -1; }
+					if (tag == -1) {
+						logger.debug("Unable to get tag for "+identifier);
+						value = false;
+					}
 
 					//Now get the name from the dictonary, if possible.
 					String tagName = Tags.toString(tag);
 					tagName = tagName.replace("(","[").replace(")","]");
 					String name = "";
 					try { name = tagDictionary.lookup(tag).name; }
-					catch (Exception noname) { }
+					catch (Exception noname) { logger.debug("Unable to find "+tagName); }
 
 					String element = getElementValue(tag, "");
 					props.setProperty(tagName + " " + name, element);
@@ -2143,6 +2157,11 @@ public class DicomObject extends FileObject {
 
 					else if (method.equals("endsWithIgnoreCase"))
 						value = elementLC.endsWith(matchLC);
+					else {
+						logger.error("Unknown function: "+identifier+"."+method+"("+match+")");
+						value = false;
+					}
+					logger.debug("...value = "+value);
 				}
 			}
 		}
