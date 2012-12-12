@@ -289,13 +289,16 @@ public class DICOMPixelAnonymizer {
 			numberOfFrames *= samplesPerPixel;
 		}
 
-		boolean isYBR = photometricInterpretation.toUpperCase().startsWith("YBR");
+		String pi = photometricInterpretation.toUpperCase();
+		boolean isYBR = pi.startsWith("YBR");
+		//boolean isM2 = pi.equals("MONOCHROME2");
 
 		int bytesPerRow = bytesPerPixel * columns;
 		byte[] buffer = new byte[bytesPerRow];
 		InputStream in = parser.getInputStream();
-		byte value = (byte)(isYBR ? 127 : 16);
 		for (int frame=0; frame<numberOfFrames; frame++) {
+			byte value = (byte)(isYBR ? 128 : 0);
+			if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) value = 0;
 			for (int row=0; row<rows; row++) {
 				int c = in.read(buffer, 0, buffer.length);
 				if ((c == -1) || (c != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
