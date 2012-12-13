@@ -104,6 +104,7 @@ public class DICOMDecompressor {
 				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
 			}
 			int planarConfig = getInt(dataset, Tags.PlanarConfiguration, 0);
+			String photometricInterpretation = getString(dataset, Tags.PhotometricInterpretation, "").toUpperCase();
 
 			//Set the encoding of the output file
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
@@ -124,13 +125,16 @@ public class DICOMDecompressor {
             fmi.write(out);
 
             //********************************************************************************
-            //Set the PhotometricInterpretation to RGB if the PlanarConfiguration is zero.
+            //Set the PhotometricInterpretation to RGB if the PlanarConfiguration is zero
+            //and the PhotometricInterpretation is not MONOCHROME.
             //This is a kludge to avoid the green image problem. It is not clear why this
             //is required when the PlanarConfiguration is zero, but unless you do it, you
             //get green images. BUT, if you do it when the PlanarConfiguration is one, you
             //also get green images. There has to be something more going on, but I can't
             //figure it out.
-            if (planarConfig == 0) dataset.putXX(Tags.PhotometricInterpretation, "RGB");
+            if ((planarConfig == 0) && !photometricInterpretation.startsWith("MONOCHROME")) {
+				dataset.putXX(Tags.PhotometricInterpretation, "RGB");
+			}
             //********************************************************************************
 
 			//Write the dataset as far as was parsed
@@ -290,6 +294,11 @@ public class DICOMDecompressor {
 
     private static int getInt(Dataset ds, int tag, int defaultValue) {
 		try { return ds.getInteger(tag).intValue(); }
+		catch (Exception ex) { return defaultValue; }
+	}
+
+    private static String getString(Dataset ds, int tag, String defaultValue) {
+		try { return ds.getString(tag); }
 		catch (Exception ex) { return defaultValue; }
 	}
 
