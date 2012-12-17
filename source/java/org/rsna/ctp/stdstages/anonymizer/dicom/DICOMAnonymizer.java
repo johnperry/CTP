@@ -13,23 +13,25 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.*;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.Enumeration;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Set;
 
 import org.dcm4che.data.Dataset;
 import org.dcm4che.data.DcmDecodeParam;
@@ -53,6 +55,7 @@ import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 
 import org.rsna.util.FileUtil;
+import org.rsna.util.StringUtil;
 
 import org.apache.log4j.Logger;
 
@@ -877,14 +880,14 @@ public class DICOMAnonymizer {
 		}
 	}
 
-	//Execute the lowercase function. This function is returns
+	//Execute the lowercase function. This function returns
 	//the value of an element, converted to lower case.
 	private static String lowercase(FnCall fn) {
 		String s = fn.context.contents(fn.args[0], fn.thisTag);
 		return s.toLowerCase();
 	}
 
-	//Execute the uppercase function. This function is returns
+	//Execute the uppercase function. This function returns
 	//the value of an element, converted to upper case.
 	private static String uppercase(FnCall fn) {
 		String s = fn.context.contents(fn.args[0], fn.thisTag);

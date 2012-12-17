@@ -130,7 +130,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 * Stop the pipeline stage.
 	 */
 	public void shutdown() {
-		if (httpServer != null) httpServer.stopServer();
+		if (httpServer != null) httpServer.shutdown();
 		stop = true;
 	}
 
