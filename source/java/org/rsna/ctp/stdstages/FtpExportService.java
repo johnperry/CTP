@@ -41,11 +41,11 @@ public class FtpExportService extends AbstractExportService {
 	 */
 	public FtpExportService(Element element) throws Exception {
 		super(element);
-		String username = element.getAttribute("username");
-		String password = element.getAttribute("password");
+		String username = element.getAttribute("username").trim();
+		String password = element.getAttribute("password").trim();
 
 		//Get the destination parameters
-		URL url = new URL(element.getAttribute("url"));
+		URL url = new URL(element.getAttribute("url").trim());
 		String protocol = url.getProtocol().toLowerCase();
 		if (!protocol.equals("ftp")) {
 			logger.error(name+": Illegal protocol ("+protocol+")");

@@ -76,7 +76,7 @@ start() {
 stop() {
 ###################################
 # Purpose: kill the PID of the CTP job
-#	Unfortunetly, the pid recorded in
+#	Unfortunatly, the pid recorded in
 #	in start() was the parent process
 #	and not the real one that Runner
 #	launched

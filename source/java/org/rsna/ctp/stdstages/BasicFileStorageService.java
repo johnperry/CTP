@@ -67,12 +67,12 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	 */
 	public BasicFileStorageService(Element element) {
 		super(element);
-		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
-		logDuplicates = element.getAttribute("logDuplicates").toLowerCase().equals("yes");
-		rejectDuplicates = element.getAttribute("rejectDuplicates").toLowerCase().equals("yes");
-		acceptClones = !element.getAttribute("acceptClones").toLowerCase().equals("no");
-		nLevels = StringUtil.getInt(element.getAttribute("nLevels"));
-		maxSize = StringUtil.getInt(element.getAttribute("maxSize"));
+		returnStoredFile = !element.getAttribute("returnStoredFile").trim().toLowerCase().equals("no");
+		logDuplicates = element.getAttribute("logDuplicates").trim().toLowerCase().equals("yes");
+		rejectDuplicates = element.getAttribute("rejectDuplicates").trim().toLowerCase().equals("yes");
+		acceptClones = !element.getAttribute("acceptClones").trim().toLowerCase().equals("no");
+		nLevels = StringUtil.getInt(element.getAttribute("nLevels").trim());
+		maxSize = StringUtil.getInt(element.getAttribute("maxSize").trim());
 		nLevels = Math.max(nLevels, 3);
 		maxSize = Math.max(maxSize, 200);
 		qualifiers = getJPEGQualifiers(element);

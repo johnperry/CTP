@@ -37,7 +37,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		super(element);
 
 		//Get the port
-		try { port = Integer.parseInt(element.getAttribute("port")); }
+		try { port = Integer.parseInt(element.getAttribute("port").trim()); }
 		catch (Exception ex) { logger.error(name+": Unparseable port value"); }
 
 		//Create the Connector

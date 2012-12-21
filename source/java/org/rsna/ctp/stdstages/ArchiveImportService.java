@@ -59,21 +59,20 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	 */
 	public ArchiveImportService(Element element) throws Exception {
 		super(element);
-		age = StringUtil.getInt(element.getAttribute("minAge"));
+		age = StringUtil.getInt(element.getAttribute("minAge").trim());
 		if (age < minAge) age = defaultAge;
 
 		//Get the root of the archive tree
-		String treePath = element.getAttribute("treeRoot");
+		String treePath = element.getAttribute("treeRoot").trim();
 		if (!treePath.trim().equals("")) treeRoot = new File(treePath);
 		else logger.warn("treeRoot attribute is missing.");
 
 		expandTARs = element.getAttribute("expandTARs").trim().equals("yes");
 
 		//See if there is a FileSystem name
-		fsName = element.getAttribute("fsName");
-		if (fsName == null) fsName = fsName.trim();
+		fsName = element.getAttribute("fsName").trim();
 		if (fsName.equals("")) fsName = null;
-		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag"),fsNameTag);
+		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag").trim(), fsNameTag);
 		setFileSystemName = (fsName != null) && (fsNameTag != 0);
 
 		if ((root != null) && (treeRoot != null)) {

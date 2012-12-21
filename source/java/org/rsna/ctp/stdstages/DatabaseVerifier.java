@@ -78,10 +78,10 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
 		authenticate = !username.equals("") && !password.equals("");
-		interval = StringUtil.getInt(element.getAttribute("interval"));
+		interval = StringUtil.getInt(element.getAttribute("interval").trim());
 		if (interval < minInterval) interval = minInterval;
-		maxAge = StringUtil.getInt(element.getAttribute("maxAge")) * aDay;
-		test = element.getAttribute("test").equals("yes");
+		maxAge = StringUtil.getInt(element.getAttribute("maxAge").trim()) * aDay;
+		test = element.getAttribute("test").trim().equals("yes");
 		if (maxAge < 0) maxAge = 0;
 		if (!url.equals("")) {
 			verifier = new Verifier();

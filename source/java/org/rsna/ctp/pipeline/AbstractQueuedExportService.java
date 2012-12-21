@@ -48,9 +48,9 @@ public abstract class AbstractQueuedExportService
 		if (root == null)
 			logger.error(name+": No root directory was specified.");
 		else {
-			dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript"), "examples/example-filter.script");
-			xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript"), "examples/example-filter.script");
-			zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript"), "examples/example-filter.script");
+			dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
+			xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript").trim(), "examples/example-filter.script");
+			zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript").trim(), "examples/example-filter.script");
 
 			temp = new File(root, "temp");
 			temp.mkdirs();

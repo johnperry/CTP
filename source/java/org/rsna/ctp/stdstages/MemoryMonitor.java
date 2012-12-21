@@ -41,7 +41,7 @@ public class MemoryMonitor extends AbstractPipelineStage implements Processor {
 	public MemoryMonitor(Element element) {
 		super(element);
 		count = 0;
-		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval"), 1) );
+		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval").trim(), 1) );
 		collectGarbage = !element.getAttribute("collectGarbage").trim().equals("no");
 		logMemoryInUse = !element.getAttribute("logMemoryInUse").trim().equals("no");
 	}

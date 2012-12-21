@@ -46,19 +46,19 @@ public class DicomImportService extends AbstractImportService {
 		super(element);
 
 		//Get the port
-		port = StringUtil.getInt(element.getAttribute("port"), port);
+		port = StringUtil.getInt(element.getAttribute("port").trim(), port);
 
 		//Get the calledAETTag, if any
-		calledAETTag = StringUtil.getHexInt(element.getAttribute("calledAETTag"), calledAETTag);
+		calledAETTag = StringUtil.getHexInt(element.getAttribute("calledAETTag").trim(), calledAETTag);
 
 		//Get the callingAETTag, if any
-		callingAETTag = StringUtil.getHexInt(element.getAttribute("callingAETTag"), callingAETTag);
+		callingAETTag = StringUtil.getHexInt(element.getAttribute("callingAETTag").trim(), callingAETTag);
 
 		//Get the connectionIPTag, if any
-		connectionIPTag = StringUtil.getHexInt(element.getAttribute("connectionIPTag"), connectionIPTag);
+		connectionIPTag = StringUtil.getHexInt(element.getAttribute("connectionIPTag").trim(), connectionIPTag);
 
 		//Get the timeTag, if any
-		timeTag = StringUtil.getHexInt(element.getAttribute("timeTag"), timeTag);
+		timeTag = StringUtil.getHexInt(element.getAttribute("timeTag").trim(), timeTag);
 
 		//Get the flag indicating whether we are to suppress recent duplicates
 		suppressDuplicates = element.getAttribute("suppressDuplicates").trim().equals("yes");

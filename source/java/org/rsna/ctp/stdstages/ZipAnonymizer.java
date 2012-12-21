@@ -36,7 +36,7 @@ public class ZipAnonymizer extends AbstractPipelineStage implements Processor, S
 	 */
 	public ZipAnonymizer(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script"), "examples/example-zip-anonymizer.script");
+		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-zip-anonymizer.script");
 	}
 
 	/**

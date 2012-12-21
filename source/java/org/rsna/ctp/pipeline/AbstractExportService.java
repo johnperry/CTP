@@ -48,10 +48,10 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	public AbstractExportService(Element element) {
 		super(element);
 		if (root != null) {
-			throttle = StringUtil.getInt(element.getAttribute("throttle"));
+			throttle = StringUtil.getInt(element.getAttribute("throttle").trim());
 			if (throttle < 0) throttle = 0;
 			if (throttle > maxThrottle) throttle = maxThrottle;
-			interval = StringUtil.getInt(element.getAttribute("interval"));
+			interval = StringUtil.getInt(element.getAttribute("interval").trim());
 			if ((interval < minInterval) || (interval > maxInterval)) interval = defaultInterval;
 			enableExport = !element.getAttribute("enableExport").trim().equals("no");
 			exporter = new Exporter();

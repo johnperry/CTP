@@ -34,8 +34,8 @@ public class DicomFilter extends AbstractPipelineStage implements Processor, Scr
 	 */
 	public DicomFilter(Element element) {
 		super(element);
-		log = element.getAttribute("log").equals("yes");
-		scriptFile = FileUtil.getFile(element.getAttribute("script"), "examples/example-filter.script");
+		log = element.getAttribute("log").trim().equals("yes");
+		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
 	}
 
 	/**

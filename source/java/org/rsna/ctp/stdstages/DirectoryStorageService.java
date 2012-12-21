@@ -57,7 +57,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	public DirectoryStorageService(Element element) {
 		super(element);
 
-		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
+		returnStoredFile = !element.getAttribute("returnStoredFile").trim().toLowerCase().equals("no");
 
 		//Set up for capturing the structure
 		cacheID = element.getAttribute("cacheID").trim();
@@ -67,7 +67,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		}
 
 		//See if we are to apply extensions to the stored files.
-		setStandardExtensions = element.getAttribute("setStandardExtensions").toLowerCase().equals("yes");
+		setStandardExtensions = element.getAttribute("setStandardExtensions").trim().toLowerCase().equals("yes");
 
 		String temp = element.getAttribute("defaultString").trim();;
 		if (!temp.equals("")) defaultString = temp;
@@ -77,9 +77,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		periodAndParenthesisReplacement = element.getAttribute("whitespaceReplacement").trim();
 
 		//See if there are scripts, and if so, get the files
-		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript"), "examples/example-filter.script");
-		xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript"), "examples/example-filter.script");
-		zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript"), "examples/example-filter.script");
+		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
+		xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript").trim(), "examples/example-filter.script");
+		zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript").trim(), "examples/example-filter.script");
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
@@ -183,6 +183,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			}
 			//If anything went wrong, quarantine the object and abort.
 			else {
+				logger.warn("Unable to save "+fileObject.getFile());
 				if (quarantine != null) quarantine.insert(fileObject);
 				return null;
 			}

@@ -54,7 +54,7 @@ public class HttpExportService extends AbstractExportService {
 
 		//Get the attribute which specifies whether files
 		//are to be zipped before transmission.
-		zip = element.getAttribute("zip").equals("yes");
+		zip = element.getAttribute("zip").trim().equals("yes");
 
 		//See if we are to log duplicate transmissions
 		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
@@ -68,7 +68,7 @@ public class HttpExportService extends AbstractExportService {
 		}
 
 		//Get the destination url
-		url = new URL(element.getAttribute("url"));
+		url = new URL(element.getAttribute("url").trim());
 		protocol = url.getProtocol().toLowerCase();
 		if (!protocol.startsWith("https") && !protocol.startsWith("http")) {
 			logger.error(name+": Illegal protocol ("+protocol+")");

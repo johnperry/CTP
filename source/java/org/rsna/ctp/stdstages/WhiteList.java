@@ -7,7 +7,10 @@
 
 package org.rsna.ctp.stdstages;
 
+import java.util.LinkedList;
 import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -17,6 +20,7 @@ import org.w3c.dom.Node;
 public class WhiteList {
 
 	HashSet<String> values = null;
+	LinkedList<Pattern> patterns = null;
 	boolean empty = true;
 
 	/**
@@ -24,15 +28,18 @@ public class WhiteList {
 	 */
 	public WhiteList(Element element, String attributeName) {
 		values = new HashSet<String>();
+		patterns = new LinkedList<Pattern>();
 		Node child = element.getFirstChild();
 		while (child != null) {
 			if ((child instanceof Element) && child.getNodeName().equals("accept")) {
 				String value = ((Element)child).getAttribute(attributeName).trim();
 				if (!value.equals("")) values.add(value);
+				String regex = ((Element)child).getAttribute("regex").trim();
+				if (!regex.equals("")) patterns.add(Pattern.compile(regex));
 			}
 			child = child.getNextSibling();
 		}
-		empty = (values.size() == 0);
+		empty = (values.size() == 0) && (patterns.size() == 0);
 	}
 
 	/**
@@ -41,7 +48,12 @@ public class WhiteList {
 	 * if the string is contained in the white list.
 	 */
 	public boolean contains(String value) {
-		return empty || values.contains(value.trim());
+		if (empty || values.contains(value.trim())) return true;
+		for (Pattern p : patterns) {
+			Matcher matcher = p.matcher(value);
+			if (matcher.matches()) return true;
+		}
+		return false;
 	}
 
 }

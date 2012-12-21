@@ -47,14 +47,14 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	 */
 	public DirectoryImportService(Element element) throws Exception {
 		super(element);
-		age = StringUtil.getInt(element.getAttribute("minAge"));
+		age = StringUtil.getInt(element.getAttribute("minAge").trim());
 		if (age < minAge) age = defaultAge;
 
 		//See if there is a FileSystem name
-		fsName = element.getAttribute("fsName");
+		fsName = element.getAttribute("fsName").trim();
 		if (fsName == null) fsName = fsName.trim();
 		if (fsName.equals("")) fsName = null;
-		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag"),fsNameTag);
+		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag").trim(),fsNameTag);
 	}
 
 	/**

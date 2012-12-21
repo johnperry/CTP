@@ -39,7 +39,7 @@ public class Pipeline extends Thread {
 	 */
 	public Pipeline(Element pipeline) {
 		super();
-		name = pipeline.getAttribute("name");
+		name = pipeline.getAttribute("name").trim();
 		setName(name);
 		stages = new ArrayList<PipelineStage>();
 		importServices = new ArrayList<ImportService>();

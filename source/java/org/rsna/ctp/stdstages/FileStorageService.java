@@ -76,19 +76,19 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 */
 	public FileStorageService(Element element) {
 		super(element);
-		type = element.getAttribute("type").toLowerCase();
-		timeDepth = StringUtil.getInt(element.getAttribute("timeDepth"));
-		returnStoredFile = !element.getAttribute("returnStoredFile").toLowerCase().equals("no");
+		type = element.getAttribute("type").trim().toLowerCase();
+		timeDepth = StringUtil.getInt(element.getAttribute("timeDepth").trim());
+		returnStoredFile = !element.getAttribute("returnStoredFile").trim().toLowerCase().equals("no");
 		String expDirString = element.getAttribute("exportDirectory").trim();
 		if (!expDirString.equals("")) exportDirectory = new File(expDirString);
-		requireAuthentication = element.getAttribute("requireAuthentication").toLowerCase().equals("yes");
-		setReadable = element.getAttribute("setWorldReadable").toLowerCase().equals("yes");
-		setWritable = element.getAttribute("setWorldWritable").toLowerCase().equals("yes");
+		requireAuthentication = element.getAttribute("requireAuthentication").trim().toLowerCase().equals("yes");
+		setReadable = element.getAttribute("setWorldReadable").trim().toLowerCase().equals("yes");
+		setWritable = element.getAttribute("setWorldWritable").trim().toLowerCase().equals("yes");
 		qualifiers = getJPEGQualifiers(element);
-		fsNameTag = DicomObject.getTagArray(element.getAttribute("fsNameTag"));
-		autoCreateUser = element.getAttribute("auto-create-user").toLowerCase().equals("yes");
-		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").toLowerCase().equals("no");
-		port = StringUtil.getInt(element.getAttribute("port"));
+		fsNameTag = DicomObject.getTagArray(element.getAttribute("fsNameTag").trim());
+		autoCreateUser = element.getAttribute("auto-create-user").trim().toLowerCase().equals("yes");
+		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").trim().toLowerCase().equals("no");
+		port = StringUtil.getInt(element.getAttribute("port").trim());
 		ssl = element.getAttribute("ssl").equals("yes");
 		if (root == null) logger.error(name+": No root directory was specified.");
 		fsm = FileSystemManager

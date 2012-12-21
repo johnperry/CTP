@@ -53,11 +53,11 @@ public class HttpImportService extends AbstractImportService {
 		super(element);
 
 		//Get the port
-		try { port = Integer.parseInt(element.getAttribute("port")); }
+		try { port = Integer.parseInt(element.getAttribute("port").trim()); }
 		catch (Exception ex) { logger.error(name+": Unparseable port value"); }
 
 		//Get the protocol
-		ssl = element.getAttribute("ssl").equals("yes");
+		ssl = element.getAttribute("ssl").trim().equals("yes");
 
 		//Get the flag indicating whether we are to log the
 		//IP addresses of connections
@@ -67,12 +67,12 @@ public class HttpImportService extends AbstractImportService {
 
 		//Get the attribute that specifies whether files
 		//are to be unzipped when received.
-		zip = element.getAttribute("zip").equals("yes");
+		zip = element.getAttribute("zip").trim().equals("yes");
 
 		//Get the attribute that determines whether
 		//authentication is required on all connections.
 		requireAuthentication =
-				element.getAttribute("requireAuthentication").equals("yes");
+				element.getAttribute("requireAuthentication").trim().equals("yes");
 
 		//Get the whitelist and blacklist
 		ipWhiteList = new WhiteList(element, "ip");

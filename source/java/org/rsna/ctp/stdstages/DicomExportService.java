@@ -49,13 +49,13 @@ public class DicomExportService extends AbstractExportService {
 		url = element.getAttribute("url").trim();
 
 		//See if we are to force a close of the association on every transfer
-		boolean forceClose = element.getAttribute("forceClose").equals("yes");
+		boolean forceClose = element.getAttribute("forceClose").trim().equals("yes");
 
 		//Get the calledAETTag, if any
-		int calledAETTag = DicomObject.getElementTag(element.getAttribute("calledAETTag"));
+		int calledAETTag = DicomObject.getElementTag(element.getAttribute("calledAETTag").trim());
 
 		//Get the callingAETTag, if any
-		int callingAETTag = DicomObject.getElementTag(element.getAttribute("callingAETTag"));
+		int callingAETTag = DicomObject.getElementTag(element.getAttribute("callingAETTag").trim());
 
 		//Get the DicomSender
 		dicomSender = new DicomStorageSCU(url, forceClose, calledAETTag, callingAETTag);

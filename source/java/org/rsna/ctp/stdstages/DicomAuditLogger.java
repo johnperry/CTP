@@ -43,9 +43,9 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	 */
 	public DicomAuditLogger(Element element) {
 		super(element);
-		verbosity = element.getAttribute("verbosity");
-		objectCacheID = element.getAttribute("cacheID");
-		auditLogID = element.getAttribute("auditLogID");
+		verbosity = element.getAttribute("verbosity").trim();
+		objectCacheID = element.getAttribute("cacheID").trim();
+		auditLogID = element.getAttribute("auditLogID").trim();
 	}
 
 	/**

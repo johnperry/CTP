@@ -36,7 +36,7 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 	public ObjectLogger(Element element) {
 		super(element);
 		verbose = element.getAttribute("verbose").trim().equals("yes");
-		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval"), 1) );
+		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval").trim(), 1) );
 		count = 0;
 	}
 

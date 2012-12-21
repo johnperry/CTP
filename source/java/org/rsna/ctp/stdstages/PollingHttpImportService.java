@@ -58,7 +58,7 @@ public class PollingHttpImportService extends AbstractPipelineStage implements I
 		}
 
 		//Get the destination url
-		url = new URL(element.getAttribute("url"));
+		url = new URL(element.getAttribute("url").trim());
 	}
 
 	/**

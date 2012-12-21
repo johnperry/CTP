@@ -49,10 +49,10 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		this.element = element;
 		name = element.getAttribute("name");
 		id = element.getAttribute("id").trim();
-		acceptDicomObjects	= !element.getAttribute("acceptDicomObjects").equals("no");
-		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects")	 .equals("no");
-		acceptZipObjects	= !element.getAttribute("acceptZipObjects")	 .equals("no");
-		acceptFileObjects	= !element.getAttribute("acceptFileObjects") .equals("no");
+		acceptDicomObjects	= !element.getAttribute("acceptDicomObjects").trim().equals("no");
+		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects").trim().equals("no");
+		acceptZipObjects	= !element.getAttribute("acceptZipObjects").trim().equals("no");
+		acceptFileObjects	= !element.getAttribute("acceptFileObjects").trim().equals("no");
 		String qPath = element.getAttribute("quarantine").trim();
 		if (!qPath.equals("")) quarantine = new Quarantine(qPath);
 		String rPath = element.getAttribute("root").trim();

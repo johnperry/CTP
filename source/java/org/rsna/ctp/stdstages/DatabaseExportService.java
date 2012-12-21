@@ -64,16 +64,16 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 		super(element);
 
 		if (root != null) {
-			interval = StringUtil.getInt(element.getAttribute("interval"));
+			interval = StringUtil.getInt(element.getAttribute("interval").trim());
 			if ((interval < minInterval) || (interval > maxInterval)) interval = defaultInterval;
-			poolSize = StringUtil.getInt(element.getAttribute("poolSize"));
+			poolSize = StringUtil.getInt(element.getAttribute("poolSize").trim());
 			if (poolSize < minPoolSize) poolSize = minPoolSize;
 			if (poolSize > maxPoolSize) poolSize = maxPoolSize;
-			adapterClassName = element.getAttribute("adapterClass");
-			fileStorageServiceID = element.getAttribute("fileStorageServiceID");
-			int port = StringUtil.getInt(element.getAttribute("port"));
-			boolean ssl = element.getAttribute("ssl").equals("yes");
-			boolean requireAuthentication = element.getAttribute("requireAuthentication").equals("yes");
+			adapterClassName = element.getAttribute("adapterClass").trim();
+			fileStorageServiceID = element.getAttribute("fileStorageServiceID").trim();
+			int port = StringUtil.getInt(element.getAttribute("port").trim());
+			boolean ssl = element.getAttribute("ssl").trim().equals("yes");
+			boolean requireAuthentication = element.getAttribute("requireAuthentication").trim().equals("yes");
 			if (port != 0) startVerifierService(ssl, port, requireAuthentication);
 
 		}

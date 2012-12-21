@@ -49,7 +49,7 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 		if (root == null)
 			logger.error(name+": No root directory was specified.");
 		else {
-			logDuplicates = element.getAttribute("logDuplicates").equals("yes");
+			logDuplicates = element.getAttribute("logDuplicates").trim().equals("yes");
 			temp = new File(root, "temp");
 			temp.mkdirs();
 			File queue = new File(root, "queue");

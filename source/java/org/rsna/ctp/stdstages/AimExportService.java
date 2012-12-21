@@ -41,7 +41,7 @@ public class AimExportService extends AbstractExportService {
 		super(element);
 
 		//Get the destination url
-		url = new URL(element.getAttribute("url"));
+		url = new URL(element.getAttribute("url").trim());
 		protocol = url.getProtocol().toLowerCase();
 		if (!protocol.startsWith("https") && !protocol.startsWith("http")) {
 			logger.error(name+": Illegal protocol ("+protocol+")");
