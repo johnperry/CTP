@@ -13,7 +13,7 @@ package org.rsna.ctp.objects;
   */
 public class SopClass {
 
-	/** The array of SR SOP Classe UIDs. */
+	/** The array of SR SOP Class UIDs. */
 	static final String[] srSopClassUIDs = {
 		"1.2.840.10008.5.1.4.1.1.88.11",		//basic
 		"1.2.840.10008.5.1.4.1.1.88.22",		//enhanced
