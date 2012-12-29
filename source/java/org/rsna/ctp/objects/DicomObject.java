@@ -2134,7 +2134,7 @@ public class DicomObject extends FileObject {
 					if (method.equals("equals"))
 						value = element.equals(match);
 
-					if (method.equals("equalsIgnoreCase"))
+					else if (method.equals("equalsIgnoreCase"))
 						value = element.equalsIgnoreCase(match);
 
 					else if (method.equals("matches"))
@@ -2157,6 +2157,7 @@ public class DicomObject extends FileObject {
 
 					else if (method.equals("endsWithIgnoreCase"))
 						value = elementLC.endsWith(matchLC);
+
 					else {
 						logger.error("Unknown function: "+identifier+"."+method+"(\""+match+"\")");
 						value = false;

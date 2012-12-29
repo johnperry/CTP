@@ -236,7 +236,8 @@ public class DicomStorageSCU {
 		}
 		catch (Exception ex) {
 			close();
-			if (ex.getMessage().contains("Connection refused")) {
+			String msg = ex.getMessage();
+			if ((msg != null) && msg.contains("Connection refused")) {
 				long time = System.currentTimeMillis();
 				if ((time - lastFailureMessageTime) > anHour) {
 					logger.warn(ex);
@@ -248,7 +249,7 @@ public class DicomStorageSCU {
 				logger.warn(ex);
 				logger.warn("..."+dicomObject.getSOPInstanceUID());
 				logger.warn("..."+dicomObject.getSOPClassName());
-				if (ex.getMessage().contains("NullPointerException")) return Status.FAIL;
+				if ((msg != null) && msg.contains("NullPointerException")) return Status.FAIL;
 			}
 		}
 		return Status.RETRY;
