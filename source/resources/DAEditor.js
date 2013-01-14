@@ -549,17 +549,21 @@ function applyProfileHandler(event, item) {
 			value = (value) ? value.nodeValue : "";
 
 			//find the place in the table
+			var row = null;
 			for ( ; currentRow<rows.length; currentRow++) {
-				var row = rows[currentRow]
-				if ((row.row_type == "p") && (row.row_t == t)) {
-					if (value != "") setInputText(row, value);
-					break;
+				var r = rows[currentRow];
+				if (((r.row_type == "p") && (r.row_t == t))
+						|| (r.row_type != "p")
+							|| (r.row_t > t)) {
+					row = r; break;
 				}
-				else if ((row.row_type != "p") || (row.row_t > t)) {
-					var tr = tbody.appendChild(createParamRow(t, value));
-					tbody.insertBefore(tr, row);
-					break
-				}
+			}
+			if (row && (row.row_type == "p") && (row.row_t == t)) {
+				if (value != "") setInputText(row, value);
+			}
+			else {
+				var tr = tbody.appendChild(createParamRow(t, value));
+				tbody.insertBefore(tr, row);
 			}
 		}
 
@@ -575,22 +579,26 @@ function applyProfileHandler(event, item) {
 				value = (value) ? value.nodeValue : "";
 
 				//find the place in the table
+				var row = null;
 				for ( ; currentRow<rows.length; currentRow++) {
-					var row = rows[currentRow]
-					if (row.row_type == "p") {
+					var r = rows[currentRow];
+					if (r.row_type == "p") {
 						//skip params
 					}
-					else if ((row.row_type == "e") && (row.row_t == t)) {
-						enableRows[enableRows.length] = row;
-						setInputText(row, value);
-						break;
+					else if (((r.row_type == "e") && (r.row_t == t))
+								|| (r.row_type != "e")
+									|| (r.row_t > t)) {
+						row = r; break;
 					}
-					else if ((row.row_type != "e") || (row.row_t > t)) {
-						var tr = tbody.appendChild(createElementRow(n, t, value));
-						tbody.insertBefore(tr, row);
-						enableRows[enableRows.length] = tr;
-						break
-					}
+				}
+				if (row && (row.row_type == "e") && (row.row_t == t)) {
+					enableRows[enableRows.length] = row;
+					setInputText(row, value);
+				}
+				else {
+					var tr = tbody.appendChild(createElementRow(n, t, value));
+					tbody.insertBefore(tr, row);
+					enableRows[enableRows.length] = tr;
 				}
 			}
 		}
@@ -601,25 +609,29 @@ function applyProfileHandler(event, item) {
 		for (var i=0; i<x.length; i++) {
 			var en = (x[i].getAttribute("en") == "T");
 			if (en) {
-				var n = x[i].getAttribute("n");
+				var n = x[i].firstChild.nodeValue;
 				var t = fixGroup(x[i].getAttribute("t"));
 
 				//find the place in the table
+				var row = null;
 				for ( ; currentRow<rows.length; currentRow++) {
-					var row = rows[currentRow];
-					if ((row.row_type == "p") || (row.row_type == "e")) {
+					var r = rows[currentRow];
+					if ((r.row_type == "p") || (r.row_type == "e")) {
 						//skip params and elements
 					}
-					else if ((row.row_type == "k") && (row.row_t == t)) {
-						enableRows[enableRows.length] = row;
-						break;
+					else if (((r.row_type == "k") && (r.row_t == t))
+								|| (r.row_type != "k")
+									|| (r.row_t > t)) {
+						row = r; break;
 					}
-					else if ((row.row_type != "k") || (row.row_t > t)) {
-						var tr = tbody.appendChild(createGlobalRow("k", n, t));
-						tbody.insertBefore(tr, row);
-						enableRows[enableRows.length] = tr;
-						break
-					}
+				}
+				if (row && (row.row_type == "k") && (row.row_t == t)) {
+					enableRows[enableRows.length] = row;
+				}
+				else {
+					var tr = tbody.appendChild(createGlobalRow("k", n, t));
+					tbody.insertBefore(tr, row);
+					enableRows[enableRows.length] = tr;
 				}
 			}
 		}
@@ -630,10 +642,14 @@ function applyProfileHandler(event, item) {
 		for (var i=0; i<x.length; i++) {
 			var en = (x[i].getAttribute("en") == "T");
 			if (en) {
-				var n = x[i].getAttribute("n");
+				var n = x[i].firstChild.nodeValue;
 				var t = x[i].getAttribute("t");
 
-				//find the place in the table
+				//Find the place in the table.
+				//Note that remove commands are not inserted
+				//if they are not already in the table, so this
+				//algorithm is a little different from the ones
+				//for the other element types.
 				for ( ; currentRow<rows.length; currentRow++) {
 					var row = rows[currentRow];
 					var type = row.row_type;
@@ -644,8 +660,6 @@ function applyProfileHandler(event, item) {
 						enableRows[enableRows.length] = row;
 						break;
 					}
-					//Note that remove commands are not inserted
-					//if they are not already in the table.
 				}
 			}
 		}
