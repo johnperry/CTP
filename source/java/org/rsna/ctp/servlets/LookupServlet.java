@@ -441,7 +441,7 @@ public class LookupServlet extends Servlet {
 			 +	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>\n")
 			 +	"  <center>\n"
 			 +	(subtitle.equals("") ? "" : "  <p>For instructions, see <a href=\""
-			 +   "http://mircwiki.rsna.org/index.php?title=Assigning_Subject_Identifiers_in_Clinical_Trials_with_CTP\""
+			 +   "http://mircwiki.rsna.org/index.php?title=The_CTP_Lookup_Table_Editor\""
 			 +   "target=\"wiki\">this article</a>.</p>\n");
 
 		if (keyTypes != null) {
