@@ -47,10 +47,14 @@ public class FileSource implements Serializable {
 	 * Get the instance of the FileSource from the checkpoint (if available),
 	 * or instantiate a new instance if no checkpoint exists.
 	 * @param treeRoot the root of the tree to be walked.
-	 * @param checkpointDir the directory in which to write checkpoints.
+	 * @param checkpointDir the directory in which to write checkpoints,
+	 * or null if a deserialized instance is not to be obtained.
 	 */
 	public static FileSource getInstance(File treeRoot, File checkpointDir) {
-		Object fileSource = SerializerUtil.deserialize( new File(checkpointDir, checkpointName) );
+		Object fileSource = null;
+		if (checkpointDir != null) {
+			fileSource = SerializerUtil.deserialize( new File(checkpointDir, checkpointName) );
+		}
 		return (fileSource != null) ? (FileSource)fileSource : new FileSource(treeRoot);
 	}
 

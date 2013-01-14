@@ -20,6 +20,7 @@ import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.ImportService;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
+import org.rsna.ctp.stdstages.archive.FileSource;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
@@ -40,6 +41,7 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	long age;
 	String fsName = null;
 	int fsNameTag = 0;
+	FileSource source = null;
 
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
@@ -55,6 +57,9 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 		if (fsName == null) fsName = fsName.trim();
 		if (fsName.equals("")) fsName = null;
 		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag").trim(),fsNameTag);
+
+		//Initialize the FileSource
+		source = FileSource.getInstance(root, null); //disable checkpointing
 	}
 
 	/**
@@ -64,7 +69,7 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	public FileObject getNextObject() {
 		File file;
 		long maxLM = System.currentTimeMillis() - age;
-		while ((file = findFile(root, maxLM)) != null) {
+		while ((file = findFile(maxLM)) != null) {
 
 			FileObject fileObject = FileObject.getInstance(file);
 			if (acceptable(fileObject)) {
@@ -129,19 +134,20 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 
 	//Walk a directory tree until we find a file with a
 	//last-modified-time earlier than a specified time.
-	private File findFile(File dir, long maxLM) {
-		File[] files = dir.listFiles();
-		if (files.length == 0) {
-			//The directory is empty.
-			//Delete it if it is not the root.
-			if (!dir.equals(root)) dir.delete();
-			return null;
+	private File findFile(long maxLM) {
+		File file;
+		while ((file=source.getNextFile()) != null) {
+			if (file.exists()) {
+				if (file.isFile() && (file.lastModified() < maxLM)) {
+					logger.debug("Processing "+file);
+					return file;
+				}
+			}
 		}
-		//Something is in the directory; check it out.
-		for (int i=0; i<files.length; i++) {
-			if (files[i].isFile() && (files[i].lastModified() < maxLM)) return files[i];
-			if (files[i].isDirectory()) return findFile(files[i], maxLM);
-		}
+		//If we get here, we didn't get anything.
+		//Re-instantiate the FileSource so we'll
+		//start over on the next try.
+		source = FileSource.getInstance(root, null);
 		return null;
 	}
 
