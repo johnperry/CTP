@@ -11,10 +11,9 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.dnd.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
+import java.util.zip.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.TransferHandler;
@@ -30,10 +29,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	TreePane treePane;
 	DataPane dataPane;
 	JSplitPane split;
+	JScrollPane jspData;
 	boolean loaded = false;
 
-	Document configXML = null;
-	Document templateXML = null;
 	Hashtable<String,Element> templateTable = null;
 	Element server = null;
 	Element pipeline = null;
@@ -42,6 +40,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	LinkedList<Element> processors = null;
 	LinkedList<Element> storageServices = null;
 	LinkedList<Element> exportServices = null;
+	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
 	public ConfigPanel() {
 		super();
@@ -49,48 +48,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		menuPane = new MenuPane();
 		this.add(menuPane, BorderLayout.NORTH);
 
-		//Parse the editor template file and construct the indexes of elements
-		templateXML = Util.getDocument( new File(templateFilename) );
-		templateTable = new Hashtable<String,Element>();
-		plugins = new LinkedList<Element>();
-		importServices = new LinkedList<Element>();
-		processors = new LinkedList<Element>();
-		storageServices = new LinkedList<Element>();
-		exportServices = new LinkedList<Element>();
-
-		if (templateXML != null) {
-			Element root = templateXML.getDocumentElement();
-			Node child = root.getFirstChild();
-			while (child != null) {
-				if (child instanceof Element) {
-					Element e = (Element)child;
-					String name = e.getTagName();
-					if (name.equals("Server")) server = e;
-					else if (name.equals("Pipeline")) pipeline = e;
-					else if (name.equals("Plugin")) plugins.add(e);
-					else if (name.equals("ImportService")) importServices.add(e);
-					else if (name.equals("Processor")) processors.add(e);
-					else if (name.equals("StorageService")) storageServices.add(e);
-					else if (name.equals("ExportService")) exportServices.add(e);
-
-					Node attrChild = e.getFirstChild();
-					while (attrChild != null) {
-						if (attrChild instanceof Element) {
-							Element ch = (Element)attrChild;
-							if (ch.getTagName().equals("attr") && ch.getAttribute("name").equals("class")) {
-								String className = ch.getAttribute("default").trim();
-								if (!className.equals("")) {
-									templateTable.put(className, e);
-									break;
-								}
-							}
-						}
-						attrChild = attrChild.getNextSibling();
-					}
-				}
-				child = child.getNextSibling();
-			}
-		}
+		loadTemplates();
 
 		treePane = new TreePane();
 		JScrollPane jspTree = new JScrollPane();
@@ -99,12 +57,12 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		jspTree.getViewport().setBackground(Color.white);
 		jspTree.getVerticalScrollBar().setUnitIncrement(30);
 
-		dataPane = new DataPane();
-		JScrollPane jspData = new JScrollPane();
+		jspData = new JScrollPane();
 		jspData.getVerticalScrollBar().setUnitIncrement(12);
-		jspData.setViewportView(dataPane);
 		jspData.getViewport().setBackground(Color.white);
 		jspData.getVerticalScrollBar().setUnitIncrement(30);
+		dataPane = new DataPane();
+		jspData.setViewportView(dataPane);
 
 		split = new JSplitPane();
 		split.setContinuousLayout(true);
@@ -115,10 +73,111 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		this.add(split, BorderLayout.CENTER);
 	}
 
+	private void loadTemplates() {
+		templateTable = new Hashtable<String,Element>();
+		plugins = new LinkedList<Element>();
+		importServices = new LinkedList<Element>();
+		processors = new LinkedList<Element>();
+		storageServices = new LinkedList<Element>();
+		exportServices = new LinkedList<Element>();
+
+		File libraries = new File("libraries");
+		loadTemplates(libraries);
+	}
+
+	private void loadTemplates(File file) {
+		if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			for (File f : files) loadTemplates(f);
+		}
+		else {
+			String name = file.getName().toLowerCase();
+			if (name.endsWith(".jar")) {
+				InputStream in = null;
+				try {
+					ZipFile zipFile = new ZipFile(file);
+					ZipEntry entry = zipFile.getEntry(templateFilename);
+					if (entry != null) {
+						in = new BufferedInputStream(zipFile.getInputStream(entry));
+						loadTemplates(Util.getDocument(in));
+					}
+				}
+				catch (Exception skip) { }
+				finally {
+					try { if (in != null) in.close(); }
+					catch (Exception ignore) { }
+				}
+			}
+		}
+	}
+
+	private void loadTemplates(Document templateXML) throws Exception {
+		if (templateXML != null) {
+			Element root = templateXML.getDocumentElement();
+			Node child = root.getFirstChild();
+			while (child != null) {
+				if (child instanceof Element) {
+					Element e = (Element)child;
+					String name = e.getTagName();
+					if (name.equals("Components")) loadComponents(e);
+					else if (name.equals("DefaultHelpText")) loadDefaultHelpText(e);
+				}
+				child = child.getNextSibling();
+			}
+		}
+	}
+
+	private void loadComponents(Element components) {
+		Node child = components.getFirstChild();
+		while (child != null) {
+			if (child instanceof Element) {
+				Element e = (Element)child;
+				String name = e.getTagName();
+				if (name.equals("Server")) server = e;
+				else if (name.equals("Pipeline")) pipeline = e;
+				else if (name.equals("Plugin")) plugins.add(e);
+				else if (name.equals("ImportService")) importServices.add(e);
+				else if (name.equals("Processor")) processors.add(e);
+				else if (name.equals("StorageService")) storageServices.add(e);
+				else if (name.equals("ExportService")) exportServices.add(e);
+
+				//Store the element in the templateTable, indexed by the class attribute value
+				Node attrChild = e.getFirstChild();
+				while (attrChild != null) {
+					if (attrChild instanceof Element) {
+						Element ch = (Element)attrChild;
+						if (ch.getTagName().equals("attr") && ch.getAttribute("name").equals("class")) {
+							String className = ch.getAttribute("default").trim();
+							if (!className.equals("")) {
+								templateTable.put(className, e);
+								break;
+							}
+						}
+					}
+					attrChild = attrChild.getNextSibling();
+				}
+			}
+			child = child.getNextSibling();
+		}
+	}
+
+	private void loadDefaultHelpText(Element dht) {
+		Node child = dht.getFirstChild();
+		while (child != null) {
+			if (child instanceof Element) {
+				Element attr = (Element)child;
+				String attrName = attr.getTagName();
+				String attrValue = attr.getTextContent().trim();
+				if (!attrValue.equals("")) defaultHelpText.put(attrName, attrValue);
+			}
+			child = child.getNextSibling();
+		}
+	}
+
 	public void load() {
 		if (!loaded) {
 			try {
-				configXML = Util.getDocument( new File("config.xml") );
+				Document configXML = Util.getDocument( new File("config.xml") );
 				treePane.load(configXML);
 				loaded = true;
 			}
@@ -258,11 +317,21 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		public DataPane() {
 			super();
 			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
-			setBackground(Color.white);
+			setView(false);
 		}
 
 		public void setView(boolean viewAsXML) {
 			this.viewAsXML = viewAsXML;
+			if (viewAsXML) {
+				setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
+				setBackground(Color.white);
+				jspData.getViewport().setBackground(Color.white);
+			}
+			else {
+				setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+				setBackground(BasePanel.bgColor);
+				jspData.getViewport().setBackground(BasePanel.bgColor);
+			}
 			if (currentObject != null) edit(currentObject);
 		}
 
@@ -287,9 +356,14 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 							String defValue = ch.getAttribute("default");
 							String options = ch.getAttribute("options").trim();
 							boolean editable = !ch.getAttribute("editable").equals("no");
+
+							//Get the help text if possible
 							String helpText = "";
-							NodeList nl = ch.getElementsByTagName("comment");
+							NodeList nl = ch.getElementsByTagName("helptext");
 							if (nl.getLength() > 0) helpText = nl.item(0).getTextContent();
+							if (helpText.equals("")) helpText = defaultHelpText.get(name);
+							if (helpText == null) helpText = "";
+
 							String configValue = userObject.getAttribute(name);
 							if (configValue.equals("")) configValue = defValue;
 

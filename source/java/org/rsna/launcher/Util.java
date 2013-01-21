@@ -60,23 +60,24 @@ public class Util {
 		bw.close();
 	}
 
+	public static DocumentBuilder getDocumentBuilder() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(true);
+		return dbf.newDocumentBuilder();
+	}
+
 	public static Document getDocument(File file) {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			return db.parse(file);
-		}
+		try { return getDocumentBuilder().parse(file); }
+		catch (Exception ex) { return null; }
+	}
+
+	public static Document getDocument(InputStream in) {
+		try { return getDocumentBuilder().parse(in); }
 		catch (Exception ex) { return null; }
 	}
 
 	public static Document getDocument() {
-		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			dbf.setNamespaceAware(true);
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			return db.newDocument();
-		}
+		try { return getDocumentBuilder().newDocument(); }
 		catch (Exception ex) { return null; }
 	}
 
