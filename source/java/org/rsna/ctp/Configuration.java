@@ -132,10 +132,8 @@ public class Configuration {
 			Element root = configXML.getDocumentElement();
 
 			//Log the configuration.
-			if (!root.getAttribute("log").toLowerCase().equals("no")) {
-				logger.info("Classpath:\n"+ClasspathUtil.listClasspath());
-				logger.info("Configuration:\n" + XmlUtil.toPrettyString(root));
-			}
+			logger.info("Classpath:\n"+ClasspathUtil.listClasspath());
+			logger.info("Configuration:\n" + XmlUtil.toPrettyString(root));
 
 			//Get the children and instantiate them.
 			//Save the parameters of the Server element.

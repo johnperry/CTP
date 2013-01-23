@@ -23,7 +23,7 @@ import org.w3c.dom.*;
 
 public class ConfigPanel extends BasePanel implements ActionListener {
 
-	static final String templateFilename = "config-editor.xml";
+	static final String templateFilename = "ConfigurationTemplates.xml";
 
 	MenuPane menuPane;
 	TreePane treePane;
@@ -73,6 +73,35 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		this.add(split, BorderLayout.CENTER);
 	}
 
+	public void load() {
+		if (!loaded) {
+			try {
+				Document configXML = Util.getDocument( new File("config.xml") );
+				loaded = treePane.load(configXML);
+			}
+			catch (Exception ex) { }
+		}
+	}
+
+	public void actionPerformed(ActionEvent event) {
+		/*
+		if (event.getSource().equals(wrap)) {
+			out.setScrollableTracksViewportWidth( wrap.isSelected() );
+			jsp.invalidate();
+			jsp.validate();
+		}
+		else if (event.getSource().equals(refresh)) {
+			reload();
+		}
+		else if (event.getSource().equals(delete)) {
+			File logs = new File("logs");
+			Util.deleteAll(logs);
+			reload();
+		}
+		*/
+	}
+
+	//******** Load the templates from all the jars in CTP/libraries ********
 	private void loadTemplates() {
 		templateTable = new Hashtable<String,Element>();
 		plugins = new LinkedList<Element>();
@@ -173,35 +202,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			child = child.getNextSibling();
 		}
 	}
-
-	public void load() {
-		if (!loaded) {
-			try {
-				Document configXML = Util.getDocument( new File("config.xml") );
-				treePane.load(configXML);
-				loaded = true;
-			}
-			catch (Exception ex) { }
-		}
-	}
-
-	public void actionPerformed(ActionEvent event) {
-		/*
-		if (event.getSource().equals(wrap)) {
-			out.setScrollableTracksViewportWidth( wrap.isSelected() );
-			jsp.invalidate();
-			jsp.validate();
-		}
-		else if (event.getSource().equals(refresh)) {
-			reload();
-		}
-		else if (event.getSource().equals(delete)) {
-			File logs = new File("logs");
-			Util.deleteAll(logs);
-			reload();
-		}
-		*/
-	}
+	//******** End of template loading ********
 
 	class MenuPane extends BasePanel {
 
@@ -250,7 +251,12 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
-				treePane.save();
+				Element config = treePane.getXML();
+				String xml = Util.toPrettyString(config);
+				File configFile = new File("config.xml");
+				backupTarget(configFile);
+				try { Util.setText(configFile, xml); }
+				catch (Exception ignore) { }
 			}
 		}
 
@@ -267,6 +273,39 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		}
 	}
 
+	//Backup a template, effectively deleting it.
+	private void backupTarget(File targetFile) {
+		targetFile = targetFile.getAbsoluteFile();
+		File parent = targetFile.getParentFile();
+		if (targetFile.exists()) {
+			String name = targetFile.getName();
+			int k = name.lastIndexOf(".");
+			String target = name.substring(0,k) + "[";
+			int tlen = target.length();
+			String ext = name.substring(k);
+
+			int n = 0;
+			File[] files = parent.listFiles();
+			if (files != null) {
+				for (File file : files) {
+					String fname = file.getName();
+					if (fname.startsWith(target)) {
+						int kk = fname.indexOf("]", tlen);
+						if (kk > tlen) {
+							int nn = Util.getInt(fname.substring(tlen, kk), 0);
+							if (nn > n) n = nn;
+						}
+					}
+				}
+			}
+			n++;
+			File backup = new File(parent, target + n + "]" + ext);
+			backup.delete(); //shouldn't be there, but just in case.
+			targetFile.renameTo(backup);
+		}
+	}
+
+	//******** The left pane ********
 	class TreePane extends BasePanel implements TreeSelectionListener {
 
 		Document doc = null;
@@ -279,7 +318,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			super();
 		}
 
-		public void load(Document doc) {
+		public boolean load(Document doc) {
 			this.doc = doc;
 			root = doc.getDocumentElement();
 			tree = new XMLTree(root);
@@ -289,30 +328,39 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			tree.expandAll();
 			dragSource = new TreeDragSource(tree, DnDConstants.ACTION_COPY_OR_MOVE);
 			dropTarget = new TreeDropTarget(tree);
+			return true;
 		}
 
 		public void valueChanged(TreeSelectionEvent event) {
 			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
 			if (treeNode != null) {
-				Object object = treeNode.getUserObject();
-				if ((object != null) && (object instanceof XMLUserObject)) {
-					XMLUserObject userObject = (XMLUserObject)object;
-					dataPane.edit( userObject );
-				}
+				dataPane.edit( treeNode );
 			}
 		}
 
-		public void save() {
-			Document doc = tree.getDocument();
-			//TODO: save the configuration
-			tree.clearSelection();
+		public Element getXML() {
+			return tree.getXML();
 		}
 	}
 
+	class ScrollableJPanel extends JPanel implements Scrollable {
+		private boolean trackWidth = true;
+		public ScrollableJPanel() {
+			super();
+		}
+		public void setTrackWidth(boolean trackWidth) { this.trackWidth = trackWidth; }
+		public boolean getScrollableTracksViewportHeight() { return false; }
+		public boolean getScrollableTracksViewportWidth() { return trackWidth; }
+		public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
+		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
+	}
+
+	//******** The right pane ********
 	class DataPane extends ScrollableJPanel {
 
 		boolean viewAsXML = false;
-		XMLUserObject currentObject = null;
+		DefaultMutableTreeNode currentNode = null;
 
 		public DataPane() {
 			super();
@@ -332,20 +380,144 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				setBackground(BasePanel.bgColor);
 				jspData.getViewport().setBackground(BasePanel.bgColor);
 			}
-			if (currentObject != null) edit(currentObject);
+			if (currentNode != null) edit(currentNode);
 		}
 
-		public void edit(XMLUserObject userObject) {
-			currentObject = userObject;
-			for (Component c : getComponents()) remove(c);
-			if (viewAsXML) displayXML(userObject);
-			else displayForm(userObject);
+		public void edit(DefaultMutableTreeNode treeNode) {
+			Object object = treeNode.getUserObject();
+			if ((object != null) && (object instanceof XMLUserObject)) {
+				currentNode = treeNode;
+				XMLUserObject userObject = (XMLUserObject)object;
+				for (Component c : getComponents()) remove(c);
+				if (viewAsXML) displayXML(userObject);
+				else displayForm(userObject);
+				jspData.setViewportView(this);
+				jspData.getVerticalScrollBar().setValue(0);
+			}
 		}
 
 		private void displayForm(XMLUserObject userObject) {
 			setTrackWidth(true);
+			setLayout(new BorderLayout());
+			add(userObject.getFormPanel(), BorderLayout.CENTER);
+		}
+
+		private void displayXML(XMLUserObject userObject) {
+			setTrackWidth(false);
+			setLayout(new BorderLayout());
+			ColorPane cp = new ColorPane();
+			cp.setEditable(false);
+			cp.setScrollableTracksViewportWidth(false);
+			String xml = Util.toPrettyString(userObject.getXML());
+			cp.setText(xml);
+			add(cp, BorderLayout.CENTER);
+		}
+	}
+
+	//******** The User Object that encapsulates the CTP configuration elements ********
+	class XMLUserObject {
+
+		public Element element;
+		public String className;
+		public String tag;
+
+		public DefaultMutableTreeNode treeNode = null;
+
+		public boolean isConfiguration = false;
+		public boolean isServer = false;
+		public boolean isPlugin = false;
+		public boolean isPipeline = false;
+		public boolean isStage = false;
+		public boolean isChild = false;
+
+		public FormPanel formPanel = null;
+
+		public XMLUserObject(Element element) {
+			super();
+			this.element = element;
+			this.className = element.getAttribute("class");
+			tag = element.getTagName();
+
+			isConfiguration = tag.equals("Configuration");
+			isServer = tag.equals("Server");
+			isPlugin = tag.equals("Plugin");
+			isPipeline = tag.equals("Pipeline");
+			if (!isConfiguration && !isServer && !isPlugin && !isPipeline) {
+				isStage = element.getParentNode().getNodeName().equals("Pipeline");
+				isChild = !isStage;
+			}
+
+			if (tag.equals("Plugin")) {
+				String name = className.substring(className.lastIndexOf(".")+1);
+				tag += " ["+name+"]";
+			}
+			else if (tag.equals("Pipeline")) {
+				tag += " ["+element.getAttribute("name")+"]";
+			}
+			this.formPanel = new FormPanel(element, getTemplate());
+		}
+
+		public void setTreeNode(DefaultMutableTreeNode treeNode) {
+			this.treeNode = treeNode;
+		}
+
+		public DefaultMutableTreeNode getTreeNode() {
+			return treeNode;
+		}
+
+		public Element getTemplate() {
+			return (isServer ? server : (isPipeline ? pipeline : templateTable.get(className)));
+		}
+
+		public FormPanel getFormPanel() {
+			return formPanel;
+		}
+
+		public String getAttribute(String name) {
+			return element.getAttribute(name);
+		}
+
+		public boolean isDragable() {
+			return !isConfiguration && !isServer && !isPipeline && !isChild;
+		}
+
+		public Element getXML() {
+			Element xml = formPanel.getXML();
+			if (treeNode != null) {
+				Enumeration e = treeNode.children();
+				while (e.hasMoreElements()) {
+					Object object = e.nextElement();
+					if (object instanceof DefaultMutableTreeNode) {
+						DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)object;
+						Object userObject = childNode.getUserObject();
+						XMLUserObject xmlUserObject = (XMLUserObject)userObject;
+						Element c = xmlUserObject.getXML();
+						Element cImported = (Element)xml.getOwnerDocument().importNode(c, true);
+						xml.appendChild(cImported);
+					}
+				}
+			}
+			return xml;
+		}
+
+		public String toString() {
+			return tag;
+		}
+	}
+
+	//******** The panel that displays the form for a component ********
+	class FormPanel extends ScrollableJPanel {
+
+		Element element;
+		Element template;
+
+		public FormPanel(Element element, Element template) {
+			super();
+			this.element = element;
+			this.template = template;
+			setBackground(BasePanel.bgColor);
+			setTrackWidth(true);
 			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
-			Element template = userObject.getTemplate();
 			if (template != null) {
 				Node child = template.getFirstChild();
 				while (child != null) {
@@ -364,7 +536,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 							if (helpText.equals("")) helpText = defaultHelpText.get(name);
 							if (helpText == null) helpText = "";
 
-							String configValue = userObject.getAttribute(name);
+							String configValue = element.getAttribute(name);
 							if (configValue.equals("")) configValue = defValue;
 
 							if (options.equals("")) {
@@ -380,36 +552,28 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 					child = child.getNextSibling();
 				}
 			}
-			revalidate();
 		}
 
-		private void displayXML(XMLUserObject userObject) {
-			setTrackWidth(false);
-			setLayout(new BorderLayout());
-			ColorPane cp = new ColorPane();
-			cp.setEditable(false);
-			cp.setScrollableTracksViewportWidth(false);
-			String xml = Util.toPrettyString(userObject.element);
-			cp.setText(xml);
-			add(cp, BorderLayout.CENTER);
-			revalidate();
+		public Element getXML() {
+			Document doc = Util.getDocument();
+			Element root = doc.createElement(element.getTagName());
+			Component[] comps = getComponents();
+			for (Component c : comps) {
+				if (c instanceof AttrPanel) {
+					AttrPanel a = (AttrPanel)c;
+					String attrName = a.getName();
+					String attrValue = a.getValue();
+					if (!attrValue.equals("")) {
+						root.setAttribute(attrName, attrValue);
+					}
+				}
+			}
+			return root;
 		}
 	}
 
-	class ScrollableJPanel extends JPanel implements Scrollable {
-		private boolean trackWidth = true;
-		public ScrollableJPanel() {
-			super();
-		}
-		public void setTrackWidth(boolean trackWidth) { this.trackWidth = trackWidth; }
-		public boolean getScrollableTracksViewportHeight() { return false; }
-		public boolean getScrollableTracksViewportWidth() { return trackWidth; }
-		public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
-		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
-	}
-
-	class AttrPanel extends ScrollableJPanel implements Scrollable {
+	//************** UI components for attributes in the right pane **************
+	class AttrPanel extends ScrollableJPanel {
 		String name;
 		public AttrPanel(String name) {
 			super();
@@ -422,6 +586,12 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			Border compound = BorderFactory.createCompoundBorder(title, empty);
 			setBorder(compound);
 			setBackground(Color.white);
+		}
+		public String getName() {
+			return name;
+		}
+		public String getValue() {
+			return "";
 		}
 	}
 
@@ -440,6 +610,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				this.add(help);
 			}
 			else this.add( Box.createVerticalStrut(5) );
+		}
+		public String getValue() {
+			return text.getText().trim();
 		}
 	}
 
@@ -465,6 +638,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				this.add(help);
 			}
 		}
+		public String getValue() {
+			return text.getSelectedItem().toString().trim();
+		}
 	}
 
 	class ButtonAttrPanel extends AttrPanel {
@@ -488,6 +664,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				help = new HelpPane(comment);
 				this.add(help);
 			}
+		}
+		public String getValue() {
+			return text.getText().trim();
 		}
 	}
 
@@ -532,6 +711,14 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				add(RowLayout.crlf());
 			}
 		}
+		public String getText() {
+			Enumeration<AbstractButton> e = group.getElements();
+			while (e.hasMoreElements()) {
+				AbstractButton b = e.nextElement();
+				if (b.isSelected()) return b.getText();
+			}
+			return "";
+		}
 	}
 
 	class HelpPane extends JTextPane implements Scrollable {
@@ -550,61 +737,6 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	}
 
 
-	//The User Object that encapsulates the CTP configuration elements
-	class XMLUserObject {
-
-		public Element element;
-		public String className;
-		public String tag;
-
-		public boolean isConfiguration = false;
-		public boolean isServer = false;
-		public boolean isPlugin = false;
-		public boolean isPipeline = false;
-		public boolean isStage = false;
-		public boolean isChild = false;
-
-		public XMLUserObject(Element element) {
-			super();
-			this.element = element;
-			this.className = element.getAttribute("class");
-			tag = element.getTagName();
-
-			isConfiguration = tag.equals("Configuration");
-			isServer = tag.equals("Server");
-			isPlugin = tag.equals("Plugin");
-			isPipeline = tag.equals("Pipeline");
-			if (!isConfiguration && !isServer && !isPlugin && !isPipeline) {
-				isStage = element.getParentNode().getNodeName().equals("Pipeline");
-				isChild = !isStage;
-			}
-
-			if (tag.equals("Plugin")) {
-				String name = className.substring(className.lastIndexOf(".")+1);
-				tag += " ["+name+"]";
-			}
-			else if (tag.equals("Pipeline")) {
-				tag += " ["+element.getAttribute("name")+"]";
-			}
-		}
-
-		public Element getTemplate() {
-			return (isServer ? server : (isPipeline ? pipeline : templateTable.get(className)));
-		}
-
-		public String getAttribute(String name) {
-			return element.getAttribute(name);
-		}
-
-		public boolean isDragable() {
-			return !isConfiguration && !isServer && !isPipeline && !isChild;
-		}
-
-		public String toString() {
-			return tag;
-		}
-	}
-
 	//*****************************************************************
 	//The rest of the source code implements the tree for the left pane
 	//*****************************************************************
@@ -617,6 +749,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			super();
 			XMLUserObject xmlUserObject = new XMLUserObject(xmlRoot);
 			troot = new DefaultMutableTreeNode(xmlUserObject);
+			xmlUserObject.setTreeNode(troot);
 			model = new DefaultTreeModel(troot);
 			setModel(model);
 			setScrollsOnExpand(true);
@@ -633,6 +766,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 					Element cel = (Element)child;
 					XMLUserObject xmlUserObject = new XMLUserObject(cel);
 					DefaultMutableTreeNode cnode = new DefaultMutableTreeNode(xmlUserObject);
+					xmlUserObject.setTreeNode(cnode);
 					tnode.add(cnode);
 					addChildren(cnode, cel);
 				}
@@ -640,10 +774,10 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			}
 		}
 
-		public Document getDocument() {
-			Document doc = Util.getDocument();
-			appendTreeNode(doc, troot);
-			return doc;
+		public Element getXML() {
+			Object userObject = troot.getUserObject();
+			XMLUserObject xmlUserObject = (XMLUserObject)userObject;
+			return xmlUserObject.getXML();
 		}
 
 		private void appendTreeNode(Node node, DefaultMutableTreeNode tnode) {

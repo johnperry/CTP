@@ -43,7 +43,7 @@
 			<attr name="port" required="yes" default="7777"/>
 			<attr name="ssl" required="no" default="no" options="yes|no"/>
 			<attr name="zip" required="no" default="no" options="yes|no">
-				<helptext>Unzip received data objects (yes/no)</helptext>
+				<helptext>Unzip received data objects</helptext>
 			</attr>
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
@@ -412,7 +412,7 @@
 				<helptext>URL of the destination HttpImportService (starting with http:// or https://)</helptext>
 			</attr>
 			<attr name="zip" required="no" default="no" options="yes|no">
-				<helptext>Zip data objects before transmission (yes/no)</helptext>
+				<helptext>Zip data objects before transmission</helptext>
 			</attr>
 			<attr name="username" required="no" default="">
 				<helptext>The username for authentication, if required by the destination system</helptext>
@@ -523,7 +523,7 @@
 		<name>Name for display on web pages (not required to be unique)</name>
 		<root>Storage directory for use by the stage for data (must be unique)</root>
 		<port>Port on which the stage listens for connections</port>
-		<ssl>Use SSL for communication (yes/no)</ssl>
+		<ssl>Use SSL for communication</ssl>
 		<acceptDicomObjects>Accept received DicomObjects</acceptDicomObjects>
 		<acceptXmlObjects>Accept received XmlObjects</acceptXmlObjects>
 		<acceptZipObjects>Accept received ZipObjects</acceptZipObjects>
