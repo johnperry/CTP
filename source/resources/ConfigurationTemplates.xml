@@ -125,37 +125,26 @@
 				<attr name="ip" required="yes" default="">
 					<helptext>IP address from which to allow connections</helptext>
 				</attr>
-			</child>
-
-			<child name="reject" required="no" allowMultiples="yes">
-				<attr name="ip" required="yes" default="">
-					<helptext>IP address from which to reject connections</helptext>
-				</attr>
-			</child>
-
-			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="calledAET" required="yes" default="">
 					<helptext>Called AE Title for which to allow connections</helptext>
 				</attr>
-			</child>
-
-			<child name="reject" required="no" allowMultiples="yes">
-				<attr name="calledAET" required="yes" default="">
-					<helptext>Called AE Title for which to reject connections</helptext>
-				</attr>
-			</child>
-
-			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="callingAET" required="yes" default="">
 					<helptext>Calling AE Title from which to allow connections</helptext>
 				</attr>
 			</child>
 
 			<child name="reject" required="no" allowMultiples="yes">
+				<attr name="ip" required="yes" default="">
+					<helptext>IP address from which to reject connections</helptext>
+				</attr>
+				<attr name="calledAET" required="yes" default="">
+					<helptext>Called AE Title for which to reject connections</helptext>
+				</attr>
 				<attr name="callingAET" required="yes" default="">
 					<helptext>Calling AE Title from which to reject connections</helptext>
 				</attr>
 			</child>
+
 		</ImportService>
 
 		<Processor>
@@ -306,7 +295,7 @@
 			<attr name="id" required="yes" default="FileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FileStorageService" editable="no"/>
 			<attr name="root" required="yes" default="roots/FileStorageService"/>
-			<attr name="type" required="yes" default="none" options="year|month|week|date|none">
+			<attr name="type" required="no" default="none" options="year|month|week|date|none">
 				<helptext>Structure of the storage tree</helptext>
 			</attr>
 			<attr name="timeDepth" required="no" default="0">

@@ -21,7 +21,7 @@ import javax.swing.event.*;
 import javax.swing.tree.*;
 import org.w3c.dom.*;
 
-public class ConfigPanel extends BasePanel implements ActionListener {
+public class ConfigPanel extends BasePanel {
 
 	static final String templateFilename = "ConfigurationTemplates.xml";
 
@@ -32,23 +32,23 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	JScrollPane jspData;
 	boolean loaded = false;
 
-	Hashtable<String,Element> templateTable = null;
-	Element server = null;
-	Element pipeline = null;
-	LinkedList<Element> plugins = null;
-	LinkedList<Element> importServices = null;
-	LinkedList<Element> processors = null;
-	LinkedList<Element> storageServices = null;
-	LinkedList<Element> exportServices = null;
+	Hashtable<String,Template> templateTable = null;
+	Template server = null;
+	Template pipeline = null;
+	LinkedList<Template> plugins = null;
+	LinkedList<Template> importServices = null;
+	LinkedList<Template> processors = null;
+	LinkedList<Template> storageServices = null;
+	LinkedList<Template> exportServices = null;
 	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
 	public ConfigPanel() {
 		super();
 
+		loadTemplates();
+
 		menuPane = new MenuPane();
 		this.add(menuPane, BorderLayout.NORTH);
-
-		loadTemplates();
 
 		treePane = new TreePane();
 		JScrollPane jspTree = new JScrollPane();
@@ -83,32 +83,48 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		}
 	}
 
-	public void actionPerformed(ActionEvent event) {
-		/*
-		if (event.getSource().equals(wrap)) {
-			out.setScrollableTracksViewportWidth( wrap.isSelected() );
-			jsp.invalidate();
-			jsp.validate();
+	//Class to encapsultate a template element
+	class Template {
+		Element template;
+		Hashtable<String,Element> attrs;
+		public Template(Element template) {
+			this.template = template;
+			attrs = new Hashtable<String,Element>();
+			Node child = template.getFirstChild();
+			while (child != null) {
+				if (child instanceof Element) {
+					Element attr = (Element)child;
+					String attrName = attr.getAttribute("name");
+					attrs.put(attrName, attr);
+				}
+				child = child.getNextSibling();
+			}
 		}
-		else if (event.getSource().equals(refresh)) {
-			reload();
+		public String getName() {
+			return template.getTagName();
 		}
-		else if (event.getSource().equals(delete)) {
-			File logs = new File("logs");
-			Util.deleteAll(logs);
-			reload();
+		public Element getTemplateElement() {
+			return template;
 		}
-		*/
+		public Element getAttrElement(String name) {
+			return attrs.get(name);
+		}
+		public String getAttrValue(String attrName, String attrValueName) {
+			Element e = attrs.get(attrName);
+			if (e != null) {
+				return e.getAttribute(attrValueName).trim();
+			}
+			return "";
+		}
 	}
 
-	//******** Load the templates from all the jars in CTP/libraries ********
 	private void loadTemplates() {
-		templateTable = new Hashtable<String,Element>();
-		plugins = new LinkedList<Element>();
-		importServices = new LinkedList<Element>();
-		processors = new LinkedList<Element>();
-		storageServices = new LinkedList<Element>();
-		exportServices = new LinkedList<Element>();
+		templateTable = new Hashtable<String,Template>();
+		plugins = new LinkedList<Template>();
+		importServices = new LinkedList<Template>();
+		processors = new LinkedList<Template>();
+		storageServices = new LinkedList<Template>();
+		exportServices = new LinkedList<Template>();
 
 		File libraries = new File("libraries");
 		loadTemplates(libraries);
@@ -161,29 +177,20 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		while (child != null) {
 			if (child instanceof Element) {
 				Element e = (Element)child;
-				String name = e.getTagName();
-				if (name.equals("Server")) server = e;
-				else if (name.equals("Pipeline")) pipeline = e;
-				else if (name.equals("Plugin")) plugins.add(e);
-				else if (name.equals("ImportService")) importServices.add(e);
-				else if (name.equals("Processor")) processors.add(e);
-				else if (name.equals("StorageService")) storageServices.add(e);
-				else if (name.equals("ExportService")) exportServices.add(e);
+				Template template = new Template(e);
+				String name = template.getName();
+				if (name.equals("Server")) server = template;
+				else if (name.equals("Pipeline")) pipeline = template;
+				else if (name.equals("Plugin")) plugins.add(template);
+				else if (name.equals("ImportService")) importServices.add(template);
+				else if (name.equals("Processor")) processors.add(template);
+				else if (name.equals("StorageService")) storageServices.add(template);
+				else if (name.equals("ExportService")) exportServices.add(template);
 
-				//Store the element in the templateTable, indexed by the class attribute value
-				Node attrChild = e.getFirstChild();
-				while (attrChild != null) {
-					if (attrChild instanceof Element) {
-						Element ch = (Element)attrChild;
-						if (ch.getTagName().equals("attr") && ch.getAttribute("name").equals("class")) {
-							String className = ch.getAttribute("default").trim();
-							if (!className.equals("")) {
-								templateTable.put(className, e);
-								break;
-							}
-						}
-					}
-					attrChild = attrChild.getNextSibling();
+				//Store the element in the templateTable, indexed by the class name
+				String className = template.getAttrValue("class", "default");
+				if (!className.equals("")) {
+					templateTable.put(className, template);
 				}
 			}
 			child = child.getNextSibling();
@@ -219,32 +226,78 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			saveItem.addActionListener( new SaveImpl() );
 			fileMenu.add(saveItem);
 
+			JMenu editMenu = new JMenu("Edit");
+			JMenuItem newPipeItem = new JMenuItem("new Pipeline");
+			newPipeItem.addActionListener( new NewPipeImpl() );
+			editMenu.add(newPipeItem);
+			JMenuItem deleteItem = new JMenuItem("Delete");
+			deleteItem.setAccelerator( KeyStroke.getKeyStroke('X', InputEvent.CTRL_MASK) );
+			deleteItem.addActionListener( new DeleteImpl() );
+			editMenu.add(deleteItem);
+
 			JMenu viewMenu = new JMenu("View");
 			JMenuItem formItem = new JMenuItem("Form");
 			formItem.setAccelerator( KeyStroke.getKeyStroke('F', InputEvent.CTRL_MASK) );
 			formItem.addActionListener( new FormImpl() );
 			viewMenu.add(formItem);
-
 			JMenuItem xmlItem = new JMenuItem("XML");
 			xmlItem.setAccelerator( KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK) );
 			xmlItem.addActionListener( new XmlImpl() );
 			viewMenu.add(xmlItem);
 
 			JMenu pluginMenu = new JMenu("Plugin");
-			pluginMenu.add( new JMenuItem("AuditLog") );
-			pluginMenu.add( new JMenuItem("MIRC") );
+			ComponentImpl impl = new ComponentImpl();
+			for (Template template : plugins) {
+				String name = template.getAttrValue("class", "default");
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(impl);
+				pluginMenu.add(item);
+			}
+
+			JMenu importServiceMenu = new JMenu("ImportService");
+			for (Template template : importServices) {
+				String name = template.getAttrValue("class", "default");
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(impl);
+				importServiceMenu.add(item);
+			}
+
+			JMenu processorMenu = new JMenu("Processor");
+			for (Template template : processors) {
+				String name = template.getAttrValue("class", "default");
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(impl);
+				processorMenu.add(item);
+			}
+
+			JMenu storageServiceMenu = new JMenu("StorageService");
+			for (Template template : storageServices) {
+				String name = template.getAttrValue("class", "default");
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(impl);
+				storageServiceMenu.add(item);
+			}
+
+			JMenu exportServiceMenu = new JMenu("ExportService");
+			for (Template template : exportServices) {
+				String name = template.getAttrValue("class", "default");
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(impl);
+				exportServiceMenu.add(item);
+			}
 
 			JMenu pipeMenu = new JMenu("Pipeline");
 			pipeMenu.add( new JMenuItem("New") );
 
-			JMenu stageMenu = new JMenu("Stage");
-			stageMenu.add( new JMenuItem("New") );
-
 			menuBar.add(fileMenu);
+			menuBar.add(editMenu);
 			menuBar.add(viewMenu);
 			menuBar.add(pluginMenu);
+			menuBar.add(importServiceMenu);
+			menuBar.add(processorMenu);
+			menuBar.add(storageServiceMenu);
+			menuBar.add(exportServiceMenu);
 			menuBar.add(pipeMenu);
-			menuBar.add(stageMenu);
 
 			this.add( menuBar );
 		}
@@ -252,11 +305,25 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
-				String xml = Util.toPrettyString(config);
-				File configFile = new File("config.xml");
-				backupTarget(configFile);
-				try { Util.setText(configFile, xml); }
-				catch (Exception ignore) { }
+				if (checkConfig(config)) {
+					String xml = Util.toPrettyString(config);
+					File configFile = new File("config.xml");
+					backupTarget(configFile);
+					try { Util.setText(configFile, xml); }
+					catch (Exception ignore) { }
+				}
+			}
+		}
+
+		class NewPipeImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				//dataPane.setView(true);
+			}
+		}
+
+		class DeleteImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				//dataPane.setView(true);
 			}
 		}
 
@@ -271,9 +338,92 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 				dataPane.setView(true);
 			}
 		}
+
+		class ComponentImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				JMenuItem item = (JMenuItem)event.getSource();
+				System.out.println("ComponentImpl: "+item.getText());
+			}
+		}
 	}
 
-	//Backup a template, effectively deleting it.
+	//Check the configuration, looking for duplicate ports and root directories.
+	private boolean checkConfig(Element config) {
+		DupTable portTable = new DupTable(config, "port");
+		DupTable rootTable = new DupTable(config, "root");
+		if (portTable.hasDuplicates) {
+			String dups = portTable.getDuplicates();
+			JOptionPane.showMessageDialog(
+				this,
+				"The following port values appear multiple times\n"
+				+ "in the configuration. Port values must be unique.\n"
+				+ "The configuration cannot be saved.\n"
+				+dups,
+				"Duplicate ports",
+				JOptionPane.WARNING_MESSAGE);
+			return false;
+		}
+		if (rootTable.hasDuplicates) {
+			String dups = rootTable.getDuplicates();
+			int yesno = JOptionPane.showConfirmDialog(
+							this,
+							"The following root directories appear multiple times\n"
+							+ "in the configuration. Except in special situations,\n"
+							+ "root directories must be unique.\n"
+							+ "If you click OK, the configuration will be saved.\n"
+							+dups,
+							"Duplicate root directories",
+							JOptionPane.OK_CANCEL_OPTION);
+			return (yesno == JOptionPane.OK_OPTION);
+		}
+		return true;
+	}
+
+	class DupTable extends Hashtable<String,Integer> {
+		String attrName;
+		public boolean hasDuplicates = false;
+		public DupTable(Element el, String attrName) {
+			super();
+			this.attrName = attrName;
+			addElement(el);
+		}
+		public void addElement(Element el) {
+			addAttribute(el);
+			Node child = el.getFirstChild();
+			while (child != null) {
+				if (child instanceof Element) {
+					addElement( (Element)child );
+				}
+				child = child.getNextSibling();
+			}
+		}
+		private void addAttribute(Element el) {
+			String attrValue = el.getAttribute(attrName).trim();
+			if (!attrValue.equals("")) {
+				Integer i = get(attrValue);
+				if (i == null) {
+					put(attrValue, new Integer(1));
+				}
+				else {
+					i = new Integer(i.intValue() + 1);
+					put(attrValue, i);
+					hasDuplicates = true;
+				}
+			}
+		}
+		public String getDuplicates() {
+			StringBuffer sb = new StringBuffer();
+			for (String attrValue : keySet()) {
+				Integer i = get(attrValue);
+				if (i.intValue() > 1) {
+					sb.append(attrValue + "\n");
+				}
+			}
+			return sb.toString();
+		}
+	}
+
+	//Backup a target.
 	private void backupTarget(File targetFile) {
 		targetFile = targetFile.getAbsoluteFile();
 		File parent = targetFile.getParentFile();
@@ -420,6 +570,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 		public Element element;
 		public String className;
 		public String tag;
+		public Template template;
 
 		public DefaultMutableTreeNode treeNode = null;
 
@@ -454,7 +605,8 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			else if (tag.equals("Pipeline")) {
 				tag += " ["+element.getAttribute("name")+"]";
 			}
-			this.formPanel = new FormPanel(element, getTemplate());
+			this.template = (isServer ? server : (isPipeline ? pipeline : templateTable.get(className)));
+			this.formPanel = new FormPanel(element, template);
 		}
 
 		public void setTreeNode(DefaultMutableTreeNode treeNode) {
@@ -465,8 +617,8 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			return treeNode;
 		}
 
-		public Element getTemplate() {
-			return (isServer ? server : (isPipeline ? pipeline : templateTable.get(className)));
+		public Template getTemplate() {
+			return template;
 		}
 
 		public FormPanel getFormPanel() {
@@ -509,9 +661,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 	class FormPanel extends ScrollableJPanel {
 
 		Element element;
-		Element template;
+		Template template;
 
-		public FormPanel(Element element, Element template) {
+		public FormPanel(Element element, Template template) {
 			super();
 			this.element = element;
 			this.template = template;
@@ -519,7 +671,7 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 			setTrackWidth(true);
 			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
 			if (template != null) {
-				Node child = template.getFirstChild();
+				Node child = template.getTemplateElement().getFirstChild();
 				while (child != null) {
 					if (child instanceof Element) {
 						Element ch = (Element)child;
@@ -563,7 +715,9 @@ public class ConfigPanel extends BasePanel implements ActionListener {
 					AttrPanel a = (AttrPanel)c;
 					String attrName = a.getName();
 					String attrValue = a.getValue();
-					if (!attrValue.equals("")) {
+					String defaultValue = template.getAttrValue(attrName, "default");
+					boolean required = template.getAttrValue(attrName, "required").equals("yes");
+					if (required || (!attrValue.equals("") && !attrValue.equals(defaultValue))) {
 						root.setAttribute(attrName, attrValue);
 					}
 				}
