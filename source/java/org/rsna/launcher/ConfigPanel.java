@@ -473,7 +473,7 @@ public class ConfigPanel extends BasePanel {
 			root = doc.getDocumentElement();
 			tree = new XMLTree(root);
 			tree.getSelectionModel().addTreeSelectionListener(this);
-			for (Component c : getComponents()) remove(c);
+			removeAll();
 			this.add(tree);
 			tree.expandAll();
 			dragSource = new TreeDragSource(tree, DnDConstants.ACTION_COPY_OR_MOVE);
@@ -538,7 +538,7 @@ public class ConfigPanel extends BasePanel {
 			if ((object != null) && (object instanceof XMLUserObject)) {
 				currentNode = treeNode;
 				XMLUserObject userObject = (XMLUserObject)object;
-				for (Component c : getComponents()) remove(c);
+				removeAll();
 				if (viewAsXML) displayXML(userObject);
 				else displayForm(userObject);
 				jspData.setViewportView(this);
@@ -918,14 +918,19 @@ public class ConfigPanel extends BasePanel {
 			while (child != null) {
 				if (child instanceof Element) {
 					Element cel = (Element)child;
-					XMLUserObject xmlUserObject = new XMLUserObject(cel);
-					DefaultMutableTreeNode cnode = new DefaultMutableTreeNode(xmlUserObject);
-					xmlUserObject.setTreeNode(cnode);
-					tnode.add(cnode);
+					DefaultMutableTreeNode cnode = addChild(tnode, cel);
 					addChildren(cnode, cel);
 				}
 				child = child.getNextSibling();
 			}
+		}
+
+		public DefaultMutableTreeNode addChild(DefaultMutableTreeNode tnode, Element child) {
+			XMLUserObject xmlUserObject = new XMLUserObject(child);
+			DefaultMutableTreeNode cnode = new DefaultMutableTreeNode(xmlUserObject);
+			xmlUserObject.setTreeNode(cnode);
+			tnode.add(cnode);
+			return cnode;
 		}
 
 		public Element getXML() {

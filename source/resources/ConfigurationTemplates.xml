@@ -19,8 +19,8 @@
 
 		<Plugin>
 			<attr name="name" required="yes" default="AuditLog"/>
-			<attr name="id" required="yes" default="AuditLog"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdplugins.AuditLog" editable="no"/>
+			<attr name="id" required="yes" default="AuditLog"/>
 			<attr name="root" default="roots/AuditLog" required="yes"/>
 		</Plugin>
 
@@ -149,14 +149,14 @@
 
 		<Processor>
 			<attr name="name" required="yes" default="ObjectCache"/>
-			<attr name="id" required="yes" default="ObjectCache"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
-			<attr name="root" default="roots/ObjectCache" required="yes"/>
+			<attr name="id" required="yes" default="ObjectCache"/>
+			<attr name="root" required="yes" default="roots/ObjectCache"/>
 		</Processor>
 
 		<Processor>
 			<attr name="name" required="yes" default="MemoryMonitor"/>
-			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.MemoryMonitor" editable="no"/>
 			<attr name="interval" required="no" default="1">
 				<helptext>Interval (in objects received) between actions taken by this stage</helptext>
 			</attr>
@@ -292,8 +292,8 @@
 
 		<StorageService>
 			<attr name="name" required="yes" default="FileStorageService"/>
-			<attr name="id" required="yes" default="FileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FileStorageService" editable="no"/>
+			<attr name="id" required="yes" default="FileStorageService"/>
 			<attr name="root" required="yes" default="roots/FileStorageService"/>
 			<attr name="type" required="no" default="none" options="year|month|week|date|none">
 				<helptext>Structure of the storage tree</helptext>
@@ -301,9 +301,7 @@
 			<attr name="timeDepth" required="no" default="0">
 				<helptext>Length of time in days before studies are automatically purged (0 = forever)</helptext>
 			</attr>
-			<attr name="acceptDuplicateUIDs" required="no" default="yes" options="yes|no">
-				<helptext>Yes: keep all objects; no: overwrite objects with the same SOPInstanceUID</helptext>
-			</attr>
+			<attr name="acceptDuplicateUIDs" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -345,8 +343,8 @@
 
 		<StorageService>
 			<attr name="name" required="yes" default="BasicFileStorageService"/>
-			<attr name="id" required="yes" default="ObjectCache"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.BasicFileStorageService" editable="no"/>
+			<attr name="id" required="yes" default="ObjectCache"/>
 			<attr name="root" required="yes" default="roots/BasicFileStorageService"/>
 			<attr name="nLevels" required="yes" default="3">
 				<helptext>Depth of the storage tree</helptext>
@@ -392,6 +390,30 @@
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="no" default="quarantines/BasicFileStorageService"/>
 		</StorageService>
+
+		<ExportService>
+			<attr name="name" required="yes" default="DicomExportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomExportService" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomExportService"/>
+			<attr name="url" required="yes" default="">
+				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip.port)</helptext>
+			</attr>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="forceClose" required="no" default="no" options="yes|no">
+				<helptext>Close the DICOM association after each object transmission</helptext>
+			</attr>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="callingAETTag" required="no" default="">
+				<helptext>DICOM tag from which to obtain the Calling AE Title (ggggeeee, optional)</helptext>
+			</attr>
+			<attr name="calledAETTag" required="no" default="">
+				<helptext>DICOM tag from which to obtain the Called AE Title (ggggeeee, optional)</helptext>
+			</attr>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="no" default="quarantines/DicomExportService"/>
+		</ExportService>
 
 		<ExportService>
 			<attr name="name" required="yes" default="HttpExportService"/>
@@ -480,9 +502,7 @@
 			<attr name="root" required="yes" default="roots/DatabaseExportService"/>
 			<attr name="adapterClass" required="yes" default=""/>
 			<attr name="poolSize" required="no" default="1"/>
-			<attr name="fileStorageServiceID" required="no" default="">
-				<helptext>The ID of the StorageService that manages objects referenced by the data stored in the database</helptext>
-			</attr>
+			<attr name="fileStorageServiceID" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -503,50 +523,51 @@
 	</Components>
 
 	<DefaultHelpText>
-		<requireAuthentication>Require authentication for connections</requireAuthentication>
-		<proxyIPAddress>The IP address of the proxy server (or blank if no proxy server)</proxyIPAddress>
-		<proxyPort>The port of the proxy server (or blank if no proxy server)</proxyPort>
-		<proxyUsername>The username for proxy authentication (or blank if proxy authentication is not used)</proxyUsername>
-		<proxyPassword>The password for proxy authentication (or blank if proxy authentication is not used)</proxyPassword>
-		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
-		<name>Name for display on web pages (not required to be unique)</name>
-		<root>Storage directory for use by the stage for data (must be unique)</root>
-		<port>Port on which the stage listens for connections</port>
-		<ssl>Use SSL for communication</ssl>
 		<acceptDicomObjects>Accept received DicomObjects</acceptDicomObjects>
+		<acceptDuplicateUIDs>Yes: keep all objects; no: overwrite objects with the same SOPInstanceUID</acceptDuplicateUIDs>
+		<acceptFileObjects>Accept received FileObjects</acceptFileObjects>
 		<acceptXmlObjects>Accept received XmlObjects</acceptXmlObjects>
 		<acceptZipObjects>Accept received ZipObjects</acceptZipObjects>
-		<acceptFileObjects>Accept received FileObjects</acceptFileObjects>
-		<logConnections>Log IP addresses of received connections</logConnections>
-		<quarantine>Storage directory for quarantined objects</quarantine>
-		<minAge>The minimum age of objects in milliseconds before import</minAge>
+		<adapterClass>The fully qualified name of the DatabaseAdapter class that provides the interface to the external database</adapterClass>
+		<auditLogID>The ID of an AuditLog plugin in which to record transmissions</auditLogID>
+		<auditLogTags>List of DICOM tags to log, separated by semicolons (tag1; tag2; etc.)</auditLogTags>
+		<cacheID>The id attribute of an ObjectCache stage from which to obtain PHI for the hierarchy</cacheID>
+		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
+		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
+		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
+		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<fsName>File System name to insert in DicomObjects (optional)</fsName>
 		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee)</fsNameTag>
-		<treeRoot>The root directory of the archive</treeRoot>
-		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
-		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
-		<timeTag>DICOM tag in which to store the time of the received connection (ggggeeee, optional)</timeTag>
+		<id>This field is required only when the stage is to be referenced by another stage. If present, it must be unique.</id>
+		<interval>Sleep time in milliseconds between polls of the export queue</interval>
 		<logConnections>Log IP addresses of received connections</logConnections>
 		<logDuplicates>Make a log entry whenever a duplicate SOPInstanceUID is stored</logDuplicates>
-		<suppressDuplicates>Ignore objects with the same SOPInstanceUID as one of the last 10 objects received</suppressDuplicates>
-		<script>The filter script file determining whether objects are to be quarantined</script>
-		<quality>The quality parameter to use for lossy compression (1-100), ignored for lossless compression</quality>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
-		<id>
-			This field is required only when the stage is to be referenced
-			by another stage. If present, it must be unique.
-		</id>
+		<minAge>The minimum age of objects in milliseconds before import</minAge>
+		<name>Name for display on web pages (not required to be unique)</name>
+		<poolSize>The number of active DatabaseAdapters to run concurrently</poolSize>
+		<port>Port on which the stage listens for connections</port>
+		<proxyIPAddress>The IP address of the proxy server (or blank if no proxy server)</proxyIPAddress>
+		<proxyPassword>The password for proxy authentication (or blank if proxy authentication is not used)</proxyPassword>
+		<proxyPort>The port of the proxy server (or blank if no proxy server)</proxyPort>
+		<proxyUsername>The username for proxy authentication (or blank if proxy authentication is not used)</proxyUsername>
+		<quality>The quality parameter to use for lossy compression (1-100), ignored for lossless compression</quality>
+		<quarantine>Storage directory for quarantined objects</quarantine>
+		<requireAuthentication>Require authentication for connections</requireAuthentication>
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>
+		<root>Storage directory for use by the stage for data (must be unique)</root>
+		<script>The filter script file determining whether objects are to be quarantined</script>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
+		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>
-		<cacheID>The id attribute of an ObjectCache stage from which to obtain PHI for the hierarchy</cacheID>
-		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
+		<suppressDuplicates>Ignore objects with the same SOPInstanceUID as one of the last 10 objects received</suppressDuplicates>
+		<throttle>Miinimum time in milliseconds between object transmissions</throttle>
+		<timeTag>DICOM tag in which to store the time of the received connection (ggggeeee, optional)</timeTag>
+		<treeRoot>The root directory of the archive</treeRoot>
+		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
 		<xmlScript>The script file determining whether XmlObjects are to be accepted for transmission</xmlScript>
 		<zipScript>The script file determining whether ZipObjects are to be accepted for transmission</zipScript>
-		<interval>Sleep time in milliseconds between polls of the export queue</interval>
-		<adapterClass>The fully qualified name of the DatabaseAdapter class that provides the interface to the external database</adapterClass>
-		<poolSize>The number of active DatabaseAdapters to run concurrently</poolSize>
 	</DefaultHelpText>
 
 </TemplateDefinitions>
