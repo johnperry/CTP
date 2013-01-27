@@ -306,11 +306,13 @@ public class ConfigPanel extends BasePanel {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
 				if (checkConfig(config)) {
+					/*
 					String xml = Util.toPrettyString(config);
 					File configFile = new File("config.xml");
 					backupTarget(configFile);
 					try { Util.setText(configFile, xml); }
 					catch (Exception ignore) { }
+					*/
 				}
 			}
 		}

@@ -35,6 +35,7 @@ public class DicomExportService extends AbstractExportService {
 	 */
 	public DicomExportService(Element element) throws Exception {
 		super(element);
+		acceptDicomObjects = true;
 		acceptXmlObjects = false;
 		acceptZipObjects = false;
 		acceptFileObjects = false;

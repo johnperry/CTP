@@ -7,8 +7,8 @@ function setSizes() {
 	var edisPos = findObject(edis);
 
 	var totalH = eselPos.h + (bodyPos.h - edisPos.y) - 10;
-	var eselH = totalH / 2;
-	var edisH = totalH / 2;
+	var eselH = totalH / 4;
+	var edisH = totalH - eselH;
 	if (eselH < 60) eselH = 60;
 	if (edisH < 60) edisH = 60;
 
