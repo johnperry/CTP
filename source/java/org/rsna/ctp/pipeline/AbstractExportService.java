@@ -8,13 +8,18 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
-import org.rsna.ctp.objects.FileObject;
+import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
+import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.objects.ZipObject;
+import org.rsna.ctp.stdplugins.AuditLog;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -40,6 +45,10 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	Exporter exporter = null;
 	boolean enableExport = true;
 
+	AuditLog auditLog = null;
+	String auditLogID = null;
+	LinkedList<Integer> auditLogTags = null;
+
 	/**
 	 * Construct an ExportService.
 	 * @param element the XML element from the configuration file
@@ -56,13 +65,30 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 			enableExport = !element.getAttribute("enableExport").trim().equals("no");
 			exporter = new Exporter();
 		}
+
+		//Get the AuditLog parameters
+		auditLogID = element.getAttribute("auditLogID").trim();
+		String[] alts = element.getAttribute("auditLogTags").split(";");
+		auditLogTags = new LinkedList<Integer>();
+		for (String alt :alts) {
+			alt = alt.trim();
+			if (!alt.equals("")) {
+				int tag = DicomObject.getElementTag(alt);
+				if (tag != 0) auditLogTags.add(new Integer(tag));
+				else logger.warn(name+": Unknown DICOM element tag: \""+alt+"\"");
+			}
+		}
 	}
 
 	/**
 	 * Start the export thread. This method is called by the subclass
 	 * that does the actual exporting after it has had time to set up.
 	 */
-	public void startExportThread() {
+	public void start() {
+
+		//Get the AuditLog plugin, if there is one.
+		auditLog = (AuditLog)Configuration.getInstance().getRegisteredPlugin(auditLogID);
+
 		if (enableExport && (exporter != null)) exporter.start();
 	}
 
@@ -171,4 +197,69 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 		}
 	}
 
+	/**
+	 * Make an entry in the AuditLog for a successfully transmitted DicomObject.
+	 * @param fileObject the object that was transmitted.
+	 * @param status the result of the transmission
+	 * @param className the name of the sending class for inclusion in the log. This
+	 * should be the classname of the sending class (<code>this.getClass().getName()</code>).
+	 * If this parameter is null or empty, the name of this class is used. If non-empty,
+	 * this parameter must be a valid XML element name.
+	 * @param stageName the name of the sending stage (<code>this.getClass().getName()</code>).
+	 * If this parameter is null or empty, the name of the sending stage is not logged.
+	 * @param destination the URL to which the object was sent.
+	 */
+	public void makeAuditLogEntry(
+						FileObject fileObject,
+						Status status,
+						String className,
+						String stageName,
+						String destination) {
+		if ((fileObject instanceof DicomObject) && status.equals(Status.OK) && (auditLog != null)) {
+			DicomObject dicomObject = (DicomObject)fileObject;
+			String patientID = dicomObject.getPatientID();
+			String studyInstanceUID = dicomObject.getStudyInstanceUID();
+			String sopInstanceUID = dicomObject.getSOPInstanceUID();
+			String sopClassName = dicomObject.getSOPClassName();
+			String entry;
+			try {
+				Document doc = XmlUtil.getDocument();
+				if ((className == null) || className.trim().equals("") || className.contains(" ")) {
+					className = "AbstractExportService";
+				}
+				Element root = doc.createElement(className);
+				if ((stageName != null) && !stageName.trim().equals("")) {
+					root.setAttribute("StageName", stageName);
+				}
+				root.setAttribute("Destination", destination);
+				root.setAttribute("SOPClassName", sopClassName);
+
+				for (Integer tag : auditLogTags) {
+					int tagint = tag.intValue();
+					String elementName = DicomObject.getElementName(tagint);
+					if (elementName != null) {
+						elementName = elementName.replaceAll("\\s", "");
+					}
+					else {
+						int g = (tagint >> 16) & 0xFFFF;
+						int e = tagint &0xFFFF;
+						elementName = String.format("g%04Xe%04X", g, e);
+					}
+					logger.debug("About to call setAttribute");
+					logger.debug("name: "+elementName);
+					logger.debug("value: \""+dicomObject.getElementValue(tagint, "")+"\"\n");
+					root.setAttribute(elementName, dicomObject.getElementValue(tagint, ""));
+				}
+				entry = XmlUtil.toPrettyString(root);
+				logger.debug("AuditLog entry:\n"+entry);
+			}
+			catch (Exception ex) {
+				logger.warn("Unable to construct the AuditLog entry", ex);
+				entry = "<"+className+"/>";
+			}
+
+			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
+			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
+		}
+	}
 }

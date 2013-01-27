@@ -61,13 +61,6 @@ public class AimExportService extends AbstractExportService {
 	}
 
 	/**
-	 * Start the export thread.
-	 */
-	public void start() {
-		startExportThread();
-	}
-
-	/**
 	 * Export a file.
 	 * @param fileToExport the file to export.
 	 * @return the status of the attempt to export the file.

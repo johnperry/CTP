@@ -34,6 +34,7 @@ public class FtpExportService extends AbstractExportService {
 	static final Logger logger = Logger.getLogger(FtpExportService.class);
 
 	FtpSender ftpSender;
+	URL url;
 
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
@@ -45,7 +46,7 @@ public class FtpExportService extends AbstractExportService {
 		String password = element.getAttribute("password").trim();
 
 		//Get the destination parameters
-		URL url = new URL(element.getAttribute("url").trim());
+		url = new URL(element.getAttribute("url").trim());
 		String protocol = url.getProtocol().toLowerCase();
 		if (!protocol.equals("ftp")) {
 			logger.error(name+": Illegal protocol ("+protocol+")");
@@ -61,13 +62,6 @@ public class FtpExportService extends AbstractExportService {
 	}
 
 	/**
-	 * Start the export thread.
-	 */
-	public void start() {
-		startExportThread();
-	}
-
-	/**
 	 * Export a file.
 	 * @param fileToExport the file to export.
 	 * @return the status of the attempt to export the file.
@@ -80,6 +74,7 @@ public class FtpExportService extends AbstractExportService {
 			dirName = (dirName==null) ? "" : dirName.trim();
 			if (dirName.equals("")) dirName = "bullpen";
 			ftpSender.send(fileToExport, ext, dirName);
+			makeAuditLogEntry(fileObject, Status.OK, "FtpExportService", getName(), url.toString());
 			return Status.OK;
 		}
 		catch (Exception ex) {

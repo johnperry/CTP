@@ -438,6 +438,8 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
 		</ExportService>
@@ -479,6 +481,8 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
 		</ExportService>

@@ -10,15 +10,12 @@ package org.rsna.ctp.stdstages;
 import java.io.*;
 import java.util.LinkedList;
 import org.apache.log4j.Logger;
-import org.rsna.ctp.Configuration;
 import org.rsna.ctp.pipeline.AbstractExportService;
 import org.rsna.ctp.pipeline.Status;
-import org.rsna.ctp.stdplugins.AuditLog;
 import org.rsna.ctp.stdstages.dicom.DicomStorageSCU;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.pipeline.Status;
 import org.rsna.util.StringUtil;
-import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -30,9 +27,6 @@ public class DicomExportService extends AbstractExportService {
 	static final Logger logger = Logger.getLogger(DicomExportService.class);
 
 	DicomStorageSCU dicomSender = null;
-	AuditLog auditLog = null;
-	String auditLogID = null;
-	LinkedList<Integer> auditLogTags = null;
 	String url = "";
 
 	/**
@@ -60,31 +54,6 @@ public class DicomExportService extends AbstractExportService {
 		//Get the DicomSender
 		dicomSender = new DicomStorageSCU(url, forceClose, calledAETTag, callingAETTag);
 
-		//Get the AuditLog parameters
-		auditLogID = element.getAttribute("auditLogID").trim();
-		String[] alts = element.getAttribute("auditLogTags").split(";");
-		auditLogTags = new LinkedList<Integer>();
-		for (String alt :alts) {
-			alt = alt.trim();
-			if (!alt.equals("")) {
-				int tag = DicomObject.getElementTag(alt);
-				if (tag != 0) auditLogTags.add(new Integer(tag));
-				else logger.warn(name+": Unknown DICOM element tag: \""+alt+"\"");
-			}
-		}
-	}
-
-	/**
-	 * Start the pipeline stage. This method starts the export thread.
-	 * It is called by the Pipeline after all the stages have been constructed.
-	 */
-	public synchronized void start() {
-		//Get the AuditLog plugin, if there is one.
-		auditLog = (AuditLog)Configuration.getInstance().getRegisteredPlugin(auditLogID);
-
-		//Now that everything is set up, start the thread that
-		//will make calls to the export method.
-		startExportThread();
 	}
 
 	/**
@@ -105,45 +74,8 @@ public class DicomExportService extends AbstractExportService {
 		dicomObject.close();
 
 		//Make an AuditLog entry if required
-		if (status.equals(Status.OK) && (auditLog != null)) {
-			String patientID = dicomObject.getPatientID();
-			String studyInstanceUID = dicomObject.getStudyInstanceUID();
-			String sopInstanceUID = dicomObject.getSOPInstanceUID();
-			String sopClassName = dicomObject.getSOPClassName();
-			String entry;
-			try {
-				Document doc = XmlUtil.getDocument();
-				Element root = doc.createElement("DicomExportService");
-				root.setAttribute("URL", url);
-				root.setAttribute("SOPClassName", sopClassName);
+		makeAuditLogEntry(dicomObject, status, "DicomExportService", getName(), url);
 
-				for (Integer tag : auditLogTags) {
-					int tagint = tag.intValue();
-					String elementName = DicomObject.getElementName(tagint);
-					if (elementName != null) {
-						elementName = elementName.replaceAll("\\s", "");
-					}
-					else {
-						int g = (tagint >> 16) & 0xFFFF;
-						int e = tagint &0xFFFF;
-						elementName = String.format("g%04Xe%04X", g, e);
-					}
-					logger.debug("About to call setAttribute");
-					logger.debug("name: "+elementName);
-					logger.debug("value: \""+dicomObject.getElementValue(tagint, "")+"\"\n");
-					root.setAttribute(elementName, dicomObject.getElementValue(tagint, ""));
-				}
-				entry = XmlUtil.toPrettyString(root);
-				logger.debug("AuditLog entry:\n"+entry);
-			}
-			catch (Exception ex) {
-				logger.warn("Unable to construct the AuditLog entry", ex);
-				entry = "<DicomExportService/>";
-			}
-
-			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
-			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
-		}
 		return status;
 	}
 

@@ -82,13 +82,6 @@ public class HttpExportService extends AbstractExportService {
 	}
 
 	/**
-	 * Start the export thread.
-	 */
-	public void start() {
-		startExportThread();
-	}
-
-	/**
 	 * Export a file.
 	 * @param fileToExport the file to export.
 	 * @return the status of the attempt to export the file.
@@ -106,10 +99,10 @@ public class HttpExportService extends AbstractExportService {
 			conn.connect();
 			svros = conn.getOutputStream();
 
+			FileObject fileObject = FileObject.getInstance( fileToExport );
 			if (logDuplicates) {
 				//*********************************************************************************************
 				//See if this object has the same UID as a recent one.
-				FileObject fileObject = FileObject.getInstance( fileToExport );
 				String currentUID = fileObject.getUID();
 				if (recentUIDs.contains(currentUID)) {
 					logger.warn("----------------------------------------------------------------");
@@ -161,7 +154,10 @@ public class HttpExportService extends AbstractExportService {
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
 			String result = FileUtil.getText( conn.getInputStream() );
-			if (result.equals("OK")) return Status.OK;
+			if (result.equals("OK")) {
+				makeAuditLogEntry(fileObject, Status.OK, "HttpExortService", getName(), url.toString());
+				return Status.OK;
+			}
 			else if (result.equals("")) return Status.RETRY;
 			else return Status.FAIL;
 		}
