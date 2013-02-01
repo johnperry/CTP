@@ -425,12 +425,8 @@
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
-			<attr name="username" required="no" default="">
-				<helptext>The username for authentication, if required by the destination system</helptext>
-			</attr>
-			<attr name="password" required="no" default="">
-				<helptext>The password for authentication, if required by the destination system</helptext>
-			</attr>
+			<attr name="username" required="no" default=""/>
+			<attr name="password" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -468,12 +464,8 @@
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination FTP site (ftp://ip:port/path)</helptext>
 			</attr>
-			<attr name="username" required="yes" default="username">
-				<helptext>The username for authentication, if required by the destination system</helptext>
-			</attr>
-			<attr name="password" required="yes" default="password">
-				<helptext>The password for authentication, if required by the destination system</helptext>
-			</attr>
+			<attr name="username" required="yes" default="username"/>
+			<attr name="password" required="yes" default="password"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -492,6 +484,8 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.AimExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/AimExportService"/>
 			<attr name="url" required="yes" default=""/>
+			<attr name="username" required="yes" default=""/>
+			<attr name="password" required="yes" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="logResponses" required="yes" default="no" options="all|failed|none">
 				<helptext>Log the contents of the responses from the AIM data service</helptext>
@@ -549,6 +543,7 @@
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
+		<password>The password for authentication, if required by the destination system</password>
 		<poolSize>The number of active DatabaseAdapters to run concurrently</poolSize>
 		<port>Port on which the stage listens for connections</port>
 		<proxyIPAddress>The IP address of the proxy server (or blank if no proxy server)</proxyIPAddress>
@@ -569,6 +564,7 @@
 		<throttle>Miinimum time in milliseconds between object transmissions</throttle>
 		<timeTag>DICOM tag in which to store the time of the received connection (ggggeeee, optional)</timeTag>
 		<treeRoot>The root directory of the archive</treeRoot>
+		<username>The username for authentication, if required by the destination system (or blank if authentication is not used)</username>
 		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
 		<xmlScript>The script file determining whether XmlObjects are to be accepted for transmission</xmlScript>
 		<zipScript>The script file determining whether ZipObjects are to be accepted for transmission</zipScript>

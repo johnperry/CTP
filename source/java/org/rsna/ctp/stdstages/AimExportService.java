@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.pipeline.AbstractExportService;
 import org.rsna.ctp.pipeline.Status;
+import org.rsna.util.Base64;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.XmlUtil;
@@ -33,6 +34,11 @@ public class AimExportService extends AbstractExportService {
 	boolean logAll = false;
 	boolean logFailed = false;
 
+	String username;
+	String password;
+	boolean authenticate;
+	String authHeader = "";
+
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
 	 * @param element the configuration element.
@@ -46,6 +52,14 @@ public class AimExportService extends AbstractExportService {
 		if (!protocol.startsWith("https") && !protocol.startsWith("http")) {
 			logger.error(name+": Illegal protocol ("+protocol+")");
 			throw new Exception();
+		}
+
+		//Get the credentials, if any
+		username = element.getAttribute("username").trim();
+		password = element.getAttribute("password").trim();
+		authenticate = !username.equals("");
+		if (authenticate) {
+			authHeader = "Basic " + Base64.encodeToString((username + ":" + password).getBytes());
 		}
 
 		//See if we are to log the responses from the AIM Data Service
@@ -83,17 +97,13 @@ public class AimExportService extends AbstractExportService {
 			return Status.FAIL;
 		}
 
-		//Get the text and URL encode it.
+		//Get the text.
 		String text = XmlUtil.toString( doc.getDocumentElement() );
-		try { text = URLEncoder.encode( text, "UTF-8" ); }
-		catch (Exception shouldNeverHappen) { return Status.FAIL; }
-		text = "aimDoc=" + text;
 
 		//Make the connection and send the text.
 		try {
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
-			conn.setRequestProperty("Content-Type", "application/x-www-url-encoded;charset=UTF-8");
 			conn.connect();
 
 			//Get a writer for UTF-8
