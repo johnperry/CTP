@@ -104,6 +104,7 @@ public class AimExportService extends AbstractExportService {
 		try {
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
+			conn.setRequestProperty("Content-Type", "text/xml;charset=UTF-8");
 			conn.connect();
 
 			//Get a writer for UTF-8
@@ -129,7 +130,7 @@ public class AimExportService extends AbstractExportService {
 		catch (Exception e) {
 			//This indicates a network failure; log it and set up for a retry.
 			logger.warn(name+": export failed: " + e.getMessage());
-			logger.debug(e);
+			logger.debug("Stack trace:", e);
 		}
 		return Status.RETRY;
 	}
