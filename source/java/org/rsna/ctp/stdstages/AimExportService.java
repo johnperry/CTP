@@ -118,13 +118,23 @@ public class AimExportService extends AbstractExportService {
 
 			//Get the response code
 			int responseCode = conn.getResponseCode();
+			boolean ok = (responseCode == 200);
 
 			//Get the response.
-			String response = FileUtil.getText( conn.getInputStream() );
+			String response = "";
+			try { response = FileUtil.getText( ok ? conn.getInputStream() : conn.getErrorStream() ); }
+			catch (Exception is) {
+				response = "Unable to obtain response text";
+				logger.debug(response, is);
+			}
 
-			//Check the response, make any necessary log entries, and return the appropriate Status instance.
-			boolean ok = response.toLowerCase().contains("document submitted");
-			if (logAll || (!ok && logFailed)) logger.info(name+": export response code: "+responseCode+"\n"+response);
+			//Make any necessary log entries.
+			if (logAll || (!ok && logFailed)) {
+				logger.info(name+": export response code: "+responseCode
+									+(response.equals("")?"":"\n"+response));
+			}
+
+			//Return the appropriate Status instance
 			return (ok ? Status.OK : Status.FAIL);
 		}
 		catch (Exception e) {
