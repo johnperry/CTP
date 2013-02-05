@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # chkconfig:		2345 75 15
 # description: 		ctp-service
 ### BEGIN INIT INFO
@@ -27,11 +28,12 @@
 ###################################################
 
 clear
+
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-JAVA_HOME="/usr/java/default"
-JAVA_BIN="/usr/java/default/bin"
+JAVA_HOME="/usr/lib/jvm/java-openjdk"
+JAVA_BIN="/usr/bin"
 CLASSPATH=".:/usr/java/default/jre/lib:/usr/java/default/lib:/usr/java/default/lib/tools.jar"
 CTP_HOME="/opt/CTP"
 
@@ -46,16 +48,15 @@ add_to_path() {
   #echo $PATH
 
   if [[ "$PATH" =~ (^|:)"$1"(:|$) ]]; then
-	#echo "PATH does contain test string, returning"
+	#echo "PATH contains test string, returning"
 	return 0
   else
-	#echo "PATH does not containt test string, adding"
+	#echo "PATH does not contain test string, adding"
 	export PATH=$PATH:$1
 	#echo "New path"
 	#echo $PATH
   fi
 }
-
 
 start() {
 ################################
@@ -63,20 +64,23 @@ start() {
 #
 #################################
 	echo "in start"
-	if [ -f $CTP_HOME/pid ]; then
+	ret=$(ps aux |grep libraries)
+	if [[ "$ret" =~ "java" ]]; then
 		echo "CTP already running, stop first"
 		return 0
 	fi
-	#eval "( java -Dinstall4j.jvmDir="$JAVA_HOME" -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar) &"
+	#eval "( java -Dinstall4j.jvmDir="$JAVA_HOME" -classpath "$CLASSPATH" -jar $CTP_HOME/	Runner.jar) &"
 	eval "( java  -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar) &"
-	pid=$!
-	echo $pid>$CTP_HOME/pid
+	return 0
+	# this PID is not useful becuase Runner.jar creates a sub-process
+	#pid=$!
+	#echo $pid>$CTP_HOME/pid
 }
 
 stop() {
 ###################################
 # Purpose: kill the PID of the CTP job
-#	Unfortunatly, the pid recorded in
+#	Unfortunetly, the pid recorded in
 #	in start() was the parent process
 #	and not the real one that Runner
 #	launched
@@ -85,19 +89,18 @@ stop() {
 #
 ##################################
 	echo "in stop"
-	if [ ! -f $CTP_HOME/pid ]; then
+	ret=$(ps aux |grep libraries)
+	if [[ "$ret" =~ "java" ]]; then
+		echo "CTP is running"
+		array=($ret)
+		#echo $ret
+		#echo ${array[1]}
+		result=$(kill ${array[1]})
+		echo $result
+		exit
+	else
 		echo "CTP is not running"
-		return 0
-	fi 
-
-	text=$(ps aux |grep libraries )
-	array=($text)
-	#echo $text
-	#echo ${array[1]}
-	
-	result=$(kill ${array[1]})
-	echo $result
-	rm $CTP_HOME/pid
+	fi
 }
 
 status() {
@@ -115,16 +118,14 @@ status() {
 	fi
 }
 
-
-cd $CTP_HOME
-add_to_path $JAVA_BIN
-
 ############################
 # Main
 # Purpose: execute cmmd line args
 # 
 # $1 command line arg for Case
 #############################
+cd $CTP_HOME
+add_to_path $JAVA_BIN
 
 case $1 in
 	start)
@@ -137,7 +138,6 @@ case $1 in
 		stop
 		start
 	;;
-
 	status)
 		status
 	;;
@@ -148,4 +148,3 @@ case $1 in
 esac
 
 exit
-
