@@ -618,10 +618,14 @@ public class ConfigPanel extends BasePanel {
 		}
 
 		public DefaultMutableTreeNode insert(Element element) {
+			DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+			return insert(element, targetNode);
+		}
+
+		public DefaultMutableTreeNode insert(Element element, DefaultMutableTreeNode targetNode) {
 			DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 			XMLUserObject userObject = new XMLUserObject(element);
 
-			DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
 			XMLUserObject targetObject = null;
 			DefaultMutableTreeNode parentNode = null;
 			DefaultMutableTreeNode cnode = null;
@@ -705,7 +709,12 @@ public class ConfigPanel extends BasePanel {
 			}
 		}
 
-		private void reload(DefaultMutableTreeNode cnode, DefaultTreeModel model) {
+		public void reload(DefaultMutableTreeNode cnode) {
+			DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+			reload(cnode, model);
+		}
+
+		public void reload(DefaultMutableTreeNode cnode, DefaultTreeModel model) {
 			if (cnode != null) {
 				model.reload();
 				tree.expandAll();
@@ -836,6 +845,7 @@ public class ConfigPanel extends BasePanel {
 			}
 			this.template = null;
 			if (isServer) template = server;
+			else if (isPlugin) template = templateTable.get(className);
 			else if (isPipeline) template = pipeline;
 			else if (isStage) template = templateTable.get(className);
 			else if (isChild) {
@@ -1364,29 +1374,29 @@ public class ConfigPanel extends BasePanel {
 						dtde.acceptDrop(dtde.getDropAction());
 
 						XMLUserObject sourceUO = (XMLUserObject)tr.getTransferData(flavors[i]);
-						DefaultMutableTreeNode sourceNode = new DefaultMutableTreeNode(sourceUO);
 
-						DefaultTreeModel model = (DefaultTreeModel) targetTree.getModel();
+						//Make an element to insert, with all the children
+						Document doc = Util.getDocument();
+						Element root = doc.createElement( sourceUO.isStage() ? "Pipeline":"Configuration"  );
+						doc.appendChild(root);
+						Element sourceEl = sourceUO.getXML();
+						sourceEl = (Element)doc.importNode(sourceEl, true);
+						root.appendChild(sourceEl);
 
-						int index = 0;
-						if (sourceUO.isStage && targetUO.isPipeline) {
-							index = model.getChildCount(targetNode);
-							model.insertNodeInto(sourceNode, targetNode, index);
+						//Insert the node
+						DefaultMutableTreeNode cnode = treePane.insert(sourceEl, targetNode);
+
+						//Insert the children
+						Node child = sourceEl.getFirstChild();
+						while (child != null) {
+							if (child instanceof Element) treePane.insert( (Element)child, cnode);
+							child = child.getNextSibling();
 						}
-						else if (sourceUO.isStage && targetUO.isStage) {
-							DefaultMutableTreeNode targetParentNode = (DefaultMutableTreeNode)targetNode.getParent();
-							index = targetParentNode.getIndex(targetNode);
-							model.insertNodeInto(sourceNode, targetParentNode, index);
-						}
-						else if (sourceUO.isPlugin && targetUO.isPlugin) {
-							DefaultMutableTreeNode targetParentNode = (DefaultMutableTreeNode)targetNode.getParent();
-							index = targetParentNode.getIndex(targetNode);
-							model.insertNodeInto(sourceNode, targetParentNode, index);
-						}
-						else {
-							dtde.rejectDrop();
-							return;
-						}
+
+						//Select the node
+						treePane.reload(cnode);
+
+						//Signal to remove the old node
 						dtde.dropComplete(true);
 						return;
 					}
@@ -1401,6 +1411,7 @@ public class ConfigPanel extends BasePanel {
 	}
 
 	public static DataFlavor XML_FLAVOR = new DataFlavor(XMLUserObject.class, "XML_FLAVOR");
+
 	class TransferableObject implements Transferable {
 
 		DataFlavor flavors[] = { XML_FLAVOR };
