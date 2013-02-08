@@ -33,7 +33,7 @@
 		</Plugin>
 
 		<Pipeline>
-			<attr name="name" required="yes" default="HttpImportService"/>
+			<attr name="name" required="yes" default="Pipeline"/>
 		</Pipeline>
 
 		<ImportService>
@@ -54,13 +54,13 @@
 			<attr name="quarantine" required="no" default="quarantines/HttpImportService"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
-				<attr name="ip" required="yes" default="">
+				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to allow connections</helptext>
 				</attr>
 			</child>
 
 			<child name="reject" required="no" allowMultiples="yes">
-				<attr name="ip" required="yes" default="">
+				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to reject connections</helptext>
 				</attr>
 			</child>
@@ -122,25 +122,25 @@
 			<attr name="quarantine" required="no" default="quarantines/DicomImportService"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
-				<attr name="ip" required="yes" default="">
+				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to allow connections</helptext>
 				</attr>
-				<attr name="calledAET" required="yes" default="">
+				<attr name="calledAET" required="no" default="">
 					<helptext>Called AE Title for which to allow connections</helptext>
 				</attr>
-				<attr name="callingAET" required="yes" default="">
+				<attr name="callingAET" required="no" default="">
 					<helptext>Calling AE Title from which to allow connections</helptext>
 				</attr>
 			</child>
 
 			<child name="reject" required="no" allowMultiples="yes">
-				<attr name="ip" required="yes" default="">
+				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to reject connections</helptext>
 				</attr>
-				<attr name="calledAET" required="yes" default="">
+				<attr name="calledAET" required="no" default="">
 					<helptext>Called AE Title for which to reject connections</helptext>
 				</attr>
-				<attr name="callingAET" required="yes" default="">
+				<attr name="callingAET" required="no" default="">
 					<helptext>Calling AE Title from which to reject connections</helptext>
 				</attr>
 			</child>
@@ -152,6 +152,17 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
 			<attr name="id" required="yes" default="ObjectCache"/>
 			<attr name="root" required="yes" default="roots/ObjectCache"/>
+		</Processor>
+
+		<Processor>
+			<attr name="name" required="yes" default="ObjectLogger"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectLogger" editable="no"/>
+			<attr name="interval" required="yes" default="1">
+				<helptext>Interval (in objects received) between actions taken by this stage</helptext>
+			</attr>
+			<attr name="verbose" required="yes" default="yes" options="yes|no">
+				<helptext>Increase the amount of information logged</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>
@@ -569,6 +580,94 @@
 		<xmlScript>The script file determining whether XmlObjects are to be accepted for transmission</xmlScript>
 		<zipScript>The script file determining whether ZipObjects are to be accepted for transmission</zipScript>
 	</DefaultHelpText>
+
+	<StandardPipelines>
+
+		<Pipeline name="CTP-TEST HTTP Server Pipeline">
+
+		<HttpImportService
+			name="HTTP Server Import"
+			class="org.rsna.ctp.stdstages.HttpImportService"
+			root="test/roots/httpserver/https-import"
+			ssl="yes"
+			port="5300"
+			requireAuthentication="yes"
+			quarantine="test/quarantines/httpserver/https-import" />
+
+		<DicomFilter
+			name="HTTP Server DICOM Filter"
+			class="org.rsna.ctp.stdstages.DicomFilter"
+			root="test/roots/httpserver/dicom-filter"
+			script="scripts/dicom-filter.script"
+			quarantine="test/quarantines/httpserver/dicom-filter" />
+
+		<XmlFilter
+			name="HTTP Server XML Filter"
+			class="org.rsna.ctp.stdstages.XmlFilter"
+			root="test/roots/httpserver/xml-filter"
+			script="scripts/xml-filter.script"
+			quarantine="test/quarantines/httpserver/xml-filter" />
+
+		<ZipFilter
+			name="HTTP Server Zip Filter"
+			class="org.rsna.ctp.stdstages.ZipFilter"
+			root="test/roots/httpserver/zip-filter"
+			script="scripts/zip-filter.script"
+			quarantine="test/quarantines/httpserver/zip-filter" />
+
+		<FileStorageService
+			name="HTTP Server File Storage"
+			class="org.rsna.ctp.stdstages.FileStorageService"
+			root="test/storage/httpserver/file"
+			port="1180"
+			returnStoredFile="no"
+			quarantine="test/quarantines/httpserver/file-storage" />
+
+		<BasicFileStorageService
+			name="HTTP Server Basic File Storage"
+			id="sbfss"
+			class="org.rsna.ctp.stdstages.BasicFileStorageService"
+			index="test/storage/httpserver/basic"
+			root="test/storage/httpserver/basic/store"
+			nLevels="3"
+			maxSize="200"
+			quarantine="test/quarantines/httpserver/basic-file-storage" >
+			<jpeg wmax="10000" wmin="96" q="-1" />
+		</BasicFileStorageService>
+
+		<DatabaseExportService
+			name="HTTP Server Database Export"
+			class="org.rsna.ctp.stdstages.DatabaseExportService"
+			adapterClass="org.rsna.ctp.stdstages.database.TestDatabaseAdapter"
+			poolSize="1"
+			fileStorageServiceID="sbfss"
+			root="test/roots/httpserver/database-export"
+			interval="10000"
+			ssl="yes"
+			port="5210"
+			quarantine="test/quarantines/httpserver/database-export" />
+
+		</Pipeline>
+
+		<Pipeline name="CTP-TEST DICOM Server Pipeline">
+
+			<DicomImportService
+				name="DICOM Server Import"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				root="test/roots/dicomserver/dicom-import"
+				port="1105"
+				quarantine="test/quarantines/dicomserver/dicom-import" />
+
+			<FileStorageService
+				name="DICOM Server File Storage"
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				root="test/storage/dicomserver/file"
+				port="1181"
+				returnStoredFile="no"
+				quarantine="test/quarantines/dicomserver/file-storage" />
+
+		</Pipeline>
+	</StandardPipelines>
 
 </TemplateDefinitions>
 

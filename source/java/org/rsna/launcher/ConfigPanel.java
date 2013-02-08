@@ -27,19 +27,21 @@ public class ConfigPanel extends BasePanel {
 
 	MenuPane menuPane;
 	TreePane treePane;
+	JScrollPane jspTree;
 	DataPane dataPane;
-	JSplitPane split;
 	JScrollPane jspData;
+	JSplitPane split;
 	boolean loaded = false;
 
-	Hashtable<String,Template> templateTable = null;
+	Hashtable<String,Template> templateTable = new Hashtable<String,Template>();
 	Template server = null;
 	Template pipeline = null;
-	LinkedList<Template> plugins = null;
-	LinkedList<Template> importServices = null;
-	LinkedList<Template> processors = null;
-	LinkedList<Template> storageServices = null;
-	LinkedList<Template> exportServices = null;
+	LinkedList<Template> plugins = new LinkedList<Template>();
+	LinkedList<Template> importServices = new LinkedList<Template>();
+	LinkedList<Template> processors = new LinkedList<Template>();
+	LinkedList<Template> storageServices = new LinkedList<Template>();
+	LinkedList<Template> exportServices = new LinkedList<Template>();
+	Hashtable<String,Element> standardPipelines = new Hashtable<String,Element>();
 	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
 	public ConfigPanel() {
@@ -51,7 +53,7 @@ public class ConfigPanel extends BasePanel {
 		this.add(menuPane, BorderLayout.NORTH);
 
 		treePane = new TreePane();
-		JScrollPane jspTree = new JScrollPane();
+		jspTree = new JScrollPane();
 		jspTree.getVerticalScrollBar().setUnitIncrement(12);
 		jspTree.setViewportView(treePane);
 		jspTree.getViewport().setBackground(Color.white);
@@ -87,17 +89,21 @@ public class ConfigPanel extends BasePanel {
 	class Template {
 		Element template;
 		Hashtable<String,Element> attrs;
+		Hashtable<String,Template> children;
 		public Template(Element template) {
 			this.template = template;
 			attrs = new Hashtable<String,Element>();
-			Node child = template.getFirstChild();
-			while (child != null) {
-				if (child instanceof Element) {
-					Element attr = (Element)child;
-					String attrName = attr.getAttribute("name");
-					attrs.put(attrName, attr);
+			children = new Hashtable<String,Template>();
+			Node n = template.getFirstChild();
+			while (n != null) {
+				if (n instanceof Element) {
+					Element e = (Element)n;
+					String name = e.getAttribute("name");
+					String tagName = e.getTagName();
+					if (tagName.equals("attr")) attrs.put(name, e);
+					else if (tagName.equals("child")) children.put(name, new Template(e));
 				}
-				child = child.getNextSibling();
+				n = n.getNextSibling();
 			}
 		}
 		public String getName() {
@@ -116,16 +122,50 @@ public class ConfigPanel extends BasePanel {
 			}
 			return "";
 		}
+		public String[] getChildNames(){
+			String[] names = new String[children.size()];
+			return children.keySet().toArray(names);
+		}
+		public Template getChildTemplate(String name) {
+			return children.get(name);
+		}
+		public Element getXML(String parentName) {
+			try {
+				Document doc = Util.getDocument();
+				Element root = doc.createElement(parentName);
+
+				Element element;
+				String tagName = template.getTagName();
+				if (tagName.equals("Plugin") || tagName.equals("Pipeline")) {
+					element = doc.createElement(tagName);
+				}
+				else if (tagName.equals("child")) {
+					element = doc.createElement(template.getAttribute("name"));
+				}
+				else {
+					element = doc.createElement(getAttrValue("name", "default"));
+				}
+
+				root.appendChild(element);
+				Node node = template.getFirstChild();
+				while (node != null) {
+					if ((node instanceof Element) && node.getNodeName().equals("attr")) {
+						Element attr = (Element)node;
+						String name = attr.getAttribute("name");
+						if (!name.equals("name")) {
+							String value = attr.getAttribute("default");
+							element.setAttribute(name, value);
+						}
+					}
+					node = node.getNextSibling();
+				}
+				return element;
+			}
+			catch (Exception ex) { ex.printStackTrace(); return null; }
+		}
 	}
 
 	private void loadTemplates() {
-		templateTable = new Hashtable<String,Template>();
-		plugins = new LinkedList<Template>();
-		importServices = new LinkedList<Template>();
-		processors = new LinkedList<Template>();
-		storageServices = new LinkedList<Template>();
-		exportServices = new LinkedList<Template>();
-
 		File libraries = new File("libraries");
 		loadTemplates(libraries);
 	}
@@ -165,6 +205,7 @@ public class ConfigPanel extends BasePanel {
 					Element e = (Element)child;
 					String name = e.getTagName();
 					if (name.equals("Components")) loadComponents(e);
+					else if (name.equals("StandardPipelines")) loadStandardPipelines(e);
 					else if (name.equals("DefaultHelpText")) loadDefaultHelpText(e);
 				}
 				child = child.getNextSibling();
@@ -197,6 +238,18 @@ public class ConfigPanel extends BasePanel {
 		}
 	}
 
+	private void loadStandardPipelines(Element sp) {
+		Node child = sp.getFirstChild();
+		while (child != null) {
+			if (child instanceof Element) {
+				Element pipe = (Element)child;
+				String name = pipe.getAttribute("name");
+				if (!name.equals("")) standardPipelines.put(name, pipe);
+			}
+			child = child.getNextSibling();
+		}
+	}
+
 	private void loadDefaultHelpText(Element dht) {
 		Node child = dht.getFirstChild();
 		while (child != null) {
@@ -213,6 +266,8 @@ public class ConfigPanel extends BasePanel {
 
 	class MenuPane extends BasePanel {
 
+		JMenu childrenMenu;
+
 		public MenuPane() {
 			super();
 			setLayout( new FlowLayout( FlowLayout.LEFT, 0, 0 ) );
@@ -227,11 +282,8 @@ public class ConfigPanel extends BasePanel {
 			fileMenu.add(saveItem);
 
 			JMenu editMenu = new JMenu("Edit");
-			JMenuItem newPipeItem = new JMenuItem("new Pipeline");
-			newPipeItem.addActionListener( new NewPipeImpl() );
-			editMenu.add(newPipeItem);
-			JMenuItem deleteItem = new JMenuItem("Delete");
-			deleteItem.setAccelerator( KeyStroke.getKeyStroke('X', InputEvent.CTRL_MASK) );
+			JMenuItem deleteItem = new JMenuItem("Remove");
+			deleteItem.setAccelerator( KeyStroke.getKeyStroke('R', InputEvent.CTRL_MASK) );
 			deleteItem.addActionListener( new DeleteImpl() );
 			editMenu.add(deleteItem);
 
@@ -244,9 +296,13 @@ public class ConfigPanel extends BasePanel {
 			xmlItem.setAccelerator( KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK) );
 			xmlItem.addActionListener( new XmlImpl() );
 			viewMenu.add(xmlItem);
+			JMenuItem expandItem = new JMenuItem("Expand all");
+			expandItem.setAccelerator( KeyStroke.getKeyStroke('E', InputEvent.CTRL_MASK) );
+			expandItem.addActionListener( new ExpandImpl() );
+			viewMenu.add(expandItem);
 
 			JMenu pluginMenu = new JMenu("Plugin");
-			ComponentImpl impl = new ComponentImpl();
+			ComponentImpl impl = new ComponentImpl("Configuration");
 			for (Template template : plugins) {
 				String name = template.getAttrValue("class", "default");
 				JMenuItem item = new JMenuItem(name);
@@ -254,7 +310,25 @@ public class ConfigPanel extends BasePanel {
 				pluginMenu.add(item);
 			}
 
+			JMenu pipeMenu = new JMenu("Pipeline");
+			JMenuItem pipeItem = new JMenuItem("New Pipeline");
+			pipeItem.setAccelerator( KeyStroke.getKeyStroke('N', InputEvent.CTRL_MASK) );
+			PipelineImpl pipeImpl = new PipelineImpl();
+			pipeItem.addActionListener(pipeImpl);
+			pipeMenu.add(pipeItem);
+
+			String[] pipeNames = new String[standardPipelines.size()];
+			pipeNames = standardPipelines.keySet().toArray(pipeNames);
+			Arrays.sort(pipeNames);
+			StandardPipelineImpl spImpl = new StandardPipelineImpl();
+			for (String name : pipeNames) {
+				JMenuItem item = new JMenuItem(name);
+				item.addActionListener(spImpl);
+				pipeMenu.add(item);
+			}
+
 			JMenu importServiceMenu = new JMenu("ImportService");
+			impl = new ComponentImpl("Pipeline");
 			for (Template template : importServices) {
 				String name = template.getAttrValue("class", "default");
 				JMenuItem item = new JMenuItem(name);
@@ -286,46 +360,50 @@ public class ConfigPanel extends BasePanel {
 				exportServiceMenu.add(item);
 			}
 
-			JMenu pipeMenu = new JMenu("Pipeline");
-			pipeMenu.add( new JMenuItem("New") );
+			childrenMenu = new JMenu("Children");
 
 			menuBar.add(fileMenu);
 			menuBar.add(editMenu);
 			menuBar.add(viewMenu);
 			menuBar.add(pluginMenu);
+			menuBar.add(pipeMenu);
 			menuBar.add(importServiceMenu);
 			menuBar.add(processorMenu);
 			menuBar.add(storageServiceMenu);
 			menuBar.add(exportServiceMenu);
-			menuBar.add(pipeMenu);
+			menuBar.add(childrenMenu);
 
 			this.add( menuBar );
+		}
+
+		public void setChildrenMenu(String parentName, Template parentTemplate) {
+			childrenMenu.removeAll();
+			if (parentTemplate != null) {
+				ChildImpl impl = new ChildImpl(parentName, parentTemplate);
+				for (String name : parentTemplate.getChildNames()) {
+					JMenuItem item = new JMenuItem(name);
+					item.addActionListener(impl);
+					childrenMenu.add(item);
+				}
+			}
 		}
 
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
 				if (checkConfig(config)) {
-					/*
 					String xml = Util.toPrettyString(config);
 					File configFile = new File("config.xml");
 					backupTarget(configFile);
 					try { Util.setText(configFile, xml); }
 					catch (Exception ignore) { }
-					*/
 				}
-			}
-		}
-
-		class NewPipeImpl implements ActionListener {
-			public void actionPerformed(ActionEvent event) {
-				//dataPane.setView(true);
 			}
 		}
 
 		class DeleteImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
-				//dataPane.setView(true);
+				treePane.delete();
 			}
 		}
 
@@ -341,10 +419,55 @@ public class ConfigPanel extends BasePanel {
 			}
 		}
 
-		class ComponentImpl implements ActionListener {
+		class ExpandImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				treePane.expandAll();
+			}
+		}
+
+		class PipelineImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				Element element = pipeline.getXML("Configuration");
+				treePane.insert(element);
+			}
+		}
+		class StandardPipelineImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				JMenuItem item = (JMenuItem)event.getSource();
-				System.out.println("ComponentImpl: "+item.getText());
+				String name = item.getText();
+				Element pipe = standardPipelines.get(name);
+				treePane.insertPipeline(pipe);
+			}
+		}
+
+		class ComponentImpl implements ActionListener {
+			String parentName;
+			public ComponentImpl(String parentName) {
+				this.parentName = parentName;
+			}
+			public void actionPerformed(ActionEvent event) {
+				JMenuItem item = (JMenuItem)event.getSource();
+				Template template = templateTable.get(item.getText());
+				Element element = template.getXML(parentName);
+				treePane.insert(element);
+			}
+		}
+
+		class ChildImpl implements ActionListener {
+			String parentName;
+			Template parentTemplate;
+			public ChildImpl(String parentName, Template parentTemplate) {
+				this.parentName = parentName;
+				this.parentTemplate = parentTemplate;
+			}
+			public void actionPerformed(ActionEvent event) {
+				JMenuItem item = (JMenuItem)event.getSource();
+				String name = item.getText();
+				Template template = parentTemplate.getChildTemplate(name);
+				Element element = template.getXML(parentName);
+				Element parent = (Element)element.getParentNode();
+				parent.setAttribute("class", parentTemplate.getAttrValue("class", "default"));
+				treePane.insert(element);
 			}
 		}
 	}
@@ -490,6 +613,108 @@ public class ConfigPanel extends BasePanel {
 			}
 		}
 
+		public void expandAll() {
+			tree.expandAll();
+		}
+
+		public DefaultMutableTreeNode insert(Element element) {
+			DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+			XMLUserObject userObject = new XMLUserObject(element);
+
+			DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+			XMLUserObject targetObject = null;
+			DefaultMutableTreeNode parentNode = null;
+			DefaultMutableTreeNode cnode = null;
+			if (targetNode != null) {
+				targetObject = (XMLUserObject)targetNode.getUserObject();
+				parentNode = (DefaultMutableTreeNode)targetNode.getParent();
+			}
+			if (userObject.isStage() && (targetNode != null)) {
+				if (targetObject.isPipeline()) {
+					cnode = tree.addChild(targetNode, userObject);
+				}
+				else if (targetObject.isStage()) {
+					int index = parentNode.getIndex(targetNode);
+					cnode = tree.addChild(targetNode, userObject);
+					parentNode.insert(cnode, index+1);
+				}
+			}
+			else if (userObject.isChild() && (targetNode != null) && targetObject.isStage()) {
+				cnode = tree.addChild(targetNode, userObject);
+			}
+			else if (userObject.isPlugin()) {
+				if ((targetObject != null) && targetObject.isPlugin()) {
+					int index = parentNode.getIndex(targetNode);
+					cnode = tree.addChild(targetNode, userObject);
+					parentNode.insert(cnode, index+1);
+				}
+				else {
+					DefaultMutableTreeNode root = (DefaultMutableTreeNode)model.getRoot();
+					DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)root.getFirstChild();
+					XMLUserObject childObject = null;
+					while (childNode != null) {
+						childObject = (XMLUserObject)childNode.getUserObject();
+						if (childObject.isPipeline()) break;
+						childNode = childNode.getNextSibling();
+					}
+					if (childNode == null) {
+						cnode = tree.addChild(root, userObject);
+					}
+					else {
+						int index = root.getIndex(childNode);
+						cnode = tree.addChild(root, userObject);
+						root.insert(cnode, index);
+
+					}
+				}
+			}
+			else if (userObject.isPipeline()) {
+				DefaultMutableTreeNode root = (DefaultMutableTreeNode)model.getRoot();
+				cnode = tree.addChild(root, userObject);
+			}
+			reload(cnode, model);
+
+			return cnode;
+		}
+
+		public void delete() {
+			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
+			if (treeNode != null) {
+				Object object = treeNode.getUserObject();
+				if ((object != null) && (object instanceof XMLUserObject)) {
+					XMLUserObject userObject = (XMLUserObject)object;
+					if (userObject.isDeletable()) {
+						DefaultMutableTreeNode next = (DefaultMutableTreeNode)treeNode.getNextSibling();
+						if (next == null) next = (DefaultMutableTreeNode)treeNode.getParent();
+						DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+						model.removeNodeFromParent(treeNode);
+						TreePath path = new TreePath(model.getPathToRoot(next));
+						tree.setSelectionPath(path);
+					}
+				}
+			}
+		}
+
+		public void insertPipeline(Element pipe) {
+			if (pipe !=  null) {
+				DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+				DefaultMutableTreeNode root = (DefaultMutableTreeNode)model.getRoot();
+				DefaultMutableTreeNode cnode = tree.addChild(root, pipe);
+				tree.addChildren(cnode, pipe);
+				reload(cnode, model);
+			}
+		}
+
+		private void reload(DefaultMutableTreeNode cnode, DefaultTreeModel model) {
+			if (cnode != null) {
+				model.reload();
+				tree.expandAll();
+				TreePath path = new TreePath(model.getPathToRoot(cnode));
+				tree.setSelectionPath(path);
+				tree.scrollPathToVisible(path);
+			}
+		}
+
 		public Element getXML() {
 			return tree.getXML();
 		}
@@ -545,6 +770,7 @@ public class ConfigPanel extends BasePanel {
 				else displayForm(userObject);
 				jspData.setViewportView(this);
 				jspData.getVerticalScrollBar().setValue(0);
+				menuPane.setChildrenMenu(userObject.toString(), userObject.getTemplate());
 			}
 		}
 
@@ -605,10 +831,25 @@ public class ConfigPanel extends BasePanel {
 				tag += " ["+name+"]";
 			}
 			else if (tag.equals("Pipeline")) {
-				tag += " ["+element.getAttribute("name")+"]";
+				String name = element.getAttribute("name");
+				if (!name.equals("")) tag += " ["+name+"]";
 			}
-			this.template = (isServer ? server : (isPipeline ? pipeline : templateTable.get(className)));
+			this.template = null;
+			if (isServer) template = server;
+			else if (isPipeline) template = pipeline;
+			else if (isStage) template = templateTable.get(className);
+			else if (isChild) {
+				Element parent = (Element)element.getParentNode();
+				Template parentTemplate = templateTable.get(parent.getAttribute("class"));
+				if (parentTemplate == null) System.out.println("parentTemplate is null");
+				template = parentTemplate.getChildTemplate(tag);
+			}
+
 			this.formPanel = new FormPanel(element, template);
+		}
+
+		public boolean isDeletable() {
+			return isPlugin || isPipeline || isStage || isChild;
 		}
 
 		public void setTreeNode(DefaultMutableTreeNode treeNode) {
@@ -633,6 +874,22 @@ public class ConfigPanel extends BasePanel {
 
 		public boolean isDragable() {
 			return !isConfiguration && !isServer && !isPipeline && !isChild;
+		}
+
+		public boolean isPlugin() {
+			return isPlugin;
+		}
+
+		public boolean isPipeline() {
+			return isPipeline;
+		}
+
+		public boolean isStage() {
+			return isStage;
+		}
+
+		public boolean isChild() {
+			return isChild;
 		}
 
 		public Element getXML() {
@@ -929,6 +1186,10 @@ public class ConfigPanel extends BasePanel {
 
 		public DefaultMutableTreeNode addChild(DefaultMutableTreeNode tnode, Element child) {
 			XMLUserObject xmlUserObject = new XMLUserObject(child);
+			return addChild(tnode, xmlUserObject);
+		}
+
+		public DefaultMutableTreeNode addChild(DefaultMutableTreeNode tnode, XMLUserObject xmlUserObject) {
 			DefaultMutableTreeNode cnode = new DefaultMutableTreeNode(xmlUserObject);
 			xmlUserObject.setTreeNode(cnode);
 			tnode.add(cnode);
