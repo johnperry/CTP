@@ -21,15 +21,15 @@
 			<attr name="name" required="yes" default="AuditLog"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdplugins.AuditLog" editable="no"/>
 			<attr name="id" required="yes" default="AuditLog"/>
-			<attr name="root" default="roots/AuditLog" required="yes"/>
+			<attr name="root" required="yes" default="roots/AuditLog"/>
 		</Plugin>
 
 		<Plugin>
 			<attr name="name" required="yes" default="Redirector"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdplugins.Redirector" editable="no"/>
 			<attr name="httpPort" required="yes" default="80"/>
-			<attr name="httpsHost" default="mirc.mysecuresite.myuniversity.edu" required="yes"/>
-			<attr name="httpsPort" default="443" required="yes"/>
+			<attr name="httpsHost" required="yes" default="mirc.mysecuresite.myuniversity.edu"/>
+			<attr name="httpsPort" required="yes" default="443"/>
 		</Plugin>
 
 		<Pipeline>
@@ -51,7 +51,7 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
-			<attr name="quarantine" required="no" default="quarantines/HttpImportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpImportService"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
@@ -77,7 +77,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/PollingHttpImportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/PollingHttpImportService"/>
 		</ImportService>
 
 		<ImportService>
@@ -91,7 +91,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/DirectoryImportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/DirectoryImportService"/>
 		</ImportService>
 
 		<ImportService>
@@ -106,7 +106,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/ArchiveImportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/ArchiveImportService"/>
 		</ImportService>
 
 		<ImportService>
@@ -119,7 +119,7 @@
 			<attr name="timeTag" required="no" default=""/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="suppressDuplicates" required="no" default="no" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/DicomImportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomImportService"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
@@ -184,7 +184,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomFilter" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomFilter"/>
 			<attr name="script" required="yes" default="scripts/DicomFilter.script"/>
-			<attr name="quarantine" required="no" default="quarantines/DicomFilter"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomFilter"/>
 		</Processor>
 
 		<Processor>
@@ -192,7 +192,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.XmlFilter" editable="no"/>
 			<attr name="root" required="yes" default="roots/XmlFilter"/>
 			<attr name="script" required="yes" default="scripts/XmlFilter.script"/>
-			<attr name="quarantine" required="no" default="quarantines/XmlFilter"/>
+			<attr name="quarantine" required="yes" default="quarantines/XmlFilter"/>
 		</Processor>
 
 		<Processor>
@@ -200,7 +200,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ZipFilter" editable="no"/>
 			<attr name="root" required="yes" default="roots/ZipFilter"/>
 			<attr name="script" required="yes" default="scripts/ZipFilter.script"/>
-			<attr name="quarantine" required="no" default="quarantines/ZipFilter"/>
+			<attr name="quarantine" required="yes" default="quarantines/ZipFilter"/>
 		</Processor>
 
 		<Processor>
@@ -243,7 +243,7 @@
 			<attr name="script" required="yes" default="scripts/DicomDecompressor.script">
 				<helptext>The script file determining whether objects are to be decompressed</helptext>
 			</attr>
-			<attr name="quarantine" required="no" default="quarantines/DicomDecompressor"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomDecompressor"/>
 		</Processor>
 
 		<Processor>
@@ -257,18 +257,18 @@
 				<helptext>The transfer syntax UID to which to convert selected DicomObjects</helptext>
 			</attr>
 			<attr name="quality" required="no" default="100"/>
-			<attr name="quarantine" required="no" default="quarantines/DicomTranscoder"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomTranscoder"/>
 		</Processor>
 
 		<Processor>
 			<attr name="name" required="yes" default="DicomAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomAnonymizer"/>
-			<attr name="lookupTable" required="no" default="scripts/LookupTable.properties"/>
+			<attr name="lookupTable" required="yes" default="scripts/LookupTable.properties"/>
 			<attr name="script" required="yes" default="scripts/DicomAnonymizer.script">
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
-			<attr name="quarantine" required="no" default="quarantines/DicomAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomAnonymizer"/>
 		</Processor>
 
 		<Processor>
@@ -278,7 +278,7 @@
 			<attr name="script" required="yes" default="scripts/DicomPixelAnonymizer.script">
 				<helptext>The script file containing document signatures and blanking regions</helptext>
 			</attr>
-			<attr name="quarantine" required="no" default="quarantines/DicomPixelAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomPixelAnonymizer"/>
 		</Processor>
 
 		<Processor>
@@ -288,7 +288,7 @@
 			<attr name="script" required="yes" default="scripts/XmlAnonymizer.script">
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
-			<attr name="quarantine" required="no" default="quarantines/XmlAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/XmlAnonymizer"/>
 		</Processor>
 
 		<Processor>
@@ -298,13 +298,13 @@
 			<attr name="script" required="yes" default="scripts/ZipAnonymizer.script">
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
-			<attr name="quarantine" required="no" default="quarantines/ZipAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/ZipAnonymizer"/>
 		</Processor>
 
 		<StorageService>
 			<attr name="name" required="yes" default="FileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FileStorageService" editable="no"/>
-			<attr name="id" required="yes" default="FileStorageService"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/FileStorageService"/>
 			<attr name="type" required="no" default="none" options="year|month|week|date|none">
 				<helptext>Structure of the storage tree</helptext>
@@ -317,7 +317,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
+			<attr name="returnStoredFile" required="yes" default="yes" options="yes|no"/>
 			<attr name="setWorldReadable" required="no" default="no" options="yes|no"/>
 			<attr name="setWorldWritable" required="no" default="no" options="yes|no"/>
 			<attr name="fsNameTag" required="no" default="">
@@ -333,7 +333,7 @@
 				<helptext>Require secure sockets layer for connection to the server</helptext>
 			</attr>
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/FileStorageService"/>
+			<attr name="quarantine" required="yes" default="quarantines/FileStorageService"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
 				<attr name="frame" required="no" default="" options="first|middle|last|all">
@@ -355,21 +355,21 @@
 		<StorageService>
 			<attr name="name" required="yes" default="BasicFileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.BasicFileStorageService" editable="no"/>
-			<attr name="id" required="yes" default="ObjectCache"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/BasicFileStorageService"/>
 			<attr name="nLevels" required="yes" default="3">
 				<helptext>Depth of the storage tree</helptext>
 			</attr>
-			<attr name="maxSize" required="no" default="200">
+			<attr name="maxSize" required="yes" default="200">
 				<helptext>Maximum size of each folder in the hierarchy</helptext>
 			</attr>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
+			<attr name="returnStoredFile" required="yes" default="yes" options="yes|no"/>
 			<attr name="logDuplicates" required="no" default="no" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/BasicFileStorageService"/>
+			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
 				<attr name="frame" required="no" default="" options="first|middle|last|all">
@@ -399,17 +399,17 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
-			<attr name="quarantine" required="no" default="quarantines/BasicFileStorageService"/>
+			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
 		</StorageService>
 
 		<ExportService>
 			<attr name="name" required="yes" default="DicomExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomExportService"/>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip.port)</helptext>
 			</attr>
-			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="forceClose" required="no" default="no" options="yes|no">
 				<helptext>Close the DICOM association after each object transmission</helptext>
 			</attr>
@@ -423,7 +423,7 @@
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="no" default="quarantines/DicomExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -433,6 +433,7 @@
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination HttpImportService (starting with http:// or https://)</helptext>
 			</attr>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
@@ -448,7 +449,7 @@
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -465,13 +466,14 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
-			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 		</ExportService>
 
 		<ExportService>
 			<attr name="name" required="yes" default="FtpExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FtpExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/FtpExportService"/>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination FTP site (ftp://ip:port/path)</helptext>
 			</attr>
@@ -487,13 +489,14 @@
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 		</ExportService>
 
 		<ExportService>
 			<attr name="name" required="yes" default="AimExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.AimExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/AimExportService"/>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="url" required="yes" default=""/>
 			<attr name="username" required="yes" default=""/>
 			<attr name="password" required="yes" default=""/>
@@ -502,7 +505,7 @@
 				<helptext>Log the contents of the responses from the AIM data service</helptext>
 			</attr>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -520,7 +523,7 @@
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="no" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 			<attr name="port" required="no" default="">
 				<helptext>The port on which the DatabaseExportService listens for request for verification of objects</helptext>
 			</attr>
@@ -597,6 +600,113 @@
 				port="8105"
 				returnStoredFile="no"
 				quarantine="test/quarantines/dicomserver/file-storage" />
+		</Pipeline>
+
+		<Pipeline name="DICOM De-identification to Local Storage">
+			<ArchiveImportService
+				acceptFileObjects="no"
+				acceptXmlObjects="no"
+				acceptZipObjects="no"
+				class="org.rsna.ctp.stdstages.ArchiveImportService"
+				fsName="DICOM Image Directory"
+				name="ArchiveImportService"
+				root="roots/ArchiveImportService"
+				treeRoot="archive"/>
+			<DicomImportService
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="no"
+				name="DicomImportService"
+				port="7777"
+				root="roots/DicomImportService"/>
+			<IDMap
+				class="org.rsna.ctp.stdstages.IDMap"
+				name="IDMap"
+				root="roots/IDMap"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/DicomAnonymizer.script"/>
+			<DicomPixelAnonymizer
+				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+				name="DicomPixelAnonymizer"
+				root="roots/DicomPixelAnonymizer"
+				script="scripts/DicomPixelAnonymizer.script"/>
+			<FileStorageService
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				id="FileStorageService"
+				name="FileStorageService"
+				root="roots/FileStorageService"
+				setWorldReadable="yes"
+				setWorldWritable="yes"/>
+		</Pipeline>
+
+		<Pipeline name="DICOM De-identification to Research PACS">
+			<HttpImportService
+				acceptFileObjects="no"
+				acceptXmlObjects="no"
+				acceptZipObjects="no"
+				class="org.rsna.ctp.stdstages.HttpImportService"
+				logConnections="no"
+				name="HttpImportService"
+				port="7778"
+				root="roots/HttpImportService"/>
+			<DicomImportService
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="no"
+				name="DicomImportService"
+				port="7779"
+				root="roots/DicomImportService"/>
+			<ArchiveImportService
+				class="org.rsna.ctp.stdstages.ArchiveImportService"
+				name="ArchiveImportService"
+				root="roots/ArchiveImportService"
+				treeRoot="archive"/>
+			<IDMap
+				class="org.rsna.ctp.stdstages.IDMap"
+				name="IDMap"
+				root="roots/IDMap"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/DicomAnonymizer.script"/>
+			<DicomPixelAnonymizer
+				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+				name="DicomPixelAnonymizer"
+				root="roots/DicomPixelAnonymizer"
+				script="scripts/DicomPixelAnonymizer.script"/>
+			<DicomExportService
+				class="org.rsna.ctp.stdstages.DicomExportService"
+				name="DicomExportService"
+				root="roots/DicomExportService"
+				url=""/>
+		</Pipeline>
+
+		<Pipeline name="Export ClearCanvas AIM XML to AIM Data Service">
+			<DirectoryImportService
+				class="org.rsna.ctp.stdstages.DirectoryImportService"
+				name="DirectoryImportService"
+				root="roots/DirectoryImportService"/>
+			<FileStorageService
+				acceptDicomObjects="no"
+				acceptFileObjects="no"
+				acceptZipObjects="no"
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				id="FileStorageService"
+				name="FileStorageService"
+				root="roots/FileStorageService"
+				setWorldReadable="yes"
+				setWorldWritable="yes"
+				type="date"/>
+			<AimExportService
+				class="org.rsna.ctp.stdstages.AimExportService"
+				logResponses="all"
+				name="AimExportService"
+				password=""
+				root="roots/AimExportService"
+				url=""
+				username=""/>
 		</Pipeline>
 
 	</StandardPipelines>

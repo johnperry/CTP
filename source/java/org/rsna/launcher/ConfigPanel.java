@@ -73,6 +73,7 @@ public class ConfigPanel extends BasePanel {
 		split.setRightComponent(jspData);
 
 		this.add(split, BorderLayout.CENTER);
+		menuPane.setEnables();
 	}
 
 	public void load() {
@@ -267,6 +268,8 @@ public class ConfigPanel extends BasePanel {
 	class MenuPane extends BasePanel {
 
 		JMenu childrenMenu;
+		JMenuItem formItem;
+		JMenuItem xmlItem;
 
 		public MenuPane() {
 			super();
@@ -288,11 +291,11 @@ public class ConfigPanel extends BasePanel {
 			editMenu.add(deleteItem);
 
 			JMenu viewMenu = new JMenu("View");
-			JMenuItem formItem = new JMenuItem("Form");
+			formItem = new JMenuItem("Form");
 			formItem.setAccelerator( KeyStroke.getKeyStroke('F', InputEvent.CTRL_MASK) );
 			formItem.addActionListener( new FormImpl() );
 			viewMenu.add(formItem);
-			JMenuItem xmlItem = new JMenuItem("XML");
+			xmlItem = new JMenuItem("XML");
 			xmlItem.setAccelerator( KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK) );
 			xmlItem.addActionListener( new XmlImpl() );
 			viewMenu.add(xmlItem);
@@ -300,12 +303,16 @@ public class ConfigPanel extends BasePanel {
 			expandItem.setAccelerator( KeyStroke.getKeyStroke('E', InputEvent.CTRL_MASK) );
 			expandItem.addActionListener( new ExpandImpl() );
 			viewMenu.add(expandItem);
+			JMenuItem collapseItem = new JMenuItem("Collapse all");
+			collapseItem.setAccelerator( KeyStroke.getKeyStroke('W', InputEvent.CTRL_MASK) );
+			collapseItem.addActionListener( new CollapseImpl() );
+			viewMenu.add(collapseItem);
 
 			JMenu pluginMenu = new JMenu("Plugin");
 			ComponentImpl impl = new ComponentImpl("Configuration");
 			for (Template template : plugins) {
-				String name = template.getAttrValue("class", "default");
-				JMenuItem item = new JMenuItem(name);
+				String className = template.getAttrValue("class", "default");
+				ComponentMenuItem item = new ComponentMenuItem(className);
 				item.addActionListener(impl);
 				pluginMenu.add(item);
 			}
@@ -330,32 +337,32 @@ public class ConfigPanel extends BasePanel {
 			JMenu importServiceMenu = new JMenu("ImportService");
 			impl = new ComponentImpl("Pipeline");
 			for (Template template : importServices) {
-				String name = template.getAttrValue("class", "default");
-				JMenuItem item = new JMenuItem(name);
+				String className = template.getAttrValue("class", "default");
+				ComponentMenuItem item = new ComponentMenuItem(className);
 				item.addActionListener(impl);
 				importServiceMenu.add(item);
 			}
 
 			JMenu processorMenu = new JMenu("Processor");
 			for (Template template : processors) {
-				String name = template.getAttrValue("class", "default");
-				JMenuItem item = new JMenuItem(name);
+				String className = template.getAttrValue("class", "default");
+				ComponentMenuItem item = new ComponentMenuItem(className);
 				item.addActionListener(impl);
 				processorMenu.add(item);
 			}
 
 			JMenu storageServiceMenu = new JMenu("StorageService");
 			for (Template template : storageServices) {
-				String name = template.getAttrValue("class", "default");
-				JMenuItem item = new JMenuItem(name);
+				String className = template.getAttrValue("class", "default");
+				ComponentMenuItem item = new ComponentMenuItem(className);
 				item.addActionListener(impl);
 				storageServiceMenu.add(item);
 			}
 
 			JMenu exportServiceMenu = new JMenu("ExportService");
 			for (Template template : exportServices) {
-				String name = template.getAttrValue("class", "default");
-				JMenuItem item = new JMenuItem(name);
+				String className = template.getAttrValue("class", "default");
+				ComponentMenuItem item = new ComponentMenuItem(className);
 				item.addActionListener(impl);
 				exportServiceMenu.add(item);
 			}
@@ -376,12 +383,33 @@ public class ConfigPanel extends BasePanel {
 			this.add( menuBar );
 		}
 
+		public void setEnables() {
+			boolean viewIsXML = dataPane.viewIsXML();
+			formItem.setEnabled(viewIsXML);
+			xmlItem.setEnabled(!viewIsXML);
+		}
+
+		class ComponentMenuItem extends JMenuItem {
+			String className;
+			public ComponentMenuItem(String className) {
+				super();
+				this.className = className;
+				String name = className.substring( className.lastIndexOf(".")+1 );
+				setText(name);
+			}
+			public String getClassName() {
+				return className;
+			}
+		}
+
 		public void setChildrenMenu(String parentName, Template parentTemplate) {
 			childrenMenu.removeAll();
 			if (parentTemplate != null) {
 				ChildImpl impl = new ChildImpl(parentName, parentTemplate);
-				for (String name : parentTemplate.getChildNames()) {
-					JMenuItem item = new JMenuItem(name);
+				String[] childNames = parentTemplate.getChildNames();
+				childrenMenu.setEnabled( (childNames.length > 0) );
+				for (String name : childNames) {
+					ComponentMenuItem item = new ComponentMenuItem(name);
 					item.addActionListener(impl);
 					childrenMenu.add(item);
 				}
@@ -410,18 +438,26 @@ public class ConfigPanel extends BasePanel {
 		class FormImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				dataPane.setView(false);
+				setEnables();
 			}
 		}
 
 		class XmlImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				dataPane.setView(true);
+				setEnables();
 			}
 		}
 
 		class ExpandImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				treePane.expandAll();
+			}
+		}
+
+		class CollapseImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				treePane.collapseAll();
 			}
 		}
 
@@ -446,25 +482,24 @@ public class ConfigPanel extends BasePanel {
 				this.parentName = parentName;
 			}
 			public void actionPerformed(ActionEvent event) {
-				JMenuItem item = (JMenuItem)event.getSource();
-				Template template = templateTable.get(item.getText());
+				ComponentMenuItem item = (ComponentMenuItem)event.getSource();
+				Template template = templateTable.get(item.getClassName());
 				Element element = template.getXML(parentName);
 				treePane.insert(element);
 			}
 		}
 
 		class ChildImpl implements ActionListener {
-			String parentName;
+			String parentClassName;
 			Template parentTemplate;
-			public ChildImpl(String parentName, Template parentTemplate) {
-				this.parentName = parentName;
+			public ChildImpl(String parentClassName, Template parentTemplate) {
+				this.parentClassName = parentClassName;
 				this.parentTemplate = parentTemplate;
 			}
 			public void actionPerformed(ActionEvent event) {
-				JMenuItem item = (JMenuItem)event.getSource();
-				String name = item.getText();
-				Template template = parentTemplate.getChildTemplate(name);
-				Element element = template.getXML(parentName);
+				ComponentMenuItem item = (ComponentMenuItem)event.getSource();
+				Template template = parentTemplate.getChildTemplate(item.getClassName());
+				Element element = template.getXML(parentClassName);
 				Element parent = (Element)element.getParentNode();
 				parent.setAttribute("class", parentTemplate.getAttrValue("class", "default"));
 				treePane.insert(element);
@@ -617,6 +652,11 @@ public class ConfigPanel extends BasePanel {
 			tree.expandAll();
 		}
 
+		public void collapseAll() {
+			tree.collapseAll();
+			tree.expandRow(0);
+		}
+
 		public DefaultMutableTreeNode insert(Element element) {
 			DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
 			return insert(element, targetNode);
@@ -752,6 +792,14 @@ public class ConfigPanel extends BasePanel {
 			super();
 			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
 			setView(false);
+		}
+
+		public boolean viewIsXML() {
+			return viewAsXML;
+		}
+
+		public boolean viewIsForm() {
+			return !viewAsXML;
 		}
 
 		public void setView(boolean viewAsXML) {
