@@ -167,16 +167,18 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 
 	/**
 	 * Get HTML text displaying the active status of the stage.
+	 * @param childUniqueStatus the status of the stage of which
+	 * this class is the parent.
 	 * @return HTML text displaying the active status of the stage.
 	 */
-	public synchronized String getStatusHTML() {
+	public synchronized String getStatusHTML(String childUniqueStatus) {
 		String stageUniqueStatus =
 			"<tr><td width=\"20%\">Files received:</td><td>" + count + "</td></tr>"
 			+ "<tr><td width=\"20%\">Queue size:</td>"
 			+ "<td>"
 			+ ((queueManager!=null) ? queueManager.size() : "???")
 			+ "</td></tr>";
-		return super.getStatusHTML(stageUniqueStatus);
+		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
 	}
 
 }

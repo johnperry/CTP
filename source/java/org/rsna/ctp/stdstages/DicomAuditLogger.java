@@ -99,13 +99,4 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
 	}
-
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return super.getStatusHTML("");
-	}
-
 }

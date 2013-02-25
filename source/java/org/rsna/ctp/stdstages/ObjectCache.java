@@ -68,13 +68,4 @@ public class ObjectCache extends AbstractPipelineStage implements Processor {
 	public FileObject getCachedObject() {
 		return cachedObject;
 	}
-
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 }

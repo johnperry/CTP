@@ -34,10 +34,10 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	protected boolean acceptXmlObjects = true;
 	protected boolean acceptZipObjects = true;
 	protected boolean acceptFileObjects = true;
-	protected File lastFileIn = null;
-	protected long lastTimeIn = 0;
-	protected File lastFileOut = null;
-	protected long lastTimeOut = 0;
+	protected volatile File lastFileIn = null;
+	protected volatile long lastTimeIn = 0;
+	protected volatile File lastFileOut = null;
+	protected volatile long lastTimeOut = 0;
 	protected volatile boolean stop = false;
 
 	/**
@@ -191,21 +191,23 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 
 	/**
 	 * Get HTML text displaying the current status of the stage.
-	 * This method must be overridden in real PipelineStage
-	 * implementations.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public abstract String getStatusHTML();
+	public String getStatusHTML() {
+		return getStatusHTML("");
+	}
 
 	/**
 	 * Get HTML text displaying the current status of the stage.
+	 * @param childUniqueStatus the status of the stage of
+	 * which this class is the parent.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public synchronized String getStatusHTML(String stageUniqueStatus) {
+	public synchronized String getStatusHTML(String childUniqueStatus) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");
-		sb.append(stageUniqueStatus);
+		sb.append(childUniqueStatus);
 		sb.append("<tr><td width=\"20%\">Last file received:</td>");
 		if (lastTimeIn != 0) {
 			sb.append("<td>"+lastFileIn+"</td></tr>");

@@ -135,12 +135,4 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		intTable.close();
 		stop = true;
 	}
-
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
 }

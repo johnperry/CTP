@@ -169,7 +169,9 @@ public abstract class AbstractPlugin implements Plugin {
 	 * This method must be overridden in real Plugin implementations.
 	 * @return HTML text displaying the current status of the plugin.
 	 */
-	public abstract String getStatusHTML();
+	public String getStatusHTML() {
+		return getStatusHTML("");
+	}
 
 	/**
 	 * Get HTML text displaying the current status of the plugin.

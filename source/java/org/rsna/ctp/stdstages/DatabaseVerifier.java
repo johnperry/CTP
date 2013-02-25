@@ -196,14 +196,6 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 		return fileObject;
 	}
 
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 	//Load the index HTrees
 	private void getIndex(String indexPath) {
 		try {

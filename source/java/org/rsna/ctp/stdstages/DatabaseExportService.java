@@ -57,6 +57,8 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	String adapterClassName = "";
 	HttpService verifierService = null;
 
+	volatile long lastElapsedTime = -1;
+
 	/**
 	 * Class constructor; creates a new instance of the DatabaseExportService.
 	 */
@@ -156,7 +158,9 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 				try {
 					if ((getQueueSize()>0) && dba.connect().equals(Status.OK)) {
 						while ((file = getNextFile()) != null) {
+							long startTime = System.nanoTime();
 							Status result = export(file);
+							lastElapsedTime = System.nanoTime() - startTime;
 							if (result.equals(Status.FAIL)) {
 								//Something is wrong with the file.
 								//Log a warning and quarantine the file.
@@ -249,6 +253,25 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 				return Status.RETRY;
 			}
 		}
+	}
+
+	/**
+	 * Get HTML text displaying the active status of the stage.
+	 * @param childUniqueStatus the status of the stage of which
+	 * this class is the parent.
+	 * @return HTML text displaying the active status of the stage.
+	 */
+	public synchronized String getStatusHTML(String childUniqueStatus) {
+		String stageUniqueStatus = "";
+		if (lastElapsedTime >= 0) {
+			long et = lastElapsedTime / 1000000;
+			stageUniqueStatus =
+				  "<tr><td width=\"20%\">Last export elapsed time:</td>"
+				+ "<td>"
+				+ String.format("%d msec", et)
+				+ "</td></tr>";
+		}
+		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
 	}
 
 	//Start the Verifier service to service GET requests to verify that a

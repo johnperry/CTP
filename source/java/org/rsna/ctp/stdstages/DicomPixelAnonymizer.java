@@ -104,14 +104,6 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 		return new File[] { scriptFile };
 	}
 
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 	//Load the script if necessary
 	private void getScript() {
 		if ((scriptFile != null) && scriptFile.exists()) {

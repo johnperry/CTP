@@ -70,14 +70,6 @@ public class Redirector extends AbstractPlugin {
 		}
 	}
 
-	/**
-	 * Get HTML text displaying the current status of the plugin.
-	 * @return HTML text displaying the current status of the plugin.
-	 */
-	public synchronized String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 	class RedirectionHandler implements Service {
 
 		public RedirectionHandler() { }

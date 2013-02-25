@@ -49,6 +49,8 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	String auditLogID = null;
 	LinkedList<Integer> auditLogTags = null;
 
+	volatile long lastElapsedTime = -1;
+
 	/**
 	 * Construct an ExportService.
 	 * @param element the XML element from the configuration file
@@ -145,7 +147,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 				try {
 					if ((getQueueSize()>0) && connect().equals(Status.OK)) {
 						while (!stop && ((file = getNextFile()) != null)) {
+							long startTime = System.nanoTime();
 							Status result = export(file);
+							lastElapsedTime = System.nanoTime() - startTime;
 							if (result.equals(Status.FAIL)) {
 								//Something is wrong with the file.
 								//Log a warning and quarantine the file.
@@ -262,4 +266,24 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
 		}
 	}
+
+	/**
+	 * Get HTML text displaying the active status of the stage.
+	 * @param childUniqueStatus the status of the stage of which
+	 * this class is the parent.
+	 * @return HTML text displaying the active status of the stage.
+	 */
+	public synchronized String getStatusHTML(String childUniqueStatus) {
+		String stageUniqueStatus = "";
+		if (lastElapsedTime >= 0) {
+			long et = lastElapsedTime / 1000000;
+			stageUniqueStatus =
+				  "<tr><td width=\"20%\">Last export elapsed time:</td>"
+				+ "<td>"
+				+ String.format("%d msec", et)
+				+ "</td></tr>";
+		}
+		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
+	}
+
 }

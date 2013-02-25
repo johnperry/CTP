@@ -77,13 +77,4 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 	public File[] getScriptFiles() {
 		return new File[] {scriptFile};
 	}
-
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 }

@@ -86,13 +86,4 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 	public File[] getScriptFiles() {
 		return new File[] {scriptFile};
 	}
-
-	/**
-	 * Get HTML text displaying the current status of the stage.
-	 * @return HTML text displaying the current status of the stage.
-	 */
-	public String getStatusHTML() {
-		return getStatusHTML("");
-	}
-
 }
