@@ -548,13 +548,15 @@ public class ConfigPanel extends BasePanel {
 			addElement(el);
 		}
 		public void addElement(Element el) {
-			addAttribute(el);
-			Node child = el.getFirstChild();
-			while (child != null) {
-				if (child instanceof Element) {
-					addElement( (Element)child );
+			if (!el.getAttribute("enabled").equals("no")) {
+				addAttribute(el);
+				Node child = el.getFirstChild();
+				while (child != null) {
+					if (child instanceof Element) {
+						addElement( (Element)child );
+					}
+					child = child.getNextSibling();
 				}
-				child = child.getNextSibling();
 			}
 		}
 		private void addAttribute(Element el) {

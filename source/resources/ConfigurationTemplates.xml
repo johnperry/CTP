@@ -34,7 +34,7 @@
 
 		<Pipeline>
 			<attr name="name" required="yes" default="Pipeline"/>
-			<attr name="enabled" required="no" default="no" options="yes|no"/>
+			<attr name="enabled" required="no" default="yes" options="yes|no"/>
 		</Pipeline>
 
 		<ImportService>
