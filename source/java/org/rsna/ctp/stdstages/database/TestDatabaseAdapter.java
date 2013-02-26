@@ -27,11 +27,14 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 	static final Logger logger = Logger.getLogger(TestDatabaseAdapter.class);
 
 	static long count = 0;
+	static Hashtable<String,String> digests = new Hashtable<String,String>();
 
 	/**
 	 * Empty TestDatabaseAdapter constructor.
 	 */
-	public TestDatabaseAdapter() { super(); }
+	public TestDatabaseAdapter() {
+		super();
+	}
 
 	/**
 	 * Process a DICOM object. This method is called by
@@ -43,12 +46,14 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 	 * @param url The URL pointing to the stored object or null if no URL is available.
 	 */
 	public Status process(DicomObject dicomObject, File storedFile, String url) {
-		logger.info(id+"DicomObject received: "+dicomObject.getFile());
-		logger.info(id+"      SOPInstanceUID: "+dicomObject.getUID());
 		count++;
+		String uid = dicomObject.getUID();
+		String digest = dicomObject.getDigest();
+		digests.put(uid, digest);
+		logger.info(id+"DicomObject received: "+dicomObject.getFile());
+		logger.info(id+"      SOPInstanceUID: "+uid);
 		logger.info(id+"               count: "+count);
-//		try { Thread.sleep(1000 * (adapterNumber + 3)); }
-//		catch (Exception ignore) { }
+		logger.info(id+"              digest: "+digest);
 		return Status.OK;
 	}
 
@@ -71,8 +76,9 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 		while (it.hasNext()) {
 			String uid = it.next();
 			count++;
-			if ((count & 1) != 0)
-				map.put(uid, UIDResult.PRESENT(System.currentTimeMillis(), ""));
+			String digest = digests.get(uid);
+			if ( ((count & 1) != 0) && (digest != null))
+				map.put(uid, UIDResult.PRESENT(System.currentTimeMillis(), digest));
 			else
 				map.put(uid, UIDResult.MISSING());
 		}

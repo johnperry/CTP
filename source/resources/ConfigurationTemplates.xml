@@ -114,7 +114,7 @@
 			<attr name="name" required="yes" default="DicomImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomImportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomImportService"/>
-			<attr name="port" required="yes" default="7777"/>
+			<attr name="port" required="yes" default="104"/>
 			<attr name="callingAETTag" required="no" default=""/>
 			<attr name="calledAETTag" required="no" default=""/>
 			<attr name="timeTag" required="no" default=""/>
@@ -400,7 +400,7 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
-			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
+			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
 		</StorageService>
 
 		<ExportService>
@@ -467,7 +467,7 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
-			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/PolledHttpExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -490,7 +490,7 @@
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/FtpExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -506,7 +506,7 @@
 				<helptext>Log the contents of the responses from the AIM data service</helptext>
 			</attr>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/AimExportService"/>
 		</ExportService>
 
 		<ExportService>
@@ -524,7 +524,7 @@
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
-			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
+			<attr name="quarantine" required="yes" default="quarantines/DatabaseExportService"/>
 			<attr name="port" required="no" default="">
 				<helptext>The port on which the DatabaseExportService listens for request for verification of objects</helptext>
 			</attr>
@@ -708,6 +708,92 @@
 				root="roots/AimExportService"
 				url=""
 				username=""/>
+		</Pipeline>
+
+		<Pipeline name="NBIA Server Pipeline">
+			<HttpImportService
+				acceptFileObjects="no"
+				class="org.rsna.ctp.stdstages.HttpImportService"
+				name="HttpImportService"
+				port="23104"
+				quarantine="quarantines/HttpImportService"
+				requireAuthentication="no"
+				root="roots/HttpImportService"/>
+			<BasicFileStorageService
+				class="org.rsna.ctp.stdstages.BasicFileStorageService"
+				id="storage"
+				index="/data/dataset_d01"
+				maxSize="300"
+				nLevels="4"
+				name="BasicFileStorageService"
+				quarantine="quarantines/BasicFileStorageService"
+				returnStoredFile="yes"
+				root="/data/dataset_d01/root">
+				<jpeg
+					frame="all"
+					q="-1"
+					wmax="512"
+					wmin="512"/>
+			</BasicFileStorageService>
+			<DatabaseExportService
+				adapterClass="gov.nih.nci.nbia.dbadapter.NCIADatabase"
+				class="org.rsna.ctp.stdstages.DatabaseExportService"
+				fileStorageServiceID="storage"
+				name="DatabaseExportService"
+				port="23304"
+				quarantine="quarantines/DatabaseExportService"
+				requireAuthentication="no"
+				root="roots/DatabaseExportService"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				quarantine="quarantines/DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/nbia-server-da.script"/>
+		</Pipeline>
+
+		<Pipeline name="NBIA Client Pipeline">
+			<HttpImportService
+				name="HttpImportService"
+				class="org.rsna.ctp.stdstages.HttpImportService"
+				root="roots/HttpImportService"
+				ssl="yes"
+				port="24104"
+				acceptFileObjects="no"
+				quarantine="quarantines/HttpImportService"/>
+			<DicomImportService
+				name="DicomImportService"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				root="roots/DicomImportService"
+				port="24304"
+				timeTag="00120050"/>
+			<DicomAnonymizer
+				name="DicomAnonymizer"
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/nbia-client-da.script"
+				quarantine="quarantines/DicomAnonymizer" />
+			<XmlAnonymizer
+				name="XmlAnonymizer"
+				class="org.rsna.ctp.stdstages.XmlAnonymizer"
+				root="roots/XmlAnonymizer"
+				script="scripts/nbia-xml-anonymizer.script"
+				quarantine="quarantines/XmlAnonymizer" />
+			<ZipAnonymizer
+				name="ZipAnonymizer"
+				class="org.rsna.ctp.stdstages.ZipAnonymizer"
+				root="roots/ZipAnonymizer"
+				script="scripts/nbia-xml-anonymizer.script"
+				quarantine="quarantines/ZipAnonymizer" />
+			<IDMap
+				name="IDMap"
+				class="org.rsna.ctp.stdstages.IDMap"
+				root="roots/IDMap" />
+			<HttpExportService
+				name="HttpExportService"
+				class="org.rsna.ctp.stdstages.HttpExportService"
+				root="roots/HttpExportService"
+				url="http://http://ncias-d823-v.nci.nih.gov:23104/" />
 		</Pipeline>
 
 	</StandardPipelines>

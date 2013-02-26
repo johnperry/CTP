@@ -9,6 +9,18 @@
 		<script language="JavaScript" type="text/javascript" src="/JSUser.js">;</script>
 		<script>
 			var user;
+			var admin = new Array(
+				"shutdown",
+				"usermanager",
+				"logs",
+				"config",
+				"idmap",
+				"objecttracker",
+				"databaseverifier",
+				"daconfig",
+				"script",
+				"lookup",
+				"spacer" );
 			function getUsername() {
 				user = new User();
 				var p = document.getElementById("up");
@@ -26,36 +38,19 @@
 					p.appendChild(a);
 					p.appendChild(document.createTextNode(" )"));
 					if (!user.hasRole("admin")) hideAdmin();
-					if (!user.hasRole("shutdown") && !user.isLocal) hideShutdown();
+					if (!user.hasRole("shutdown") && !user.isLocal) hide("shutdown");
 				}
 				else {
 					p.appendChild(document.createTextNode("You are not logged in."));
 					hideAdmin();
-					hideShutdown();
+					hide("shutdown");
 				}
 			}
 			function hideAdmin() {
-				var x = document.getElementById("shutdown");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("usermanager");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("idmap");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("objecttracker");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("databaseverifier");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("daconfig");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("script");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("lookup");
-				if (x) x.parentNode.removeChild(x);
-				x = document.getElementById("spacer");
-				if (x) x.parentNode.removeChild(x);
+				for (var i=0; i<admin.length; i++) hide(admin[i]);
 			}
-			function hideShutdown() {
-				var x = document.getElementById("shutdown");
+			function hide(id) {
+				var x = document.getElementById(id);
 				if (x) x.parentNode.removeChild(x);
 			}
 			function loaded() { getUsername(); }
@@ -74,11 +69,11 @@
 				<td><input style="width:300" type="button" value="User Manager"
 						onclick="window.open('users','_self');"></td>
 			</tr>
-			<tr>
+			<tr id="logs">
 				<td><input style="width:300" type="button" value="Logs"
 						onclick="window.open('logs','_self');"></td>
 			</tr>
-			<tr>
+			<tr id="config">
 				<td><input style="width:300" type="button" value="Configuration"
 						onclick="window.open('configuration','_self');"></td>
 			</tr>

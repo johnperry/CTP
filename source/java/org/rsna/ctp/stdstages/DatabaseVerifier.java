@@ -240,6 +240,7 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 								else { lastKey = "0"; break; }
 							}
 						}
+						logger.debug("About to check the status of "+count+" entries.");
 						if (count > 0) {
 							try {
 								HttpURLConnection conn = HttpUtil.getConnection(url + "?uids=" + sb.toString());
@@ -249,6 +250,7 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 									String result = FileUtil.getText( conn.getInputStream() );
 									Document doc = XmlUtil.getDocument(result);
 									Element root = doc.getDocumentElement();
+									logger.debug("Response:\n"+XmlUtil.toPrettyString(root));
 									Node child = root.getFirstChild();
 									while (child != null) {
 										process(child);

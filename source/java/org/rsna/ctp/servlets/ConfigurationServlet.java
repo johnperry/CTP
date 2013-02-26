@@ -42,6 +42,14 @@ public class ConfigurationServlet extends Servlet {
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
 		boolean admin = req.isFromLocalHost() || req.userHasRole("admin");
+
+		//Require that the user be an admin or be local
+		if (!admin) {
+			res.setResponseCode(res.notfound);
+			res.send();
+			return;
+		}
+
 		String home = req.getParameter("home", "/");
 		Configuration config = Configuration.getInstance();
 		String ipAddress = config.getIPAddress();
