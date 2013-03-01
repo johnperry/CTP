@@ -26,8 +26,9 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 
 	static final Logger logger = Logger.getLogger(TestDatabaseAdapter.class);
 
-	static long count = 0;
+	static int objectCount = 0;
 	static Hashtable<String,String> digests = new Hashtable<String,String>();
+	int lastPresentCount = 1;
 
 	/**
 	 * Empty TestDatabaseAdapter constructor.
@@ -46,13 +47,13 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 	 * @param url The URL pointing to the stored object or null if no URL is available.
 	 */
 	public Status process(DicomObject dicomObject, File storedFile, String url) {
-		count++;
+		objectCount++;
 		String uid = dicomObject.getUID();
 		String digest = dicomObject.getDigest();
 		digests.put(uid, digest);
 		logger.info(id+"DicomObject received: "+dicomObject.getFile());
 		logger.info(id+"      SOPInstanceUID: "+uid);
-		logger.info(id+"               count: "+count);
+		logger.info(id+"               count: "+objectCount);
 		logger.info(id+"              digest: "+digest);
 		return Status.OK;
 	}
@@ -69,19 +70,26 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 	 * database does not support queries for object presence or absence, return null.
 	 */
 	public Map<String, UIDResult> uidQuery(Set<String> uidSet) {
-		logger.warn("Verification request received for "+uidSet.size()+" instances.");
 		Hashtable<String, UIDResult> map = new Hashtable<String, UIDResult>();
-		Iterator<String> it = uidSet.iterator();
 		int count = 0;
-		while (it.hasNext()) {
-			String uid = it.next();
+		int present = 0;
+		for (String uid : uidSet) {
 			count++;
 			String digest = digests.get(uid);
-			if ( ((count & 1) != 0) && (digest != null))
+			if ( ((count & 1) != 0) && (digest != null) ) {
 				map.put(uid, UIDResult.PRESENT(System.currentTimeMillis(), digest));
-			else
-				map.put(uid, UIDResult.MISSING());
+				present++;
+			}
+			else map.put(uid, UIDResult.MISSING());
 		}
+		if ((lastPresentCount > 0) || (present > 0)) {
+			int size = uidSet.size();
+			logger.info(id+"Verification request received for "+size
+						+" instance" +((size == 1) ? "" : "s")+". "
+						+present
+						+((present == 1) ? " was" : " were")+" found.");
+		}
+		lastPresentCount = present;
 		return map;
 	}
 }

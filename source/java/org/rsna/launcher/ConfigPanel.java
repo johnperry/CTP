@@ -283,6 +283,9 @@ public class ConfigPanel extends BasePanel {
 			saveItem.setAccelerator( KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK) );
 			saveItem.addActionListener( new SaveImpl() );
 			fileMenu.add(saveItem);
+			JMenuItem deleteBackupsItem = new JMenuItem("Delete backups");
+			deleteBackupsItem.addActionListener( new DeleteBackupsImpl() );
+			fileMenu.add(deleteBackupsItem);
 
 			JMenu editMenu = new JMenu("Edit");
 			JMenuItem deleteItem = new JMenuItem("Remove");
@@ -426,6 +429,36 @@ public class ConfigPanel extends BasePanel {
 					try { Util.setText(configFile, xml); }
 					catch (Exception ignore) { }
 				}
+			}
+		}
+
+		class DeleteBackupsImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				File ctp = new File("config.xml");
+				try {
+					ctp = ctp.getCanonicalFile().getParentFile();
+					File[] files = ctp.listFiles(new ConfigFileFilter());
+					if ((files.length > 0) && deleteApproved()) {
+						for (File file : files) file.delete();
+					}
+				}
+				catch (Exception skip) { skip.printStackTrace(); }
+			}
+		}
+
+		public boolean deleteApproved() {
+			int yesno = JOptionPane.showConfirmDialog(
+								this,
+								"Are you sure you want to delete\n"
+								+ "the backup config.xml files?\n",
+								"Are you sure?",
+								JOptionPane.YES_NO_OPTION);
+			return (yesno == JOptionPane.YES_OPTION);
+		}
+
+		class ConfigFileFilter implements FileFilter {
+			public boolean accept(File file) {
+				return file.getName().matches("config\\[\\d+\\]\\.xml");
 			}
 		}
 

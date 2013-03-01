@@ -126,6 +126,14 @@ Siemens
     [0028,0011].equals("1024") }
   (0,0,1024,60) (200,60,20,20) (800,65,104,14) 
 
+Acuson
+{ Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("ACUSON") *
+    [0008,1090].containsIgnoreCase("SEQUOIA") *
+    [0028,0010].equals("480") *
+    [0028,0011].equals("640") }
+  (0,0,640,30)
+
 ************** 
      MRI
 **************
