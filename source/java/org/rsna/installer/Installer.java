@@ -193,6 +193,9 @@ public class Installer extends JFrame {
 			//If this was a new installation, set up the config file and set the port
 			installConfigFile(port);
 
+			//Now do any specific configuration required.
+			adjustConfiguration(port, directory);
+
 			cp.append("Installation complete.");
 
 			JOptionPane.showMessageDialog(this,
@@ -356,6 +359,52 @@ public class Installer extends JFrame {
 			for (File file : xmlFiles) file.delete();
 			xml.delete();
 		}
+	}
+
+	private void adjustConfiguration(int port, File directory) {
+		//If this is a new ISN installation and the Edge Server
+		//keystore and truststore files exist, then set the configuration
+		//to use them instead of the ones in the default installation.
+		File dir = new File(directory, "CTP");
+		String keystore = "/usr/local/edgeserver/conf/keystore.jks";
+		String truststore = "/usr/local/edgeserver/conf/truststore.jks";
+		File keystoreFile = new File(keystore);
+		File truststoreFile = new File(truststore);
+		File configFile = new File(dir, "config.xml");
+		if (true //(port > 0)
+				&& programName.equals("ISN")
+					&& configFile.exists()
+						&& keystoreFile.exists()
+							&& truststoreFile.exists()) {
+			try {
+				String configText = getFileText(configFile);
+				configText = replaceAttributeValue(configText, "keystore", keystore);
+				configText = replaceAttributeValue(configText, "keystorePassword", "edge1234");
+				configText = replaceAttributeValue(configText, "truststore", truststore);
+				configText = replaceAttributeValue(configText, "truststorePassword", "edge1234");
+				setFileText(configFile, configText);
+				//Delete the default files, just to avoid confusion
+				(new File(dir, "keystore.jks")).delete();
+				(new File(dir, "truststore.jks")).delete();
+				cp.appendln(Color.black, "The keystore attributes were successfully updated");
+			}
+			catch (Exception unable) {
+				cp.appendln(Color.red, "Unable to update the keystore attributes in the config file");
+			}
+		}
+	}
+
+	private String replaceAttributeValue(String text, String name, String value) {
+		String target = name+"=\"";
+		int k1 = text.indexOf(target);
+		if (k1 > 0) {
+			k1 += target.length();
+			int k2 = text.indexOf("\"");
+			if (k2 > k1) {
+				return text.substring(0, k1) + value + text.substring(k2);
+			}
+		}
+		return text;
 	}
 
 	//Let the user select an installation directory.
