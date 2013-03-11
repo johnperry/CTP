@@ -55,10 +55,10 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
-			if (dob.isImage() && dob.getDcmDecodeParam().encapsulated) {
+			if (dob.isEncapsulated()) {
 				if ((scriptFile == null) || dob.matches(FileUtil.getText(scriptFile)).getResult()) {
 					File file = dob.getFile();
-					AnonymizerStatus status = DICOMDecompressor.decompress(file,file);
+					AnonymizerStatus status = DICOMDecompressor.decompress(file, file);
 					if (status.isOK()) {
 						fileObject = FileObject.getInstance(file);
 						if (!(fileObject instanceof DicomObject)) {

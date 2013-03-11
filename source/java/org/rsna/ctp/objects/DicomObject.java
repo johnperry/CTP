@@ -1324,12 +1324,20 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Tests whether the DicomObject actually contained a image.
+	 * Tests whether the DicomObject contains an image.
 	 * The test is done by verifying that the PixelData element is present.
 	 * @return true if the object contains an image; false otherwise.
 	 */
 	public boolean isImage() {
 		return isImage;
+	}
+
+	/**
+	 * Tests whether the DicomObject contains an image with encapsulated pixel data.
+	 * @return true if the object contains an image with encapsulated pixel data; false otherwise.
+	 */
+	public boolean isEncapsulated() {
+		return (isImage && fileParam.encapsulated);
 	}
 
 	/**

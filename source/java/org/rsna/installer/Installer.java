@@ -345,11 +345,15 @@ public class Installer extends JFrame {
 		}
 
 		//remove obsolete versions of the slf4j libraries
+		//and the dcm4che-imageio libraries
 		File libraries = new File(dir, "libraries");
 		if (libraries.exists()) {
 			File[] files = libraries.listFiles();
 			for (File file : files) {
-				if (file.getName().startsWith("slf4j-")) file.delete();
+				String name = file.getName();
+				if (name.startsWith("slf4j-") || name.startsWith("dcm4che-imageio-rle")) {
+					file.delete();
+				}
 			}
 		}
 		//remove the obsolete xml library
