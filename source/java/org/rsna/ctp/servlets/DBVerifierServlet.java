@@ -140,7 +140,7 @@ public class DBVerifierServlet extends Servlet {
 	//Create an HTML page containing the requested results.
 	private String getResultsPage(DatabaseVerifier verifier, int p, int s, String date, String ptid, String siuid, String clear, String home) {
 		if ((siuid == null) || siuid.trim().equals("")) {
-			return responseHead(verifier.getName(), home)
+			return responseHead(verifier.getName(), home, "_self", "Return to the home page", p, s)
 					+ getSummary(verifier, p, s, date, ptid, clear)
 						+ responseTail();
 		}
@@ -158,6 +158,17 @@ public class DBVerifierServlet extends Servlet {
 		if ((clear != null) && clear.equals("yes")) verifier.clearUnverifiedList();
 		StringBuffer sb = new StringBuffer();
 		sb.append("<center>\n");
+
+		sb.append("<p style=\"width:50%; text-align:left\">");
+		sb.append("This page lists the studies that have been processed. If the unverified ");
+		sb.append("queue size is zero, all the objects have been successfully transmitted ");
+		sb.append("to the destination, stored, and entered into the database. ");
+		sb.append("If the unveried queue size is non-zero, monitor the size to see if it ");
+		sb.append("is changing. To check on individual objects in a specific study, click ");
+		sb.append("the value in the Instances column. On the next page, any object with a ");
+		sb.append("blank in the Entry Date field has not been confirmed to be in the database.");
+		sb.append("</p>");
+
 		boolean ptidSearch = true;
 		HashSet<String> studies = null;
 		if (ptid != null) {
@@ -321,6 +332,11 @@ public class DBVerifierServlet extends Servlet {
 		sb.append("</tr>");
 		sb.append("</table>");
 
+		sb.append("<br/>");
+		sb.append("<input type=\"button\" value=\"Retrieve the latest data\" ");
+		sb.append("onclick=\"window.open('/"+context+"?p="+p+"&s="+s+",'_self');\"/>");
+
+
 		sb.append("</center>");
 		return sb.toString();
 	}
@@ -379,7 +395,11 @@ public class DBVerifierServlet extends Servlet {
 		return responseHead(title, home, "_self", "Return to the home page");
 	}
 
-	private String responseHead(String title, String url, String target, String page) {
+	private String responseHead(String title, String homeurl, String target, String hometooltip) {
+		return responseHead(title, homeurl, target, hometooltip, -1, -1);
+	}
+
+	private String responseHead(String title, String homeurl, String target, String hometooltip, int p, int s) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -397,7 +417,24 @@ public class DBVerifierServlet extends Servlet {
 			+	"  </script>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-			+	HtmlUtil.getCloseBox(url, target, page)
+
+			+	"  <div style=\"float:right;\">\n"
+			+	"   <img src=\"/icons/home.png\"\n"
+			+	"    onclick=\"window.open('"+homeurl+"','"+target+"');\"\n"
+			+	"    title=\""+hometooltip+"\"\n"
+			+	"    style=\"margin:2\"/>\n";
+
+		if ((p >= 0) && (s >= 0)) {
+			String refreshurl = "/" + context + "?p=" + p + "&s=" + s;
+			head +=
+				"   <br/>\n"
+			+	"   <img src=\"/icons/refresh.png\"\n"
+			+	"    onclick=\"window.open('"+refreshurl+"','"+target+"');\"\n"
+			+	"    title=\"Retrieve the latest data\"\n"
+			+	"    style=\"margin:2\"/>\n";
+		}
+
+		head += "  </div>\n"
 			+	"  <h1>"+title+"</h1>\n"
 			+	"  <center>\n";
 		return head;
