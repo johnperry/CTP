@@ -334,6 +334,7 @@
 				<helptext>Require secure sockets layer for connection to the server</helptext>
 			</attr>
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
+			<attr name="exportDirectory" required="no" default=""/>
 			<attr name="quarantine" required="yes" default="quarantines/FileStorageService"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
@@ -548,6 +549,7 @@
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
 		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
+		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<fsName>File System name to insert in DicomObjects (optional)</fsName>
 		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee)</fsNameTag>
