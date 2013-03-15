@@ -116,7 +116,8 @@ public class Configuration {
 
 			logger.info("Start time:       "+StringUtil.getDateTime(" at "));
 			logger.info("user.dir:         "+System.getProperty("user.dir"));
-			logger.info("java.ext.dirs:    "+System.getProperty("java.ext.dirs") + "\n");
+			logger.info("java.ext.dirs:    "+System.getProperty("java.ext.dirs"));
+			logger.info("IP Address:       "+IPUtil.getIPAddress() + "\n");
 
 			//Instantiate the stages table
 			stages = new Hashtable<String,PipelineStage>();
