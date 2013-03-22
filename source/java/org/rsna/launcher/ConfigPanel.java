@@ -19,6 +19,11 @@ import javax.swing.border.*;
 import javax.swing.TransferHandler;
 import javax.swing.event.*;
 import javax.swing.tree.*;
+import org.rsna.util.ColorPane;
+import org.rsna.util.FileUtil;
+import org.rsna.util.RowLayout;
+import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
 import org.w3c.dom.*;
 
 public class ConfigPanel extends BasePanel {
@@ -79,7 +84,7 @@ public class ConfigPanel extends BasePanel {
 	public void load() {
 		if (!loaded) {
 			try {
-				Document configXML = Util.getDocument( new File("config.xml") );
+				Document configXML = XmlUtil.getDocument( new File("config.xml") );
 				loaded = treePane.load(configXML);
 			}
 			catch (Exception ex) { }
@@ -132,7 +137,7 @@ public class ConfigPanel extends BasePanel {
 		}
 		public Element getXML(String parentName) {
 			try {
-				Document doc = Util.getDocument();
+				Document doc = XmlUtil.getDocument();
 				Element root = doc.createElement(parentName);
 
 				Element element;
@@ -185,7 +190,7 @@ public class ConfigPanel extends BasePanel {
 					ZipEntry entry = zipFile.getEntry(templateFilename);
 					if (entry != null) {
 						in = new BufferedInputStream(zipFile.getInputStream(entry));
-						loadTemplates(Util.getDocument(in));
+						loadTemplates(XmlUtil.getDocument(in));
 					}
 				}
 				catch (Exception skip) { }
@@ -423,10 +428,10 @@ public class ConfigPanel extends BasePanel {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
 				if (checkConfig(config)) {
-					String xml = Util.toPrettyString(config);
+					String xml = XmlUtil.toPrettyString(config);
 					File configFile = new File("config.xml");
 					backupTarget(configFile);
-					try { Util.setText(configFile, xml); }
+					try { FileUtil.setText(configFile, xml); }
 					catch (Exception ignore) { }
 				}
 			}
@@ -637,7 +642,7 @@ public class ConfigPanel extends BasePanel {
 					if (fname.startsWith(target)) {
 						int kk = fname.indexOf("]", tlen);
 						if (kk > tlen) {
-							int nn = Util.getInt(fname.substring(tlen, kk), 0);
+							int nn = StringUtil.getInt(fname.substring(tlen, kk), 0);
 							if (nn > n) n = nn;
 						}
 					}
@@ -878,7 +883,7 @@ public class ConfigPanel extends BasePanel {
 			ColorPane cp = new ColorPane();
 			cp.setEditable(false);
 			cp.setScrollableTracksViewportWidth(false);
-			String xml = Util.toPrettyString(userObject.getXML());
+			String xml = XmlUtil.toPrettyString(userObject.getXML());
 			cp.setText(xml);
 			add(cp, BorderLayout.CENTER);
 		}
@@ -1059,22 +1064,25 @@ public class ConfigPanel extends BasePanel {
 		}
 
 		public Element getXML() {
-			Document doc = Util.getDocument();
-			Element root = doc.createElement(element.getTagName());
-			Component[] comps = getComponents();
-			for (Component c : comps) {
-				if (c instanceof AttrPanel) {
-					AttrPanel a = (AttrPanel)c;
-					String attrName = a.getName();
-					String attrValue = a.getValue();
-					String defaultValue = template.getAttrValue(attrName, "default");
-					boolean required = template.getAttrValue(attrName, "required").equals("yes");
-					if (required || (!attrValue.equals("") && !attrValue.equals(defaultValue))) {
-						root.setAttribute(attrName, attrValue);
+			try {
+				Document doc = XmlUtil.getDocument();
+				Element root = doc.createElement(element.getTagName());
+				Component[] comps = getComponents();
+				for (Component c : comps) {
+					if (c instanceof AttrPanel) {
+						AttrPanel a = (AttrPanel)c;
+						String attrName = a.getName();
+						String attrValue = a.getValue();
+						String defaultValue = template.getAttrValue(attrName, "default");
+						boolean required = template.getAttrValue(attrName, "required").equals("yes");
+						if (required || (!attrValue.equals("") && !attrValue.equals(defaultValue))) {
+							root.setAttribute(attrName, attrValue);
+						}
 					}
 				}
+				return root;
 			}
-			return root;
+			catch (Exception ex) { return null; }
 		}
 	}
 
@@ -1204,17 +1212,19 @@ public class ConfigPanel extends BasePanel {
 		ButtonGroup group;
 		public ConfigButtonGroup(String[] values, int selectedIndex) {
 			super();
-			setLayout( new RowLayout(10, 0) );
+			setLayout( new BoxLayout(this, BoxLayout.Y_AXIS) );
 			setBackground(Color.white);
 			group = new ButtonGroup();
 			for (int i=0; i<values.length; i++) {
+				Box box = new Box(BoxLayout.X_AXIS);
 				JRadioButton jrb = new JRadioButton( values[i] );
 				jrb.setSelected( (i==selectedIndex) );
 				jrb.setFont( new Font( "Monospaced", Font.BOLD, 12 ) );
 				jrb.setBackground(Color.white);
 				group.add(jrb);
-				add(jrb);
-				add(RowLayout.crlf());
+				box.add(jrb);
+				box.add(Box.createHorizontalGlue());
+				this.add(box);
 			}
 		}
 		public String getText() {
@@ -1459,7 +1469,7 @@ public class ConfigPanel extends BasePanel {
 						XMLUserObject sourceUO = (XMLUserObject)tr.getTransferData(flavors[i]);
 
 						//Make an element to insert, with all the children
-						Document doc = Util.getDocument();
+						Document doc = XmlUtil.getDocument();
 						Element root = doc.createElement( sourceUO.isStage() ? "Pipeline":"Configuration"  );
 						doc.appendChild(root);
 						Element sourceEl = sourceUO.getXML();

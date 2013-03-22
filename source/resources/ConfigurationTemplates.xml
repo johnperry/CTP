@@ -283,6 +283,13 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomPlanarConfigurationConverter"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPlanarConfigurationConverter" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomPlanarConfigurationConverter"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomPlanarConfigurationConverter"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="XmlAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.XmlAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/XmlAnonymizer"/>

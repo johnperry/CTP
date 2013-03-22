@@ -13,6 +13,12 @@ import java.io.File;
 import java.util.Properties;
 import javax.swing.*;
 import javax.swing.border.*;
+import org.rsna.util.BrowserUtil;
+import org.rsna.util.FileUtil;
+import org.rsna.util.IPUtil;
+import org.rsna.util.RowLayout;
+import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
 import org.w3c.dom.Element;
 
 public class JavaPanel extends BasePanel implements ActionListener {
@@ -132,10 +138,10 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	public void actionPerformed(ActionEvent event) {
 		if (event.getSource().equals(launchBrowser)) {
 			Configuration config = Configuration.getInstance();
-			String ip = Util.getIPAddress();
+			String ip = IPUtil.getIPAddress();
 			String protocol = "http" + (config.ssl ? "s" : "");
 			String url = protocol + "://" + ip + ":" + config.port;
-			Util.openURL( url );
+			BrowserUtil.openURL( url );
 		}
 		else if (event.getSource().equals(stop)) {
 			Util.shutdown();
@@ -152,16 +158,16 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	private void clearLogsDir() {
 		if (clearLogs.cb.isSelected()) {
 			File logs = new File("logs");
-			Util.deleteAll(logs);
+			FileUtil.deleteAll(logs);
 			IOPanel.out.clear();
 		}
 	}
 
 	private void run() {
-		int port = Util.getInt( serverPort.tf.getText().trim(), config.port );
+		int port = StringUtil.getInt( serverPort.tf.getText().trim(), config.port );
 		if (port != config.port) {
 			try {
-				Element server = Util.getFirstNamedChild( config.configXML, "Server" );
+				Element server = XmlUtil.getFirstNamedChild( config.configXML, "Server" );
 				server.setAttribute("port", Integer.toString(port));
 				config.saveXML();
 				config.port = port;

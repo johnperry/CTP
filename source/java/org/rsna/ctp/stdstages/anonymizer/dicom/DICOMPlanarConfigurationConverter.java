@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2013 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -39,40 +39,33 @@ import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.UIDs;
 import org.dcm4che.dict.VRs;
 
-import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 
 import org.apache.log4j.Logger;
 
 /**
- * The CTP DICOM pixel anonymizer. The anonymizer blanks regions of
- * DICOM objects for clinical trials.
+ * The CTP DICOM PlanarConfiguration Converter. This class has one
+ * static method that converts images to PlanarConfiguraton 0.
  */
-public class DICOMPixelAnonymizer {
+public class DICOMPlanarConfigurationConverter {
 
-	static final Logger logger = Logger.getLogger(DICOMPixelAnonymizer.class);
+	static final Logger logger = Logger.getLogger(DICOMPlanarConfigurationConverter.class);
 	static final DcmParserFactory pFact = DcmParserFactory.getInstance();
 	static final DcmObjectFactory oFact = DcmObjectFactory.getInstance();
 	static final DictionaryFactory dFact = DictionaryFactory.getInstance();
 	static final TagDictionary tagDictionary = dFact.getDefaultTagDictionary();
 
    /**
-     * Blanks the specified regions of the input file, writing the
-     * result to the output file. The input and output files are allowed
-     * to be the same.
+     * Convert an image to PlanarConfiguration 0.
      * @param inFile the file to anonymize.
      * @param outFile the output file, which may be same as inFile you if want
      * to anonymize in place.
-     * @param regions the object containing the pixel areas to blank.
      * @return the static status result
      */
-    public static AnonymizerStatus anonymize(
-			File inFile,
-			File outFile,
-			Regions regions) {
+    public static AnonymizerStatus convert(File inFile, File outFile) {
 
 		long fileLength = inFile.length();
-		logger.debug("Entering DICOMPixelAnonymizer.anonymize");
+		logger.debug("Entering DICOMPlanarConfigurationConverter.convert");
 		logger.debug("File length       = "+fileLength);
 
 		BufferedInputStream in = null;
@@ -111,9 +104,26 @@ public class DICOMPixelAnonymizer {
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Unable to get the rows and columns");
 			}
-			if ((bitsAllocated % 8) != 0) {
+			if (samplesPerPixel != 3) {
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "Unsupported SamplesPerPixel: "+samplesPerPixel);
+			}
+			if (bitsAllocated != 8) {
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
+			}
+			if (planarConfiguration != 1) {
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "Unsupported PlanarConfiguration: "+planarConfiguration);
+			}
+			if (!photometricInterpretation.equals("RGB")) {
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "Unsupported PhotometricInterpretation: "+photometricInterpretation);
+			}
+
+            if (parser.getReadTag() != Tags.PixelData) {
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "No pixels");
 			}
 
 			//Set the encoding
@@ -124,12 +134,14 @@ public class DICOMPixelAnonymizer {
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(prefEncodingUID);
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
 
-/**/		//While in development, abort on encapsulated pixel data
-/**/		if (encoding.encapsulated) {
+			if (encoding.encapsulated) {
 				logger.debug("Encapsulated pixel data found");
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
 			}
+
+			//Set PlanarConfiguration to 0
+			dataset.putUS(Tags.PlanarConfiguration, 0);
 
 			//Save the dataset to a temporary file, and rename at the end.
 			File tempDir = outFile.getParentFile();
@@ -145,51 +157,19 @@ public class DICOMPixelAnonymizer {
 			dataset.writeDataset(out, encoding);
 
 			//Process the pixels
-            if (parser.getReadTag() == Tags.PixelData) {
-                dataset.writeHeader(
-                    out,
-                    encoding,
-                    parser.getReadTag(),
-                    parser.getReadVR(),
-                    parser.getReadLength());
-                if (encoding.encapsulated) {
-                    parser.parseHeader();
-                    while (parser.getReadTag() == Tags.Item) {
-                        dataset.writeHeader(
-                            out,
-                            encoding,
-                            parser.getReadTag(),
-                            parser.getReadVR(),
-                            parser.getReadLength());
-                        writeValueTo(parser, buffer, out, false);
-                        parser.parseHeader();
-                    }
-                    if (parser.getReadTag() != Tags.SeqDelimitationItem) {
-                        throw new Exception(
-                            "Unexpected Tag: " + Tags.toString(parser.getReadTag()));
-                    }
-                    if (parser.getReadLength() != 0) {
-                        throw new Exception(
-                            "(fffe,e0dd), Length:" + parser.getReadLength());
-                    }
-                    dataset.writeHeader(
-                        out,
-                        encoding,
-                        Tags.SeqDelimitationItem,
-                        VRs.NONE,
-                        0);
-                } else {
-					processPixels(parser,
-								  out,
-								  swap && (parser.getReadVR() == VRs.OW),
-								  numberOfFrames, samplesPerPixel, planarConfiguration, photometricInterpretation,
-								  rows, columns, bitsAllocated,
-								  regions);
-					logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
-                }
-				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
-			}
+			dataset.writeHeader(
+				out,
+				encoding,
+				parser.getReadTag(),
+				parser.getReadVR(),
+				parser.getReadLength());
+			processPixels(parser, out, numberOfFrames, rows, columns);
 			logger.debug("Finished writing the pixels");
+
+			 //Get ready for the next element
+			logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
+			if (parser.getStreamPosition() < fileLength) parser.parseHeader();
+
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -261,82 +241,46 @@ public class DICOMPixelAnonymizer {
     private static void processPixels(
 							DcmParser parser,
 							OutputStream out,
-							boolean swap,
 							int numberOfFrames,
-							int samplesPerPixel,
-							int planarConfiguration,
-							String photometricInterpretation,
 							int rows,
-							int columns,
-							int bitsAllocated,
-							Regions regions) throws Exception {
+							int columns) throws Exception {
 
 		int len = parser.getReadLength();
 		logger.debug("Read length       = "+len);
 
-		int bytesPerPixel = bitsAllocated/8;
+		int size = rows * columns;
+		byte[] r = new byte[size];
+		byte[] g = new byte[size];
+		byte[] b = new byte[size];
+		byte[] rgb = new byte[3*size];
 
-		if (planarConfiguration == 0) {
-			//MONOCHROME2 or RGB images arranged as RGBRGBRGB...
-			//Here, we treat each frame as a single frame with
-			//pixels which are samplesPerPixel wide.
-			bytesPerPixel *= samplesPerPixel;
-		}
-		else {
-			//RGB images arranged in three layers, as RRR...GGG...BBB...
-			//Here, we treat each frame as samplesPerPixel subframes,
-			//one for each sample, with each pixel in a subframe being
-			//a single sample wide.
-			numberOfFrames *= samplesPerPixel;
-		}
-
-		String pi = photometricInterpretation.toUpperCase();
-		boolean isYBR = pi.startsWith("YBR");
-		//boolean isM2 = pi.equals("MONOCHROME2");
-
-		int bytesPerRow = bytesPerPixel * columns;
-		byte[] buffer = new byte[bytesPerRow];
 		InputStream in = parser.getInputStream();
 		for (int frame=0; frame<numberOfFrames; frame++) {
-			byte value = (byte)(isYBR ? 128 : 0);
-			if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) value = 0;
-			for (int row=0; row<rows; row++) {
-				int c = in.read(buffer, 0, buffer.length);
-				if ((c == -1) || (c != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
-				blankRegions(buffer, row, columns, bytesPerPixel, regions, value);
-				if (swap) swapBytes(buffer);
-				out.write(buffer, 0, bytesPerRow);
+			getColor(in, r);
+			getColor(in, g);
+			getColor(in, b);
+			int ptr = 0;
+			for (int k=0; k<size; k++) {
+				rgb[ptr++] = r[k];
+				rgb[ptr++] = g[k];
+				rgb[ptr++] = b[k];
 			}
+			out.write(rgb, 0, rgb.length);
 		}
 		//Add a byte to the end if we have written an odd number of bytes
-		long nbytes = numberOfFrames * rows * bytesPerRow;
+		long nbytes = numberOfFrames * rows * columns * 3;
 		logger.debug("numberOfFrames    = "+numberOfFrames);
 		logger.debug("rows              = "+rows);
 		logger.debug("columns           = "+columns);
-		logger.debug("bytesPerPixel     = "+bytesPerPixel);
 		logger.debug("Total image bytes = "+nbytes);
 		if ((nbytes & 1) != 0) out.write(0);
 
 		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
-	private static void blankRegions(byte[] bytes, int row, int columns, int bytesPerPixel, Regions regions, byte value) {
-		int[] ranges = regions.getRangesFor(row);
-		for (int i=0; i<ranges.length; i+=2) {
-			int left = bytesPerPixel * ranges[i];
-			int right = Math.min( bytesPerPixel * (ranges[i+1] + 1), bytes.length );
-			for (int k=left; k<right; k++) bytes[k] = value;
-		}
-	}
-
-	private static void swapBytes(byte[] bytes) {
-		int len = bytes.length & 0xffffFFFE;
-		byte b;
-		for (int i=0; i<len; i+=2) {
-			b = bytes[i];
-			bytes[i] = bytes[i+1];
-			bytes[i+1] = b;
-		}
+	private static void getColor(InputStream in, byte[] buffer) throws Exception {
+		int c = in.read(buffer, 0, buffer.length);
+		if ((c == -1) || (c != buffer.length)) throw new EOFException("Read error");
 	}
 
 	private static void writeValueTo(

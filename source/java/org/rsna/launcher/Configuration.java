@@ -10,6 +10,9 @@ package org.rsna.launcher;
 import java.io.*;
 import java.util.*;
 import org.w3c.dom.Document;
+import org.rsna.util.FileUtil;
+import org.rsna.util.JarUtil;
+import org.rsna.util.XmlUtil;
 
 public class Configuration {
 
@@ -57,8 +60,7 @@ public class Configuration {
 	protected Configuration() throws Exception {
 
 		//Get the configuration parameters from the CTP config file.
-		configXML = Util.getDocument(configFile);
-		if (configXML == null) throw new Exception("The config file is missing or does not parse.");
+		configXML = XmlUtil.getDocument(configFile);
 
 		isMIRC = Util.containsAttribute(configXML, "Plugin", "class", "mirc.MIRC");
 		isISN = (new File("libraries/isn/ISN.jar")).exists();
@@ -87,22 +89,22 @@ public class Configuration {
 		File jai = new File(extDir, "jai_imageio.jar");
 		imageIOTools = clib.exists() && jai.exists();
 		if (imageIOTools) {
-			Hashtable<String,String> jaiManifest = Util.getManifestAttributes(jai);
+			Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);
 			imageIOVersion  = jaiManifest.get("Implementation-Version");
 		}
 
 		//Get the CTP.jar parameters
-		Hashtable<String,String> manifest = Util.getManifestAttributes(ctp);
+		Hashtable<String,String> manifest = JarUtil.getManifestAttributes(ctp);
 		ctpDate = manifest.get("Date");
 		ctpJava = manifest.get("Java-Version");
 
 		//Get the util.jar parameters
-		Hashtable<String,String> utilManifest = Util.getManifestAttributes("libraries/util.jar");
+		Hashtable<String,String> utilManifest = JarUtil.getManifestAttributes(new File("libraries/util.jar"));
 		utilDate = utilManifest.get("Date");
 		utilJava = utilManifest.get("Java-Version");
 
 		//Get the MIRC.jar parameters (if the plugin is present)
-		Hashtable<String,String> mircManifest = Util.getManifestAttributes("libraries/MIRC.jar");
+		Hashtable<String,String> mircManifest = JarUtil.getManifestAttributes(new File("libraries/MIRC.jar"));
 		if (mircManifest != null) {
 			mircJava = mircManifest.get("Java-Version");
 			mircDate = mircManifest.get("Date");
@@ -110,7 +112,7 @@ public class Configuration {
 		}
 
 		//Get the ISN.jar parameters
-		Hashtable<String,String> isnManifest = Util.getManifestAttributes("libraries/isn/ISN.jar");
+		Hashtable<String,String> isnManifest = JarUtil.getManifestAttributes(new File("libraries/isn/ISN.jar"));
 		if (isnManifest != null) {
 			isnJava = isnManifest.get("Java-Version");
 			isnDate = isnManifest.get("Date");
@@ -161,7 +163,7 @@ public class Configuration {
 	}
 
 	public void saveXML() throws Exception {
-		Util.setText( configFile, Util.toPrettyString( configXML ) );
+		FileUtil.setText( configFile, XmlUtil.toPrettyString( configXML ) );
 	}
 
 }

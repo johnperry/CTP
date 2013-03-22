@@ -14,6 +14,7 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import org.rsna.util.StringUtil;
 
 /**
  * The ClinicalTrialProcessor program launcher.
@@ -106,10 +107,10 @@ public class Launcher extends JFrame implements ChangeListener {
 
 	private void positionFrame() {
 		Properties props = Configuration.getInstance().props;
-		int x = Util.getInt( props.getProperty("x"), 0 );
-		int y = Util.getInt( props.getProperty("y"), 0 );
-		int w = Util.getInt( props.getProperty("w"), 0 );
-		int h = Util.getInt( props.getProperty("h"), 0 );
+		int x = StringUtil.getInt( props.getProperty("x"), 0 );
+		int y = StringUtil.getInt( props.getProperty("y"), 0 );
+		int w = StringUtil.getInt( props.getProperty("w"), 0 );
+		int h = StringUtil.getInt( props.getProperty("h"), 0 );
 		int wmin = 500;
 		int hmin = 600;
 		if ((w < wmin) || (h < hmin)) {

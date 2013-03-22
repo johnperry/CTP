@@ -11,6 +11,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import javax.swing.*;
+import org.rsna.util.ColorPane;
+import org.rsna.util.FileUtil;
 
 public class LogPanel extends BasePanel implements ActionListener {
 
@@ -54,7 +56,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 	public void reload() {
 		out.clear();
 		if (log.exists()) {
-			try { out.append( Util.getText( log ) ); }
+			try { out.append( FileUtil.getText( log ) ); }
 			catch (Exception ignore) { }
 		}
 	}
@@ -65,7 +67,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 		}
 		else if (event.getSource().equals(delete)) {
 			File logs = new File("logs");
-			Util.deleteAll(logs);
+			FileUtil.deleteAll(logs);
 			reload();
 		}
 	}
