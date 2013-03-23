@@ -182,10 +182,14 @@ public class DicomAnonymizerServlet extends Servlet {
 			//This is a request to save a specific script.
 			//Don't force the extension on scripts because that
 			//might invalidate the reference in the config file.
-			if (FileUtil.setText(file, FileUtil.utf8, xml))
+			if (FileUtil.setText(file, FileUtil.utf8, xml)) {
 				res.write("OK");
-			else
+				logger.debug("Successfully stored the posted script to "+file);
+			}
+			else {
 				res.write("Unable to store "+file);
+				logger.debug("Unable to store the posted script to "+file);
+			}
 		}
 
 		else res.setResponseCode(res.notimplemented);
