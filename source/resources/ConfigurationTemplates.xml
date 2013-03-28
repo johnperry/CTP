@@ -283,6 +283,13 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomMammoPixelAnonymizer"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomMammoPixelAnonymizer" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomMammoPixelAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomMammoPixelAnonymizer"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="DicomPlanarConfigurationConverter"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPlanarConfigurationConverter" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomPlanarConfigurationConverter"/>

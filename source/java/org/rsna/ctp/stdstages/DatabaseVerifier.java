@@ -312,7 +312,9 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 								//Finally, remove this uid from the unverifiedList.
 								unverifiedList.remove(sopiUID);
 							}
-							else logger.debug("Mismatched digest for "+sopiUID);
+							else logger.debug("Mismatched digest for "+sopiUID
+												+ "\n                Local  = "+uvobj.digest
+												+ "\n                Remote = "+digest);
 
 							//Remove the object if it has timed out, even if it has not yet been verified.
 							if ((maxAge > 0) && ((System.currentTimeMillis() - uvobj.datetime) > maxAge)) {
