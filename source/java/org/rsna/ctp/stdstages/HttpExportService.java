@@ -40,6 +40,7 @@ public class HttpExportService extends AbstractExportService {
 	String authHeader = null;
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
+	boolean sendDigestHeader = false;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -58,6 +59,10 @@ public class HttpExportService extends AbstractExportService {
 
 		//See if we are to log duplicate transmissions
 		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
+
+		//See if we are to send a digest header with a file transmission.
+		//Note: digest headers are not supplied if zip file transmission is enabled.
+		sendDigestHeader = element.getAttribute("sendDigestHeader").equals("yes");
 
 		//Get the credentials, if they are present.
 		username = element.getAttribute("username").trim();
@@ -90,16 +95,19 @@ public class HttpExportService extends AbstractExportService {
 		HttpURLConnection conn;
 		OutputStream svros;
 		try {
+			FileObject fileObject = FileObject.getInstance( fileToExport );
+
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
 			}
+			if (sendDigestHeader && !zip) {
+				conn.setRequestProperty("Digest", fileObject.getDigest());
+			}
 			conn.connect();
-			svros = conn.getOutputStream();
 
-			FileObject fileObject = FileObject.getInstance( fileToExport );
 			if (logDuplicates) {
 				//*********************************************************************************************
 				//See if this object has the same UID as a recent one.
@@ -126,6 +134,7 @@ public class HttpExportService extends AbstractExportService {
 			}
 
 			//Send the file to the server
+			svros = conn.getOutputStream();
 			if (!zip) FileUtil.streamFile(fileToExport, svros);
 			else FileUtil.zipStreamFile(fileToExport, svros);
 

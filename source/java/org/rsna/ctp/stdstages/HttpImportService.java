@@ -18,6 +18,7 @@ import java.util.zip.*;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import org.apache.log4j.Logger;
+import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractImportService;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
@@ -139,7 +140,7 @@ public class HttpImportService extends AbstractImportService {
 					//Good authentication, turn on auth logging again.
 					logAuthenticationFailures = true;
 
-					//Only accept POST requests have Content-Type = application/x-mirc.
+					//Only accept POST requests that have Content-Type = application/x-mirc.
 					if ( req.method.equals("POST") &&
 							req.getContentType().contains("application/x-mirc") ) {
 						if (getPostedFile(req)) {
@@ -208,6 +209,17 @@ public class HttpImportService extends AbstractImportService {
 					contentLength -= len;
 				}
 				out.flush(); out.close(); out = null;
+
+				//If there is a digest header, check the file
+				String digestHeader = req.getHeader("Digest");
+				if (digestHeader != null) {
+					FileObject fob = new FileObject(tempFile);
+					if (!digestHeader.equals(fob.getDigest())) {
+						logger.warn("Digest comparison failure detected for "+tempFile);
+						return false;
+					}
+				}
+
 				if (!zip) fileReceived(tempFile);
 				else unpackAndReceive(tempFile);
 			}

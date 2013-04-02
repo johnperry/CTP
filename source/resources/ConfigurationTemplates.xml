@@ -453,6 +453,7 @@
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
+			<attr name="sendDigestHeader" required="yes" default="no" options="yes|no"/>
 			<attr name="username" required="no" default=""/>
 			<attr name="password" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
@@ -587,6 +588,7 @@
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>
 		<root>Storage directory for use by the stage for data (must be unique)</root>
 		<script>The filter script file determining whether objects are to be quarantined</script>
+		<sendDigestHeader>Include a Digest header in the connection to allow the destination to detect errors at the application level</sendDigestHeader>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
 		<ssl>Use SSL for communication</ssl>
