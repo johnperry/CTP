@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# chkconfig:		2345 75 15
-# description: 		ctp-service
 ### BEGIN INIT INFO
-# Provides:		ctp-service
-# Required-Start:	$all
-# Required-Stop:	$all
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
+# Provides: ctp-service
+# Should-Start: postgresql
+# Should-Stop: postgresql
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: starts the ctp-service
 ### END INIT INFO
+
 
 ################################################
 # Author: SG Langer 12/11/2012
@@ -18,43 +18,46 @@
 #	http://mircwiki.rsna.org/index.php?title=Running_CTP_as_a_Linux_Service
 #
 # Usage: Assuming that this script lives in CTP_HOME, then
-#	a) make a symbolic link to this in /etc/init.d like this 
-#		> ln -s /CTP_HOME/ctp-service ctpService
+#	a) make a symbolic link to this in /etc/init.d like this
+#		> ln -s /CTP_HOME/linux/ctpService.sh /etc/init.d/ctpService
 #	b) then add the new service to boot via this
-#		> chkconfig --add ctpService
+#		> update-rc.d ctpService defaults 98 02
 #
-#	CTP will now be controllable like any other 
-#	service
+#	CTP will now be controllable like any other service.
+#	The parameters 98 02 tell the operating system to start
+#	CTP very late in the boot process and to kill it very
+#	early in the shutdown process. This is done because no
+#	other services make use of CTP directly.
 ###################################################
 
 clear
 
-# Source function library.
-. /etc/rc.d/init.d/functions
+USER=edge
+CTP_HOME=${CTP_HOME}
+JAVA_BIN=${JAVA_BIN}
+JAVA=$JAVA_BIN/java
+CTP_PID=$CTP_HOME/ctp.pid
 
-JAVA_HOME="/usr/lib/jvm/java-openjdk"
-JAVA_BIN="/usr/bin"
-CLASSPATH=".:/usr/java/default/jre/lib:/usr/java/default/lib:/usr/java/default/lib/tools.jar"
-CTP_HOME="/opt/CTP"
+. /lib/lsb/init-functions
 
 add_to_path() {
-######################################
+#####################################
 # Purpose: check if a substr exists in PATH
 #	Add if not
 #
 # $1 = Substr to look for in path
-######################################
-  #echo "original path"
-  #echo $PATH
+#####################################
+  echo "original path"
+  echo $PATH
 
   if [[ "$PATH" =~ (^|:)"$1"(:|$) ]]; then
-	#echo "PATH contains test string, returning"
+	echo "PATH contains test string, returning"
 	return 0
   else
-	#echo "PATH does not contain test string, adding"
+	echo "PATH does not contain test string, adding"
 	export PATH=$PATH:$1
-	#echo "New path"
-	#echo $PATH
+	echo "New path"
+	echo $PATH
   fi
 }
 
@@ -63,15 +66,25 @@ start() {
 # Purpose: start CTP and record PID
 #
 #################################
-	echo "in start"
+	log_daemon_msg "Start CTP"
+	echo "in stop"
 	ret=$(ps aux |grep libraries)
-	if [[ "$ret" =~ "java" ]]; then
+	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP already running, stop first"
 		return 0
 	fi
-	#eval "( java -Dinstall4j.jvmDir="$JAVA_HOME" -classpath "$CLASSPATH" -jar $CTP_HOME/	Runner.jar) &"
-	eval "( java  -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar) &"
-	return 0
+
+        if start-stop-daemon --start -v -c $USER -d $CTP_HOME -m -b --pidfile $CTP_PID --startas $JAVA -- -jar $CTP_HOME/Runner.jar; then
+
+	    echo "CTP started"
+        else
+            log_end_msg 1
+	    echo "CTP did not start"
+            exit 1
+	fi
+
+       log_end_msg 0
+	
 	# this PID is not useful becuase Runner.jar creates a sub-process
 	#pid=$!
 	#echo $pid>$CTP_HOME/pid
@@ -90,7 +103,7 @@ stop() {
 ##################################
 	echo "in stop"
 	ret=$(ps aux |grep libraries)
-	if [[ "$ret" =~ "java" ]]; then
+	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP is running"
 		array=($ret)
 		#echo $ret
@@ -110,7 +123,7 @@ status() {
 ####################################
 	echo "in status"
 	ret=$(ps aux |grep libraries)
-	if [[ "$ret" =~ "java" ]]; then
+	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP is running"
 		echo $ret
 	else
@@ -146,5 +159,6 @@ case $1 in
 		echo "valid options: start/stop/restart/status"
 	;;
 esac
+
 
 exit

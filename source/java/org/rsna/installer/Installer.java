@@ -189,6 +189,7 @@ public class Installer extends JFrame {
 		if (count > 0) {
 			//Create the service installer batch files.
 			updateWindowsServiceInstaller();
+			updateLinuxServiceInstaller();
 
 			//If this was a new installation, set up the config file and set the port
 			installConfigFile(port);
@@ -534,7 +535,8 @@ public class Installer extends JFrame {
 			if (suppressFirstPathElement) dir = dir.getParentFile();
 			File windows = new File(dir, "windows");
 			File install = new File(windows, "install.bat");
-			cp.appendln(Color.black, "install.bat: "+install.getAbsolutePath());
+			cp.appendln(Color.black, "Windows service installer:");
+			cp.appendln(Color.black, install.getAbsolutePath());
 			String bat = getFileText(install);
 			Properties props = new Properties();
 			String home = dir.getAbsolutePath();
@@ -550,6 +552,44 @@ public class Installer extends JFrame {
 			JOptionPane.showMessageDialog(this,
 					"Unable to update the windows service install.bat file.",
 					"Windows Service Installer",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+
+	private void updateLinuxServiceInstaller() {
+		try {
+			File dir = new File(directory, "CTP");
+			if (suppressFirstPathElement) dir = dir.getParentFile();
+			File linux = new File(dir, "linux");
+			File install = new File(linux, "ctpService-ubuntu.sh");
+			cp.appendln(Color.black, "Linux service installer:");
+			cp.appendln(Color.black, install.getAbsolutePath());
+			String bat = getFileText(install);
+			Properties props = new Properties();
+			String ctpHome = dir.getAbsolutePath();
+			cp.appendln(Color.black, "CTP_HOME: "+ctpHome);
+			ctpHome = ctpHome.replaceAll("\\\\", "\\\\\\\\");
+			props.put("CTP_HOME", ctpHome);
+			File javaHome = new File(System.getProperty("java.home"));
+			String javaBin = (new File(javaHome, "bin")).getAbsolutePath();
+			cp.appendln(Color.black, "JAVA_BIN: "+javaBin);
+			javaBin = javaBin.replaceAll("\\\\", "\\\\\\\\");
+			props.put("JAVA_BIN", javaBin);
+
+			bat = replace(bat, props);
+			setFileText(install, bat);
+			String osName = System.getProperty("os.name").toLowerCase();
+			if (programName.equals("ISN") && !osName.contains("windows")) {
+				File initDir = new File("/etc/init.d");
+				File initFile = new File(initDir, "ctpService");
+				if (initDir.exists()) setFileText(initFile, bat);
+			}
+		}
+		catch (Exception ex) {
+			ex.printStackTrace();
+			JOptionPane.showMessageDialog(this,
+					"Unable to update the Linux service ctpService.sh file.",
+					"Linux Service Installer",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
