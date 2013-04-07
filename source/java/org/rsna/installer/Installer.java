@@ -582,7 +582,12 @@ public class Installer extends JFrame {
 			if (programName.equals("ISN") && !osName.contains("windows")) {
 				File initDir = new File("/etc/init.d");
 				File initFile = new File(initDir, "ctpService");
-				if (initDir.exists()) setFileText(initFile, bat);
+				if (initDir.exists()) {
+					setFileText(initFile, bat);
+					initFile.setReadable(true, false); //everybody can read //Java 1.6
+					initFile.setWritable(true); //only the owner can write //Java 1.6
+					initFile.setExecutable(true, false); //everybody can execute //Java 1.6
+				}
 			}
 		}
 		catch (Exception ex) {

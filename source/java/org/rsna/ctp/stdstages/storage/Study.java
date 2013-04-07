@@ -47,8 +47,8 @@ public class Study implements Comparable {
 		this.fileSystem = fileSystem;
 		this.studyName = studyName;
 		dir.mkdirs();
-//		if (fileSystem.getSetReadable()) dir.setReadable(true,false); //Java 1.6
-//		if (fileSystem.getSetWritable()) dir.setWritable(true,false); //Java 1.6
+		if (fileSystem.getSetReadable()) dir.setReadable(true,false); //Java 1.6
+		if (fileSystem.getSetWritable()) dir.setWritable(true,false); //Java 1.6
 		indexFile = new File(dir,"__index.xml");
 		try {
 			getIndex();

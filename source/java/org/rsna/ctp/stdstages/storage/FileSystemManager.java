@@ -120,8 +120,8 @@ public class FileSystemManager {
 		this.qualifiers = qualifiers;
 		this.exportDirectory = exportDirectory;
 		fileSystems = new Hashtable<String,FileSystem>();
-//		if (setReadable) root.setReadable(true,false); //Java 1.6
-//		if (setWritable) root.setWritable(true,false); //Java 1.6
+		if (setReadable) root.setReadable(true,false); //Java 1.6
+		if (setWritable) root.setWritable(true,false); //Java 1.6
 	}
 
 	/**

@@ -87,8 +87,8 @@ public class FileSystem {
 		dir.mkdirs();
 		dirNameLength = dir.getAbsolutePath().length();
 		indexFile = new File(dir,"__index.xml");
-//		if (setReadable) dir.setReadable(true,false); //Java 1.6
-//		if (setWritable) dir.setWritable(true,false); //Java 1.6
+		if (setReadable) dir.setReadable(true,false); //Java 1.6
+		if (setWritable) dir.setWritable(true,false); //Java 1.6
 		guestList = new GuestList(dir);
 	}
 
