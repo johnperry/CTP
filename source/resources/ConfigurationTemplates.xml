@@ -609,16 +609,60 @@
 			<DicomImportService
 				name="DICOM Server Import"
 				class="org.rsna.ctp.stdstages.DicomImportService"
-				root="test/roots/dicomserver/dicom-import"
+				root="roots/DicomImportService"
 				port="8104"
-				quarantine="test/quarantines/dicomserver/dicom-import" />
+				quarantine="quarantines/DicomImportService" />
 			<FileStorageService
 				name="DICOM Server File Storage"
 				class="org.rsna.ctp.stdstages.FileStorageService"
-				root="test/storage/dicomserver/file"
+				root="storage/FileStorageService"
 				port="8105"
 				returnStoredFile="no"
-				quarantine="test/quarantines/dicomserver/file-storage" />
+				quarantine="quarantines/FileStorageService" />
+		</Pipeline>
+
+		<Pipeline name="CTP-Generic Anonymizer">
+			<DicomImportService
+				name="DicomImportService"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="rejected"
+				port="8106"
+				quarantine="quarantines/DicomImportService"
+				root="roots/DicomImportService"/>
+			<DicomFilter
+				name="DicomFilter"
+				class="org.rsna.ctp.stdstages.DicomFilter"
+				root="roots/DicomFilter"
+				script="scripts/dicom-filter.script"/>
+			<DicomDecompressor
+				name="DicomDecompressor"
+				class="org.rsna.ctp.stdstages.DicomDecompressor"
+				root="roots/DicomDecompressor"
+				quarantine="quarantines/DicomDecompressor"/>
+			<DicomPixelAnonymizer
+				name="DicomPixelAnonymizer"
+				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+				log="yes"
+				root="roots/CDAnonymizer/DicomPixelAnonymizer"
+				script="scripts/DicomPixelAnonymizer.script"
+				quarantine="quarantines/DicomPixelAnonymizer"/>
+			<DicomAnonymizer
+				name="DicomAnonymizer"
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				lookupTable="scripts/lookup-table.properties"
+				quarantine="quarantines/DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/DicomServiceAnonymizerFileroom.script"/>
+			<DicomExportService
+				name="DicomExportService"
+				class="org.rsna.ctp.stdstages.DicomExportService"
+				root="roots/DicomExportService"
+				quarantine="quarantines/DicomExportService"
+				url="dicom://Autoburn_AE:ANONYMIZER@141.214.102.150:5006"
+				forceClose="no"
+				dicomScript="scripts/df.script"
+				throttle="0"
+				interval="5000"/>
 		</Pipeline>
 
 		<Pipeline name="DICOM De-identification to Local Storage">
@@ -653,7 +697,6 @@
 				script="scripts/DicomPixelAnonymizer.script"/>
 			<FileStorageService
 				class="org.rsna.ctp.stdstages.FileStorageService"
-				id="FileStorageService"
 				name="FileStorageService"
 				root="roots/FileStorageService"
 				setWorldReadable="yes"
@@ -712,7 +755,6 @@
 				acceptFileObjects="no"
 				acceptZipObjects="no"
 				class="org.rsna.ctp.stdstages.FileStorageService"
-				id="FileStorageService"
 				name="FileStorageService"
 				root="roots/FileStorageService"
 				setWorldReadable="yes"
