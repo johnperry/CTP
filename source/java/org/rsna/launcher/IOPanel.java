@@ -10,7 +10,7 @@ package org.rsna.launcher;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import org.rsna.util.ColorPane;
+import org.rsna.ui.ColorPane;
 
 public class IOPanel extends BasePanel {
 

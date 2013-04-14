@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import javax.swing.*;
-import org.rsna.util.ColorPane;
+import org.rsna.ui.ColorPane;
 import org.rsna.util.FileUtil;
 
 public class LogPanel extends BasePanel implements ActionListener {
