@@ -50,24 +50,26 @@ public class DicomPlanarConfigurationConverter extends AbstractPipelineStage imp
 	public FileObject process(FileObject fileObject) {
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
-		if ( (fileObject instanceof DicomObject)
-				&& ((DicomObject)fileObject).isImage()
-					&& (((DicomObject)fileObject).getPlanarConfiguration() == 1) ) {
-			File file = fileObject.getFile();
-			AnonymizerStatus status = DICOMPlanarConfigurationConverter.convert(file, file);
-			if (status.isOK()) {
-				fileObject = FileObject.getInstance(file);
+		if (fileObject instanceof DicomObject) {
+			DicomObject dob = (DicomObject)fileObject;
+			if (dob.isImage()
+					&& (dob.getPlanarConfiguration() == 1)
+						&& (dob.getSamplesPerPixel() == 3)) {
+				File file = fileObject.getFile();
+				AnonymizerStatus status = DICOMPlanarConfigurationConverter.convert(file, file);
+				if (status.isOK()) {
+					fileObject = FileObject.getInstance(file);
+				}
+				else if (status.isSKIP()) {
+					logger.info(status.getMessage());
+				}
+				else if (status.isQUARANTINE()) {
+					if (quarantine != null) quarantine.insert(fileObject);
+					lastFileOut = null;
+					lastTimeOut = System.currentTimeMillis();
+					return null;
+				}
 			}
-			else if (status.isSKIP()) {
-				logger.info(status.getMessage());
-			}
-			else if (status.isQUARANTINE()) {
-				if (quarantine != null) quarantine.insert(fileObject);
-				lastFileOut = null;
-				lastTimeOut = System.currentTimeMillis();
-				return null;
-			}
-			else if (status.isSKIP()) ; //keep the input object
 		}
 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());

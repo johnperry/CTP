@@ -33,6 +33,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	PixelScript script = null;
 	long lastModified = 0;
 	boolean log = false;
+	boolean test = false;
 
 	/**
 	 * Construct the DicomPixelAnonymizer PipelineStage.
@@ -43,6 +44,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 		super(element);
 		log = element.getAttribute("log").trim().equals("yes");
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-pixel-anonymizer.script");
+		test = element.getAttribute("test").trim().equals("yes");
 	}
 
 	/**
@@ -66,7 +68,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 				if (signature != null) {
 					Regions regions = signature.regions;
 					if ((regions != null) && (regions.size() > 0)) {
-						AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions);
+						AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions, test);
 						if (status.isOK()) {
 							fileObject = FileObject.getInstance(file);
 						}

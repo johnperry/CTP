@@ -15,6 +15,11 @@
 			<attr name="proxyUsername" required="no" default=""/>
 			<attr name="proxyPassword" required="no" default=""/>
 			<attr name="usersClassName" required="no" default="org.rsna.server.UsersXmlFileImpl"/>
+			<attr name="initialContextFactory" required="no" default=""/>
+			<attr name="providerURL" required="no" default=""/>
+			<attr name="securityAuthentication" required="no" default=""/>
+			<attr name="securityPrincipal" required="no" default=""/>
+			<attr name="ldapAdmin" required="no" default=""/>
 		</Server>
 
 		<Plugin>
@@ -280,6 +285,12 @@
 				<helptext>The script file containing document signatures and blanking regions</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomPixelAnonymizer"/>
+			<attr name="log" required="no" default="no" options="yes|no">
+				<helptext>Log the matching signature</helptext>
+			</attr>
+			<attr name="test" required="no" default="no" options="yes|no">
+				<helptext>Test mode causes regions to be highlighted rather than set to black</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>
@@ -569,7 +580,9 @@
 		<fsName>File System name to insert in DicomObjects (optional)</fsName>
 		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee)</fsNameTag>
 		<id>This field is required only when the stage is to be referenced by another stage. If present, it must be unique.</id>
+		<initialContextFactory>The LDAP context factory (e.g., com.sun.jndi.ldap.LdapCtxFactory)</initialContextFactory>
 		<interval>Sleep time in milliseconds between polls of the export queue</interval>
+		<ldapAdmin>The LDAP admin username (e.g., adminUserName)</ldapAdmin>
 		<logConnections>Log IP addresses of received connections</logConnections>
 		<logDuplicates>Make a log entry whenever a duplicate SOPInstanceUID is stored</logDuplicates>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
@@ -578,6 +591,7 @@
 		<password>The password for authentication, if required by the destination system</password>
 		<poolSize>The number of active DatabaseAdapters to run concurrently</poolSize>
 		<port>Port on which the stage listens for connections</port>
+		<providerURL>The LDAP provider URL (e.g., ldaps://example.org)</providerURL>
 		<proxyIPAddress>The IP address of the proxy server (or blank if no proxy server)</proxyIPAddress>
 		<proxyPassword>The password for proxy authentication (or blank if proxy authentication is not used)</proxyPassword>
 		<proxyPort>The port of the proxy server (or blank if no proxy server)</proxyPort>
@@ -588,6 +602,8 @@
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>
 		<root>Storage directory for use by the stage for data (must be unique)</root>
 		<script>The filter script file determining whether objects are to be quarantined</script>
+		<securityAuthentication>The LDAP authentication method (e.g., simple)</securityAuthentication>
+		<securityPrincipal>The LDAP principal (e.g., cn=${username}, ou=people, dc=med, dc=university, dc=edu)</securityPrincipal>
 		<sendDigestHeader>Include a Digest header in the connection to allow the destination to detect errors at the application level</sendDigestHeader>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>

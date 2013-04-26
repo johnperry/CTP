@@ -69,7 +69,8 @@ public class DICOMPixelAnonymizer {
     public static AnonymizerStatus anonymize(
 			File inFile,
 			File outFile,
-			Regions regions) {
+			Regions regions,
+			boolean test) {
 
 		long fileLength = inFile.length();
 		logger.debug("Entering DICOMPixelAnonymizer.anonymize");
@@ -184,7 +185,7 @@ public class DICOMPixelAnonymizer {
 								  swap && (parser.getReadVR() == VRs.OW),
 								  numberOfFrames, samplesPerPixel, planarConfiguration, photometricInterpretation,
 								  rows, columns, bitsAllocated,
-								  regions);
+								  regions, test);
 					logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
                 }
 				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
@@ -269,7 +270,8 @@ public class DICOMPixelAnonymizer {
 							int rows,
 							int columns,
 							int bitsAllocated,
-							Regions regions) throws Exception {
+							Regions regions,
+							boolean test) throws Exception {
 
 		int len = parser.getReadLength();
 		logger.debug("Read length       = "+len);
@@ -298,7 +300,7 @@ public class DICOMPixelAnonymizer {
 		byte[] buffer = new byte[bytesPerRow];
 		InputStream in = parser.getInputStream();
 		for (int frame=0; frame<numberOfFrames; frame++) {
-			byte value = (byte)(isYBR ? 128 : 0);
+			byte value = (byte)(isYBR ? (test ? 0 : 128) : (test ? 127 : 0));
 			if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) value = 0;
 			for (int row=0; row<rows; row++) {
 				int c = in.read(buffer, 0, buffer.length);
