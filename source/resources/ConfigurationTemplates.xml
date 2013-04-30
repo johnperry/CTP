@@ -16,7 +16,7 @@
 			<attr name="proxyPassword" required="no" default=""/>
 			<attr name="keystore" required="no" default="keystore"/>
 			<attr name="keystorePassword" required="no" default="ctpstore"/>
-			<attr name="truststore" required="no" default="keystore"/>
+			<attr name="truststore" required="no" default=""/>
 			<attr name="truststorePassword" required="no" default=""/>
 			<attr name="usersClassName" required="no" default="org.rsna.server.UsersXmlFileImpl"/>
 			<attr name="initialContextFactory" required="no" default=""/>
