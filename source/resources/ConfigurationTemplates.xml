@@ -429,6 +429,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="setStandardExtensions" required="no" default="no" options="yes|no"/>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
 		</StorageService>
@@ -609,6 +610,7 @@
 		<securityAuthentication>The LDAP authentication method (e.g., simple)</securityAuthentication>
 		<securityPrincipal>The LDAP principal (e.g., cn=${username}, ou=people, dc=med, dc=university, dc=edu)</securityPrincipal>
 		<sendDigestHeader>Include a Digest header in the connection to allow the destination to detect errors at the application level</sendDigestHeader>
+		<setStandardExtensions>Assign file extensions based on file type (.dcm, .xml, .zip, .md)</setStandardExtensions>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
 		<ssl>Use SSL for communication</ssl>

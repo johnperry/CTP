@@ -94,7 +94,7 @@ public class DICOMAnonymizerContext {
 			String key = (String)it.nextElement();
 
 			if (key.startsWith("set.[")) {
-				int k = key.lastIndexOf("]");
+				int k = findClosingBracket(key, 4);
 				if (k > 0) {
 					int tag = getElementTag(key.substring(5, k));
 					if (tag != 0) {
@@ -126,6 +126,17 @@ public class DICOMAnonymizerContext {
 
 		inStack = new LinkedList<Dataset>();
 		outStack = new LinkedList<Dataset>();
+	}
+
+	private int findClosingBracket(String s, int start) {
+		int count = 0;
+		for (int i=start; i<s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '[') count++;
+			else if (c == ']') count--;
+			if (count == 0) return i;
+		}
+		return -1;
 	}
 
 	/*
