@@ -58,7 +58,7 @@ VITREA
 
  Stent Planning Worksheet
   { [0008,0070].containsIgnoreCase("VITAL Images") *
-    [0008,103e].containsIgnoreCase("AAA") *
+    ( [0008,103e].containsIgnoreCase("AAA") + [0008,103e].containsIgnoreCase("Report") ) *
     [0028,0010].containsIgnoreCase("1041") }
   (0,0,795,150)
 

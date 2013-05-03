@@ -445,7 +445,6 @@ public class QuarantineServlet extends Servlet {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/BaseStyles.css\"></link>");
 		sb.append("\n<style>\n");
-		sb.append("body {background-color:white; margin-top:0; margin-right:0; padding:0;}\n");
 		sb.append("td {background-color:white; padding:5;}\n");
 		sb.append("td span {background-color:white;}\n");
 		sb.append("h1 {margin-top:10; margin-bottom:10;}\n");
@@ -454,4 +453,3 @@ public class QuarantineServlet extends Servlet {
 	}
 
 }
-
