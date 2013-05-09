@@ -1641,8 +1641,11 @@ public class DicomObject extends FileObject {
 			int tag = el.tag();
 			tagString = checkForNull(Tags.toString(tag));
 
-			try { tagName = checkForNull(tagDictionary.lookup(tag).name); }
-			catch (Exception e) { tagName = ""; }
+			if ((tag & 0x10000) != 0) tagName = "";
+			else {
+				try { tagName = checkForNull(tagDictionary.lookup(tag).name); }
+				catch (Exception e) { tagName = ""; }
+			}
 
 			vr = el.vr();
 			vrString = VRs.toString(vr);

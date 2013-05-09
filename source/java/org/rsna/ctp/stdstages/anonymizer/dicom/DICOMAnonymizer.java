@@ -401,8 +401,8 @@ public class DICOMAnonymizer {
 							(group == 0x00020000) 		||	//FMI group
 							(group == 0x00280000) 		||	//the image description
 							(group == 0x7FE00000) 		||	//the image
-							(isOverlay && !context.rol) ||	//overlays
-							(isCurve && !context.rc);		//curves
+							(isOverlay && !context.rol && !(isPrivate & context.rpg)) || //overlays
+							(isCurve && !context.rc && !(isPrivate & context.rpg));      //curves
 
 			if (context.rpg && isPrivate && !hasScript && !keep) {
 				try { ds.remove(tag); }
