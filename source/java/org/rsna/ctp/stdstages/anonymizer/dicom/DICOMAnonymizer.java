@@ -560,6 +560,7 @@ public class DICOMAnonymizer {
 	static final String selectFn 		= "select";
 	static final String appendFn 		= "append";
 	static final String alwaysFn 		= "always";
+	static final String hashdateFn 		= "hashdate";
 	static final String incrementdateFn = "incrementdate";
 	static final String lowercaseFn		= "lowercase";
 	static final String uppercaseFn		= "uppercase";
@@ -607,6 +608,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(selectFn))		out += selectfn(fnCall);
 				else if (fnCall.name.equals(appendFn))		out += appendfn(fnCall);
 				else if (fnCall.name.equals(alwaysFn))		out += alwaysfn(fnCall);
+				else if (fnCall.name.equals(hashdateFn))	out += hashdate(fnCall);
 				else if (fnCall.name.equals(incrementdateFn)) out += incrementdate(fnCall);
 				else if (fnCall.name.equals(lowercaseFn))	out += lowercase(fnCall);
 				else if (fnCall.name.equals(uppercaseFn))	out += uppercase(fnCall);
@@ -986,6 +988,35 @@ public class DICOMAnonymizer {
 		catch (Exception e) {
 			logger.warn("Exception caught in hash"+fn.getArgs()+": "+e.getMessage());
 			return fn.getArgs();
+		}
+	}
+
+	//Execute the hashdate function call.
+	//Get a new date by adding a constant to an date value, determining the
+	//increment by hashing the value of an element and limiting the increment
+	//to the last 10 years..
+	private static String hashdate(FnCall fn) {
+		//arg must contain: DateElementName, HashElementName
+		//DateElementName is the name of the element containing the date to be incremented.
+		//HashElementName specifies an element whose value is to be hashed and then
+		//converted to an increment in the last 10 years.
+		String emptyDate = "@empty()";
+		String removeDate = "@remove()";
+		try {
+			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
+			if (date == null) return removeDate;
+			String unhashed = fn.context.contentsNull(fn.args[1], fn.thisTag);
+			if (unhashed == null) return removeDate;
+			String incString = AnonymizerFunctions.hash(unhashed, -1);
+			int n = incString.length();
+			if (n > 4) incString = incString.substring( n-4, n);
+			long inc = Long.parseLong(incString);
+			inc = -1 * (inc % (10 * 365));
+			return AnonymizerFunctions.incrementDate(date, inc);
+		}
+		catch (Exception e) {
+			logger.debug("Exception caught in hashdate"+fn.getArgs()+": "+e.getMessage());
+			return emptyDate;
 		}
 	}
 
