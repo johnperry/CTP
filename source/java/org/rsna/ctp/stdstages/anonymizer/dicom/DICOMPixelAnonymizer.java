@@ -64,6 +64,7 @@ public class DICOMPixelAnonymizer {
      * @param outFile the output file, which may be same as inFile you if want
      * to anonymize in place.
      * @param regions the object containing the pixel areas to blank.
+     * @param test true to highlight blanked regions; false to render them in black.
      * @return the static status result
      */
     public static AnonymizerStatus anonymize(

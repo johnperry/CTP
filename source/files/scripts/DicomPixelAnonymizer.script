@@ -151,3 +151,10 @@ Canon
 **************
     OTHER
 **************
+
+ADAC
+  { [0008,0070].containsIgnoreCase("ADAC") *
+    [0028,0010].containsIgnoreCase("832") *
+    [0028,0011].containsIgnoreCase("1024")}
+  (0,0,1024,60) (0,762,1024,80)
+ 
