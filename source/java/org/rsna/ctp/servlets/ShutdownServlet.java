@@ -88,9 +88,9 @@ public class ShutdownServlet extends Servlet {
 		//Now poll the Configuration to see if all the pipes stopped.
 		boolean pipesClean = false;
 		for (int k=0; k<20; k++) {
+			if ( pipesClean = config.pipelinesAreDown() ) break;
 			try { Thread.sleep(2000); }
 			catch (Exception quit) { break; }
-			if ( pipesClean = config.pipelinesAreDown() ) break;
 		}
 
 		//Now shut down the plugins.
@@ -100,9 +100,9 @@ public class ShutdownServlet extends Servlet {
 		//Now poll the Configuration to see if all the plugins stopped.
 		boolean pluginsClean = false;
 		for (int k=0; k<20; k++) {
+			if ( pluginsClean = config.pluginsAreDown() ) break;
 			try { Thread.sleep(2000); }
 			catch (Exception quit) { break; }
-			if ( pluginsClean = config.pluginsAreDown() ) break;
 		}
 
 		//Log the result

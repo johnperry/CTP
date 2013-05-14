@@ -376,11 +376,10 @@ public class Installer extends JFrame {
 		File keystoreFile = new File(keystore);
 		File truststoreFile = new File(truststore);
 		File configFile = new File(dir, "config.xml");
-		if (true //(port > 0)
-				&& programName.equals("ISN")
-					&& configFile.exists()
-						&& keystoreFile.exists()
-							&& truststoreFile.exists()) {
+		if (programName.equals("ISN")
+				&& configFile.exists()
+					&& keystoreFile.exists()
+						&& truststoreFile.exists()) {
 			try {
 				String configText = getFileText(configFile);
 				configText = replaceAttributeValue(configText, "keystore", keystore);
