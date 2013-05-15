@@ -47,6 +47,7 @@ public class ClinicalTrialProcessor {
 	static final File libraries = new File("libraries");
 	static final String mainClassName = "org.rsna.ctp.ClinicalTrialProcessor";
 	static boolean running = true;
+	static Logger logger = null;
 
 	/**
 	 * The main method of the ClinicalTrialProcessor program.
@@ -80,6 +81,7 @@ public class ClinicalTrialProcessor {
 			try { Thread.sleep(2000); }
 			catch (Exception ignore) { }
 		}
+		if (logger != null) logger.info("startService returned\n");
 	}
 
 	/**
@@ -108,6 +110,7 @@ public class ClinicalTrialProcessor {
 			else System.out.println("Unable to service the shutdown request from ServiceManager.");
 		}
 		catch (Exception keepRunning) { keepRunning.printStackTrace(); }
+		if (logger != null) logger.info("stopService returned");
 	}
 
 	/**
@@ -126,7 +129,7 @@ public class ClinicalTrialProcessor {
 		logs.mkdirs();
 		File logProps = new File("log4j.properties");
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
-		Logger logger = Logger.getLogger(ClinicalTrialProcessor.class);
+		logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
 		//Instantiate the singleton Cache and clear it.
 		Cache.getInstance(new File("CACHE")).clear();
