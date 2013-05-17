@@ -24,15 +24,15 @@ GE
   { [0008,103e].containsIgnoreCase("Dose Report") }
   (0,0,512,110)
 
-  { [0040,0310].containsIgnoreCase("DLP") }
+  { [0008,0070].containsIgnoreCase("GE MEDICAL") *
+    [0040,0310].containsIgnoreCase("DLP") }
   (0,0,512,110)
 
  AW Workstation
 
   { [0028,0301].containsIgnoreCase("YES") * 
     [0008,0070].containsIgnoreCase("GE MEDICAL") *
-    [0008,103E].containsIgnoreCase("AW electronic film") 
-  }
+    [0008,103E].containsIgnoreCase("AW electronic film") }
   (0,0,512,80)
 
  512 x 512 screen captures
@@ -47,6 +47,12 @@ GE
     [0008,103e].containsIgnoreCase("AVA Report") *
     [0028,0010].containsIgnoreCase("512") }
   (0,0,200,250)
+
+ 512 x 512 screen captures - Volume Rendering - MRCP
+  { [0008,0008].containsIgnoreCase("VOLREN") *
+    [0028,0010].containsIgnoreCase("512") *
+    [0028,0011].containsIgnoreCase("512") }
+   (350,0,162,30) (390,80,122,15)
 
  1024 x 1024 screen captures
   { [0028,0301].containsIgnoreCase("YES") * 
@@ -70,11 +76,17 @@ SIEMENS
     [0028,0010].containsIgnoreCase("860") }
   (0,0,1132,60)
 
+PHILIPS
+
+  { [0008,0070].containsIgnoreCase("PHILIPS") *
+    [0008,0008].containsIgnoreCase("DOSE") }
+  (0,0,512,135)
+
 **************
      PET/CT
 **************
 SIEMENS 
-  This file creates a totally black JPG image
+  This is an overlay
   { [6000,0022].containsIgnoreCase("Siemens MedCom Object Graphics") }
   (0,0,512,90)
 
@@ -92,18 +104,18 @@ GE
 Philips 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
-    [0028,0010].containsIgnoreCase("480")}
+    [0028,0010].containsIgnoreCase("480") }
   (0,0,640,47)
 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
-    [0028,0010].containsIgnoreCase("768")}
+    [0028,0010].containsIgnoreCase("768") }
   (0,0,1024,75)
 
 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
-    [0028,0010].containsIgnoreCase("600")}
+    [0028,0010].containsIgnoreCase("600") }
   (0,0,800,59)
 
 Zonare
@@ -145,7 +157,7 @@ Acuson
 Canon
   { [0008,0070].containsIgnoreCase("Canon") * 
     [0008,1090].containsIgnoreCase("CXDI") * 
-    [0028,0010].containsIgnoreCase("2592")}
+    [0028,0010].containsIgnoreCase("2592") }
   (0,0,2208,80) (0,2512,2208,80)
 
 **************
@@ -155,6 +167,11 @@ Canon
 ADAC
   { [0008,0070].containsIgnoreCase("ADAC") *
     [0028,0010].containsIgnoreCase("832") *
-    [0028,0011].containsIgnoreCase("1024")}
+    [0028,0011].containsIgnoreCase("1024") }
   (0,0,1024,60) (0,762,1024,80)
  
+MEDRAD Injection Profile
+  { [0008,103e].containsIgnoreCase("MEDRAD") *
+    [0028,0010].equals("1077") *
+    [0028,0011].equals("750") }
+  (0,0,750,230)

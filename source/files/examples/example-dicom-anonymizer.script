@@ -1,5 +1,5 @@
 <script>
- <p t="DATEINC">0</p>
+ <p t="DATEINC">-137</p>
  <p t="PROFILENAME">DICOM-S142-Baseline</p>
  <p t="PROJECTNAME">Project</p>
  <p t="SHORTNAME">Project</p>
@@ -9,15 +9,15 @@
  <p t="UIDROOT">9999</p>
  <e en="T" t="00080005" n="SpecificCharacterSet">@keep()</e>
  <e en="F" t="00080008" n="ImageType"></e>
- <e en="T" t="00080012" n="InstanceCreationDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080012" n="InstanceCreationDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00080013" n="InstanceCreationTime"></e>
  <e en="T" t="00080014" n="InstanceCreatorUID">@hashuid(@UIDROOT,this)</e>
  <e en="T" t="00080016" n="SOPClassUID">@keep()</e>
  <e en="T" t="00080018" n="SOPInstanceUID">@hashuid(@UIDROOT,this)</e>
- <e en="T" t="00080020" n="StudyDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080020" n="StudyDate">@hashdate(this,PatientID)</e>
  <e en="T" t="00080021" n="SeriesDate">@remove()</e>
  <e en="T" t="00080022" n="AcquisitionDate">@remove()</e>
- <e en="T" t="00080023" n="ContentDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00080023" n="ContentDate">@hashdate(this,PatientID)</e>
  <e en="T" t="00080024" n="OverlayDate">@remove()</e>
  <e en="T" t="00080025" n="CurveDate">@remove()</e>
  <e en="T" t="0008002a" n="AcquisitionDatetime">@remove()</e>
@@ -130,7 +130,7 @@
  <e en="T" t="00100010" n="PatientName">@hashname(this,6,2)</e>
  <e en="T" t="00100020" n="PatientID">@param(@SHORTNAME)-@hashptid(@SITEID,this,10)</e>
  <e en="T" t="00100021" n="IssuerOfPatientID">@remove()</e>
- <e en="T" t="00100030" n="PatientBirthDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00100030" n="PatientBirthDate">@hashdate(this,PatientID)</e>
  <e en="T" t="00100032" n="PatientBirthTime">@remove()</e>
  <e en="T" t="00100040" n="PatientSex">@empty()</e>
  <e en="T" t="00100050" n="PatientInsurancePlanCodeSeq">@remove()</e>
@@ -237,7 +237,7 @@
  <e en="T" t="00181008" n="GantryID">@remove()</e>
  <e en="F" t="00181010" n="SecondaryCaptureDeviceID"></e>
  <e en="F" t="00181011" n="HardcopyCreationDeviceID"></e>
- <e en="T" t="00181012" n="DateOfSecondaryCapture">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00181012" n="DateOfSecondaryCapture">@hashdate(this,PatientID)</e>
  <e en="F" t="00181014" n="TimeOfSecondaryCapture"></e>
  <e en="F" t="00181016" n="SecondaryCaptureDeviceManufacturer"></e>
  <e en="F" t="00181017" n="HardcopyDeviceManufacturer"></e>
@@ -337,7 +337,7 @@
  <e en="F" t="00181191" n="AnodeTargetMaterial"></e>
  <e en="F" t="001811a0" n="BodyPartThickness"></e>
  <e en="F" t="001811a2" n="CompressionForce"></e>
- <e en="T" t="00181200" n="DateOfLastCalibration">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00181200" n="DateOfLastCalibration">@hashdate(this,PatientID)</e>
  <e en="F" t="00181201" n="TimeOfLastCalibration"></e>
  <e en="F" t="00181210" n="ConvolutionKernel"></e>
  <e en="F" t="00181242" n="ActualFrameDuration"></e>
@@ -463,7 +463,7 @@
  <e en="F" t="00187006" n="DetectorDescription"></e>
  <e en="F" t="00187008" n="DetectorMode"></e>
  <e en="T" t="0018700a" n="DetectorID">@remove()</e>
- <e en="T" t="0018700c" n="DateOfLastDetectorCalibration">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0018700c" n="DateOfLastDetectorCalibration">@hashdate(this,PatientID)</e>
  <e en="F" t="0018700e" n="TimeOfLastDetectorCalibration"></e>
  <e en="F" t="00187010" n="ExposuresOnDetectorSinceLastCalibration"></e>
  <e en="F" t="00187011" n="ExposuresOnDetectorSinceManufactured"></e>
@@ -551,7 +551,7 @@
  <e en="F" t="00189067" n="BaselineCorrection"></e>
  <e en="F" t="00189070" n="CardiacRRIntervalSpecified"></e>
  <e en="F" t="00189073" n="AcquisitionDuration"></e>
- <e en="T" t="00189074" n="FrameAcquisitionDatetime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00189074" n="FrameAcquisitionDatetime">@hashdate(this,PatientID)</e>
  <e en="F" t="00189075" n="DiffusionDirectionality"></e>
  <e en="F" t="00189076" n="DiffusionGradientDirectionSeq"></e>
  <e en="F" t="00189077" n="ParallelAcquisition"></e>
@@ -588,7 +588,7 @@
  <e en="F" t="00189126" n="VolumeLocalizationSeq"></e>
  <e en="F" t="00189127" n="SpectroscopyAcquisitionDataColumns"></e>
  <e en="F" t="00189147" n="DiffusionAnisotropyType"></e>
- <e en="T" t="00189151" n="FrameReferenceDatetime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00189151" n="FrameReferenceDatetime">@hashdate(this,PatientID)</e>
  <e en="F" t="00189152" n="MetaboliteMapSeq"></e>
  <e en="F" t="00189155" n="ParallelReductionFactorOutOfPlane"></e>
  <e en="F" t="00189159" n="SpectroscopyAcquisitionOutOfPlanePhaseSteps"></e>
@@ -775,22 +775,22 @@
  <e en="F" t="0032000a" n="StudyStatusID"></e>
  <e en="F" t="0032000c" n="StudyPriorityID"></e>
  <e en="T" t="00320012" n="StudyIDIssuer">@remove()</e>
- <e en="T" t="00320032" n="StudyVerifiedDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00320032" n="StudyVerifiedDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00320033" n="StudyVerifiedTime"></e>
- <e en="T" t="00320034" n="StudyReadDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00320034" n="StudyReadDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00320035" n="StudyReadTime"></e>
- <e en="T" t="00321000" n="ScheduledStudyStartDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00321000" n="ScheduledStudyStartDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00321001" n="ScheduledStudyStartTime"></e>
- <e en="T" t="00321010" n="ScheduledStudyStopDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00321010" n="ScheduledStudyStopDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00321011" n="ScheduledStudyStopTime"></e>
  <e en="T" t="00321020" n="ScheduledStudyLocation">@remove()</e>
  <e en="T" t="00321021" n="ScheduledStudyLocationAET">@remove()</e>
  <e en="T" t="00321030" n="ReasonforStudy">@remove()</e>
  <e en="T" t="00321032" n="RequestingPhysician">@remove()</e>
  <e en="T" t="00321033" n="RequestingService">@remove()</e>
- <e en="T" t="00321040" n="StudyArrivalDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00321040" n="StudyArrivalDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00321041" n="StudyArrivalTime"></e>
- <e en="T" t="00321050" n="StudyCompletionDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00321050" n="StudyCompletionDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00321051" n="StudyCompletionTime"></e>
  <e en="F" t="00321055" n="StudyComponentStatusID"></e>
  <e en="T" t="00321060" n="RequestedProcedureDescription">@remove()</e>
@@ -802,14 +802,14 @@
  <e en="T" t="00380010" n="AdmissionID">@remove()</e>
  <e en="T" t="00380011" n="IssuerOfAdmissionID">@remove()</e>
  <e en="F" t="00380016" n="RouteOfAdmissions"></e>
- <e en="T" t="0038001a" n="ScheduledAdmissionDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0038001a" n="ScheduledAdmissionDate">@hashdate(this,PatientID)</e>
  <e en="F" t="0038001b" n="ScheduledAdmissionTime"></e>
- <e en="T" t="0038001c" n="ScheduledDischargeDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0038001c" n="ScheduledDischargeDate">@hashdate(this,PatientID)</e>
  <e en="F" t="0038001d" n="ScheduledDischargeTime"></e>
  <e en="T" t="0038001e" n="ScheduledPatientInstitutionResidence">@remove()</e>
  <e en="T" t="00380020" n="AdmittingDate">@remove()</e>
  <e en="T" t="00380021" n="AdmittingTime">@remove()</e>
- <e en="T" t="00380030" n="DischargeDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00380030" n="DischargeDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00380032" n="DischargeTime"></e>
  <e en="T" t="00380040" n="DischargeDiagnosisDescription">@remove()</e>
  <e en="F" t="00380044" n="DischargeDiagnosisCodeSeq"></e>
@@ -848,9 +848,9 @@
  <e en="F" t="003a0222" n="NotchFilterFrequency"></e>
  <e en="F" t="003a0223" n="NotchFilterBandwidth"></e>
  <e en="T" t="00400001" n="ScheduledStationAET">@remove()</e>
- <e en="T" t="00400002" n="SPSStartDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400002" n="SPSStartDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00400003" n="SPSStartTime"></e>
- <e en="T" t="00400004" n="SPSEndDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400004" n="SPSEndDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00400005" n="SPSEndTime"></e>
  <e en="T" t="00400006" n="ScheduledPerformingPhysicianName">@remove()</e>
  <e en="T" t="00400007" n="SPSDescription">@remove()</e>
@@ -866,10 +866,10 @@
  <e en="T" t="00400241" n="PerformedStationAET">@remove()</e>
  <e en="T" t="00400242" n="PerformedStationName">@remove()</e>
  <e en="T" t="00400243" n="PerformedLocation">@remove()</e>
- <e en="T" t="00400244" n="PPSStartDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400244" n="PPSStartDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00400245" n="PPSStartTime"></e>
  <e en="T" t="00400248" n="PerformedStationNameCodeSeq">@remove()</e>
- <e en="T" t="00400250" n="PPSEndDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00400250" n="PPSEndDate">@hashdate(this,PatientID)</e>
  <e en="F" t="00400251" n="PPSEndTime"></e>
  <e en="F" t="00400252" n="PPSStatus"></e>
  <e en="T" t="00400253" n="PPSID">@remove()</e>
@@ -929,7 +929,7 @@
  <e en="T" t="00401103" n="PersonTelephoneNumbers">@remove()</e>
  <e en="T" t="00401400" n="RequestedProcedureComments">@remove()</e>
  <e en="T" t="00402001" n="ReasonForTheImagingServiceRequest">@remove()</e>
- <e en="T" t="00402004" n="IssueDateOfImagingServiceRequest">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00402004" n="IssueDateOfImagingServiceRequest">@hashdate(this,PatientID)</e>
  <e en="F" t="00402005" n="IssueTimeOfImagingServiceRequest"></e>
  <e en="T" t="00402008" n="OrderEnteredBy">@remove()</e>
  <e en="T" t="00402009" n="OrderEntererLocation">@remove()</e>
@@ -956,8 +956,8 @@
  <e en="F" t="00409225" n="RealWorldValueSlope"></e>
  <e en="F" t="0040a010" n="RelationshipType"></e>
  <e en="T" t="0040a027" n="VerifyingOrganization">@remove()</e>
- <e en="T" t="0040a030" n="VerificationDateTime">@incrementdate(this,@DATEINC)</e>
- <e en="T" t="0040a032" n="ObservationDateTime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0040a030" n="VerificationDateTime">@hashdate(this,PatientID)</e>
+ <e en="T" t="0040a032" n="ObservationDateTime">@hashdate(this,PatientID)</e>
  <e en="F" t="0040a040" n="ValueType"></e>
  <e en="F" t="0040a043" n="ConceptNameCodeSeq"></e>
  <e en="F" t="0040a050" n="ContinuityOfContent"></e>
@@ -968,8 +968,8 @@
  <e en="T" t="0040a07c" n="CustodialOrganizationSeq">@remove()</e>
  <e en="T" t="0040a088" n="VerifyingObserverIdentificationCodeSeq">@remove()</e>
  <e en="F" t="0040a0b0" n="RefWaveformChannels"></e>
- <e en="T" t="0040a120" n="DateTime">@incrementdate(this,@DATEINC)</e>
- <e en="T" t="0040a121" n="Date">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0040a120" n="DateTime">@hashdate(this,PatientID)</e>
+ <e en="T" t="0040a121" n="Date">@hashdate(this,PatientID)</e>
  <e en="F" t="0040a122" n="Time"></e>
  <e en="T" t="0040a123" n="PersonName">@if(this,isblank){@remove()}{Removed by CTP}</e>
  <e en="T" t="0040a124" n="UID">@hashuid(@UIDROOT,this)</e>
@@ -977,7 +977,7 @@
  <e en="F" t="0040a132" n="RefSamplePositions"></e>
  <e en="F" t="0040a136" n="RefFrameNumbers"></e>
  <e en="F" t="0040a138" n="RefTimeOffsets"></e>
- <e en="T" t="0040a13a" n="RefDatetime">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="0040a13a" n="RefDatetime">@hashdate(this,PatientID)</e>
  <e en="F" t="0040a160" n="TextValue"></e>
  <e en="F" t="0040a168" n="ConceptCodeSeq"></e>
  <e en="F" t="0040a180" n="AnnotationGroupNumber"></e>

@@ -1244,18 +1244,18 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the contents of the SeriesInstanceUID element.
-	 * @return the text of the element or null if the element does not exist.
+	 * @return the text of the element or the empty string if the element does not exist.
 	 */
 	public String getSeriesInstanceUID() {
-		return getElementValue(Tags.SeriesInstanceUID, null);
+		return getElementValue(Tags.SeriesInstanceUID);
 	}
 
 	/**
 	 * Convenience method to get the contents of the SeriesDescription element.
-	 * @return the text of the element or null if the element does not exist.
+	 * @return the text of the element or the empty string if the element does not exist.
 	 */
 	public String getSeriesDescription() {
-		return getElementValue(Tags.SeriesDescription, null);
+		return getElementValue(Tags.SeriesDescription);
 	}
 
 	/**
@@ -1297,7 +1297,8 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the value of the PhotometricInterpretation element.
-	 * @return the value of the PhotometricInterpretation element.
+	 * @return the value of the PhotometricInterpretation element or the empty string
+	 * if the element does not exist..
 	 */
 	public String getPhotometricInterpretation() {
 		return getElementValue(Tags.PhotometricInterpretation);
@@ -2135,7 +2136,7 @@ public class DicomObject extends FileObject {
 					try { name = tagDictionary.lookup(tag).name; }
 					catch (Exception noname) { logger.debug("Unable to find "+tagName); }
 
-					String element = getElementValue(tag, "");
+					String element = getElementValue(tag);
 					props.setProperty(tagName + " " + name, element);
 
 					String elementLC = element.toLowerCase();
