@@ -64,21 +64,19 @@ public class QuarantineServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
-		boolean admin = req.userHasRole("qadmin");
+		boolean admin = req.userHasRole("qadmin") || req.userHasRole("admin");
 		String home = req.getParameter("home", "/");
 		//check the path information
-		String p = req.getParameter("p");
-		int pInt = StringUtil.getInt(p, -1);
-		String s = req.getParameter("s");
-		int sInt = StringUtil.getInt(s, -1);
-		String file = req.getParameter("file");
-		String list = req.getParameter("list");
+		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);
+		int sInt = StringUtil.getInt(req.getParameter("s", "-1"), -1);
+		String file = req.getParameter("file", "");
+		boolean list = req.getParameter("list", "yes").equals("yes");
+		boolean display = (req.getParameter("display") != null);
 		boolean queue = (req.getParameter("queue") != null);
 		boolean delete = (req.getParameter("delete") != null);
-		if (list == null) list = "";
-		if ((p == null) || p.equals("") || (pInt == -1)) sizesPage(res, home);
-		else if ((s == null) || s.equals("") || (sInt == -1)) sizesPage(res, pInt, home);
-		else if ((file == null) || file.equals("")) {
+		if (pInt == -1) sizesPage(res, home);
+		else if (sInt == -1) sizesPage(res, pInt, home);
+		else if (file.equals("")) {
 			if (admin && queue) queueAll(pInt, sInt);
 			if (admin && delete) deleteAll(pInt, sInt);
 			contentsPage(req, res, pInt, sInt, admin);
@@ -89,7 +87,7 @@ public class QuarantineServlet extends Servlet {
 				if (delete) deleteFile(pInt, sInt, file);
 				contentsPage(req, res, pInt, sInt, admin);
 			}
-			else downloadFile(res, pInt, sInt, file, list, admin, home);
+			else downloadFile(res, pInt, sInt, file, list, display, admin, home);
 		}
 	}
 
@@ -167,7 +165,7 @@ public class QuarantineServlet extends Servlet {
 		}
 		sb.append("</td><td>");
 		sb.append("<a href=\"?p="+pipelineIndex+"&s="+stageIndex+"\">"+stage.getName()+"</a>");
-		sb.append("</td><td>"+quarantine.getSize()+"</td></tr>");
+		sb.append("</td><td style=\"text-align:right\">"+quarantine.getSize()+"</td></tr>");
 		return true;
 	}
 
@@ -262,7 +260,7 @@ public class QuarantineServlet extends Servlet {
 								+"?p="+pipelineIndex
 								+"&s="+stageIndex
 								+"&file="+files[i].getName()
-								+"\">"+files[i].getName()+"</a>");
+								+"\" target=\"dcm\">"+files[i].getName()+"</a>");
 					sb.append("</td>");
 					sb.append("<td>");
 					sb.append(StringUtil.getDateTime(files[i].lastModified(),"&nbsp;&nbsp;&nbsp;"));
@@ -283,6 +281,14 @@ public class QuarantineServlet extends Servlet {
 									+"&file="+files[i].getName()
 									+"&delete"
 									+"\">delete</a>");
+						sb.append("</td>");
+						sb.append("<td>");
+						sb.append("<a href=\""
+									+"?p="+pipelineIndex
+									+"&s="+stageIndex
+									+"&file="+files[i].getName()
+									+"&display"
+									+"\" target=\"dcm\">display</a>");
 						sb.append("</td>");
 					}
 					sb.append("</tr>");
@@ -343,7 +349,8 @@ public class QuarantineServlet extends Servlet {
 					  int pipelineIndex,
 					  int stageIndex,
 					  String filename,
-					  String list,
+					  boolean list,
+					  boolean display,
 					  boolean admin,
 					  String home) {
 		Pipeline pipeline;
@@ -388,7 +395,7 @@ public class QuarantineServlet extends Servlet {
 		try { dicomObject = new DicomObject(file); }
 		catch (Exception ignore) { dicomObject = null; }
 
-		if ((dicomObject == null) || list.equals("no")) {
+		if ((dicomObject == null) || (!list && !display)) {
 			//Just download the file with a standard
 			//Content-Type as defined by its extension.
 			res.write(file);
@@ -397,9 +404,26 @@ public class QuarantineServlet extends Servlet {
 			res.send();
 			return;
 		}
-		//It is a DicomObject and listing is not suppressed.
-		//Download a page containing an element listing
-		//and a button allowing downloading of the file.
+
+		//See if this is a display request
+		if (display) {
+			if (dicomObject.isImage()) {
+				try {
+					File temp = File.createTempFile("Image-", ".jpeg");
+					dicomObject.saveAsJPEG(temp, 0, 1500, 256, -1);
+					res.write(temp);
+					res.setContentType(temp);
+					res.send();
+					temp.delete();
+				}
+				catch (Exception unable) { }
+			}
+		}
+
+		//If we get here, then it was not a display
+		//or the display request failed. The only thing
+		//to do is download a page containing an element
+		//listing and a button allowing downloading of the file.
 		sb.append(getPageStart(pipeline, stage, admin, file, home));
 		sb.append("<body>");
 		sb.append(dicomObject.getElementTable(admin));
