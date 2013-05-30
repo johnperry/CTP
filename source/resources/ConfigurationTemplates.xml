@@ -292,6 +292,9 @@
 			<attr name="log" required="no" default="no" options="yes|no">
 				<helptext>Log the matching signature</helptext>
 			</attr>
+			<attr name="setBurnedInAnnotation" required="no" default="no" options="yes|no">
+				<helptext>Set the BurnedInAnnotation element to "NO" for objects that match a signature.</helptext>
+			</attr>
 			<attr name="test" required="no" default="no" options="yes|no">
 				<helptext>Test mode causes regions to be highlighted rather than set to black</helptext>
 			</attr>

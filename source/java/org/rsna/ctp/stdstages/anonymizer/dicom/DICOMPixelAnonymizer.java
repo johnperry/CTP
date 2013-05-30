@@ -71,6 +71,7 @@ public class DICOMPixelAnonymizer {
 			File inFile,
 			File outFile,
 			Regions regions,
+			boolean setBurnedInAnnotation,
 			boolean test) {
 
 		long fileLength = inFile.length();
@@ -142,6 +143,11 @@ public class DICOMPixelAnonymizer {
 			fmi = oFact.newFileMetaInfo(dataset, prefEncodingUID);
             dataset.setFileMetaInfo(fmi);
             fmi.write(out);
+
+			//Set the BurnedInAnnotation element if necessary
+			if (setBurnedInAnnotation) {
+				dataset.putCS(Tags.BurnedInAnnotation, "NO");
+			}
 
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);

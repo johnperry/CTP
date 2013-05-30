@@ -32,6 +32,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	public File scriptFile = null;
 	PixelScript script = null;
 	long lastModified = 0;
+	boolean setBurnedInAnnotation = false;
 	boolean log = false;
 	boolean test = false;
 
@@ -44,6 +45,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 		super(element);
 		log = element.getAttribute("log").trim().equals("yes");
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-pixel-anonymizer.script");
+		setBurnedInAnnotation = element.getAttribute("setBurnedInAnnotation").trim().equals("yes");
 		test = element.getAttribute("test").trim().equals("yes");
 	}
 
@@ -68,7 +70,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 				if (signature != null) {
 					Regions regions = signature.regions;
 					if ((regions != null) && (regions.size() > 0)) {
-						AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions, test);
+						AnonymizerStatus status = DICOMPixelAnonymizer.anonymize(file, file, regions, setBurnedInAnnotation, test);
 						if (status.isOK()) {
 							fileObject = FileObject.getInstance(file);
 						}
