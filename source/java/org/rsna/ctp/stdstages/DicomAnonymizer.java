@@ -86,7 +86,6 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		return new File[] { dicomScriptFile, null, null };
 	}
 
-
 	/**
 	 * Process a DicomObject, anonymizing it and returning the processed object.
 	 * If there is no script file, pass the object unmodified.
