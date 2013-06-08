@@ -117,13 +117,15 @@ public class Launcher extends JFrame implements ChangeListener {
 			w = wmin;
 			h = hmin;
 		}
-		setSize( w, h );
-		if ( ((x == 0) && (y == 0)) || !screensCanShow(x, y) ) {
+		if ( !screensCanShow(x, y) || !screensCanShow(x+w-1, y+h-1) ) {
 			Toolkit t = getToolkit();
 			Dimension scr = t.getScreenSize ();
-			x = (scr.width - w)/2;
-			y = (scr.height - h)/2;
+			x = (scr.width - wmin)/2;
+			y = (scr.height - hmin)/2;
+			w = wmin;
+			h = hmin;
 		}
+		setSize( w, h );
 		setLocation( new Point(x,y) );
 	}
 
