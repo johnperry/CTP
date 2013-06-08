@@ -451,16 +451,6 @@ public class ConfigPanel extends BasePanel {
 			}
 		}
 
-		public boolean deleteApproved() {
-			int yesno = JOptionPane.showConfirmDialog(
-								this,
-								"Are you sure you want to delete\n"
-								+ "the backup config.xml files?\n",
-								"Are you sure?",
-								JOptionPane.YES_NO_OPTION);
-			return (yesno == JOptionPane.YES_OPTION);
-		}
-
 		class ConfigFileFilter implements FileFilter {
 			public boolean accept(File file) {
 				return file.getName().matches("config\\[\\d+\\]\\.xml");
@@ -543,6 +533,16 @@ public class ConfigPanel extends BasePanel {
 				treePane.insert(element);
 			}
 		}
+	}
+
+	public boolean deleteApproved() {
+		int yesno = JOptionPane.showConfirmDialog(
+							this,
+							"Are you sure you want to delete\n"
+							+ "the backup config.xml files?\n",
+							"Are you sure?",
+							JOptionPane.YES_NO_OPTION);
+		return (yesno == JOptionPane.YES_OPTION);
 	}
 
 	//Check the configuration, looking for duplicate ports and root directories.

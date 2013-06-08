@@ -118,13 +118,26 @@ public class Launcher extends JFrame implements ChangeListener {
 			h = hmin;
 		}
 		setSize( w, h );
-		if ((x == 0) && (y == 0)) {
+		if ( ((x == 0) && (y == 0)) || !screensCanShow(x, y) ) {
 			Toolkit t = getToolkit();
 			Dimension scr = t.getScreenSize ();
 			x = (scr.width - w)/2;
 			y = (scr.height - h)/2;
 		}
 		setLocation( new Point(x,y) );
+	}
+
+	private boolean screensCanShow(int x, int y) {
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] gs = ge.getScreenDevices();
+		for (int j = 0; j < gs.length; j++) {
+			GraphicsDevice gd = gs[j];
+			GraphicsConfiguration[] gc = gd.getConfigurations();
+			for (int i=0; i < gc.length; i++) {
+				if (gc[i].getBounds().contains(x, y)) return true;
+			}
+		}
+		return false;
 	}
 
     //Class to capture a window close event and give the
