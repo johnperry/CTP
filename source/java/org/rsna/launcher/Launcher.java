@@ -126,17 +126,16 @@ public class Launcher extends JFrame implements ChangeListener {
 			h = hmin;
 		}
 		setSize( w, h );
-		setLocation( new Point(x,y) );
+		setLocation( x, y );
 	}
 
 	private boolean screensCanShow(int x, int y) {
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsDevice[] gs = ge.getScreenDevices();
-		for (int j = 0; j < gs.length; j++) {
-			GraphicsDevice gd = gs[j];
-			GraphicsConfiguration[] gc = gd.getConfigurations();
-			for (int i=0; i < gc.length; i++) {
-				if (gc[i].getBounds().contains(x, y)) return true;
+		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] screens = env.getScreenDevices();
+		for (GraphicsDevice screen : screens) {
+			GraphicsConfiguration[] configs = screen.getConfigurations();
+			for (GraphicsConfiguration gc : configs) {
+				if (gc.getBounds().contains(x, y)) return true;
 			}
 		}
 		return false;
