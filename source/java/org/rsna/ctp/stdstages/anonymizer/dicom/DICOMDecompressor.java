@@ -7,7 +7,9 @@
 
 package org.rsna.ctp.stdstages.anonymizer.dicom;
 
+import java.awt.Graphics2D;
 import java.awt.image.*;
+import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;
@@ -41,6 +43,7 @@ import org.dcm4che.dict.VRs;
 
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
+import org.rsna.util.FileUtil;
 
 import org.apache.log4j.Logger;
 
@@ -104,7 +107,13 @@ public class DICOMDecompressor {
 				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
 			}
 			int planarConfig = getInt(dataset, Tags.PlanarConfiguration, 0);
+			boolean isPlanarConfig0 = (planarConfig == 0);
+
 			String photometricInterpretation = getString(dataset, Tags.PhotometricInterpretation, "").toUpperCase();
+			boolean isMonochrome = photometricInterpretation.contains("MONOCHROME");
+			boolean isPalette = photometricInterpretation.contains("PALETTE");
+			boolean isYBR = photometricInterpretation.contains("YBR");
+			boolean isRGB = photometricInterpretation.contains("RGB");
 
 			//Set the encoding of the output file
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
@@ -114,7 +123,7 @@ public class DICOMDecompressor {
 
 			//Save the dataset to a temporary file in a temporary directory
 			//on the same file system root, and rename at the end.
-			File tempDir = new File(outFile.getParentFile().getParentFile(),"decompressor-temp");
+			File tempDir = FileUtil.createTempDirectory(outFile.getParentFile().getParentFile());
 			tempDir.mkdirs();
 			tempFile = File.createTempFile("DCMtemp-",".decomp",tempDir);
             out = new BufferedOutputStream(new FileOutputStream(tempFile));
@@ -125,15 +134,28 @@ public class DICOMDecompressor {
             fmi.write(out);
 
             //********************************************************************************
-            //Set the PhotometricInterpretation to RGB if the PlanarConfiguration is zero
-            //and the PhotometricInterpretation is not MONOCHROME.
-            //This is a kludge to avoid the green image problem. It is not clear why this
-            //is required when the PlanarConfiguration is zero, but unless you do it, you
-            //get green images. BUT, if you do it when the PlanarConfiguration is one, you
-            //also get green images. There has to be something more going on, but I can't
-            //figure it out.
-            if ((planarConfig == 0) && !photometricInterpretation.startsWith("MONOCHROME")) {
+            //This is a kludge to avoid the green image problem. For color
+            //images, we will convert to RGB with PlanarConfiguration 0 and
+            //force SamplesPerPixel to 3..
+            if (!isMonochrome) {
 				dataset.putXX(Tags.PhotometricInterpretation, "RGB");
+				dataset.putUS(Tags.BitsAllocated, 8);
+				dataset.putUS(Tags.BitsStored, 8);
+				dataset.putUS(Tags.HighBit, 7);
+				samplesPerPixel = 3;
+				dataset.putUS(Tags.SamplesPerPixel, samplesPerPixel);
+				dataset.putUS(Tags.PlanarConfiguration, 0);
+			}
+			//Remove the palette elements if we are converting from palette to RGB
+			if (isPalette) {
+				dataset.remove(Tags.PaletteColorLookupTableSeq);
+				dataset.remove(Tags.PaletteColorLUTUID);
+				dataset.remove(Tags.RedPaletteColorLUTData);
+				dataset.remove(Tags.RedPaletteColorLUTDescriptor);
+				dataset.remove(Tags.GreenPaletteColorLUTData);
+				dataset.remove(Tags.GreenPaletteColorLUTDescriptor);
+				dataset.remove(Tags.BluePaletteColorLUTData);
+				dataset.remove(Tags.BluePaletteColorLUTDescriptor);
 			}
             //********************************************************************************
 
@@ -148,6 +170,7 @@ public class DICOMDecompressor {
                 int nPixelBytes = numberOfFrames * rows * columns * samplesPerPixel * bytesPerSample;
                 int pixelBytesLength = nPixelBytes + (nPixelBytes & 1);
                 logger.debug("planarConfig     = "+planarConfig);
+                logger.debug("photometricInt   = "+photometricInterpretation);
                 logger.debug("numberOfFrames   = "+numberOfFrames);
                 logger.debug("rows             = "+rows);
                 logger.debug("columns          = "+columns);
@@ -171,12 +194,13 @@ public class DICOMDecompressor {
 				for (int i=0; i<numberOfFrames; i++) {
 					logger.debug("Decompressing frame "+i);
 					BufferedImage bi = reader.read(i);
+					if (!isMonochrome && !isRGB) bi = convertToRGB(bi);
 					WritableRaster wr = bi.getRaster();
 					DataBuffer b = wr.getDataBuffer();
 					int numBanks = b.getNumBanks();
-					logger.debug("    Number of banks = "+numBanks);
+					logger.debug("Number of banks = "+numBanks);
 					for (int bank=0; bank<numBanks; bank++) {
-						logger.debug("Reading bank "+bank);
+						logger.debug("  Reading bank "+bank);
 						if (b.getDataType() == DataBuffer.TYPE_USHORT) {
 							logger.debug("  Datatype: DataBuffer.TYPE_USHORT");
 							DataBufferUShort bus = (DataBufferUShort)b;
@@ -206,12 +230,26 @@ public class DICOMDecompressor {
 							logger.debug("    Buffer length = "+data.length);
 							out.write(data);
 						}
+						else if (b.getDataType() == DataBuffer.TYPE_INT) {
+							logger.debug("    Datatype: DataBuffer.TYPE_INT");
+							DataBufferInt bb = (DataBufferInt)b;
+							int[] data = bb.getData(bank);
+							logger.debug("    Buffer length = "+data.length);
+							for (int k=0; k<data.length; k++) {
+								int red = (data[k] & 0xff0000) >> 16;
+								int green = (data[k] & 0xff00) >> 8;
+								int blue = data[k] & 0xff;
+								out.write(red & 0xff);
+								out.write(green & 0xff);
+								out.write(blue & 0xff);
+							}
+						}
 						else {
 							logger.warn("Unsupported DataBuffer type ("+b.getDataType()+") in "+inFile);
 							throw new Exception("Unsupported DataBuffer type: "+b.getDataType());
 						}
 					}
-					logger.debug("    Done decompressing frame "+i);
+					logger.debug("  Done decompressing frame "+i);
 				}
 				//Pad the pixels if necessary
 				if ((nPixelBytes & 1) != 0) {
@@ -259,6 +297,7 @@ public class DICOMDecompressor {
 			in.close();
 			outFile.delete();
 			tempFile.renameTo(outFile);
+			FileUtil.deleteAll(tempDir);
 			return AnonymizerStatus.OK(outFile,"");
 		}
 
@@ -284,6 +323,26 @@ public class DICOMDecompressor {
 			return AnonymizerStatus.QUARANTINE(inFile, e.getMessage());
 		}
     }
+
+    private static BufferedImage convertToRGB(BufferedImage bi) {
+		// Make a destination image
+		BufferedImage rgbImage =
+						new BufferedImage(
+								bi.getWidth(),
+								bi.getHeight(),
+								BufferedImage.TYPE_INT_RGB);
+
+		//Make an identity transform op
+		AffineTransformOp atop = new AffineTransformOp(
+										new AffineTransform(),
+										AffineTransformOp.TYPE_NEAREST_NEIGHBOR );
+
+		// Paint the transformed image.
+		Graphics2D g2d = rgbImage.createGraphics();
+		g2d.drawImage(bi, atop, 0, 0);
+		g2d.dispose();
+		return rgbImage;
+	}
 
     private static void close(InputStream in) {
 		try { if (in != null) in.close(); }
