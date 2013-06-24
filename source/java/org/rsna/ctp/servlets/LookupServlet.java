@@ -69,7 +69,7 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = req.getParameter("home", "/");
+		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Now make either the page listing the various editable stages
@@ -123,6 +123,7 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
+		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
@@ -141,7 +142,6 @@ public class LookupServlet extends Servlet {
 
 				//Get the parts. Note: this must be done before getting the parameters.
 				LinkedList<UploadedFile> files = req.getParts(dir, 10*1024*1024);
-				String home = req.getParameter("home", "/");
 				int p = Integer.parseInt(req.getParameter("p"));
 				int s = Integer.parseInt(req.getParameter("s"));
 				File file = getLookupTableFile(p,s);
@@ -173,7 +173,6 @@ public class LookupServlet extends Servlet {
 			int p,s;
 			File file = null;
 			try {
-				String home = req.getParameter("home", "/");
 				p = Integer.parseInt(req.getParameter("p"));
 				s = Integer.parseInt(req.getParameter("s"));
 				file = getLookupTableFile(p,s);

@@ -62,7 +62,7 @@ public class DicomAnonymizerServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = req.getParameter("home", "/");
+		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Disable caching of the response
@@ -144,7 +144,7 @@ public class DicomAnonymizerServlet extends Servlet {
 		}
 
 		//Set up the response
-		String home = req.getParameter("home", "/");
+		String home = filter(req.getParameter("home", "/"));
 		res.disableCaching();
 		res.setContentType("txt");
 
@@ -194,11 +194,6 @@ public class DicomAnonymizerServlet extends Servlet {
 
 		else res.setResponseCode(res.notimplemented);
 		res.send();
-	}
-
-	//Filter a string for cross-site scripting characters (<...>)
-	private String filter(String s) {
-		return s.replaceAll("<[^>]*>","");
 	}
 
 	//Get the script file, if possible

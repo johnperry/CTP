@@ -38,11 +38,13 @@
 					p.appendChild(a);
 					p.appendChild(document.createTextNode(" )"));
 					if (!user.hasRole("admin")) hideAdmin();
+					if (!user.hasRole("admin") && !user.hasRole("qadmin")) hide("quarantines");
 					if (!user.hasRole("shutdown") && !user.isLocal) hide("shutdown");
 				}
 				else {
 					p.appendChild(document.createTextNode("You are not logged in."));
 					hideAdmin();
+					hide("quarantines");
 					hide("shutdown");
 				}
 			}
@@ -81,7 +83,7 @@
 				<td><input style="width:300" type="button" value="Status"
 						onclick="window.open('status','_self');"></td>
 			</tr>
-			<tr>
+			<tr id="quarantines">
 				<td><input style="width:300" type="button" value="Quarantines"
 						onclick="window.open('quarantines','_self');"></td>
 			</tr>

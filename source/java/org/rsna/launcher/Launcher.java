@@ -111,13 +111,17 @@ public class Launcher extends JFrame implements ChangeListener {
 		int y = StringUtil.getInt( props.getProperty("y"), 0 );
 		int w = StringUtil.getInt( props.getProperty("w"), 0 );
 		int h = StringUtil.getInt( props.getProperty("h"), 0 );
+
+		boolean noProps = ((w == 0) || (h == 0));
+
 		int wmin = 500;
 		int hmin = 600;
 		if ((w < wmin) || (h < hmin)) {
 			w = wmin;
 			h = hmin;
 		}
-		if ( !screensCanShow(x, y) || !screensCanShow(x+w-1, y+h-1) ) {
+
+		if ( noProps || !screensCanShow(x, y) || !screensCanShow(x+w-1, y+h-1) ) {
 			Toolkit t = getToolkit();
 			Dimension scr = t.getScreenSize ();
 			x = (scr.width - wmin)/2;

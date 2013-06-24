@@ -41,7 +41,7 @@ public class StatusServlet extends Servlet {
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
 		Configuration config = Configuration.getInstance();
-		String home = req.getParameter("home", "/");
+		String home = filter(req.getParameter("home", "/"));
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html>");

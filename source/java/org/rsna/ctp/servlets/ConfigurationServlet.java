@@ -50,7 +50,7 @@ public class ConfigurationServlet extends Servlet {
 			return;
 		}
 
-		String home = req.getParameter("home", "/");
+		String home = filter(req.getParameter("home", "/"));
 		Configuration config = Configuration.getInstance();
 		String ipAddress = config.getIPAddress();
 		int serverPort = config.getServerPort();

@@ -64,9 +64,18 @@ public class QuarantineServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
+
+		//Require that the user have the qadmin or admin role
 		boolean admin = req.userHasRole("qadmin") || req.userHasRole("admin");
-		String home = req.getParameter("home", "/");
-		//check the path information
+		if (!admin) {
+			res.setResponseCode(res.notfound);
+			res.send();
+			return;
+		}
+
+		String home = filter(req.getParameter("home", "/"));
+
+		//Check the path information
 		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);
 		int sInt = StringUtil.getInt(req.getParameter("s", "-1"), -1);
 		String file = req.getParameter("file", "");
