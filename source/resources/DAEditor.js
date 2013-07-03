@@ -666,7 +666,6 @@ function applyProfileHandler(event, item) {
 
 		//Set the checkboxes after a suitable delay
 		window.setTimeout(setRowEnables, 500);
-
 	}
 }
 
