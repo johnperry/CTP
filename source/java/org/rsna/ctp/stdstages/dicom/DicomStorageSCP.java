@@ -89,6 +89,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 	private BlackList calledAETBlackList = null;
 	private WhiteList callingAETWhiteList = null;
 	private BlackList callingAETBlackList = null;
+	PCTable pcTable = null;
 
 /**/List<String> recentUIDs;
 /**/List<Long> recentTimes;
@@ -112,6 +113,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 		calledAETBlackList = dicomImportService.getCalledAETBlackList();
 		callingAETWhiteList = dicomImportService.getCallingAETWhiteList();
 		callingAETBlackList = dicomImportService.getCallingAETBlackList();
+		pcTable = dicomImportService.getPCTable();
 		recentUIDs = new LinkedList<String>();
 		recentTimes = new LinkedList<Long>();
 
@@ -276,7 +278,6 @@ public class DicomStorageSCP extends DcmServiceBase {
         policy.setCallingAETs(null);
         policy.setMaxPDULength(maxPDULength);
         policy.setAsyncOpsWindow(0, 1);
-        PCTable pcTable = PCTable.getInstance();
         Enumeration<String> en = pcTable.keys();
         while (en.hasMoreElements()) {
 			String asUID = en.nextElement();

@@ -141,6 +141,9 @@
 				<attr name="callingAET" required="no" default="">
 					<helptext>Calling AE Title from which to allow connections</helptext>
 				</attr>
+				<attr name="sopClass" required="no" default="">
+					<helptext>SOP Class UID (or dcm4che name) to accept</helptext>
+				</attr>
 			</child>
 
 			<child name="reject" required="no" allowMultiples="yes">

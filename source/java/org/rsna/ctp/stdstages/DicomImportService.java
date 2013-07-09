@@ -9,11 +9,14 @@ package org.rsna.ctp.stdstages;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.pipeline.AbstractImportService;
 import org.rsna.ctp.stdstages.dicom.DicomStorageSCP;
+import org.rsna.ctp.stdstages.dicom.PCTable;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * An ImportService that receives files via the DICOM protocol.
@@ -37,6 +40,7 @@ public class DicomImportService extends AbstractImportService {
 	BlackList calledAETBlackList = null;
 	WhiteList callingAETWhiteList = null;
 	BlackList callingAETBlackList = null;
+	PCTable pcTable = null;
 
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
@@ -75,6 +79,18 @@ public class DicomImportService extends AbstractImportService {
 		calledAETBlackList = new BlackList(element, "calledAET");
 		callingAETWhiteList = new WhiteList(element, "callingAET");
 		callingAETBlackList = new BlackList(element, "callingAET");
+
+		//Get the PCTable
+		LinkedList<String> sopClasses = new LinkedList<String>();
+		Node child = element.getFirstChild();
+		while (child != null) {
+			if ((child instanceof Element) && child.getNodeName().equals("accept")) {
+				String sopClass = ((Element)child).getAttribute("sopClass").trim();
+				if (!sopClass.equals("")) sopClasses.add( sopClass );
+			}
+			child = child.getNextSibling();
+		}
+		pcTable = PCTable.getInstance(sopClasses);
 
 		//Create the DicomStorageSCP
 		dicomStorageSCP = new DicomStorageSCP(this);
@@ -211,6 +227,14 @@ public class DicomImportService extends AbstractImportService {
 	 */
 	public BlackList getCallingAETBlackList() {
 		return callingAETBlackList;
+	}
+
+	/**
+	 * Get the PCTable
+	 * @return the callingAET black list
+	 */
+	public PCTable getPCTable() {
+		return pcTable;
 	}
 
 }

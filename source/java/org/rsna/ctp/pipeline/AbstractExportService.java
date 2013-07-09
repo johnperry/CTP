@@ -72,7 +72,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 		auditLogID = element.getAttribute("auditLogID").trim();
 		String[] alts = element.getAttribute("auditLogTags").split(";");
 		auditLogTags = new LinkedList<Integer>();
-		for (String alt :alts) {
+		for (String alt : alts) {
 			alt = alt.trim();
 			if (!alt.equals("")) {
 				int tag = DicomObject.getElementTag(alt);

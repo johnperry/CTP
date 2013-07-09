@@ -28,8 +28,25 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		}
 	}
 
+	protected PCTable(LinkedList<String> sopClasses) {
+		super();
+		for (String sopClass : sopClasses) {
+			if (!sopClass.contains(".")) sopClass = UIDs.forName(sopClass);
+			LinkedList<String> pcList = pcTable.get(sopClass);
+			if (pcList != null) this.put(sopClass, pcList);
+		}
+		logger.debug("PCTable.size: "+this.size());
+	}
+
 	public static synchronized PCTable getInstance() {
 		return pcTable;
+	}
+
+	public static synchronized PCTable getInstance(LinkedList<String> sopClasses) {
+		if ((sopClasses != null) && (sopClasses.size() > 0)) {
+			return new PCTable(sopClasses);
+		}
+		else return pcTable;
 	}
 
 	static class PC {
