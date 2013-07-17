@@ -445,6 +445,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomExportService"/>
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="dicomScript" required="no" default=""/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip.port)</helptext>
 			</attr>
