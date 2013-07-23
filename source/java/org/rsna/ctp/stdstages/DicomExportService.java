@@ -46,6 +46,12 @@ public class DicomExportService extends AbstractExportService {
 		//See if we are to force a close of the association on every transfer
 		boolean forceClose = element.getAttribute("forceClose").trim().equals("yes");
 
+		//Get the hostTag, if any
+		int hostTag = DicomObject.getElementTag(element.getAttribute("hostTag").trim());
+
+		//Get the portTag, if any
+		int portTag = DicomObject.getElementTag(element.getAttribute("portTag").trim());
+
 		//Get the calledAETTag, if any
 		int calledAETTag = DicomObject.getElementTag(element.getAttribute("calledAETTag").trim());
 
@@ -53,7 +59,7 @@ public class DicomExportService extends AbstractExportService {
 		int callingAETTag = DicomObject.getElementTag(element.getAttribute("callingAETTag").trim());
 
 		//Get the DicomSender
-		dicomSender = new DicomStorageSCU(url, forceClose, calledAETTag, callingAETTag);
+		dicomSender = new DicomStorageSCU(url, forceClose, hostTag, portTag, calledAETTag, callingAETTag);
 
 	}
 

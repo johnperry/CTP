@@ -81,14 +81,20 @@ public class DicomStorageSCU {
     private byte[] buffer = null;
     private ActiveAssociation active = null;
     private Association assoc = null;
-    private String currentTSUID = null;
-    private String currentSOPClassUID = null;
 	private PresContext pc = null;
+
 	private boolean forceClose;
+    private int hostTag = 0;
+    private int portTag = 0;
     private int calledAETTag = 0;
     private int callingAETTag = 0;
+
+    private String currentHost = "";
+    private int currentPort = 0;
     private String currentCalledAET = "";
     private String currentCallingAET = "";
+    private String currentTSUID = null;
+    private String currentSOPClassUID = null;
 
     private DcmURL url = null;
 
@@ -100,18 +106,23 @@ public class DicomStorageSCU {
 	 * @param url the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
 	 * @param forceClose true to force the closure of the association after sending an object; false to leave
 	 * the association open after a transmission.
+	 * @param hostTag the tag in the DicomObject from which to get the host name of the destination SCP, or 0 if
+	 * the host name in the URL is to be used for all transmissions
+	 * @param portTag the tag in the DicomObject from which to get the port of the destination SCP, or 0 if
+	 * the port in the URL is to be used for all transmissions
 	 * @param calledAETTag the tag in the DicomObject from which to get the calledAET, or 0 if
 	 * the calledAET in the URL is to be used for all transmissions
 	 * @param callingAETTag the tag in the DicomObject from which to get the callingAET, or 0 if
 	 * the callingAET in the URL is to be used for all transmissions
 	 */
-	public DicomStorageSCU(String url, boolean forceClose, int calledAETTag, int callingAETTag) {
+	public DicomStorageSCU(String url, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
 		this.url = new DcmURL(url);
 		this.forceClose = forceClose;
+		this.hostTag = hostTag;
+		this.portTag = portTag;
 		this.calledAETTag = calledAETTag;
 		this.callingAETTag = callingAETTag;
         buffer = new byte[bufferSize];
-        initAssocParam(this.url);
 	}
 
 	/**
@@ -164,6 +175,8 @@ public class DicomStorageSCU {
         String sopClassUID = dicomObject.getSOPClassUID();
         String tsUID = dicomObject.getTransferSyntaxUID();
 
+		String requestedHost = getHost(dicomObject, hostTag, url.getHost());
+		int requestedPort = getPort(dicomObject, portTag, url.getPort());
         String requestedCalledAET = getAET(dicomObject, calledAETTag, url.getCalledAET());
         String requestedCallingAET = getAET(dicomObject, callingAETTag, url.getCallingAET());
 
@@ -179,6 +192,12 @@ public class DicomStorageSCU {
 				//if the SOP Class has changed, then YES
 				(currentSOPClassUID == null) || !sopClassUID.equals(currentSOPClassUID) ||
 
+				//if the host has changed, then YES
+				!requestedHost.equals(currentHost) ||
+
+				//if the port has changed, then YES
+				(requestedPort != currentPort) ||
+
 				//if the called AET has changed, then YES
 				!requestedCalledAET.equals(currentCalledAET) ||
 
@@ -192,10 +211,9 @@ public class DicomStorageSCU {
 				close();
 
 				//Create a new association
-				assocRQ.setCalledAET(requestedCalledAET);
-				assocRQ.setCallingAET(maskNull(requestedCallingAET));
+		        initAssocParam(requestedCalledAET, maskNull(requestedCallingAET));
 				initPresContext(sopClassUID);
-				active = openAssoc();
+				active = openAssoc(requestedHost, requestedPort);
 				if (active == null) {
 					logger.warn("Unable to establish association for "+dicomObject.getSOPInstanceUID());
 					logger.warn("...SOPClass: "+dicomObject.getSOPClassName());
@@ -220,6 +238,8 @@ public class DicomStorageSCU {
 				}
 				currentTSUID = pc.getTransferSyntaxUID();
 				currentSOPClassUID = sopClassUID;
+				currentHost = requestedHost;
+				currentPort = requestedPort;
 				currentCalledAET = requestedCalledAET;
 				currentCallingAET = requestedCallingAET;
 			}
@@ -240,8 +260,8 @@ public class DicomStorageSCU {
 			if ((msg != null) && msg.contains("Connection refused")) {
 				long time = System.currentTimeMillis();
 				if ((time - lastFailureMessageTime) > anHour) {
+					logger.warn("dicom://"+requestedCalledAET+":"+requestedCallingAET+"@"+requestedHost+":"+requestedPort);
 					logger.warn(ex);
-					logger.warn("..."+url.toString());
 					lastFailureMessageTime = time;
 				}
 			}
@@ -382,6 +402,33 @@ public class DicomStorageSCU {
         return (aet != null) ? aet : "DCMSND";
     }
 
+    private String getHost(DicomObject dicomObject, int tag, String defaultHost) {
+		String host = defaultHost;
+		try {
+			if (tag != 0) {
+				byte[] bytes = dicomObject.getElementBytes(tag);
+				host = new String(bytes).trim();
+				host = (host.equals("") ? defaultHost : host);
+			}
+		}
+		catch (Exception ex) { host = defaultHost; }
+		return host;
+	}
+
+    private int getPort(DicomObject dicomObject, int tag, int defaultPort) {
+		int port = defaultPort;
+		try {
+			if (tag != 0) {
+				byte[] bytes = dicomObject.getElementBytes(tag);
+				try { port = Integer.parseInt( new String(bytes).trim() ); }
+				catch (Exception ex) { port = 0; }
+				port = ((port == 0) ? defaultPort : port);
+			}
+		}
+		catch (Exception ex) { port = defaultPort; }
+		return port;
+	}
+
     private String getAET(DicomObject dicomObject, int tag, String defaultAET) {
 		String aet = defaultAET;
 		try {
@@ -395,17 +442,16 @@ public class DicomStorageSCU {
 		return aet;
 	}
 
-    private final void initAssocParam(DcmURL url) {
-        assocRQ.setCalledAET( url.getCalledAET() );
-        assocRQ.setCallingAET( maskNull( url.getCallingAET() ) );
+    private final void initAssocParam(String calledAET, String callingAET) {
+        assocRQ.setCalledAET( calledAET );
+        assocRQ.setCallingAET( maskNull( callingAET ) );
         assocRQ.setMaxPDULength( maxPDULength );
         assocRQ.setAsyncOpsWindow( aFact.newAsyncOpsWindow(0,1) );
     }
 
-    private ActiveAssociation openAssoc()
+    private ActiveAssociation openAssoc(String host, int port)
         	throws IOException, GeneralSecurityException {
-        Association assoc =
-            aFact.newRequestor(newSocket(url.getHost(), url.getPort()));
+        Association assoc = aFact.newRequestor(newSocket(host, port));
         assoc.setAcTimeout(acTimeout);
         assoc.setDimseTimeout(dimseTimeout);
         assoc.setSoCloseDelay(soCloseDelay);
