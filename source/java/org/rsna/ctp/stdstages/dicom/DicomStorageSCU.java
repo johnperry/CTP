@@ -214,11 +214,7 @@ public class DicomStorageSCU {
 		        initAssocParam(requestedCalledAET, maskNull(requestedCallingAET));
 				initPresContext(sopClassUID);
 				active = openAssoc(requestedHost, requestedPort);
-				if (active == null) {
-					logger.warn("Unable to establish association for "+dicomObject.getSOPInstanceUID());
-					logger.warn("...SOPClass: "+dicomObject.getSOPClassName());
-					return Status.FAIL;
-				}
+				if (active == null) return Status.RETRY; //probably off-line
 				assoc = active.getAssociation();
 
 				//Negotiate the transfer syntax
@@ -234,6 +230,8 @@ public class DicomStorageSCU {
 				if (pc == null) {
 					currentTSUID = null;
 					currentSOPClassUID = null;
+					logger.debug("Unable to negotiate a transfer syntax for "+dicomObject.getSOPInstanceUID());
+					logger.debug("...SOPClass: "+dicomObject.getSOPClassName());
 					return Status.FAIL;
 				}
 				currentTSUID = pc.getTransferSyntaxUID();
