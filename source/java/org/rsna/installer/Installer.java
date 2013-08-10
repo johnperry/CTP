@@ -535,11 +535,11 @@ public class Installer extends JFrame {
 			File windows = new File(dir, "windows");
 			File install = new File(windows, "install.bat");
 			cp.appendln(Color.black, "Windows service installer:");
-			cp.appendln(Color.black, install.getAbsolutePath());
+			cp.appendln(Color.black, "...file: "+install.getAbsolutePath());
 			String bat = getFileText(install);
 			Properties props = new Properties();
 			String home = dir.getAbsolutePath();
-			cp.appendln(Color.black, "home: "+home);
+			cp.appendln(Color.black, "...home: "+home);
 			home = home.replaceAll("\\\\", "\\\\\\\\");
 			props.put("home", home);
 
@@ -562,16 +562,16 @@ public class Installer extends JFrame {
 			File linux = new File(dir, "linux");
 			File install = new File(linux, "ctpService-ubuntu.sh");
 			cp.appendln(Color.black, "Linux service installer:");
-			cp.appendln(Color.black, install.getAbsolutePath());
+			cp.appendln(Color.black, "...file: "+install.getAbsolutePath());
 			String bat = getFileText(install);
 			Properties props = new Properties();
 			String ctpHome = dir.getAbsolutePath();
-			cp.appendln(Color.black, "CTP_HOME: "+ctpHome);
+			cp.appendln(Color.black, "...CTP_HOME: "+ctpHome);
 			ctpHome = ctpHome.replaceAll("\\\\", "\\\\\\\\");
 			props.put("CTP_HOME", ctpHome);
 			File javaHome = new File(System.getProperty("java.home"));
 			String javaBin = (new File(javaHome, "bin")).getAbsolutePath();
-			cp.appendln(Color.black, "JAVA_BIN: "+javaBin);
+			cp.appendln(Color.black, "...JAVA_BIN: "+javaBin);
 			javaBin = javaBin.replaceAll("\\\\", "\\\\\\\\");
 			props.put("JAVA_BIN", javaBin);
 
@@ -811,10 +811,42 @@ public class Installer extends JFrame {
 			InputStreamReader isr = new InputStreamReader(is);
 			int size = 256; char[] buf = new char[size]; int len;
 			while ((len=isr.read(buf,0,size)) != -1) text.append(buf,0,len);
+			isr.close();
+			if (programName.equals("ISN")) return !shutdown(port, ssl);
 			return true;
 		}
 		catch (Exception ex) { return false; }
 	}
+
+    public boolean shutdown(int port, boolean ssl) {
+        try {
+            String protocol = "http" + (ssl?"s":"");
+            URL url = new URL( protocol, "127.0.0.1", port, "shutdown");
+			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("servicemanager", "shutdown");
+            conn.connect();
+
+            StringBuffer sb = new StringBuffer();
+            BufferedReader br = new BufferedReader( new InputStreamReader(conn.getInputStream(), "UTF-8") );
+            int n; char[] cbuf = new char[1024];
+            while ((n=br.read(cbuf, 0, cbuf.length)) != -1) sb.append(cbuf,0,n);
+            br.close();
+            String message = sb.toString().replace("<br>","\n");
+            if (message.contains("Goodbye")) {
+				cp.appendln("Shutting down the server:");
+				String[] lines = message.split("\n");
+				for (String line : lines) {
+					cp.append("...");
+            		cp.appendln(line);
+				}
+            	return true;
+			}
+        }
+        catch (Exception ex) { }
+        cp.appendln("Unable to shutdown CTP");
+        return false;
+    }
 
 	private void logSubstring(String info, String text, String search) {
 		System.out.println(info);
