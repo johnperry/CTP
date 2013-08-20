@@ -342,7 +342,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FileStorageService" editable="no"/>
 			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/FileStorageService"/>
-			<attr name="type" required="no" default="none" options="year|month|week|date|none">
+			<attr name="type" required="no" default="none" options="year|month|week|day|none">
 				<helptext>Structure of the storage tree</helptext>
 			</attr>
 			<attr name="timeDepth" required="no" default="0">
