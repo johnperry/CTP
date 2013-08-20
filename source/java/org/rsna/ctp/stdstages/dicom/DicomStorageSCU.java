@@ -264,10 +264,12 @@ public class DicomStorageSCU {
 				}
 			}
 			else {
+				logger.debug("Error processing a DicomObject for transmission", ex);
 				logger.warn(ex);
 				logger.warn("..."+dicomObject.getSOPInstanceUID());
 				logger.warn("..."+dicomObject.getSOPClassName());
-				if ((msg != null) && msg.contains("NullPointerException")) return Status.FAIL;
+				if ((ex instanceof java.io.EOFException) ||
+					(ex instanceof java.lang.NullPointerException)) return Status.FAIL;
 			}
 		}
 		return Status.RETRY;

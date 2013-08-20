@@ -80,14 +80,14 @@ public class StorageServlet extends Servlet {
 	//List all the file systems.
 	private void listFileSystems(HttpRequest req, HttpResponse res, FileSystemManager fsm) {
 		List<String> fsList = fsm.getFileSystemsFor(req.getUser());
-		if (fsm.getSize() == 1) {
+		if (fsList.size() == 1) {
 			//Only one FileSystem, just list its studies.
 			//First, make a Path to the FileSystem.
 			Path path = new Path("/storage/" + fsList.get(0));
 			listStudies(req, res, path, fsm);
 		}
 		else {
-			//More than one FileSystem; list them.
+			//Zero or more than one FileSystem; list them.
 			StringBuffer sb = new StringBuffer();
 			sb.append("<html><head>");
 			sb.append("<title>Storage Service</title>");
