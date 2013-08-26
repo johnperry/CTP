@@ -35,6 +35,7 @@ import org.rsna.util.XmlUtil;
 public class IDMapServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(IDMapServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct an IDMapServlet.
@@ -54,7 +55,6 @@ public class IDMapServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Get the selected stage, if possible.
@@ -98,7 +98,6 @@ public class IDMapServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
 			res.redirect(home);
 			return;
@@ -226,7 +225,6 @@ public class IDMapServlet extends Servlet {
 	private String makeForm(IDMap idMap, int p, int s, String home) {
 		StringBuffer form = new StringBuffer();
 		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
-		form.append(hidden("home",home));
 		form.append(hidden("p",Integer.toString(p)));
 		form.append(hidden("s",Integer.toString(s)));
 

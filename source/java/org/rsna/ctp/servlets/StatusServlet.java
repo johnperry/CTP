@@ -24,6 +24,7 @@ import org.rsna.util.HtmlUtil;
 public class StatusServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(StatusServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a StatusServlet.
@@ -41,7 +42,6 @@ public class StatusServlet extends Servlet {
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
 		Configuration config = Configuration.getInstance();
-		String home = filter(req.getParameter("home", "/"));
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html>");

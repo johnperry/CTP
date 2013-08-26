@@ -85,7 +85,10 @@ public class Configuration {
 		try {
 			//Log the environment
 			String thisOS = System.getProperty("os.name");
-			String thisJava = System.getProperty("java.version");
+			String thisJavaVersion = System.getProperty("java.version");
+			String thisJavaVendor = System.getProperty("java.vendor");
+			String thisJavaVMVendor = System.getProperty("java.vm.vendor");
+			String thisJavaVMVersion = System.getProperty("java.vm.version");
 			String thisJavaBits = System.getProperty("sun.arch.data.model") + " bits";
 
 			//Find the ImageIO Tools and get the version
@@ -102,7 +105,10 @@ public class Configuration {
 				thisImageIOVersion  = jaiManifest.get("Implementation-Version");
 			}
 			logger.info("Operating system: " + thisOS);
-			logger.info("Java version:     " + thisJava);
+			logger.info("Java vendor:      " + thisJavaVendor);
+			logger.info("Java version:     " + thisJavaVersion);
+			logger.info("Java VM vendor:   " + thisJavaVMVendor);
+			logger.info("Java VM version:  " + thisJavaVMVersion);
 			logger.info("Java data model:  " + thisJavaBits);
 			logger.info("ImageIO Tools:    " + thisImageIOVersion);
 

@@ -33,6 +33,7 @@ import org.rsna.util.StringUtil;
 public class QuarantineServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(QuarantineServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a QuarantineServlet.
@@ -72,8 +73,6 @@ public class QuarantineServlet extends Servlet {
 			res.send();
 			return;
 		}
-
-		String home = filter(req.getParameter("home", "/"));
 
 		//Check the path information
 		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);

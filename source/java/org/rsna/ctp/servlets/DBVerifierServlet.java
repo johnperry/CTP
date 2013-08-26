@@ -44,6 +44,7 @@ import org.w3c.dom.NodeList;
 public class DBVerifierServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(DBVerifierServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a DBVerifierServlet.
@@ -64,7 +65,6 @@ public class DBVerifierServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Get the selected stage, if possible.
@@ -145,7 +145,7 @@ public class DBVerifierServlet extends Servlet {
 						+ responseTail();
 		}
 		else {
-			String url = "/" + context + "?home="+home+"&p="+p+"&s="+s;
+			String url = "/" + context + "?p="+p+"&s="+s;
 			if (date != null) url += "&date="+date;
 			if (ptid != null) url += "&ptid="+ptid;
 			return responseHead(verifier.getName(), url, "_self", "Back")

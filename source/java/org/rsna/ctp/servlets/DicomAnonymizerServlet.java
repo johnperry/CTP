@@ -39,6 +39,7 @@ import org.rsna.util.StringUtil;
 public class DicomAnonymizerServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(DicomAnonymizerServlet.class);
+	String home = "/";
 
 	File dicomProfiles = new File("profiles/dicom");
 	File savedProfiles = new File("profiles/saved");
@@ -62,7 +63,6 @@ public class DicomAnonymizerServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Disable caching of the response
@@ -144,7 +144,6 @@ public class DicomAnonymizerServlet extends Servlet {
 		}
 
 		//Set up the response
-		String home = filter(req.getParameter("home", "/"));
 		res.disableCaching();
 		res.setContentType("txt");
 

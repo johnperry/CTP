@@ -46,6 +46,7 @@ import org.rsna.util.StringUtil;
 public class LookupServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(LookupServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a LookupServlet.
@@ -69,7 +70,6 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Now make either the page listing the various editable stages
@@ -123,7 +123,6 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
@@ -354,7 +353,6 @@ public class LookupServlet extends Servlet {
 
 		StringBuffer form = new StringBuffer();
 		form.append("<form id=\"URLEncodedFormID\" method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
-		form.append(hidden("home", home));
 		form.append(hidden("p", p + ""));
 		form.append(hidden("s", s + ""));
 

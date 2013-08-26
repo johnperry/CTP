@@ -25,6 +25,7 @@ import org.rsna.util.HtmlUtil;
 public class ConfigurationServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(ConfigurationServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a ConfigurationServlet.
@@ -50,7 +51,6 @@ public class ConfigurationServlet extends Servlet {
 			return;
 		}
 
-		String home = filter(req.getParameter("home", "/"));
 		Configuration config = Configuration.getInstance();
 		String ipAddress = config.getIPAddress();
 		int serverPort = config.getServerPort();

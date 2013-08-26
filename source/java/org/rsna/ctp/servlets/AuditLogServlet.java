@@ -28,6 +28,7 @@ import org.w3c.dom.Node;
 public class AuditLogServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(AuditLogServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct an AuditLogServlet. Note: the AuditLogServlet
@@ -51,7 +52,6 @@ public class AuditLogServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) throws Exception {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Get the plugin, if possible.

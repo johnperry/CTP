@@ -40,6 +40,7 @@ import org.w3c.dom.NodeList;
 public class ObjectTrackerServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(ObjectTrackerServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct an ObjectTrackerServlet.
@@ -59,7 +60,6 @@ public class ObjectTrackerServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Get the selected stage, if possible.
@@ -103,7 +103,6 @@ public class ObjectTrackerServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
 			res.redirect(home);
 			return;
@@ -166,7 +165,7 @@ public class ObjectTrackerServlet extends Servlet {
 				res.setContentType("html");
 				res.write(
 					responseHead("Search Results from "+tracker.getName(),
-								 "/" + context + "?home="+home+"&p="+p+"&s="+s,
+								 "/" + context + "?p="+p+"&s="+s,
 								 "_self",
 								 "Return to the search page")
 						+ getHTML(data)
@@ -222,7 +221,6 @@ public class ObjectTrackerServlet extends Servlet {
 	private String makeForm(ObjectTracker tracker, int p, int s, String home) {
 		StringBuffer form = new StringBuffer();
 		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
-		form.append(hidden("home",home));
 		form.append(hidden("p",Integer.toString(p)));
 		form.append(hidden("s",Integer.toString(s)));
 

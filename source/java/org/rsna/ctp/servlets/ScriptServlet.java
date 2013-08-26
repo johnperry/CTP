@@ -38,6 +38,7 @@ import org.rsna.util.StringUtil;
 public class ScriptServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(ScriptServlet.class);
+	String home = "/";
 
 	/**
 	 * Construct a ScriptServlet.
@@ -64,7 +65,6 @@ public class ScriptServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin")) { res.redirect(home); return; }
 
 		//Get the script file, if possible.
@@ -110,7 +110,6 @@ public class ScriptServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		String home = filter(req.getParameter("home", "/"));
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
 			res.redirect(home);
 			return;
@@ -218,7 +217,6 @@ public class ScriptServlet extends Servlet {
 
 		StringBuffer form = new StringBuffer();
 		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
-		form.append(hidden("home", home));
 		form.append(hidden("p", p + ""));
 		form.append(hidden("s", s + ""));
 		form.append(hidden("f", f + ""));
