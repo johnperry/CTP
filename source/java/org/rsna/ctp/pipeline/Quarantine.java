@@ -8,6 +8,8 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.util.FileUtil;
 
@@ -49,7 +51,9 @@ public class Quarantine {
 	 * @return the files in the directory.
 	 */
 	public File[] getFiles() {
-		return directory.listFiles();
+		File[] files = directory.listFiles();
+		Arrays.sort(files, new LMDateComparator( LMDateComparator.down ));
+		return files;
 	}
 
 	/**
@@ -74,11 +78,7 @@ public class Quarantine {
 	 * @param queueManager the QueueManager to receive the files.
 	 */
 	public void queueAll(QueueManager queueManager) {
-		File[] files = getFiles();
-		for (int i=0; i<files.length; i++) {
-			queueManager.enqueue(files[i]);
-			files[i].delete();
-		}
+		queueManager.enqueueDir(directory);
 	}
 
 	/**
@@ -132,6 +132,41 @@ public class Quarantine {
 	 */
 	public File insertCopy(FileObject fileObject) {
 		return fileObject.copyToDirectory(directory);
+	}
+
+	//A Comparator for sorting File objects by lastModifiedDate
+	class LMDateComparator implements Comparator {
+
+		public static final int up = 1;
+		public static final int down = -1;
+		int dir = down;
+
+		/**
+		 * Create a reverse order Comparator for lmDate values.
+		 */
+		public LMDateComparator() {
+			this(down);
+		}
+
+		/**
+		 * Create a specified order Comparator for lmDate values.
+		 */
+		public LMDateComparator(int direction) {
+			if (direction >= 0) dir = up;
+			else dir = down;
+		}
+
+		/**
+		 * Compare.
+		 */
+		public int compare(Object o1, Object o2) {
+			if ( (o1 instanceof File) && (o2 instanceof File)) {
+				long d1 = ((File)o1).lastModified();
+				long d2 = ((File)o2).lastModified();
+				return dir * ( (d1>d2) ? 1 : ((d1<d2) ? -1 : 0) );
+			}
+			else return 0;
+		}
 	}
 
 }

@@ -70,7 +70,7 @@ start() {
 		return 0
 	fi
 	#eval "( java -Dinstall4j.jvmDir="$JAVA_HOME" -classpath "$CLASSPATH" -jar $CTP_HOME/	Runner.jar) &"
-	eval "( java  -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar) &"
+	eval "( java  -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar start) &"
 	return 0
 	# this PID is not useful becuase Runner.jar creates a sub-process
 	#pid=$!
@@ -87,6 +87,9 @@ stop() {
 #
 #	So we have to do a little work
 #
+# 8-14: JP told SGL that Runner can be called with
+#	command line args (stop, start, toggle). 
+#	This simplifies things
 ##################################
 	echo "in stop"
 	ret=$(ps aux |grep libraries)
@@ -95,8 +98,8 @@ stop() {
 		array=($ret)
 		#echo $ret
 		#echo ${array[1]}
-		result=$(kill ${array[1]})
-		echo $result
+		#result=$(kill ${array[1]})
+		eval "( java -classpath "$CLASSPATH" -jar $CTP_HOME/Runner.jar stop) &"
 		sleep 2
 		return 0
 	else

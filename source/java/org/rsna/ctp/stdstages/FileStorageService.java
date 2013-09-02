@@ -216,6 +216,8 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 
 		lastFileStored = fileObject.getFile();
 		lastTime = System.currentTimeMillis();
+		lastFileOut = lastFileStored;
+		lastTimeOut = lastTime;
 		return fileObject;
 	}
 

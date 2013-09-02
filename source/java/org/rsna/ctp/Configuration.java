@@ -116,7 +116,7 @@ public class Configuration {
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
 
 			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:        ");
-			logManifestAttribute(new File("libraries/Util.jar"), "Date",    "Util build:       ");
+			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:       ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:       ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:     ");
 

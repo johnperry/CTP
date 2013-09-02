@@ -57,7 +57,8 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 			active = new File(root, "active");
 			active.mkdirs();
 			activePath = active.getAbsolutePath();
-			queueManager.enqueueDir(active); //requeue any files that are left from an ungraceful shutdown.
+			int n = queueManager.enqueueDir(active); //requeue any files that are left from an ungraceful shutdown.
+			if (n > 0) logger.info(name+": "+n+" files requeued from "+active);
 		}
 	}
 

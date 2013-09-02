@@ -133,6 +133,14 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	/**
+	 * Get the last time the stage supplied a file.
+	 * @return the last time the stage supplied a file to the pipeline.
+	 */
+	public synchronized long getLastFileOutTime() {
+		return lastTimeOut;
+	}
+
+	/**
 	 * Get HTML text describing the configuration of the stage,
 	 * consisting of a header element containing the
 	 * stage's name and a table containing the rest of the

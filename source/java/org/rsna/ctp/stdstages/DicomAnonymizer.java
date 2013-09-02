@@ -21,6 +21,7 @@ import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizer;
 import org.rsna.util.FileUtil;
+import org.rsna.util.TimerUtil;
 import org.w3c.dom.Element;
 
 /**
@@ -99,6 +100,8 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 
 		if ( (fileObject instanceof DicomObject) && (scriptFile != null) ) {
 
+			TimerUtil.reset();
+
 			//If there is a dicomScriptFile, use it to determine whether to anonymize
 			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile).getResult()) {
 
@@ -106,9 +109,18 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 				File file = fileObject.getFile();
 				DAScript dascript = DAScript.getInstance(scriptFile);
 				Properties script = dascript.toProperties();
+
+				logger.debug(TimerUtil.getLapTimeText("Get script"));
+
 				Properties lookup = LookupTable.getProperties(lookupTableFile);
+
+				logger.debug(TimerUtil.getLapTimeText("Get lookup table"));
+
 				AnonymizerStatus status =
 							DICOMAnonymizer.anonymize(file, file, script, lookup, intTable, false, false);
+
+				logger.debug(TimerUtil.getTotalTimeText("Total anonymization time"));
+
 				if (status.isOK()) {
 					fileObject = FileObject.getInstance(file);
 				}

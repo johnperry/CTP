@@ -63,7 +63,7 @@ public class MemoryMonitor extends AbstractPipelineStage implements Processor {
 			}
 
 			if (logMemoryInUse) {
-				logger.info(name + ": (" + (count+1) + "): memory in use: " + usedMemory());
+				logger.info(name + ": (" + (count+1) + "): memory in use: " + String.format("%,d bytes",usedMemory()));
 			}
 		}
 		count++;

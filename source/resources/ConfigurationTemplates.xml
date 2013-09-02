@@ -179,6 +179,11 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="PerformanceLogger"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PerformanceLogger" editable="no"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="MemoryMonitor"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.MemoryMonitor" editable="no"/>
 			<attr name="interval" required="no" default="1">
@@ -405,7 +410,9 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="returnStoredFile" required="yes" default="yes" options="yes|no"/>
-			<attr name="logDuplicates" required="no" default="no" options="yes|no"/>
+			<attr name="logDuplicates" required="no" default="no" options="yes|no">
+				<helptext>Make a log entry whenever a duplicate SOPInstanceUID is stored</helptext>
+			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
@@ -457,13 +464,16 @@
 				<helptext>DICOM tag from which to obtain the destination SCP host (ggggeeee, optional)</helptext>
 			</attr>
 			<attr name="portTag" required="no" default="">
-				<helptext>DICOM tag from which to obtain the destinatioin SCP port (ggggeeee, optional)</helptext>
+				<helptext>DICOM tag from which to obtain the destination SCP port (ggggeeee, optional)</helptext>
 			</attr>
 			<attr name="callingAETTag" required="no" default="">
 				<helptext>DICOM tag from which to obtain the Calling AE Title (ggggeeee, optional)</helptext>
 			</attr>
 			<attr name="calledAETTag" required="no" default="">
 				<helptext>DICOM tag from which to obtain the Called AE Title (ggggeeee, optional)</helptext>
+			</attr>
+			<attr name="logDuplicates" required="no" default="no" options="yes|no">
+				<helptext>Make a log entry when an object is transmitted with a SOPInstanceUID that has occurred in the last 10 objects</helptext>
 			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
@@ -492,6 +502,9 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
+			<attr name="logDuplicates" required="no" default="no" options="yes|no">
+				<helptext>Make a log entry when an object is transmitted with a SOPInstanceUID that has occurred in the last 10 objects</helptext>
+			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
@@ -602,7 +615,6 @@
 		<interval>Sleep time in milliseconds between polls of the export queue</interval>
 		<ldapAdmin>The LDAP admin username (e.g., adminUserName)</ldapAdmin>
 		<logConnections>Log IP addresses of received connections</logConnections>
-		<logDuplicates>Make a log entry whenever a duplicate SOPInstanceUID is stored</logDuplicates>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>

@@ -37,6 +37,8 @@ public abstract class AbstractQueuedExportService
 	protected File dicomScriptFile = null;
 	protected File xmlScriptFile = null;
 	protected File zipScriptFile = null;
+	protected volatile File lastFileDequeued = null;
+	protected volatile long lastTimeDequeued = 0;
 
 	/**
 	 * Construct an ExportService.
@@ -95,6 +97,8 @@ public abstract class AbstractQueuedExportService
 	 * @param fileObject the object to be exported.
 	 */
 	public synchronized void export(FileObject fileObject) {
+		lastFileIn = fileObject.getFile();
+		lastTimeIn = System.currentTimeMillis();
 		if (fileObject instanceof DicomObject) {
 			if (acceptDicomObjects) {
 				if ((dicomScriptFile == null)
@@ -117,12 +121,12 @@ public abstract class AbstractQueuedExportService
 			}
 		}
 		else if (acceptFileObjects) enqueue(fileObject);
+		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
+		lastTimeOut = System.currentTimeMillis();
 	}
 
 	//Add a fileObject to the export queue
 	private void enqueue(FileObject fileObject) {
-		lastFileIn = fileObject.getFile();
-		lastTimeIn = System.currentTimeMillis();
 		if (queueManager.enqueue(lastFileIn) == null) {
 			if (quarantine != null) quarantine.insertCopy(fileObject);
 		}
@@ -155,8 +159,8 @@ public abstract class AbstractQueuedExportService
 		if (queueManager != null) {
 			File file = queueManager.dequeue(active);
 			if (file != null) {
-				lastFileOut = file;
-				lastTimeOut = System.currentTimeMillis();
+				lastFileDequeued = file;
+				lastTimeDequeued = System.currentTimeMillis();
 			}
 			return file;
 		}
@@ -186,12 +190,19 @@ public abstract class AbstractQueuedExportService
 	 * @return HTML text displaying the active status of the stage.
 	 */
 	public synchronized String getStatusHTML(String childUniqueStatus) {
-		String stageUniqueStatus =
-			"<tr><td width=\"20%\">Queue size:</td>"
-			+ "<td>"
-			+ ((queueManager!=null) ? queueManager.size() : "???")
-			+ "</td></tr>";
-		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
+		StringBuffer sb = new StringBuffer();
+		sb.append("<tr><td width=\"20%\">Queue size:</td>");
+		sb.append("<td>" + ((queueManager!=null) ? queueManager.size() : "???") + "</td></tr>");
+		sb.append("<tr><td width=\"20%\">Last file dequeued:</td>");
+		if (lastTimeDequeued != 0) {
+			sb.append("<td>"+lastFileDequeued+"</td></tr>");
+			sb.append("<tr><td width=\"20%\">Last file dequeued at:</td>");
+			sb.append("<td>"+StringUtil.getDateTime(lastTimeDequeued,"&nbsp;&nbsp;&nbsp;")+"</td></tr>");
+		}
+		else sb.append("<td>No activity</td></tr>");
+		return super.getStatusHTML(childUniqueStatus + sb.toString());
 	}
 
 }
+
+

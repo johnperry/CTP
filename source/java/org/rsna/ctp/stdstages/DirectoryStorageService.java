@@ -188,6 +188,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				return null;
 			}
 		}
+		lastFileOut = lastFileStored;
+		lastTimeOut = lastTime;
 		return fileObject;
 	}
 

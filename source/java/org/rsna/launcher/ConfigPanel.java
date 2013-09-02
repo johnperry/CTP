@@ -830,7 +830,8 @@ public class ConfigPanel extends BasePanel {
 
 		public DataPane() {
 			super();
-			setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
+			//setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
+			setLayout( new BorderLayout() );
 			setView(false);
 		}
 
@@ -880,11 +881,10 @@ public class ConfigPanel extends BasePanel {
 		private void displayXML(XMLUserObject userObject) {
 			setTrackWidth(false);
 			setLayout(new BorderLayout());
-			ColorPane cp = new ColorPane();
+			String xml = XmlUtil.toPrettyString(userObject.getXML());
+			ColorPane cp = new ColorPane(xml);
 			cp.setEditable(false);
 			cp.setScrollableTracksViewportWidth(false);
-			String xml = XmlUtil.toPrettyString(userObject.getXML());
-			cp.setText(xml);
 			add(cp, BorderLayout.CENTER);
 		}
 	}

@@ -84,22 +84,26 @@ public class QueueManager {
 	/**
 	 * Insert all the files in a directory into the queue
 	 * directory tree, preserving the embedded filename, if present.
-	 * this method does not walk a deep tree; it only takes the
+	 * This method does not walk a deep tree; it only takes the
 	 * first-generation children of the specified directory,
 	 * ignoring any child directories. This method deletes any
 	 * files that it enqueues from the original directory.
 	 * @param dir the directory whose contents are to be inserted.
+	 * @return the number of files actually enqueued from the directory.
 	 */
-	public synchronized void enqueueDir(File dir) {
+	public synchronized int enqueueDir(File dir) {
+		int count = 0;
 		if ((dir != null) && dir.exists()) {
 			File[] files = dir.listFiles();
 			for (int i=0; i<files.length; i++) {
 				if (files[i].isFile()) {
 					enqueue(files[i]);
 					files[i].delete();
+					count++;
 				}
 			}
 		}
+		return count;
 	}
 
 	/**

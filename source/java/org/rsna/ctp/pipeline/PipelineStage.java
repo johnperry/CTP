@@ -29,4 +29,6 @@ public interface PipelineStage {
 
 	public String getStatusHTML();
 
+	public long getLastFileOutTime();
+
 }
