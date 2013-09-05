@@ -56,7 +56,6 @@ import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
-import org.rsna.util.TimerUtil;
 
 import org.apache.log4j.Logger;
 
@@ -119,8 +118,6 @@ public class DICOMAnonymizer {
 			//will serve as the original data for reference during
 			//the anonymization process.
 
-			TimerUtil.getLapTime(); //clear the lap timer
-
 			//Get the origds (up to the pixels), and close the input stream.
 			BufferedInputStream origin = new BufferedInputStream(new FileInputStream(inFile));
 			DcmParser origp = pFact.newDcmParser(origin);
@@ -129,7 +126,6 @@ public class DICOMAnonymizer {
 			origp.setDcmHandler(origds.getDcmHandler());
 			origp.parseDcmFile(origff, Tags.PixelData);
 			origin.close();
-			logger.debug(TimerUtil.getLapTimeText("Parse the dataset for input"));
 
 			//Get the dataset (excluding pixels) and leave the input stream open.
 			//This one needs to be left open so we can read the pixels and any
@@ -141,11 +137,9 @@ public class DICOMAnonymizer {
 			Dataset dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
-			logger.debug(TimerUtil.getLapTimeText("Parse the dataset for output"));
 
 			//Encapsulate everything in a context
 			DICOMAnonymizerContext context = new DICOMAnonymizerContext(cmds, lkup, intTable, origds, dataset);
-			logger.debug(TimerUtil.getLapTimeText("Instantiate the DICOMAnonymizerContext"));
 
 			//There are two steps in anonymizing the dataset:
 			// 1. Insert any elements that are required by the script
@@ -155,11 +149,9 @@ public class DICOMAnonymizer {
 
 			//Step 1: insert new elements
 			insertElements(context);
-			logger.debug(TimerUtil.getLapTimeText("Insert new elements"));
 
 			//Step 2: modify the remaining elements according to the commands
 			processElements(context);
-			logger.debug(TimerUtil.getLapTimeText("Process elements"));
 
 			//Write the dataset to a temporary file in the same directory
 			File tempDir = outFile.getParentFile();
@@ -191,11 +183,9 @@ public class DICOMAnonymizer {
 			fmi = oFact.newFileMetaInfo(dataset, prefEncodingUID);
             dataset.setFileMetaInfo(fmi);
             fmi.write(out);
-			logger.debug(TimerUtil.getLapTimeText("Write the file metadata"));
 
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);
-			logger.debug(TimerUtil.getLapTimeText("Write the dataset"));
 
 			//Write the pixels if the parser actually stopped before pixeldata
             if (parser.getReadTag() == Tags.PixelData) {
@@ -236,7 +226,6 @@ public class DICOMAnonymizer {
                 }
 				parser.parseHeader(); //get ready for the next element
 			}
-			logger.debug(TimerUtil.getLapTimeText("Write the pixels"));
 
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
@@ -266,17 +255,14 @@ public class DICOMAnonymizer {
 				}
 				parser.parseHeader();
 			}
-			logger.debug(TimerUtil.getLapTimeText("Write post-pixels elements"));
 			out.flush();
 			out.close();
 			in.close();
-			logger.debug(TimerUtil.getLapTimeText("Close the file"));
 
 			//Rename the temp file to the specified outFile.
 			if (renameToSOPIUID) outFile = new File(outFile.getParentFile(),sopiUID+".dcm");
 			outFile.delete();
 			tempFile.renameTo(outFile);
-			logger.debug(TimerUtil.getLapTimeText("Rename the file"));
 		}
 
 		catch (Exception e) {
@@ -1113,6 +1099,7 @@ public class DICOMAnonymizer {
 	//Execute the encrypt function call. This function is used
 	//to generate an encrypted string from an element text value.
 	private static String encrypt(FnCall fn) {
+		logger.debug("encrypt"+fn.getArgs()+" called");
 		if (fn.args.length < 2) return fn.getArgs();
 		try {
 			String value = fn.context.contents(fn.args[0], fn.thisTag);
@@ -1120,7 +1107,7 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.encrypt(value, key);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in encipher"+fn.getArgs()+": "+e.getMessage());
+			logger.warn("Exception caught in encrypt"+fn.getArgs()+": "+e.getMessage());
 			return fn.getArgs();
 		}
 	}

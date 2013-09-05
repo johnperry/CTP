@@ -49,7 +49,7 @@ GE
   (0,0,200,250)
 
  512 x 512 screen captures - Volume Rendering - MRCP
-  { [0008,0008].containsIgnoreCase("VOLREN") *
+  { [0008,0008].containsIgnoreCase("VOLREN") *
     [0028,0010].containsIgnoreCase("512") *
     [0028,0011].containsIgnoreCase("512") }
    (350,0,162,30) (390,80,122,15)
@@ -137,6 +137,14 @@ Siemens
     [0028,0010].equals("768") *
     [0028,0011].equals("1024") }
   (0,0,1024,60) (200,60,20,20) (800,65,104,14) 
+
+Siemens
+{ Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("SIEMENS") *
+    [0008,1090].containsIgnoreCase("ACUSON") *
+    [0028,0010].equals("600") *
+    [0028,0011].equals("800") }
+  (0,0,800,43) (128,56,16,16)
 
 Acuson
 { Modality.equals("US") *

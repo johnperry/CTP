@@ -25,6 +25,7 @@ import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.plugin.Plugin;
 import org.rsna.server.HttpServer;
+import org.rsna.util.CipherUtil;
 import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.IPUtil;
@@ -90,6 +91,8 @@ public class Configuration {
 			String thisJavaVMVendor = System.getProperty("java.vm.vendor");
 			String thisJavaVMVersion = System.getProperty("java.vm.version");
 			String thisJavaBits = System.getProperty("sun.arch.data.model") + " bits";
+			int thisJCEKeyLength = CipherUtil.getMaxAllowedKeyLength();
+			int thisJCEMaxKeyLength = CipherUtil.getMaxAllowedKeyLength("AES");
 
 			//Find the ImageIO Tools and get the version
 			String javaHome = System.getProperty("java.home");
@@ -104,26 +107,28 @@ public class Configuration {
 				Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);
 				thisImageIOVersion  = jaiManifest.get("Implementation-Version");
 			}
-			logger.info("Operating system: " + thisOS);
-			logger.info("Java vendor:      " + thisJavaVendor);
-			logger.info("Java version:     " + thisJavaVersion);
-			logger.info("Java VM vendor:   " + thisJavaVMVendor);
-			logger.info("Java VM version:  " + thisJavaVMVersion);
-			logger.info("Java data model:  " + thisJavaBits);
-			logger.info("ImageIO Tools:    " + thisImageIOVersion);
+			logger.info("Operating system:    " + thisOS);
+			logger.info("Java vendor:         " + thisJavaVendor);
+			logger.info("Java version:        " + thisJavaVersion);
+			logger.info("Java VM vendor:      " + thisJavaVMVendor);
+			logger.info("Java VM version:     " + thisJavaVMVersion);
+			logger.info("Java data model:     " + thisJavaBits);
+			logger.info("CTP crypto strength: " + thisJCEKeyLength);
+			logger.info("Max crypto strength: " + thisJCEMaxKeyLength);
+			logger.info("ImageIO Tools:       " + thisImageIOVersion);
 
 			//Log the application libraries
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
 
-			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:        ");
-			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:       ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:       ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:     ");
+			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:           ");
+			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:          ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:          ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:        ");
 
-			logger.info("Start time:       "+StringUtil.getDateTime(" at "));
-			logger.info("user.dir:         "+System.getProperty("user.dir"));
-			logger.info("java.ext.dirs:    "+System.getProperty("java.ext.dirs"));
-			logger.info("IP Address:       "+IPUtil.getIPAddress() + "\n");
+			logger.info("Start time:          "+StringUtil.getDateTime(" at "));
+			logger.info("user.dir:            "+System.getProperty("user.dir"));
+			logger.info("java.ext.dirs:       "+System.getProperty("java.ext.dirs"));
+			logger.info("IP Address:          "+IPUtil.getIPAddress() + "\n");
 
 			//Instantiate the stages table
 			stages = new Hashtable<String,PipelineStage>();
