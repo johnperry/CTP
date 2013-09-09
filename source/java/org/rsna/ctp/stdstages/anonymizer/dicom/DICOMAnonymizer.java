@@ -86,7 +86,7 @@ public class DICOMAnonymizer {
      * function call, the output file is not written and the input file
      * is unmodified, even if it is the same as the output file.
      * @param inFile the file to anonymize.
-     * @param outFile the output file.  It may be same as inFile you if want
+     * @param outFile the output file.  It may be same as inFile if you want
      * to anonymize in place.
      * @param cmds the properties object containing the anonymization commands.
      * @param lkup the properties object containing the local lookup table; null

@@ -290,6 +290,16 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomCorrector"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomCorrector" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomCorrector"/>
+			<attr name="dicomScript" required="no" default="">
+				<helptext>The filter script file determining whether DicomObjects are to be processed</helptext>
+			</attr>
+			<attr name="quarantine" required="yes" default="quarantines/DicomAnonymizer"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="DicomPixelAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPixelAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomPixelAnonymizer"/>
