@@ -18,14 +18,13 @@ public class StoredObject {
 	static final Logger logger = Logger.getLogger(StoredObject.class);
 
 	/** The File pointing to the StoredObject in the FileStorageService. */
-
 	public File file = null;
 
 	/**
 	 * The URL by which the StoredObject can be obtained from the FileStorageService.
 	 * Note that this URL points to a servlet, and the path does not correspond to the
 	 * path on the server.
-	*/
+	 */
 	public String url = null;
 
 	/**

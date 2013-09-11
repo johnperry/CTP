@@ -40,7 +40,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 * @param element the XML element from the configuration file
 	 * specifying the configuration of the stage.
 	 */
-	public DicomAnonymizer(Element element) {
+	public DicomAnonymizer(Element element) throws Exception {
 		super(element);
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-anonymizer.script");
 

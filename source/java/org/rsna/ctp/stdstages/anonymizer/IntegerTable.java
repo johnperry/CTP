@@ -29,12 +29,12 @@ public class IntegerTable {
 	 * Constructor; create an IntegerTable from a database file.
 	 * @param dir the directory in which the database is to be created.
 	 */
-	public IntegerTable(File dir) {
+	public IntegerTable(File dir) throws Exception {
 		this.dir = dir;
 		File indexFile = new File(dir, "integers");
 		recman = JdbmUtil.getRecordManager( indexFile.getAbsolutePath() );
 		index = JdbmUtil.getHTree( recman, "index" );
-		if (index == null) logger.warn("Unable to load the integer database.");
+		if (index == null) throw new Exception("Unable to load the integer database.");
 	}
 
 	/**

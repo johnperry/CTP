@@ -67,16 +67,20 @@ function StackPrototypeShowImage() {
 Stack.prototype.showImage = StackPrototypeShowImage;
 
 function StackPrototypeSetWheelDriver() {
-	if (this.div.addEventListener)
+	if (this.div.addEventListener) {
 		this.div.addEventListener('DOMMouseScroll', this.wheel, false); //Mozilla
+		this.div.addEventListener("mousewheel", this.wheel, false);
+	}
 	else
 		this.div.onmousewheel = this.wheel; //IE + Opera
 }
 Stack.prototype.setWheelDriver = StackPrototypeSetWheelDriver;
 
 function StackPrototypeRemoveWheelDriver() {
-	if (this.div.removeEventListener)
+	if (this.div.removeEventListener) {
 		this.div.removeEventListener('DOMMouseScroll', this.wheel, false); //Mozilla
+		this.div.removeEventListener("mousewheel", this.wheel, false);
+	}
 	else
 		this.div.onmousewheel = null; //IE + Opera
 }
@@ -167,7 +171,8 @@ function series() {
 
 function getImageDiv(image) {
 	var div = document.createElement("DIV");
-	div.style.display = "inline";
+	if (document.all) div.style.display = "inline"; //IE
+	else div.style.display = "inline-block"; //non-IE
 	if (image) {
 		div.style.width = image.columns + 2;
 		div.style.height = image.rows + 2;

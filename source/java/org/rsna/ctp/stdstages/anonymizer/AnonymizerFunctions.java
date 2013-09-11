@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.regex.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
-import org.apache.log4j.Logger;
 import org.rsna.util.Base64;
 import org.rsna.util.DateUtil;
 import org.rsna.util.DigestUtil;
@@ -26,8 +25,6 @@ import org.rsna.util.DigestUtil;
  * See the <a href="http://mircwiki.rsna.org">MIRC wiki</a> for more more information.
  */
 public class AnonymizerFunctions {
-
-	static final Logger logger = Logger.getLogger(AnonymizerFunctions.class);
 
 	/**
 	 * Look up a String in a local unencrypted Properties object.
@@ -254,10 +251,7 @@ public class AnonymizerFunctions {
 			enCipher.init(Cipher.ENCRYPT_MODE, skeySpec, random);
 			return enCipher;
 		}
-		catch (Exception ex) {
-			logger.error("Unable to initialize the Cipher using \""+keyText+"\"",ex);
-			return null;
-		}
+		catch (Exception ex) { return null; }
 	}
 
 	//Make an encryption key from a string

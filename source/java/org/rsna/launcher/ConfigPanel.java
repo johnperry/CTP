@@ -91,7 +91,7 @@ public class ConfigPanel extends BasePanel {
 		}
 	}
 
-	//Class to encapsultate a template element
+	//Class to encapsulate a template element
 	class Template {
 		Element template;
 		Hashtable<String,Element> attrs;
@@ -427,12 +427,33 @@ public class ConfigPanel extends BasePanel {
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
+				fixPipelines(config);
 				if (checkConfig(config)) {
 					String xml = XmlUtil.toPrettyString(config);
 					File configFile = new File("config.xml");
 					backupTarget(configFile);
 					try { FileUtil.setText(configFile, xml); }
 					catch (Exception ignore) { }
+				}
+			}
+			private void fixPipelines(Element root) {
+				Node pipe = root.getFirstChild();
+				while (pipe != null) {
+					if ((pipe instanceof Element) && pipe.getNodeName().equals("Pipeline")) {
+						Node n = pipe.getFirstChild();
+						while (n != null) {
+							if (n instanceof Element) {
+								Element stage = (Element)n;
+								String className = stage.getAttribute("class");
+								if (className.contains(".")) {
+									String name = className.substring( className.lastIndexOf(".")+1 );
+									XmlUtil.renameElement(stage, name);
+								}
+							}
+							n = n.getNextSibling();
+						}
+					}
+					pipe = pipe.getNextSibling();
 				}
 			}
 		}

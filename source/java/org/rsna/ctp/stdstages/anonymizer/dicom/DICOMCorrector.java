@@ -117,7 +117,7 @@ public class DICOMCorrector {
 					int i = 0;
 					Dataset sq;
 					while ((sq=el.getItem(i++)) != null) {
-						correctDataset(sq, scs);
+						changed |= correctDataset(sq, scs);
 					}
 				}
 			}
