@@ -40,7 +40,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 * @param element the XML element from the configuration file
 	 * specifying the configuration of the stage.
 	 */
-	public DicomAnonymizer(Element element) throws Exception {
+	public DicomAnonymizer(Element element) {
 		super(element);
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-anonymizer.script");
 
@@ -48,7 +48,10 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		if (!lookupTable.equals("")) {
 			lookupTableFile = new File(lookupTable);
 		}
-		intTable = new IntegerTable(root);
+
+		try { intTable = new IntegerTable(root); }
+		catch (Exception ex) { logger.warn(name+": "+ex.getMessage()); }
+
 		String dicomScript = element.getAttribute("dicomScript").trim();
 		if (!dicomScript.equals("")) {
 			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
