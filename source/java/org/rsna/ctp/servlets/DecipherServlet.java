@@ -57,9 +57,9 @@ public class DecipherServlet extends Servlet {
 			try {
 				DicomObject dob = new DicomObject(new File(file));
 				elem = elem.replaceAll("[^a-fA-F0-9]","");
-				int tag = Integer.parseInt(elem,16);
+				int tag = Integer.parseInt(elem, 16);
 				String value = new String(dob.getElementByteBuffer(tag).array());
-				String result = CipherUtil.decipher(value, key);
+				String result = CipherUtil.decrypt(value, key);
 				res.write(result);
 			}
 			catch (Exception ex) { res.setResponseCode(404); }
@@ -73,14 +73,3 @@ public class DecipherServlet extends Servlet {
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
