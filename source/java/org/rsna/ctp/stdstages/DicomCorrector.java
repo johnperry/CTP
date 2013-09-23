@@ -26,6 +26,8 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 	static final Logger logger = Logger.getLogger(DicomCorrector.class);
 
 	File dicomScriptFile = null; //the DicomFilter script that determines whether to anonymize the object
+	boolean quarantineUncorrectedMismatches = false;
+	boolean logUncorrectedMismatches = false;
 
 	/**
 	 * Construct the DicomCorrector PipelineStage.
@@ -39,6 +41,9 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 		if (!dicomScript.equals("")) {
 			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
 		}
+
+		quarantineUncorrectedMismatches = element.getAttribute("quarantineUncorrectedMismatches").trim().toLowerCase().equals("yes");
+		logUncorrectedMismatches = element.getAttribute("logUncorrectedMismatches").trim().toLowerCase().equals("yes");
 	}
 
 	//Implement the Scriptable interface
@@ -69,7 +74,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 				//Okay, correct the object
 				File file = fileObject.getFile();
 				AnonymizerStatus status =
-							DICOMCorrector.correct(file, file);
+							DICOMCorrector.correct(file, file, quarantineUncorrectedMismatches, logUncorrectedMismatches);
 				if (status.isOK()) {
 					fileObject = FileObject.getInstance(file);
 				}

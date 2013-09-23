@@ -46,14 +46,17 @@ public class DICOMCorrector {
      */
     public static AnonymizerStatus correct(
 			File inFile,
-			File outFile) {
+			File outFile,
+			boolean quarantineUncorrectedMismatches,
+			boolean logUncorrectedMismatches) {
 
+		DicomObject dob = null;
 		try {
-			DicomObject dob = new DicomObject(inFile, true); //leave the inFile open
+			dob = new DicomObject(inFile, true); //leave the inFile open
 			Dataset ds = dob.getDataset();
 			SpecificCharacterSet scs = ds.getSpecificCharacterSet();
 
-			boolean changed = correctDataset(inFile, ds, scs);
+			boolean changed = correctDataset(inFile, ds, scs, quarantineUncorrectedMismatches, logUncorrectedMismatches);
 
 			if (!changed) {
 				dob.close();
@@ -73,10 +76,15 @@ public class DICOMCorrector {
 				return AnonymizerStatus.OK(outFile, "");
 			}
 		}
-		catch (Exception unable) { return AnonymizerStatus.QUARANTINE(inFile, ""); }
+		catch (Exception unable) {
+			if (dob != null) dob.close();
+			return AnonymizerStatus.QUARANTINE(inFile, "");
+		}
 	}
 
-	private static boolean correctDataset(File inFile, Dataset ds, SpecificCharacterSet scs) throws Exception {
+	private static boolean correctDataset(File inFile, Dataset ds, SpecificCharacterSet scs,
+										  boolean quarantineUncorrectedMismatches,
+										  boolean logUncorrectedMismatches) throws Exception {
 		boolean changed = false;
 		for (Iterator it=ds.iterator(); it.hasNext(); ) {
 			DcmElement el = (DcmElement)it.next();
@@ -84,11 +92,11 @@ public class DICOMCorrector {
 			boolean isPrivate = ((tag & 0x10000) != 0);
 			TagDictionary.Entry entry = tagDictionary.lookup(tag);
 			if (!isPrivate && (entry != null)) {
-				if (entry.vr.equals("SQ")) {
+				if (entry.vr.equals("SQ") && VRs.toString(el.vr()).equals("SQ")) {
 					int i = 0;
 					Dataset sq;
 					while ((sq=el.getItem(i++)) != null) {
-						changed |= correctDataset(inFile, sq, scs);
+						changed |= correctDataset(inFile, sq, scs, quarantineUncorrectedMismatches, logUncorrectedMismatches);
 					}
 				}
 				else if (!entry.vr.equals(VRs.toString(el.vr()))) {
@@ -110,15 +118,21 @@ public class DICOMCorrector {
 							ds.putFL(tag, flt);
 							changed = true;
 						}
-						else if (entry.vr.equals("CS") && (len > 0)) {
-							ByteBuffer bb = el.getByteBuffer();
-							byte[] bytes = bb.array();
-							String str = scs.decode(bytes);
+						else if (entry.vr.equals("CS")) {
+							String str = "";
+							if (len > 0) {
+								ByteBuffer bb = el.getByteBuffer();
+								byte[] bytes = bb.array();
+								str = scs.decode(bytes);
+							}
 							ds.putCS(tag, str);
 							changed = true;
 						}
 						else {
-							logger.debug(inFile+": Mismatched VR for "+Tags.toString(tag)+" "+entry.vr+"/"+VRs.toString(el.vr())+" len="+len);
+							if (logUncorrectedMismatches) {
+								logger.info(inFile+": Mismatched VR for "+Tags.toString(tag)+" "+entry.vr+"/"+VRs.toString(el.vr())+" len="+len);
+							}
+							if (quarantineUncorrectedMismatches) throw new Exception("Uncorrectable VR for "+Tags.toString(tag));
 						}
 					}
 					catch (Exception skip) { logger.warn("Unable to convert "+Tags.toString(tag), skip); }

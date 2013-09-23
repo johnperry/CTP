@@ -296,7 +296,13 @@
 			<attr name="dicomScript" required="no" default="">
 				<helptext>The filter script file determining whether DicomObjects are to be processed</helptext>
 			</attr>
-			<attr name="quarantine" required="yes" default="quarantines/DicomAnonymizer"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomCorrector"/>
+			<attr name="quarantineUncorrectedMismatches" required="no" options="yes|no" default="no">
+				<helptext>Quarantine objects that cannot be completely corrected.</helptext>
+			</attr>
+			<attr name="logUncorrectedMismatches" required="no" options="yes|no" default="no">
+				<helptext>Log all elements that cannot be corrected.</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>
