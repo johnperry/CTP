@@ -33,4 +33,11 @@ public interface ImportService {
 	 */
 	public void release(File file);
 
+	/**
+	 * Get the size of the import queue.
+	 * @return the number of objects in the import queue, or zero if the
+	 * ImportService is not queued.
+	 */
+	public int getQueueSize();
+
 }

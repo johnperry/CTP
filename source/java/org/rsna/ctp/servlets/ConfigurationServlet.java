@@ -46,7 +46,7 @@ public class ConfigurationServlet extends Servlet {
 
 		//Require that the user be an admin or be local
 		if (!admin) {
-			res.setResponseCode(res.notfound);
+			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
@@ -66,7 +66,7 @@ public class ConfigurationServlet extends Servlet {
 		sb.append("h1 {margin-top:10; margin-bottom:0;}");
 		sb.append("</style>");
 		sb.append("</head><body>");
-		sb.append(HtmlUtil.getCloseBox(home));
+		if (!req.hasParameter("suppress")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center>");
 		sb.append("<h1>Configuration</h1>");
 		sb.append("Build " + config.getManifestAttribute("Date"));

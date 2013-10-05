@@ -213,6 +213,7 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
+		if (startLauncher(new File(directory, "CTP"))) System.exit(0)
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
@@ -853,6 +854,26 @@ public class Installer extends JFrame {
 		System.out.println("...String: \""+text+"\"");
 		if (search != null) {
 			System.out.println("...Search: \""+search+"\"");
+		}
+	}
+
+	private boolean startLauncher(File dir) {
+		try {
+			Runtime rt = Runtime.getRuntime();
+			ArrayList<String> command = new ArrayList<String>();
+			command.add("java");
+			command.add("-jar");
+			command.add("Launcher.jar");
+			String[] cmdarray = command.toArray( new String[command.size()] );
+			Process proc = rt.exec(cmdarray, null, dir);
+			return true;
+		}
+		catch (Exception ex) {
+			JOptionPane.showMessageDialog(this,
+					"Unable to start the Launcher program.\n"+ex.getMessage(),
+					"Start Failed",
+					JOptionPane.INFORMATION_MESSAGE);
+			return false;
 		}
 	}
 

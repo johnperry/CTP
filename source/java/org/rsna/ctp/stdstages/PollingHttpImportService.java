@@ -62,6 +62,16 @@ public class PollingHttpImportService extends AbstractPipelineStage implements I
 	}
 
 	/**
+	 * Get the number of objects in the import queue. Since this stage simply
+	 * polls an external system there is not import queue, so to satisfy the
+	 * contract of the ImportService interface, we just return zero.
+	 * return zero.
+	 */
+	public synchronized int getQueueSize() {
+		return 0;
+	}
+
+	/**
 	 * Get the next object available for processing.
 	 * @return the next object available, or null if no object is available.
 	 */

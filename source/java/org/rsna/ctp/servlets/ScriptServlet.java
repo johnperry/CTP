@@ -65,7 +65,13 @@ public class ScriptServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the script file, if possible.
 		int p,s,f;
@@ -78,11 +84,11 @@ public class ScriptServlet extends Servlet {
 			//Now make either the page listing the various scriptable stages
 			//or the page listing the scripts in the specified file.
 			if (scriptFile != null)
-				res.write(getScriptPage(p, s, f, scriptFile, home));
+				res.write(getScriptPage(p, s, f, scriptFile));
 			else
-				res.write(getListPage(home));
+				res.write(getListPage());
 		}
-		catch (Exception ex) { res.write(getListPage(home)); }
+		catch (Exception ex) { res.write(getListPage()); }
 
 		//Return the page
 		res.disableCaching();
@@ -111,9 +117,12 @@ public class ScriptServlet extends Servlet {
 
 		//Make sure the user is authorized to do this.
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
-			res.redirect(home);
+			res.setResponseCode(res.forbidden);
+			res.send();
 			return;
 		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the parameters from the form.
 		String script = req.getParameter("script");
@@ -132,7 +141,7 @@ public class ScriptServlet extends Servlet {
 				//Make a new page from the new data and send it out
 				res.disableCaching();
 				res.setContentType("html");
-				res.write(getScriptPage(p, s, f, scriptFile, home));
+				res.write(getScriptPage(p, s, f, scriptFile));
 				res.send();
 				return;
 			}
@@ -160,8 +169,8 @@ public class ScriptServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the list of script files.
-	private String getListPage(String home) {
-		return responseHead("Select the Script File to Edit", "", home)
+	private String getListPage() {
+		return responseHead("Select the Script File to Edit", "")
 				+ makeList()
 					+ responseTail();
 	}
@@ -184,12 +193,13 @@ public class ScriptServlet extends Servlet {
 							File file = scriptFiles[f];
 							if ((file != null) && file.exists()) {
 								sb.append("<tr>");
-								sb.append("<td>"+pipe.getPipelineName()+"</td>");
-								sb.append("<td>"+stage.getName()+"</td>");
-								sb.append("<td><a href=\"/"+context
+								sb.append("<td class=\"list\">"+pipe.getPipelineName()+"</td>");
+								sb.append("<td class=\"list\">"+stage.getName()+"</td>");
+								sb.append("<td class=\"list\"><a href=\"/"+context
 												+"?p="+p
 												+"&s="+s
 												+"&f="+f
+												+(home.equals("") ? "&suppress" : "")
 												+"\">"
 												+file.getAbsolutePath()+"</a></td>");
 								sb.append("</tr>");
@@ -206,13 +216,13 @@ public class ScriptServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the form for configuring the file.
-	private String getScriptPage(int p, int s, int f, File scriptFile, String home) {
-		return responseHead("Script Editor", scriptFile.getAbsolutePath(), home)
-				+ makeForm(p, s, f, scriptFile, home)
+	private String getScriptPage(int p, int s, int f, File scriptFile) {
+		return responseHead("Script Editor", scriptFile.getAbsolutePath())
+				+ makeForm(p, s, f, scriptFile)
 					+ responseTail();
 	}
 
-	private String makeForm(int p, int s, int f, File scriptFile, String home) {
+	private String makeForm(int p, int s, int f, File scriptFile) {
 		String script = FileUtil.getText(scriptFile);
 
 		StringBuffer form = new StringBuffer();
@@ -220,6 +230,7 @@ public class ScriptServlet extends Servlet {
 		form.append(hidden("p", p + ""));
 		form.append(hidden("s", s + ""));
 		form.append(hidden("f", f + ""));
+		if (home.equals("")) form.append(hidden("suppress", ""));
 
 		form.append("<center>\n");
 		form.append("<textarea name=\"script\">" + script + "</textarea>\n");
@@ -238,7 +249,7 @@ public class ScriptServlet extends Servlet {
 		return "<input name=\"" + name + "\" value='" + value + "'/>";
 	}
 
-	private String responseHead(String title, String subtitle, String home) {
+	private String responseHead(String title, String subtitle) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -247,13 +258,14 @@ public class ScriptServlet extends Servlet {
 			+	"   <style>\n"
 			+	"    body {margin-top:0; margin-right:0;}\n"
 			+	"    h1 {text-align:center; margin-top:10;}\n"
-			+	"    h2 {text-align:center; font-size:12pt; margin:0; padding:0; font-weight:normal; font-family: Arial, Helvetica, Verdana, sans-serif;}\n"
+			+	"    h2 {text-align:center; font-size:12pt; margin:0; margin-bottom:10px; padding:0; font-weight:normal; font-family: Arial, Helvetica, Verdana, sans-serif;}\n"
 			+	"    textarea {width:75%; height:500px;}\n"
+			+	"    td.list {background:white}\n"
 			+	"    .button {width:250}\n"
 			+	"   </style>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-			+	HtmlUtil.getCloseBox(home)
+			+	(home.equals("") ? "" : HtmlUtil.getCloseBox(home))
 			+	"  <h1>"+title+"</h1>\n"
 			+	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>")
 			+	"  <center>\n";

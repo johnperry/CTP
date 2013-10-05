@@ -1,6 +1,6 @@
 body {
-	padding:0;
-	margin:0;
+	padding: 0;
+	margin: 0;
 	overflow: hidden;
 }
 
@@ -23,14 +23,14 @@ h2 {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: medium;
 }
-	
+
 p.instruction {
 	text-align: left;
 	font-size: 10pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: bold;
-	margin-left: 15%;
-	margin-right: 15%;
+	margin-left: 10%;
+	margin-right: 10%;
 	margin-top: 6;
 	margin-bottom: 6;
 	padding: 0;
@@ -38,13 +38,12 @@ p.instruction {
 
 p.center {
 	margin-top: 0px;
-	margin-left: 15%;
-	margin-right: 15%;
+	margin-left: 10%;
+	margin-right: 10%;
 }
 
 table {
-	width:70%;
-	text-align: center;
+	width:100%;
 }
 
 td.text-field {
@@ -52,7 +51,7 @@ td.text-field {
 	font-size: 11pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: normal;
-	width:70%;
+	width:80%;
 	text-align:left;
 }
 
@@ -61,7 +60,7 @@ td.text-label {
 	font-size: 11pt;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-weight: normal;
-	width:30%;
+	width:20%;
 	text-align:left;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 }
@@ -72,8 +71,8 @@ input.fullwidth {
 
 div.entryselect {
 	margin-top: 0px;
-	margin-left: 15%;
-	margin-right: 15%;
+	margin-left: 10%;
+	margin-right: 10%;
 	margin-bottom: 10px;
 	border: thin solid #E8E8E8;
 	padding: 3px;
@@ -90,8 +89,8 @@ div.entryselect span {
 
 div.entrydisplay {
 	margin-top: 0px;
-	margin-left: 15%;
-	margin-right: 15%;
+	margin-left: 10%;
+	margin-right: 10%;
 	border: thin solid #E8E8E8;
 	padding: 3px;
 	height: 30px;

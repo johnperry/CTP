@@ -54,7 +54,14 @@ var menuBar = new MenuBar("menuBar", new Array (fileMenu, profilesMenu, viewMenu
 window.onload = load;
 
 function load() {
-	setPageHeader("DICOM Anonymizer Configurator", "", closeboxURL, checkSave);
+	var iconURL = closeboxURL;
+	var iconHandler = checkSave;
+	if (closeboxHome == "") {
+		iconURL = "/icons/save.png";
+		iconHandler = save;
+	}
+
+	setPageHeader("DICOM Anonymizer Configurator", "", iconURL, iconHandler);
 	menuBar.setText(scriptFile);
 	createProfilesMenus();
 	menuBar.display();
@@ -407,7 +414,9 @@ function close() {
 //
 function save(event, item) {
 	savedXML = getXML(true);
-	var qs = "p=" + pipe + "&s=" + stage + "&xml="+encodeURIComponent(savedXML);
+	var qs = "p=" + pipe + "&s=" + stage;
+	if (closeboxURL == "") qs += "&suppress";
+	qs += "&xml="+encodeURIComponent(savedXML);
 	var req = new AJAX();
 	req.POST(contextURL + scriptPath, qs, displayResult);
 }
@@ -445,7 +454,9 @@ function createNewProfile(event) {
 function saveProfile(name) {
 	var xml = getXML(false);
 	var namePath = "/" + encodeURIComponent(name);
-	var qs = "xml="+encodeURIComponent(xml);
+	var qs = "";
+	if (closeboxURL == "") qs += "suppress&";
+	qs += "xml="+encodeURIComponent(xml);
 	var req = new AJAX();
 	req.POST(contextURL + profilePath + namePath, qs, displayResult);
 }

@@ -6,7 +6,8 @@ function setSizes() {
 	var eselPos = findObject(esel);
 	var edisPos = findObject(edis);
 
-	var totalH = eselPos.h + (bodyPos.h - edisPos.y) - 10;
+	var space = edisPos.y - (eselPos.y + eselPos.h);
+	var totalH = (bodyPos.h - eselPos.y) - space - 30;
 	var eselH = totalH / 4;
 	var edisH = totalH - eselH;
 	if (eselH < 60) eselH = 60;
@@ -32,7 +33,7 @@ function search() {
 			break;
 		}
 	}
-	if ((type != "") && (text != "")) {
+	if ((type != "") && ((text != "") || (type == "entry"))) {
 		var req = new AJAX();
 		var qs = "type="+type+"&text="+text+"&"+req.timeStamp();
 		req.POST("/"+context, qs, displayQueryResults);

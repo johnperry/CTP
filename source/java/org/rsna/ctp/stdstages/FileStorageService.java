@@ -142,6 +142,14 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	}
 
 	/**
+	 * Get the server port specified in the configuration.
+	 * @return the stage's server port, or zero if none is specified.
+	 */
+	public int getPort() {
+		return port;
+	}
+
+	/**
 	 * Get the URL corresponding to a stored object. This method is used to find the URL of
 	 * a stored object corresponding to a queued object.
 	 * @param fileObject the object.

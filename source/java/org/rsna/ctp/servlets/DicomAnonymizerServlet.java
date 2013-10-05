@@ -63,7 +63,13 @@ public class DicomAnonymizerServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Disable caching of the response
 		res.disableCaching();
@@ -87,13 +93,13 @@ public class DicomAnonymizerServlet extends Servlet {
 		if ((len == 1) && (file == null)) {
 			//This is a request for the script selection page
 			res.setContentType("html");
-			res.write(getListPage(home));
+			res.write(getListPage());
 		}
 
 		else if ((len == 1) && (file != null)) {
 			//This is a request for the editor for the script specified by p and s
 			res.setContentType("html");
-			res.write(getScriptPage(p, s, file, home));
+			res.write(getScriptPage(p, s, file));
 		}
 
 		else if ((len == 2) && path.element(1).equals("profiles")) {
@@ -114,7 +120,7 @@ public class DicomAnonymizerServlet extends Servlet {
 			res.write(getScriptXML(file));
 		}
 
-		else res.redirect(home);
+		else res.setResponseCode(res.notfound);
 		res.send();
 	}
 
@@ -142,6 +148,8 @@ public class DicomAnonymizerServlet extends Servlet {
 			res.send();
 			return;
 		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Set up the response
 		res.disableCaching();
@@ -211,17 +219,6 @@ public class DicomAnonymizerServlet extends Servlet {
 		return null;
 	}
 
-	private boolean isAuthorized(HttpRequest req, HttpResponse res) {
-		if (!req.userHasRole("admin")) {
-			res.setResponseCode(403);
-			res.setContentType("html");
-			res.disableCaching();
-			res.send();
-			return false;
-		}
-		return true;
-	}
-
 	private String getProfilesXML() {
 		dicomProfiles.mkdirs();
 		savedProfiles.mkdirs();
@@ -261,13 +258,20 @@ public class DicomAnonymizerServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the list of script files.
-	private String getListPage(String home) {
+	private String getListPage() {
 		String template = "/DAList.html";
 		String page = FileUtil.getText( getClass().getResourceAsStream(template) );
 		String table = makeList();
 		Properties props = new Properties();
 		props.setProperty("home", home);
 		props.setProperty("table", table);
+		props.setProperty("homeicon", "");
+		if (!home.equals("")) {
+			props.setProperty(
+				"homeicon",
+				"<img src=\"/icons/home.png\" onclick=\"window.open('"+home+"','_self');\" title=\"Return to the home page\" style=\"margin:2\"/>"
+			);
+		}
 		page = StringUtil.replace(page, props);
 		return page;
 	}
@@ -291,12 +295,13 @@ public class DicomAnonymizerServlet extends Servlet {
 						String scriptPath = scriptFile.getAbsolutePath();
 						scriptPath = scriptPath.replace("\\","/");
 						sb.append("<tr>\n");
-						sb.append("<td>"+pipe.getPipelineName()+"</td>\n");
-						sb.append("<td>"+stage.getName()+"</td>\n");
-						sb.append("<td><a href=\"/"
+						sb.append("<td class=\"list\">"+pipe.getPipelineName()+"</td>\n");
+						sb.append("<td class=\"list\">"+stage.getName()+"</td>\n");
+						sb.append("<td class=\"list\"><a href=\"/"
 											+context
 											+"?p="+p
 											+"&s="+s
+											+(home.equals("") ? "&suppress" : "")
 											+"\">"
 											+scriptPath+"</a></td>\n");
 						sb.append("</tr>\n");
@@ -311,7 +316,7 @@ public class DicomAnonymizerServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the form for configuring the file.
-	private String getScriptPage(int pipe, int stage, File file, String home) {
+	private String getScriptPage(int pipe, int stage, File file) {
 		String template = "/DAEditor.html";
 		String page = FileUtil.getText( getClass().getResourceAsStream(template) );
 		String table = makeList();

@@ -29,6 +29,7 @@ public class AuditLogServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(AuditLogServlet.class);
 	String home = "/";
+	String suppress = "";
 
 	/**
 	 * Construct an AuditLogServlet. Note: the AuditLogServlet
@@ -52,7 +53,16 @@ public class AuditLogServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) throws Exception {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) {
+			home = "";
+			suppress = "&suppress";
+		}
 
 		//Get the plugin, if possible.
 		Plugin plugin = Configuration.getInstance().getRegisteredPlugin(context);
@@ -64,7 +74,10 @@ public class AuditLogServlet extends Servlet {
 			Element root = (Element)doc.importNode(auditLog.getConfigElement(), true);
 			doc.appendChild(root);
 			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/AuditLogServlet.xsl" ) );
-			Object[] params = { "context", context };
+			Object[] params = {
+				"context", context,
+				"suppress", suppress
+			};
 			res.write( XmlUtil.getTransformedText( doc, xsl, params ) );
 		}
 		else {
@@ -134,7 +147,10 @@ public class AuditLogServlet extends Servlet {
 					if (type.equals("ptid")) ids = auditLog.getEntriesForPatientID(text);
 					else if (type.equals("study")) ids = auditLog.getEntriesForStudyUID(text);
 					else if (type.equals("object")) ids = auditLog.getEntriesForObjectUID(text);
-					else if (type.equals("entry")) ids = auditLog.getEntriesForID(text);
+					else {
+						if ((text == null) || text.trim().equals("")) text = "1";
+						ids = auditLog.getEntriesForID(text);
+					}
 
 					for (Integer id : ids) {
 						String entryTime = auditLog.getTime(id);

@@ -68,6 +68,8 @@ public class Configuration {
 	Hashtable<String,PipelineStage> stages = null;
 	Hashtable<String,Plugin> plugins = null;
 	Element serverElement = null;
+	String ctpBuild = "";
+	String ctpJava = "";
 
 	/**
 	 * Get the singleton instance of the Configuration, loading it
@@ -119,8 +121,9 @@ public class Configuration {
 
 			//Log the application libraries
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
+			ctpJava = manifest.get("Java-Version");
 
-			logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:           ");
+			ctpBuild = logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:           ");
 			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:          ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:          ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:        ");
@@ -207,14 +210,16 @@ public class Configuration {
 		}
 	}
 
-	private void logManifestAttribute(File jarFile, String name, String prefix) {
+	private String logManifestAttribute(File jarFile, String name, String prefix) {
+		String value = "";
 		if (jarFile.exists()) {
 			Hashtable<String,String> manifest = JarUtil.getManifestAttributes(jarFile);
 			if (manifest != null) {
-				String value = manifest.get(name);
+				value = manifest.get(name);
 				if (value != null) logger.info(prefix + value);
 			}
 		}
+		return value;
 	}
 
 	/**
@@ -287,6 +292,30 @@ public class Configuration {
 		String value = manifest.get(name);
 		if (value == null) value = "";
 		return value;
+	}
+
+	/**
+	 * Get the CTP build version.
+	 * @return the CTP build version.
+	 */
+	public String getCTPBuild() {
+		return ctpBuild;
+	}
+
+	/**
+	 * Get the CTP Java version.
+	 * @return the CTP Java version.
+	 */
+	public String getCTPJava() {
+		return ctpJava;
+	}
+
+	/**
+	 * Get the Configuration document.
+	 * @return the Configuration XML Document.
+	 */
+	public Document getConfigurationDocument() {
+		return configXML;
 	}
 
 	/**

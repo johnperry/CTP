@@ -1,144 +1,134 @@
 <html>
-	<head>
-		<title>RSNA CTP Main Page</title>
-		<link rel="Stylesheet" type="text/css" media="all" href="/BaseStyles.css"></link>
-		<style>
-			p {text-align: center; font-family:sans-serif; font-size:12;}
-		</style>
-		<script language="JavaScript" type="text/javascript" src="/JSAJAX.js">;</script>
-		<script language="JavaScript" type="text/javascript" src="/JSUser.js">;</script>
-		<script>
-			var user;
-			var admin = new Array(
-				"shutdown",
-				"usermanager",
-				"logs",
-				"config",
-				"idmap",
-				"objecttracker",
-				"databaseverifier",
-				"daconfig",
-				"script",
-				"lookup",
-				"spacer" );
-			function getUsername() {
-				user = new User();
-				var p = document.getElementById("up");
-				if (user.isLoggedIn) {
-					if (user.usersImpl != "xml") {
-						x = document.getElementById("usermanager");
-						if (x) x.parentNode.removeChild(x);
-					}
-					p.appendChild(document.createTextNode("You are logged in as "+user.name+"."));
-					p.appendChild(document.createElement("BR"));
-					var a = document.createElement("A");
-					a.setAttribute("href","/login?logout");
-					a.appendChild(document.createTextNode("logout"));
-					p.appendChild(document.createTextNode("( "));
-					p.appendChild(a);
-					p.appendChild(document.createTextNode(" )"));
-					if (!user.hasRole("admin")) hideAdmin();
-					if (!user.hasRole("admin") && !user.hasRole("qadmin")) hide("quarantines");
-					if (!user.hasRole("shutdown") && !user.isLocal) hide("shutdown");
-				}
-				else {
-					p.appendChild(document.createTextNode("You are not logged in."));
-					hideAdmin();
-					hide("quarantines");
-					hide("shutdown");
-				}
-			}
-			function hideAdmin() {
-				for (var i=0; i<admin.length; i++) hide(admin[i]);
-			}
-			function hide(id) {
-				var x = document.getElementById(id);
-				if (x) x.parentNode.removeChild(x);
-			}
-			function loaded() { getUsername(); }
-			window.onload = loaded;
-		</script>
-	</head>
-	<body>
-		<center>
-		<h1>RSNA CTP</h1>
-		<table>
-			<tr>
-				<td><input style="width:300" type="button" value="Login"
-						onclick="window.open('login','_self');"></td>
-			</tr>
-			<tr id="usermanager">
-				<td><input style="width:300" type="button" value="User Manager"
-						onclick="window.open('users','_self');"></td>
-			</tr>
-			<tr id="logs">
-				<td><input style="width:300" type="button" value="Logs"
-						onclick="window.open('logs','_self');"></td>
-			</tr>
-			<tr id="config">
-				<td><input style="width:300" type="button" value="Configuration"
-						onclick="window.open('configuration','_self');"></td>
-			</tr>
-			<tr>
-				<td><input style="width:300" type="button" value="Status"
-						onclick="window.open('status','_self');"></td>
-			</tr>
-			<tr id="quarantines">
-				<td><input style="width:300" type="button" value="Quarantines"
-						onclick="window.open('quarantines','_self');"></td>
-			</tr>
-			<tr id="idmap">
-				<td><input style="width:300" type="button" value="ID Map"
-						onclick="window.open('idmap','_self');"></td>
-			</tr>
-			<tr id="objecttracker">
-				<td><input style="width:300" type="button" value="Object Tracker"
-						onclick="window.open('objecttracker','_self');"></td>
-			</tr>
-			<tr id="databaseverifier">
-				<td><input style="width:300" type="button" value="Database Verifier"
-						onclick="window.open('databaseverifier','_self');"></td>
-			</tr>
-			<tr>
-				<td><input style="width:300" type="button" value="System Properties"
-						onclick="window.open('system','_self');"></td>
-			</tr>
-			<tr id="daconfig">
-				<td><input style="width:300" type="button" value="DICOM Anonymizer Configurator"
-						onclick="window.open('daconfig','_self');"></td>
-			</tr>
-			<tr id="script">
-				<td><input style="width:300" type="button" value="Script Editor"
-						onclick="window.open('script','_self');"></td>
-			</tr>
-			<tr id="lookup">
-				<td><input style="width:300" type="button" value="Lookup Table Editor"
-						onclick="window.open('lookup','_self');"></td>
-			</tr>
-			</tr><td>&nbsp;</td></tr>
-			<tr>
-				<td><input style="width:300" type="button" value="CTP Documentation"
-						onclick="window.open('http://mircwiki.rsna.org/index.php?title=CTP-The_RSNA_Clinical_Trial_Processor','wiki');"></td>
-			</tr>
-			<tr>
-				<td><input style="width:300" type="button" value="DicomFilter Script Documentation"
-						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Filter','wiki');"></td>
-			</tr>
-			<tr>
-				<td><input style="width:300" type="button" value="DICOM Anonymizer Documentation"
-						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer','wiki');"></td>
-			</tr>
-			<tr>
-				<td><input style="width:300" type="button" value="XML Anonymizer Documentation"
-						onclick="window.open('http://mircwiki.rsna.org/index.php?title=The_CTP_XML_Anonymizer','wiki');"></td>
-			</tr>
-			<tr id="spacer"><td>&nbsp;</td></tr>
-			<tr id="shutdown">
-				<td><input style="width:300" type="button" value="Shutdown"
-						onclick="window.open('shutdown','_self');"></td>
-			</tr>
-		</table>
-		<p id="up"/>
-		</center>
-	</body>
+
+<head>
+	<meta name="keywords"
+		content="radiology software, CTP, open-source, radiography, radiology, DICOM, software, java"/>
+	<meta name="description"
+		content="CTP is a free software server program for use in clinical imaging trials.
+				It was created and is supported by the Radiological Society of North America (RSNA)."/>
+	<title>RSNA CTP</title>
+	<link rel="stylesheet" href="/JSPage.css" type="text/css"/>
+	<link rel="stylesheet" href="/JSPopup.css" type="text/css"/>
+	<link rel="stylesheet" href="/JSSplitPane.css" type="text/css"/>
+	<link rel="stylesheet" href="/JSCTP.css" type="text/css"/>
+	<script language="JavaScript" type="text/javascript" src="/JSUtil.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSAJAX.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSUser.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSPopup.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSLoginPopup.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSPage.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSSplitPane.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSCTPServer.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSCookies.js">;</script>
+	<script language="JavaScript" type="text/javascript" src="/JSCTP.js">;</script>
+</head>
+
+<body>
+
+	<div class="header">
+		<div class="headerLeft">
+			<span class="ctpname">RSNA CTP</span>
+		</div>
+		<div class="headerRight">
+			<div style="float:right; margin-top:7px;">
+				<xsl:text>&#160;&#160;</xsl:text>
+				<span class="headerText">Welcome </span>
+				<span class="headerText" id="usernameSpan">&#160;</span>
+				<xsl:text>&#160;&#160;</xsl:text>
+				<span class="headerText">
+					<xsl:text>|&#160;&#160;</xsl:text>
+					<a href="javascript:loginLogout();" id="loginoutAnchor">Login</a>
+					<xsl:text>&#160;&#160;</xsl:text>
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div id="main">
+		<div id="left" class="leftpane">
+			<div id="General">
+				<div class="L1">General</div>
+				<div class="L2"><a href="javascript:loadFrame('/summary?suppress')">Summary</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/status?suppress')">Status</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/system?suppress')">System Properties</a></div>
+				<div class="L2"><a href="javascript:clearRight()">Clear the Right Pane</a></div>
+			</div>
+
+			<div id="Admin">
+				<div class="L1">Admin</div>
+				<div class="L2"><a href="javascript:loadFrame('/users?suppress')">User Manager</a><br/></div>
+				<div class="L2" id="DicomAnonymizer"><a href="javascript:loadFrame('/daconfig?suppress')">DICOM Anonymizer</a></div>
+				<div class="L2" id="Scriptable"><a href="javascript:loadFrame('/script?suppress')">Script Editor</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/lookup?suppress')">Lookup Table Editor</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/configuration?suppress')">Configuration</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/quarantines?suppress')">Quarantines</a></div>
+				<div class="L2" id="IDMap"><a href="javascript:loadFrame('/idmap?suppress')">ID Map</a></div>
+				<div class="L2" id="ObjectTracker"><a href="javascript:loadFrame('/objecttracker?suppress')">Object Tracker</a></div>
+				<div class="L2" id="DatabaseVerifier"><a href="javascript:loadFrame('/databaseverifier?suppress')">Database Verifier</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/logs?suppress')">Log Viewer</a></div>
+				<div class="L2"><a href="javascript:loadFrame('/level?suppress')">Logger Levels</a></div>
+				<div class="L2"><a href="javascript:listCookies();">List Cookies</a></div>
+			</div>
+
+			<div id="Plugins">&#160;</div>
+
+			<div id="Pipelines">&#160;</div>
+
+			<div id="Documentation">
+				<div class="L1">Documentation<br/></div>
+				<div class="L2">
+					<a href="http://mircwiki.rsna.org/index.php?title=CTP-The_RSNA_Clinical_Trial_Processor" target="wiki">
+						CTP
+					</a>
+				</div>
+				<div class="L2">
+					<a href="http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Filter" target="wiki">
+						DICOM Filter
+					</a>
+				</div>
+				<div class="L2">
+					<a href="http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer" target="wiki">
+						DICOM Anonymizer
+					</a>
+				</div>
+				<div class="L2">
+					<a href="http://mircwiki.rsna.org/index.php?title=The_CTP_XML_and_Zip_Filters" target="wiki">
+						XML Filter
+					</a>
+				</div>
+				<div class="L2">
+					<a href="http://mircwiki.rsna.org/index.php?title=The_CTP_XML_Anonymizer" target="wiki">
+						XML Anonymizer
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<div id="center" class="centerpane">&#160;</div>
+
+		<div id="right" class="rightpane">
+			<xsl:call-template name="rightpane"/>
+		</div>
+	</div>
+
+	<div class="footer">
+		<div class="footerlogo">
+			<img src="/icons/RSNAinformaticsLogo.jpg"/>
+			<span class="productname">RSNA CTP</span>
+		</div>
+		<div class="footerRight">
+			<p id="line1" class="line1">
+				<a href="http://mircwiki.rsna.org/index.php?title=CTP_Articles" target="wiki">RSNA CTP Wiki</a>&#160;&#160;
+			</p>
+			<p id="line2" class="line2">
+				Server IP: <span id="serverip"> </span>&#160;&#160;|&#160;
+				Server Port: <span id="serverport"> </span>&#160;&#160;|&#160;
+				CTP Build: <span id="ctpbuild"> </span>
+				<span id="ctpjava"> </span>
+			</p>
+		</div>
+	</div>
+
+</body>
+
 </html>

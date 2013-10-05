@@ -63,6 +63,15 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	}
 
 	/**
+	 * Get the size of the import directory.
+	 * @return the number of objects in the import queue, or zero if the
+	 * ImportService is not queued.
+	 */
+	public int getQueueSize() {
+		return FileUtil.getFileCount(root);
+	}
+
+	/**
 	 * Get the next object available for processing.
 	 * @return the next object available, or null if no object is available.
 	 */

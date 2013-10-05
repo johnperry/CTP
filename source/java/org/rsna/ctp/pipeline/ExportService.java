@@ -22,4 +22,10 @@ public interface ExportService {
 	 */
 	public void export(FileObject fileObject);
 
+	/**
+	 * Get the size of the export queue.
+	 * @return the number of objects in the export queue, or zero if the
+	 * ExportService is not queued.
+	 */
+	public int getQueueSize();
 }

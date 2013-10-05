@@ -45,6 +45,7 @@ public class DBVerifierServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(DBVerifierServlet.class);
 	String home = "/";
+	String suppress = "";
 
 	/**
 	 * Construct a DBVerifierServlet.
@@ -65,7 +66,16 @@ public class DBVerifierServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) {
+			home = "";
+			suppress = "&suppress";
+		}
 
 		//Get the selected stage, if possible.
 		DatabaseVerifier verifier = null;
@@ -124,8 +134,8 @@ public class DBVerifierServlet extends Servlet {
 					PipelineStage stage = stages.get(s);
 					if (stage instanceof DatabaseVerifier) {
 						sb.append("<tr>");
-						sb.append("<td width=\"50%\">"+pipe.getPipelineName()+"</td>");
-						sb.append("<td><a href=\"/"+context+"?p="+p+"&s="+s+"\">"+stage.getName()+"</a></td>");
+						sb.append("<td class=\"list\" width=\"50%\">"+pipe.getPipelineName()+"</td>");
+						sb.append("<td class=\"list\"><a href=\"/"+context+"?p="+p+"&s="+s+suppress+"\">"+stage.getName()+"</a></td>");
 						sb.append("</tr>");
 						count++;
 					}
@@ -140,15 +150,15 @@ public class DBVerifierServlet extends Servlet {
 	//Create an HTML page containing the requested results.
 	private String getResultsPage(DatabaseVerifier verifier, int p, int s, String date, String ptid, String siuid, String clear, String home) {
 		if ((siuid == null) || siuid.trim().equals("")) {
-			return responseHead(verifier.getName(), home, "_self", "Return to the home page", p, s)
+			return responseHead(verifier.getName(), home, "/icons/home.png", "_self", "Return to the home page", p, s)
 					+ getSummary(verifier, p, s, date, ptid, clear)
 						+ responseTail();
 		}
 		else {
-			String url = "/" + context + "?p="+p+"&s="+s;
+			String url = "/" + context + "?p="+p+"&s="+s+suppress;
 			if (date != null) url += "&date="+date;
 			if (ptid != null) url += "&ptid="+ptid;
-			return responseHead(verifier.getName(), url, "_self", "Back")
+			return responseHead(verifier.getName(), url, "/icons/go-previous-32.png", "_self", "Return to the search page")
 					+ getInstances(verifier, p, s, date, ptid, siuid)
 						+ responseTail();
 		}
@@ -220,7 +230,7 @@ public class DBVerifierServlet extends Servlet {
 						sb.append("<tr>");
 						if (ptidSearch) {
 							sb.append("<td>");
-								sb.append("<a href=\"/"+context+"?p="+p+"&s="+s+"&date="+sob.date+"\">");
+								sb.append("<a href=\"/"+context+"?p="+p+"&s="+s+"&date="+sob.date+suppress+"\">");
 									sb.append(sob.date);
 								sb.append("</a>");
 							sb.append("</td>");
@@ -229,14 +239,14 @@ public class DBVerifierServlet extends Servlet {
 						else {
 							sb.append("<td>" + sob.date + "</td>");
 							sb.append("<td>");
-								sb.append("<a href=\"/"+context+"?p="+p+"&s="+s+"&ptid="+sob.ptID+"\">");
+								sb.append("<a href=\"/"+context+"?p="+p+"&s="+s+"&ptid="+sob.ptID+suppress+"\">");
 									sb.append(sob.ptID);
 								sb.append("</a>");
 							sb.append("</td>");
 						}
 						sb.append("<td>" + sob.ptName + "</td>");
 						sb.append("<td class=\"numeric\">");
-							sb.append("<a href=\"/"+context+"?p="+p+"&s="+s+"&siuid="+siUID+"\">");
+							sb.append("<a href=\""+context+"?p="+p+"&s="+s+"&siuid="+siUID+suppress+"\">");
 								sb.append(sob.getInstanceCount());
 							sb.append("</a>");
 						sb.append("</td>");
@@ -281,7 +291,7 @@ public class DBVerifierServlet extends Servlet {
 			else {
 				sb.append("<td>");
 				sb.append("<input type=\"button\" value=\"Next Date\" ");
-				sb.append("onclick=\"window.open('/"+context+"?p="+p+"&s="+s+"&date="+nextDate+"','_self');\"/>");
+				sb.append("onclick=\"window.open('/"+context+"?p="+p+"&s="+s+"&date="+nextDate+suppress+"','_self');\"/>");
 				sb.append("</td>");
 			}
 		}
@@ -302,7 +312,7 @@ public class DBVerifierServlet extends Servlet {
 			else {
 				sb.append("<td>");
 				sb.append("<input type=\"button\" value=\"Prev Date\" ");
-				sb.append("onclick=\"window.open('/"+context+"?p="+p+"&s="+s+"&date="+prevDate+"','_self');\"/>");
+				sb.append("onclick=\"window.open('/"+context+"?p="+p+"&s="+s+"&date="+prevDate+suppress+"','_self');\"/>");
 				sb.append("</td>");
 			}
 		}
@@ -312,7 +322,7 @@ public class DBVerifierServlet extends Servlet {
 		sb.append("<input type=\"text\" id=\"ptidField\">");
 		sb.append("&nbsp;&nbsp;");
 		sb.append("<input type=\"button\" value=\"Go\" ");
-		sb.append("onclick=\"goto('"+context+"','"+p+"','"+s+"','ptid','ptidField');\"");
+		sb.append("onclick=\"goto('"+context+"','"+p+"','"+s+suppress+"','ptid','ptidField');\"");
 		sb.append("/>");
 		sb.append("</td>");
 		sb.append("</tr>");
@@ -327,7 +337,7 @@ public class DBVerifierServlet extends Servlet {
 		sb.append("<tr>");
 		sb.append("<td>");
 		sb.append("<input type=\"button\" value=\"Clear the unverified queue\" ");
-		sb.append("onclick=\"if (window.confirm('Are you sure?'))window.open('/"+context+"?p="+p+"&s="+s+"&clear=yes','_self');\"/>");
+		sb.append("onclick=\"if (window.confirm('Are you sure?'))window.open('/"+context+"?p="+p+"&s="+s+suppress+"&clear=yes','_self');\"/>");
 		sb.append("</td>");
 		sb.append("</tr>");
 		sb.append("</table>");
@@ -392,14 +402,14 @@ public class DBVerifierServlet extends Servlet {
 	}
 
 	private String responseHead(String title, String home) {
-		return responseHead(title, home, "_self", "Return to the home page");
+		return responseHead(title, home, "/icons/home.png", "_self", "Return to the home page");
 	}
 
-	private String responseHead(String title, String homeurl, String target, String hometooltip) {
-		return responseHead(title, homeurl, target, hometooltip, -1, -1);
+	private String responseHead(String title, String homeurl, String icon, String target, String hometooltip) {
+		return responseHead(title, homeurl, icon, target, hometooltip, -1, -1);
 	}
 
-	private String responseHead(String title, String homeurl, String target, String hometooltip, int p, int s) {
+	private String responseHead(String title, String homeurl, String icon, String target, String hometooltip, int p, int s) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -410,6 +420,7 @@ public class DBVerifierServlet extends Servlet {
 			+	"    body {margin-top:0; margin-right:0;}\n"
 			+	"    h1 {text-align:center; margin-top:10;}\n"
 			+	"    table.footer td {padding:5;}\n"
+			+	"    td.list {background:white;}\n"
 			+	"  </style>\n"
 			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSTableSort.js\">;</script>\n"
 			+	"  <script>function goto(context,p,s,qp,valueID) {\n"
@@ -417,15 +428,18 @@ public class DBVerifierServlet extends Servlet {
 			+	"  </script>\n"
 			+	" </head>\n"
 			+	" <body>\n"
+			+	"  <div style=\"float:right;\">\n";
 
-			+	"  <div style=\"float:right;\">\n"
-			+	"   <img src=\"/icons/home.png\"\n"
-			+	"    onclick=\"window.open('"+homeurl+"','"+target+"');\"\n"
-			+	"    title=\""+hometooltip+"\"\n"
-			+	"    style=\"margin:2\"/>\n";
+		if (!homeurl.equals("")) {
+			head +=
+					"   <img src=\""+icon+"\"\n"
+				+	"    onclick=\"window.open('"+homeurl+"','"+target+"');\"\n"
+				+	"    title=\""+hometooltip+"\"\n"
+				+	"    style=\"margin:2\"/>\n";
+		}
 
 		if ((p >= 0) && (s >= 0)) {
-			String refreshurl = "/" + context + "?p=" + p + "&s=" + s;
+			String refreshurl = "/" + context + "?p=" + p + "&s=" + s + suppress;
 			head +=
 				"   <br/>\n"
 			+	"   <img src=\"/icons/refresh.png\"\n"

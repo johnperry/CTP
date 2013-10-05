@@ -60,7 +60,13 @@ public class ObjectTrackerServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the selected stage, if possible.
 		ObjectTracker tracker = null;
@@ -81,8 +87,8 @@ public class ObjectTrackerServlet extends Servlet {
 
 		//Now make either the page listing the various ObjectTracker stages
 		//or the search page for the specified ObjectTracker.
-		if (tracker == null) res.write(getListPage(home));
-		else res.write(getSearchPage(tracker, p, s, home));
+		if (tracker == null) res.write(getListPage());
+		else res.write(getSearchPage(tracker, p, s));
 
 		//Return the page
 		res.disableCaching();
@@ -104,9 +110,12 @@ public class ObjectTrackerServlet extends Servlet {
 
 		//Make sure the user is authorized to do this.
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
-			res.redirect(home);
+			res.setResponseCode(res.forbidden);
+			res.send();
 			return;
 		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the parameters from the form.
 		String keyType = req.getParameter("keytype");
@@ -131,7 +140,7 @@ public class ObjectTrackerServlet extends Servlet {
 			return;
 		}
 		if (tracker == null) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.setContentType("html");
 			res.disableCaching();
 			res.send();
@@ -141,7 +150,7 @@ public class ObjectTrackerServlet extends Servlet {
 		//Get the selected data
 		Document data = getData(tracker, keyType, keys);
 		if (data == null) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.setContentType("html");
 			res.disableCaching();
 			res.send();
@@ -165,7 +174,8 @@ public class ObjectTrackerServlet extends Servlet {
 				res.setContentType("html");
 				res.write(
 					responseHead("Search Results from "+tracker.getName(),
-								 "/" + context + "?p="+p+"&s="+s,
+								 "/" + context + "?p="+p+"&s="+s+(home.equals("")?"&suppress":""),
+								 "/icons/go-previous-32.png",
 								 "_self",
 								 "Return to the search page")
 						+ getHTML(data)
@@ -178,8 +188,8 @@ public class ObjectTrackerServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the list of ObjectTracker stages.
-	private String getListPage(String home) {
-		return responseHead("Select the ObjectTracker to Search", home)
+	private String getListPage() {
+		return responseHead("Select the ObjectTracker to Search")
 				+ makeList()
 					+ responseTail();
 	}
@@ -198,8 +208,8 @@ public class ObjectTrackerServlet extends Servlet {
 					PipelineStage stage = stages.get(s);
 					if (stage instanceof ObjectTracker) {
 						sb.append("<tr>");
-						sb.append("<td width=\"50%\">"+pipe.getPipelineName()+"</td>");
-						sb.append("<td><a href=\"/"+context+"?p="+p+"&s="+s+"\">"+stage.getName()+"</a></td>");
+						sb.append("<td class=\"list\" width=\"50%\">"+pipe.getPipelineName()+"</td>");
+						sb.append("<td class=\"list\"><a href=\"/"+context+"?p="+p+"&s="+s+(home.equals("")?"&suppress":"")+"\">"+stage.getName()+"</a></td>");
 						sb.append("</tr>");
 						count++;
 					}
@@ -211,18 +221,19 @@ public class ObjectTrackerServlet extends Servlet {
 		return sb.toString();
 	}
 
-	//Create an HTML page containing the form for configuring the file.
-	private String getSearchPage(ObjectTracker tracker, int p, int s, String home) {
-		return responseHead("Search "+tracker.getName(), home)
-				+ makeForm(tracker, p, s, home)
+	//Create an HTML page containing the form for searching the database.
+	private String getSearchPage(ObjectTracker tracker, int p, int s) {
+		return responseHead("Search "+tracker.getName())
+				+ makeForm(tracker, p, s)
 					+ responseTail();
 	}
 
-	private String makeForm(ObjectTracker tracker, int p, int s, String home) {
+	private String makeForm(ObjectTracker tracker, int p, int s) {
 		StringBuffer form = new StringBuffer();
 		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
 		form.append(hidden("p",Integer.toString(p)));
 		form.append(hidden("s",Integer.toString(s)));
+		if (home.equals("")) form.append(hidden("suppress", ""));
 
 		form.append("<center>\n");
 
@@ -266,11 +277,11 @@ public class ObjectTrackerServlet extends Servlet {
 		return "<input type=\"hidden\" name=\"" + name + "\" value=\"" + text + "\"/>";
 	}
 
-	private String responseHead(String title, String home) {
-		return responseHead(title, home, "_self", "Return to the home page");
+	private String responseHead(String title) {
+		return responseHead(title, home, (String)null, "_self", "Return to the home page");
 	}
 
-	private String responseHead(String title, String home, String target, String tooltip) {
+	private String responseHead(String title, String home, String icon, String target, String tooltip) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -283,11 +294,12 @@ public class ObjectTrackerServlet extends Servlet {
 			+	"    select {width:600px;}\n"
 			+	"    th {padding:5px;}\n"
 			+	"    td {padding:5px;}\n"
+			+	"    td.list {background:white;}\n"
 			+	"    .button {width:250}\n"
 			+	"   </style>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-			+	HtmlUtil.getCloseBox(home, target, tooltip)
+			+	(home.equals("") ? "" : HtmlUtil.getCloseBox(home, icon, target, tooltip))
 			+	"  <h1>"+title+"</h1>\n"
 			+	"  <center>\n";
 		return head;

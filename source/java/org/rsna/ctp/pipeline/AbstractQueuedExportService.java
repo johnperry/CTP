@@ -136,7 +136,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the size of the export queue.
 	 * return the size of the export queue, or 0 if no QueueManager exists.
 	 */
-	protected synchronized int getQueueSize() {
+	public synchronized int getQueueSize() {
 		if (queueManager != null) return queueManager.size();
 		return 0;
 	}

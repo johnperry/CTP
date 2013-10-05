@@ -70,7 +70,13 @@ public class LookupServlet extends Servlet {
 			HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Now make either the page listing the various editable stages
 		//or the page listing the contents of the specified file.
@@ -90,17 +96,17 @@ public class LookupServlet extends Servlet {
 					res.setContentDisposition(new File(file.getName()+".csv"));
 				}
 				else {
-					res.write(getEditorPage(p, s, file, home));
+					res.write(getEditorPage(p, s, file));
 					res.setContentType("html");
 				}
 			}
 			else {
-				res.write(getListPage(home));
+				res.write(getListPage());
 				res.setContentType("html");
 			}
 		}
 		catch (Exception ex) {
-			res.write(getListPage(home));
+			res.write(getListPage());
 			res.setContentType("html");
 		}
 
@@ -128,6 +134,8 @@ public class LookupServlet extends Servlet {
 			res.send();
 			return;
 		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		File dir = null;
 		String contentType = req.getContentType().toLowerCase();
@@ -157,7 +165,7 @@ public class LookupServlet extends Servlet {
 				//Make a new page from the new data and send it out
 				res.disableCaching();
 				res.setContentType("html");
-				res.write(getEditorPage(p, s, file, home));
+				res.write(getEditorPage(p, s, file));
 				res.send();
 				return;
 			}
@@ -192,7 +200,7 @@ public class LookupServlet extends Servlet {
 					//Make a new page from the new data and send it out
 					res.disableCaching();
 					res.setContentType("html");
-					res.write(getEditorPage(p, s, file, home));
+					res.write(getEditorPage(p, s, file));
 					res.send();
 					return;
 				}
@@ -294,8 +302,8 @@ public class LookupServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the list of files.
-	private String getListPage(String home) {
-		return responseHead("Select the Lookup Table File to Edit", "", home, false, null)
+	private String getListPage() {
+		return responseHead("Select the Lookup Table File to Edit", "", false, false, null)
 				+ makeList()
 					+ responseTail();
 	}
@@ -318,11 +326,12 @@ public class LookupServlet extends Servlet {
 					}
 					if (file != null) {
 						sb.append("<tr>");
-						sb.append("<td>"+pipe.getPipelineName()+"</td>");
-						sb.append("<td>"+stage.getName()+"</td>");
-						sb.append("<td><a href=\"/"+context
+						sb.append("<td class=\"list\">"+pipe.getPipelineName()+"</td>");
+						sb.append("<td class=\"list\">"+stage.getName()+"</td>");
+						sb.append("<td class=\"list\"><a href=\"/"+context
 										+"?p="+p
 										+"&s="+s
+										+(home.equals("") ? "&suppress" : "")
 										+"\">"
 										+file.getAbsolutePath()+"</a></td>");
 						sb.append("</tr>");
@@ -337,14 +346,14 @@ public class LookupServlet extends Servlet {
 	}
 
 	//Create an HTML page containing the form for configuring the file.
-	private String getEditorPage(int p, int s, File file, String home) {
+	private String getEditorPage(int p, int s, File file) {
 		HashSet<String> keyTypes = getKeyTypes(p, s);
-		return responseHead("Lookup Table Editor", file.getAbsolutePath(), home, true, keyTypes)
-				+ makeForm(p, s, file, home)
+		return responseHead("Lookup Table Editor", file.getAbsolutePath(), true, true, keyTypes)
+				+ makeForm(p, s, file)
 					+ responseTail();
 	}
 
-	private String makeForm(int p, int s, File file, String home) {
+	private String makeForm(int p, int s, File file) {
 		Properties props = getProperties(file);
 		Set<Object> keySet = props.keySet();
 		Object[] keys = new Object[keySet.size()];
@@ -355,6 +364,7 @@ public class LookupServlet extends Servlet {
 		form.append("<form id=\"URLEncodedFormID\" method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
 		form.append(hidden("p", p + ""));
 		form.append(hidden("s", s + ""));
+		if (home.equals("")) form.append(hidden("suppress", ""));
 
 		form.append("<center>\n");
 		form.append("<table>\n");
@@ -391,7 +401,7 @@ public class LookupServlet extends Servlet {
 		return "<input type=\"hidden\" id=\"" + name + "\" name=\"" + name + "\" value=\"" + text + "\"/>";
 	}
 
-	private String responseHead(String title, String subtitle, String home, boolean includeCSVLinks, HashSet<String> keyTypes) {
+	private String responseHead(String title, String subtitle, boolean includeSave, boolean includeCSVLinks, HashSet<String> keyTypes) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -406,17 +416,25 @@ public class LookupServlet extends Servlet {
 			+	" </head>\n"
 			+	" <body>\n"
 
-			+	"  <div style=\"float:right;\">\n"
-			+	"   <img src=\"/icons/home.png\"\n"
-			+	"    onclick=\"window.open('"+home+"','_self');\"\n"
-			+	"    style=\"margin-right:2px;\"\n"
-			+	"    title=\"Return to the home page\"/>\n"
-			+	"   <br>\n"
-			+	"   <img src=\"/icons/save.png\"\n"
-			+	"    onclick=\"submitURLEncodedForm();\"\n"
-			+	"    style=\"margin-right:2px;\"\n"
-			+	"    title=\"Update the file\"/>\n"
-			+	"   <br>\n";
+			+	"  <div style=\"float:right;\">\n";
+
+		if (!home.equals("")) {
+			head +=
+					"   <img src=\"/icons/home.png\"\n"
+				+	"    onclick=\"window.open('"+home+"','_self');\"\n"
+				+	"    style=\"margin-right:2px;\"\n"
+				+	"    title=\"Return to the home page\"/>\n"
+				+	"   <br>\n";
+		}
+
+		if (includeSave) {
+			head +=
+					"   <img src=\"/icons/save.png\"\n"
+				+	"    onclick=\"submitURLEncodedForm();\"\n"
+				+	"    style=\"margin-right:2px;\"\n"
+				+	"    title=\"Update the file\"/>\n"
+				+	"   <br>\n";
+		}
 
 		if (includeCSVLinks) {
 			head +=

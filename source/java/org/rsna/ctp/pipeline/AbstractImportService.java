@@ -79,6 +79,14 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	}
 
 	/**
+	 * Get the size of the import queue.
+	 * @return the number of objects in the import queue.
+	 */
+	public synchronized int getQueueSize() {
+		return queueManager.size();
+	}
+
+	/**
 	 * Enqueue a file and log it.
 	 * @param file the file that was received.
 	 */

@@ -51,10 +51,11 @@ public class StatusServlet extends Servlet {
 		sb.append("<style>");
 		sb.append("body {margin-top:0; margin-right:0; padding:0;}");
 		sb.append("td {background-color:white;}");
-		sb.append("h1 {margin-top:10; margin-bottom:0;}");
+		sb.append("h1 {margin-top:10; margin-bottom:0; font-family: Verdana, Arial, Helvetica, sans-serif;}");
+		sb.append("h2 {font-family: Verdana, Arial, Helvetica, sans-serif;}");
 		sb.append("</style>");
 		sb.append("</head><body>");
-		sb.append(HtmlUtil.getCloseBox(home));
+		if (!req.hasParameter("suppress")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>Status</h1></center>");
 
 		//Insert information for each pipeline

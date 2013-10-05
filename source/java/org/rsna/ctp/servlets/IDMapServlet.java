@@ -55,7 +55,13 @@ public class IDMapServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) { res.redirect(home); return; }
+		if (!req.userHasRole("admin")) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the selected stage, if possible.
 		IDMap idMap = null;
@@ -99,9 +105,12 @@ public class IDMapServlet extends Servlet {
 
 		//Make sure the user is authorized to do this.
 		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
-			res.redirect(home);
+			res.setResponseCode(res.forbidden);
+			res.send();
 			return;
 		}
+
+		if (req.hasParameter("suppress")) home = "";
 
 		//Get the parameters from the form.
 		String keyType = req.getParameter("keytype");
@@ -109,6 +118,7 @@ public class IDMapServlet extends Servlet {
 		String format = req.getParameter("format");
 		String pParam = req.getParameter("p");
 		String sParam = req.getParameter("s");
+		if (req.hasParameter("suppress")) home = "";
 
 		//Find the IDMap stage.
 		IDMap idMap = null;
@@ -169,7 +179,8 @@ public class IDMapServlet extends Servlet {
 				res.setContentType("html");
 				res.write(
 					responseHead("Search Results from "+idMap.getName(),
-								 "/" + context + "?p="+p+"&s="+s,
+								 "/" + context + "?p="+p+"&s="+s+(home.equals("")?"&suppress":""),
+								 "/icons/go-previous-32.png",
 								 "_self",
 								 "Return to the search page")
 						+ getMapTable(data, keyTitle, valueTitle)
@@ -184,11 +195,11 @@ public class IDMapServlet extends Servlet {
 	//Create an HTML page containing the list of IDMap stages.
 	private String getListPage(String home) {
 		return responseHead("Select the IDMap to Search", home)
-				+ makeList()
+				+ makeList(home)
 					+ responseTail();
 	}
 
-	private String makeList() {
+	private String makeList(String home) {
 		StringBuffer sb = new StringBuffer();
 		Configuration config = Configuration.getInstance();
 		List<Pipeline> pipelines = config.getPipelines();
@@ -202,8 +213,8 @@ public class IDMapServlet extends Servlet {
 					PipelineStage stage = stages.get(s);
 					if (stage instanceof IDMap) {
 						sb.append("<tr>");
-						sb.append("<td width=\"50%\">"+pipe.getPipelineName()+"</td>");
-						sb.append("<td><a href=\"/"+context+"?p="+p+"&s="+s+"\">"+stage.getName()+"</a></td>");
+						sb.append("<td class=\"list\" width=\"50%\">"+pipe.getPipelineName()+"</td>");
+						sb.append("<td class=\"list\"><a href=\"/"+context+"?p="+p+"&s="+s+(home.equals("")?"&suppress":"")+"\">"+stage.getName()+"</a></td>");
 						sb.append("</tr>");
 						count++;
 					}
@@ -227,6 +238,7 @@ public class IDMapServlet extends Servlet {
 		form.append("<form method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
 		form.append(hidden("p",Integer.toString(p)));
 		form.append(hidden("s",Integer.toString(s)));
+		if (home.equals("")) form.append(hidden("suppress", ""));
 
 		form.append("<center>\n");
 
@@ -274,10 +286,10 @@ public class IDMapServlet extends Servlet {
 	}
 
 	private String responseHead(String title, String home) {
-		return responseHead(title, home, "_self", "Return to the home page");
+		return responseHead(title, home, (String)null, "_self", "Return to the home page");
 	}
 
-	private String responseHead(String title, String url, String target, String tooltip) {
+	private String responseHead(String title, String home, String icon, String target, String tooltip) {
 		String head =
 				"<html>\n"
 			+	" <head>\n"
@@ -290,11 +302,12 @@ public class IDMapServlet extends Servlet {
 			+	"    select {width:600px;}\n"
 			+	"    th {padding:5px;}\n"
 			+	"    td {padding:5px;}\n"
+			+	"    td.list {background:white;}\n"
 			+	"    .button {width:250}\n"
 			+	"   </style>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-			+	HtmlUtil.getCloseBox(url, target, tooltip)
+			+	(home.equals("") ? "" : HtmlUtil.getCloseBox(home, icon, target, tooltip))
 			+	"  <h1>"+title+"</h1>\n"
 			+	"  <center>\n";
 		return head;

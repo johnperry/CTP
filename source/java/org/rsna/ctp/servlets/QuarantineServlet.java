@@ -34,6 +34,7 @@ public class QuarantineServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(QuarantineServlet.class);
 	String home = "/";
+	String suppress = "";
 
 	/**
 	 * Construct a QuarantineServlet.
@@ -69,9 +70,14 @@ public class QuarantineServlet extends Servlet {
 		//Require that the user have the qadmin or admin role
 		boolean admin = req.userHasRole("qadmin") || req.userHasRole("admin");
 		if (!admin) {
-			res.setResponseCode(res.notfound);
+			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
+		}
+
+		if (req.hasParameter("suppress")) {
+			home = "";
+			suppress = "&suppress";
 		}
 
 		//Check the path information
@@ -103,7 +109,7 @@ public class QuarantineServlet extends Servlet {
 	void sizesPage(HttpResponse res, String home) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		sb.append(HtmlUtil.getCloseBox(home));
+		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>All Quarantines</h1>");
 		sb.append("<table border=\"1\">");
 		Configuration config = Configuration.getInstance();
@@ -128,14 +134,14 @@ public class QuarantineServlet extends Servlet {
 		Pipeline pipeline;
 		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
 		catch (Exception quit) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 			return;
 		}
 		StringBuffer sb = new StringBuffer();
 
 		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		sb.append(HtmlUtil.getCloseBox(home));
+		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>"+pipeline.getPipelineName()+" Quarantines</h1>");
 		sb.append("<table border=\"1\">");
 		getSizes(sb, pipeline, pipelineIndex);
@@ -168,11 +174,11 @@ public class QuarantineServlet extends Servlet {
 		if (quarantine == null) return false;
 		sb.append("<tr><td>");
 		if (first) {
-			sb.append("<a href=\"?p="+pipelineIndex+"\">"+pipeline.getPipelineName()+"</a>");
+			sb.append("<a href=\"?p="+pipelineIndex+suppress+"\">"+pipeline.getPipelineName()+"</a>");
 			first = false;
 		}
 		sb.append("</td><td>");
-		sb.append("<a href=\"?p="+pipelineIndex+"&s="+stageIndex+"\">"+stage.getName()+"</a>");
+		sb.append("<a href=\"?p="+pipelineIndex+"&s="+stageIndex+suppress+"\">"+stage.getName()+"</a>");
 		sb.append("</td><td style=\"text-align:right\">"+quarantine.getSize()+"</td></tr>");
 		return true;
 	}
@@ -228,19 +234,19 @@ public class QuarantineServlet extends Servlet {
 		PipelineStage stage;
 		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
 		catch (Exception quit) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 			return;
 		}
 		try { stage = pipeline.getStages().get(stageIndex); }
 		catch (Exception quit) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 			return;
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		sb.append(HtmlUtil.getCloseBox());
+		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<br><center><h1>"+pipeline.getPipelineName()
 					+"<br>"+stage.getName()+" Quarantine</h1>");
 		Quarantine quarantine = stage.getQuarantine();
@@ -252,11 +258,11 @@ public class QuarantineServlet extends Servlet {
 			if (files.length > 0) {
 				if (admin) {
 					sb.append("<input type=\"button\"");
-					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+"&queue','_self')\"");
+					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+suppress+"&queue','_self')\"");
 					sb.append(" value=\"Queue All\"/>");
 					sb.append("&nbsp;&nbsp;&nbsp;");
 					sb.append("<input type=\"button\"");
-					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+"&delete','_self')\"");
+					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+suppress+"&delete','_self')\"");
 					sb.append(" value=\"Delete All\"/>");
 					sb.append("<br><br>");
 				}
@@ -268,6 +274,7 @@ public class QuarantineServlet extends Servlet {
 								+"?p="+pipelineIndex
 								+"&s="+stageIndex
 								+"&file="+files[i].getName()
+								+suppress
 								+"\" target=\"dcm\">"+files[i].getName()+"</a>");
 					sb.append("</td>");
 					sb.append("<td>");
@@ -280,6 +287,7 @@ public class QuarantineServlet extends Servlet {
 									+"&s="+stageIndex
 									+"&file="+files[i].getName()
 									+"&queue"
+									+suppress
 									+"\">queue</a>");
 						sb.append("</td>");
 						sb.append("<td>");
@@ -288,6 +296,7 @@ public class QuarantineServlet extends Servlet {
 									+"&s="+stageIndex
 									+"&file="+files[i].getName()
 									+"&delete"
+									+suppress
 									+"\">delete</a>");
 						sb.append("</td>");
 						sb.append("<td>");
@@ -296,6 +305,7 @@ public class QuarantineServlet extends Servlet {
 									+"&s="+stageIndex
 									+"&file="+files[i].getName()
 									+"&display"
+									+suppress
 									+"\" target=\"dcm\">display</a>");
 						sb.append("</td>");
 					}
@@ -365,13 +375,13 @@ public class QuarantineServlet extends Servlet {
 		PipelineStage stage;
 		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
 		catch (Exception quit) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 			return;
 		}
 		try { stage = pipeline.getStages().get(stageIndex); }
 		catch (Exception quit) {
-			res.setResponseCode(404);
+			res.setResponseCode(res.notfound);
 			res.send();
 			return;
 		}
@@ -423,6 +433,7 @@ public class QuarantineServlet extends Servlet {
 					res.setContentType(temp);
 					res.send();
 					temp.delete();
+					return;
 				}
 				catch (Exception unable) { }
 			}
@@ -466,7 +477,7 @@ public class QuarantineServlet extends Servlet {
 		}
 		sb.append("</head>");
 		sb.append("<body>");
-		sb.append(HtmlUtil.getCloseBox(home));
+		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>"+pipeline.getPipelineName()
 					+"<br>"+stage.getName()+" Quarantine</h1>");
 		return sb.toString();

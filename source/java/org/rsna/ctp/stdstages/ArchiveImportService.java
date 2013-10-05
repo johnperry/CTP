@@ -84,6 +84,16 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	}
 
 	/**
+	 * Get the number of objects in the import queue. Since this stage can walk a huge tree,
+	 * it isn't worth the cost to count the tree, so to satisfy the contract of the ImportService
+	 * interface, we just return zero.
+	 * return zero.
+	 */
+	public synchronized int getQueueSize() {
+		return 0;
+	}
+
+	/**
 	 * Get the next object available for processing.
 	 * @return the next object available, or null if no object is available.
 	 */

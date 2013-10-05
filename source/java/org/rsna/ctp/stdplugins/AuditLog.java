@@ -109,7 +109,7 @@ public class AuditLog extends AbstractPlugin {
 		int size;
 		try { size = ((Integer)count.get(lastIDName)).intValue(); }
 		catch (Exception mustBeZero) { size = 0; }
-		String sizeLine = "<tr><td>Number of entries</td><td>"+size+"</td></tr>";
+		String sizeLine = "<tr><td width=\"20%\">Number of entries</td><td>"+size+"</td></tr>";
 		return getStatusHTML(sizeLine);
 	}
 

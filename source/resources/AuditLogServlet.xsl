@@ -3,6 +3,7 @@
 <xsl:output method="xml" encoding="utf-8" omit-xml-declaration="yes" />
 
 <xsl:param name="context"/>
+<xsl:param name="suppress"/>
 
 <xsl:template match="/Plugin">
 	<html>
@@ -17,11 +18,13 @@
 		</head>
 		<body>
 			<div class="closebox">
-				<img src="/icons/home.png"
-					 onclick="window.open('/','_self');"
-					 title="Return to the home page"/>
-				<br/>
-				<img src="/icons/save.png"
+			<xsl:if test="$suppress=''">
+					<img src="/icons/home.png"
+						 onclick="window.open('/','_self');"
+						 title="Return to the home page"/>
+					<br/>
+				</xsl:if>
+				<img src="/icons/refresh.png"
 					 onclick="search();"
 					 title="Search"/>
 			</div>
@@ -29,7 +32,7 @@
 			<h1>Audit Log Service</h1>
 			<h2><xsl:value-of select="@name"/></h2>
 
-			<p class="instruction">Select a search field and enter a value:</p>
+			<p class="instruction">Select a search field, enter a value, and click the search button:</p>
 			<p class="center">
 			<table border="1">
 				<tr>
@@ -58,7 +61,7 @@
 				</tr>
 				<tr>
 					<td class="text-label">
-						<input id="object" type="radio" name="searchfield" value="entry">Entry ID:</input>
+						<input id="object" type="radio" name="searchfield" value="entry" checked="true">Entry ID:</input>
 					</td>
 					<td class="text-field">
 						<input type="text" class="fullwidth"/>

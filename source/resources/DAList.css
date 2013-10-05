@@ -1,5 +1,5 @@
 body {
-	margin:0; 
+	margin:0;
 	overflow:hidden;
 }
 
@@ -14,8 +14,12 @@ th {
 }
 
 td {
-	text-align:left; 
+	text-align:left;
 	padding:1 5 1 5;
+}
+
+td.list {
+	background:white;
 }
 
 #propsdiv {
