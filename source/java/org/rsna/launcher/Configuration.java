@@ -10,6 +10,8 @@ package org.rsna.launcher;
 import java.io.*;
 import java.util.*;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.rsna.util.FileUtil;
 import org.rsna.util.JarUtil;
 import org.rsna.util.XmlUtil;
@@ -144,6 +146,28 @@ public class Configuration {
 		if ((mx == null) || mx.trim().equals("")) props.setProperty("mx", "256");
 		String ms = props.getProperty("ms");
 		if ((ms == null) || ms.trim().equals("")) props.setProperty("ms", "128");
+	}
+
+	public boolean hasPipelines() {
+		if (configXML != null) {
+			Element root = configXML.getDocumentElement();
+			Node child = root.getFirstChild();
+			while (child != null) {
+				if ((child instanceof Element) && child.getNodeName().equals("Pipeline")) return true;
+				child = child.getNextSibling();
+			}
+		}
+		return false;
+	}
+
+	public void reloadXML() {
+		try {
+			configXML = XmlUtil.getDocument(configFile);
+			try { port = Integer.parseInt( Util.getAttribute(configXML, "Server", "port") ); }
+			catch (Exception ex) { port = 0; }
+			ssl = Util.getAttribute(configXML, "Server", "ssl").equals("yes");
+		}
+		catch (Exception ignore) { }
 	}
 
 	public void save() {

@@ -58,11 +58,11 @@ public class Launcher extends JFrame implements ChangeListener {
 			setTitle(config.windowTitle);
 
 			versionPanel = new VersionPanel();
-			javaPanel = new JavaPanel();
+			javaPanel = JavaPanel.getInstance();
 			systemPanel = new SystemPanel();
 			configPanel = new ConfigPanel();
 			ioPanel = new IOPanel();
-			logPanel = new LogPanel();
+			logPanel = LogPanel.getInstance();
 			tp = new JTabbedPane();
 			tp.setBackground( Color.white );
 			tp.setForeground( BasePanel.titleColor );
@@ -85,8 +85,15 @@ public class Launcher extends JFrame implements ChangeListener {
 			setVisible(true);
 
 			UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
+
 			if (autostart) javaPanel.start();
-			else javaPanel.setFocusOnStart();
+			else {
+				javaPanel.setFocusOnStart();
+				if (!config.hasPipelines()) {
+					tp.setSelectedComponent(configPanel);
+					configPanel.showHelp();
+				}
+			}
 		}
 		catch (Exception ex) {
 			setVisible(true);

@@ -1,34 +1,3 @@
 <Configuration>
     <Server port="80"/>
-    <Pipeline name="Example Pipeline">
-        <DicomImportService
-            class="org.rsna.ctp.stdstages.DicomImportService"
-            logConnections="no"
-            name="DicomImportService"
-            port="1104"
-            quarantine="quarantines/DicomImportService"
-            root="roots/DicomImportService"/>
-        <DicomPixelAnonymizer
-            class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
-            log="yes"
-            name="DicomPixelAnonymizer"
-            quarantine="quarantines/DicomPixelAnonymizer"
-            root="roots/DicomPixelAnonymizer"
-            script="scripts/DicomPixelAnonymizer.script"/>
-        <DicomAnonymizer
-            class="org.rsna.ctp.stdstages.DicomAnonymizer"
-            lookupTable="scripts/lookup-table.properties"
-            name="DicomAnonymizer"
-            quarantine="quarantines/DicomAnonymizer"
-            root="roots/DicomAnonymizer"
-            script="scripts/DicomAnonymizer.script"/>
-        <FileStorageService
-            class="org.rsna.ctp.stdstages.FileStorageService"
-            name="FileStorageService"
-            port="9000"
-            quarantine="quarantines/FileStorageService"
-            returnStoredFile="yes"
-            root="roots/FileStorageService"
-            type="month"/>
-    </Pipeline>
 </Configuration>

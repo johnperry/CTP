@@ -213,7 +213,7 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if (startLauncher(new File(directory, "CTP"))) System.exit(0)
+		if (startLauncher(new File(directory, "CTP"))) System.exit(0);
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.

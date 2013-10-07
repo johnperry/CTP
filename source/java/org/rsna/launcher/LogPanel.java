@@ -23,7 +23,14 @@ public class LogPanel extends BasePanel implements ActionListener {
 	JButton refresh;
 	File log = new File("logs/ctp.log");
 
-	public LogPanel() {
+	static LogPanel logPanel = null;
+
+	public static LogPanel getInstance() {
+		if (logPanel == null) logPanel = new LogPanel();
+		return logPanel;
+	}
+
+	protected LogPanel() {
 		super();
 
 		out = new ColorPane();

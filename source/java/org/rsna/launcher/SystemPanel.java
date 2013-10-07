@@ -10,16 +10,18 @@ package org.rsna.launcher;
 import java.awt.*;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.border.*;
 
 public class SystemPanel extends BasePanel {
 
 	public SystemPanel() {
 		super();
-		JEditorPane vp = new JEditorPane( "text/html", getPage() );
-		vp.setEditable(false);
+		JEditorPane pane = new JEditorPane( "text/html", getPage() );
+		pane.setEditable(false);
+		pane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
 		JScrollPane jsp = new JScrollPane();
-		jsp.setViewportView(vp);
+		jsp.setViewportView(pane);
 		add(jsp, BorderLayout.CENTER);
 	}
 
@@ -28,10 +30,10 @@ public class SystemPanel extends BasePanel {
 		String page =
 				"<html>\n"
 			+	" <head></head>\n"
-			+	"<body style=\"background:white;font-family:sans-serif;\">"
+			+	"<body style=\"background:#b9d0ed;font-family:sans-serif;\">"
 			+	" <center>\n"
 			+ 	"  <h1 style=\"color:#2977b9\">System Properties</h1>\n"
-			+	"   <table border=\"1\">\n"
+			+	"   <table border=\"1\" style=\"background:white\">\n"
 			+	     displayProperties()
 			+	"   </table>\n"
 			+	"  </center>\n"

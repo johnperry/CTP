@@ -43,7 +43,14 @@ public class JavaPanel extends BasePanel implements ActionListener {
 	Thread runner = null;
 	Monitor monitor = null;
 
-	public JavaPanel() {
+	static JavaPanel javaPanel = null;
+
+	public static JavaPanel getInstance() {
+		if (javaPanel == null) javaPanel = new JavaPanel();
+		return javaPanel;
+	}
+
+	protected JavaPanel() {
 		super();
 		setLayout(new BorderLayout());
 		config = Configuration.getInstance();
@@ -161,6 +168,11 @@ public class JavaPanel extends BasePanel implements ActionListener {
 			FileUtil.deleteAll(logs);
 			IOPanel.out.clear();
 		}
+	}
+
+	public void reloadXML() {
+		int port = StringUtil.getInt( Util.getAttribute(config.configXML, "Server", "port") );
+		serverPort.tf.setText(Integer.toString(port));
 	}
 
 	private void run() {

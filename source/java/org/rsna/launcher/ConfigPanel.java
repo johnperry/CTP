@@ -21,6 +21,7 @@ import javax.swing.TransferHandler;
 import javax.swing.tree.*;
 import org.rsna.ui.ColorPane;
 import org.rsna.ui.RowLayout;
+import org.rsna.util.BrowserUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
@@ -78,6 +79,7 @@ public class ConfigPanel extends BasePanel {
 		split.setRightComponent(jspData);
 
 		this.add(split, BorderLayout.CENTER);
+		split.setDividerLocation(200);
 		menuPane.setEnables();
 	}
 
@@ -89,6 +91,22 @@ public class ConfigPanel extends BasePanel {
 			}
 			catch (Exception ex) { }
 		}
+	}
+
+	public void showHelp() {
+		Configuration config = Configuration.getInstance();
+		if (!config.hasPipelines()) {
+			JOptionPane.showMessageDialog(
+						this,
+						"The configuration currently has no pipelines.\n"
+						+"You can add a pipeline by selecting a pre-configured\n"
+						+"one from the Pipeline menu, or you can construct one\n"
+						+"from scratch by typing ctrl-N and then adding pipeline\n"
+						+"stages from the other menus.\n",
+						"No Pipelines",
+						JOptionPane.PLAIN_MESSAGE );
+		}
+		BrowserUtil.openURL( "http://mircwiki.rsna.org/index.php?title=The_CTP_Launcher_Configuration_Editor" );
 	}
 
 	//Class to encapsulate a template element
@@ -377,6 +395,13 @@ public class ConfigPanel extends BasePanel {
 
 			childrenMenu = new JMenu("Children");
 
+			JMenu helpMenu = new JMenu("Help");
+			JMenuItem helpItem = new JMenuItem("Instructions");
+			helpItem.setAccelerator( KeyStroke.getKeyStroke('H', InputEvent.CTRL_MASK) );
+			HelpImpl helpImpl = new HelpImpl();
+			helpItem.addActionListener(helpImpl);
+			helpMenu.add(helpItem);
+
 			menuBar.add(fileMenu);
 			menuBar.add(editMenu);
 			menuBar.add(viewMenu);
@@ -387,6 +412,7 @@ public class ConfigPanel extends BasePanel {
 			menuBar.add(storageServiceMenu);
 			menuBar.add(exportServiceMenu);
 			menuBar.add(childrenMenu);
+			menuBar.add(helpMenu);
 
 			this.add( menuBar );
 		}
@@ -434,6 +460,8 @@ public class ConfigPanel extends BasePanel {
 					backupTarget(configFile);
 					try { FileUtil.setText(configFile, xml); }
 					catch (Exception ignore) { }
+					Configuration.getInstance().reloadXML();
+					JavaPanel.getInstance().reloadXML();
 				}
 			}
 			private void fixPipelines(Element root) {
@@ -516,6 +544,7 @@ public class ConfigPanel extends BasePanel {
 				treePane.insert(element);
 			}
 		}
+
 		class StandardPipelineImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				JMenuItem item = (JMenuItem)event.getSource();
@@ -552,6 +581,12 @@ public class ConfigPanel extends BasePanel {
 				Element parent = (Element)element.getParentNode();
 				parent.setAttribute("class", parentTemplate.getAttrValue("class", "default"));
 				treePane.insert(element);
+			}
+		}
+
+		class HelpImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				showHelp();
 			}
 		}
 	}

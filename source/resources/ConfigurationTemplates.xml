@@ -668,7 +668,7 @@
 
 	<StandardPipelines>
 
-		<Pipeline name="CTP-Generic DICOM Receiver">
+		<Pipeline name="CTP-DICOM Storage with PHI">
 			<DicomImportService
 				name="DICOM Server Import"
 				class="org.rsna.ctp.stdstages.DicomImportService"
@@ -678,13 +678,34 @@
 			<FileStorageService
 				name="DICOM Server File Storage"
 				class="org.rsna.ctp.stdstages.FileStorageService"
-				root="storage/FileStorageService"
+				root="roots/FileStorageService"
 				port="8105"
 				returnStoredFile="no"
 				quarantine="quarantines/FileStorageService" />
 		</Pipeline>
 
-		<Pipeline name="CTP-Generic Anonymizer">
+		<Pipeline name="CTP-DICOM Storage with Anonymization">
+			<DicomImportService
+				name="DICOM Server Import"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				root="roots/DicomImportService"
+				port="8104"
+				quarantine="quarantines/DicomImportService" />
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/DicomAnonymizer.script"/>
+			<FileStorageService
+				name="DICOM Server File Storage"
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				root="roots/FileStorageService"
+				port="8105"
+				returnStoredFile="no"
+				quarantine="quarantines/FileStorageService" />
+		</Pipeline>
+
+		<Pipeline name="CTP-Export to CD Burner">
 			<DicomImportService
 				name="DicomImportService"
 				class="org.rsna.ctp.stdstages.DicomImportService"
@@ -744,29 +765,6 @@
 				name="DicomImportService"
 				port="7777"
 				root="roots/DicomImportService"/>
-			<IDMap
-				class="org.rsna.ctp.stdstages.IDMap"
-				name="IDMap"
-				root="roots/IDMap"/>
-			<DicomAnonymizer
-				class="org.rsna.ctp.stdstages.DicomAnonymizer"
-				name="DicomAnonymizer"
-				root="roots/DicomAnonymizer"
-				script="scripts/DicomAnonymizer.script"/>
-			<DicomPixelAnonymizer
-				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
-				name="DicomPixelAnonymizer"
-				root="roots/DicomPixelAnonymizer"
-				script="scripts/DicomPixelAnonymizer.script"/>
-			<FileStorageService
-				class="org.rsna.ctp.stdstages.FileStorageService"
-				name="FileStorageService"
-				root="roots/FileStorageService"
-				setWorldReadable="yes"
-				setWorldWritable="yes"/>
-		</Pipeline>
-
-		<Pipeline name="DICOM De-identification to Research PACS">
 			<HttpImportService
 				acceptFileObjects="no"
 				acceptXmlObjects="no"
@@ -776,17 +774,16 @@
 				name="HttpImportService"
 				port="7778"
 				root="roots/HttpImportService"/>
-			<DicomImportService
-				class="org.rsna.ctp.stdstages.DicomImportService"
-				logConnections="no"
-				name="DicomImportService"
-				port="7779"
-				root="roots/DicomImportService"/>
-			<ArchiveImportService
-				class="org.rsna.ctp.stdstages.ArchiveImportService"
-				name="ArchiveImportService"
-				root="roots/ArchiveImportService"
-				treeRoot="archive"/>
+			<DicomDecompressor
+				name="DicomDecompressor"
+				class="org.rsna.ctp.stdstages.DicomDecompressor"
+				root="roots/DicomDecompressor"
+				quarantine="quarantines/DicomDecompressor"/>
+			<DicomPixelAnonymizer
+				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+				name="DicomPixelAnonymizer"
+				root="roots/DicomPixelAnonymizer"
+				script="scripts/DicomPixelAnonymizer.script"/>
 			<IDMap
 				class="org.rsna.ctp.stdstages.IDMap"
 				name="IDMap"
@@ -796,11 +793,58 @@
 				name="DicomAnonymizer"
 				root="roots/DicomAnonymizer"
 				script="scripts/DicomAnonymizer.script"/>
+			<FileStorageService
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				name="FileStorageService"
+				root="roots/FileStorageService"
+				setWorldReadable="yes"
+				setWorldWritable="yes"/>
+		</Pipeline>
+
+		<Pipeline name="DICOM De-identification to Research PACS">
+			<ArchiveImportService
+				acceptFileObjects="no"
+				acceptXmlObjects="no"
+				acceptZipObjects="no"
+				class="org.rsna.ctp.stdstages.ArchiveImportService"
+				fsName="DICOM Image Directory"
+				name="ArchiveImportService"
+				root="roots/ArchiveImportService"
+				treeRoot="archive"/>
+			<DicomImportService
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="no"
+				name="DicomImportService"
+				port="7777"
+				root="roots/DicomImportService"/>
+			<HttpImportService
+				acceptFileObjects="no"
+				acceptXmlObjects="no"
+				acceptZipObjects="no"
+				class="org.rsna.ctp.stdstages.HttpImportService"
+				logConnections="no"
+				name="HttpImportService"
+				port="7778"
+				root="roots/HttpImportService"/>
+			<DicomDecompressor
+				name="DicomDecompressor"
+				class="org.rsna.ctp.stdstages.DicomDecompressor"
+				root="roots/DicomDecompressor"
+				quarantine="quarantines/DicomDecompressor"/>
 			<DicomPixelAnonymizer
 				class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
 				name="DicomPixelAnonymizer"
 				root="roots/DicomPixelAnonymizer"
 				script="scripts/DicomPixelAnonymizer.script"/>
+			<IDMap
+				class="org.rsna.ctp.stdstages.IDMap"
+				name="IDMap"
+				root="roots/IDMap"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer"
+				script="scripts/DicomAnonymizer.script"/>
 			<DicomExportService
 				class="org.rsna.ctp.stdstages.DicomExportService"
 				name="DicomExportService"
