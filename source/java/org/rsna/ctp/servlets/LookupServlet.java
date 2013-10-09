@@ -237,19 +237,19 @@ public class LookupServlet extends Servlet {
 	//Get the lookup table file
 	private HashSet<String> getKeyTypes(int p, int s) {
 		HashSet<String> set = new HashSet<String>();
-		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^)]+)\\)");
+		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
 		try {
 			PipelineStage stage = getPipelineStage(p, s);
 			if ((stage != null) && (stage instanceof DicomAnonymizer)) {
 				DicomAnonymizer anonymizer = (DicomAnonymizer)stage;
-				DAScript script = DAScript.getInstance(anonymizer.scriptFile);
+				DAScript script = DAScript.getInstance(anonymizer.getScriptFile());
 				Properties props = script.toProperties();
 				for (Object replObject : props.values()) {
 					String repl = (String)replObject;
 					Matcher matcher = pattern.matcher(repl);
 					while (matcher.find()) {
 						String group = matcher.group(1);
-						set.add(group);
+						set.add(group.trim());
 					}
 				}
 			}
@@ -468,6 +468,7 @@ public class LookupServlet extends Servlet {
 				boolean first = true;
 				for (String kt : keyTypes) {
 					head += (first ? "" : ", ") + kt;
+					first = false;
 				}
 			}
 		}

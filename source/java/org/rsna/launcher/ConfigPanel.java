@@ -396,11 +396,25 @@ public class ConfigPanel extends BasePanel {
 			childrenMenu = new JMenu("Children");
 
 			JMenu helpMenu = new JMenu("Help");
-			JMenuItem helpItem = new JMenuItem("Instructions");
+			JMenuItem helpItem = new JMenuItem("Configuration Editor Instructions");
 			helpItem.setAccelerator( KeyStroke.getKeyStroke('H', InputEvent.CTRL_MASK) );
 			HelpImpl helpImpl = new HelpImpl();
 			helpItem.addActionListener(helpImpl);
 			helpMenu.add(helpItem);
+			JMenuItem ctphelpItem = new JMenuItem("Top-level CTP Article");
+			ctphelpItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					BrowserUtil.openURL( "http://mircwiki.rsna.org/index.php?title=CTP-The_RSNA_Clinical_Trial_Processor" );
+				}
+			});
+			helpMenu.add(ctphelpItem);
+			JMenuItem ctpArticlesItem = new JMenuItem("List of all CTP Articles");
+			ctpArticlesItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					BrowserUtil.openURL( "http://mircwiki.rsna.org/index.php?title=CTP_Articles" );
+				}
+			});
+			helpMenu.add(ctpArticlesItem);
 
 			menuBar.add(fileMenu);
 			menuBar.add(editMenu);

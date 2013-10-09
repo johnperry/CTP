@@ -67,7 +67,6 @@ public class SummaryServlet extends Servlet {
 
 		userIsAdmin = req.userHasRole("admin");
 		host = req.getHeader("Host");
-		System.out.println("host header: \""+host+"\"");
 
 		//Get the parameters.
 		int p = StringUtil.getInt(req.getParameter("pipeline"), -1);
