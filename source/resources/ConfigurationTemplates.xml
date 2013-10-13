@@ -10,20 +10,29 @@
 				<helptext>Use secure sockets layer for connection to the server</helptext>
 			</attr>
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
-			<attr name="proxyIPAddress" required="no" default=""/>
-			<attr name="proxyPort" required="no" default=""/>
-			<attr name="proxyUsername" required="no" default=""/>
-			<attr name="proxyPassword" required="no" default=""/>
-			<attr name="keystore" required="no" default="keystore"/>
-			<attr name="keystorePassword" required="no" default="ctpstore"/>
-			<attr name="truststore" required="no" default=""/>
-			<attr name="truststorePassword" required="no" default=""/>
 			<attr name="usersClassName" required="no" default="org.rsna.server.UsersXmlFileImpl"/>
-			<attr name="initialContextFactory" required="no" default=""/>
-			<attr name="providerURL" required="no" default=""/>
-			<attr name="securityAuthentication" required="no" default=""/>
-			<attr name="securityPrincipal" required="no" default=""/>
-			<attr name="ldapAdmin" required="no" default=""/>
+
+			<child name="SSL" required="no" allowMultiples="no">
+				<attr name="keystore" required="no" default="keystore"/>
+				<attr name="keystorePassword" required="no" default="ctpstore"/>
+				<attr name="truststore" required="no" default=""/>
+				<attr name="truststorePassword" required="no" default=""/>
+			</child>
+
+			<child name="ProxyServer" required="no" allowMultiples="no">
+				<attr name="proxyIPAddress" required="no" default=""/>
+				<attr name="proxyPort" required="no" default=""/>
+				<attr name="proxyUsername" required="no" default=""/>
+				<attr name="proxyPassword" required="no" default=""/>
+			</child>
+
+			<child name="LDAP" required="no" allowMultiples="no">
+				<attr name="initialContextFactory" required="no" default=""/>
+				<attr name="providerURL" required="no" default=""/>
+				<attr name="securityAuthentication" required="no" default=""/>
+				<attr name="securityPrincipal" required="no" default=""/>
+				<attr name="ldapAdmin" required="no" default=""/>
+			</child>
 		</Server>
 
 		<Plugin>

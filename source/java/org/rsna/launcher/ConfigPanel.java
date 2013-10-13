@@ -793,7 +793,7 @@ public class ConfigPanel extends BasePanel {
 					parentNode.insert(cnode, index+1);
 				}
 			}
-			else if (userObject.isChild() && (targetNode != null) && targetObject.isStage()) {
+			else if (userObject.isChild() && (targetNode != null) && (targetObject.isStage() || targetObject.isServer())) {
 				cnode = tree.addChild(targetNode, userObject);
 			}
 			else if (userObject.isPlugin()) {
@@ -1008,7 +1008,10 @@ public class ConfigPanel extends BasePanel {
 			else if (isStage) template = templateTable.get(className);
 			else if (isChild) {
 				Element parent = (Element)element.getParentNode();
-				Template parentTemplate = templateTable.get(parent.getAttribute("class"));
+				Template parentTemplate = null;
+				String parentClass = parent.getAttribute("class");
+				if (parent.getTagName().equals("Server") && parentClass.equals("")) parentTemplate = server;
+				else parentTemplate = templateTable.get(parentClass);
 				if (parentTemplate == null) System.out.println("parentTemplate is null");
 				template = parentTemplate.getChildTemplate(tag);
 			}
@@ -1042,6 +1045,10 @@ public class ConfigPanel extends BasePanel {
 
 		public boolean isDragable() {
 			return !isConfiguration && !isServer && !isPipeline && !isChild;
+		}
+
+		public boolean isServer() {
+			return isServer;
 		}
 
 		public boolean isPlugin() {
