@@ -166,6 +166,7 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("databaseverifier",DBVerifierServlet.class);
 		selector.addServlet("decipher",		DecipherServlet.class);
 		selector.addServlet("system",		SysPropsServlet.class);
+		selector.addServlet("environment",	EnvironmentServlet.class);
 		selector.addServlet("daconfig",		DicomAnonymizerServlet.class);
 		selector.addServlet("script",		ScriptServlet.class);
 		selector.addServlet("lookup",		LookupServlet.class);
