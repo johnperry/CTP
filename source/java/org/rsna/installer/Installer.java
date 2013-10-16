@@ -894,7 +894,7 @@ public class Installer extends JFrame {
 		"keystore",
 		"keystorePassword",
 		"truststore",
-		"trustStorePassword"
+		"truststorePassword"
 	};
 	String[] proxyAttrs = {
 		"proxyIPAddress",
