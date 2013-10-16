@@ -19,6 +19,16 @@ import java.util.zip.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.text.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
 
 /**
  * The ClinicalTrialProcessor program installer.
@@ -185,6 +195,9 @@ public class Installer extends JFrame {
 		//Now install the files
 		int count = unpackZipFile( installer, "CTP", directory.getAbsolutePath(), suppressFirstPathElement );
 
+		//Make any necessary schema changes
+		fixConfigSchema();
+
 		//And report the results.
 		if (count > 0) {
 			//Create the service installer batch files.
@@ -213,7 +226,7 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if (startLauncher(new File(directory, "CTP"))) System.exit(0);
+		if (!programName.equals("ISN") && startLauncher(new File(directory, "CTP"))) System.exit(0);
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
@@ -877,4 +890,182 @@ public class Installer extends JFrame {
 		}
 	}
 
+	String[] sslAttrs = {
+		"keystore",
+		"keystorePassword",
+		"truststore",
+		"trustStorePassword"
+	};
+	String[] proxyAttrs = {
+		"proxyIPAddress",
+		"proxyPort",
+		"proxyUsername",
+		"proxyPassword"
+	};
+	String[] ldapAttrs = {
+		"initialContextFactory",
+		"providerURL",
+		"securityAuthentication",
+		"securityPrincipal",
+		"ldapAdmin"
+	};
+	private void fixConfigSchema() {
+		File ctpDir = new File(directory, "CTP");
+		File configFile = new File(ctpDir, "config.xml");
+		try {
+			Document doc = getDocument(configFile);
+			Element root = doc.getDocumentElement();
+			Element server = getFirstNamedChild(root, "Server");
+			moveAttributes(server, sslAttrs, "SSL");
+			moveAttributes(server, proxyAttrs, "ProxyServer");
+			moveAttributes(server, ldapAttrs, "LDAP");
+			if (programName.equals("ISN")) fixRSNAROOT(server);
+			setFileText(configFile, toString(doc));
+		}
+		catch (Exception ex) {
+			cp.appendln(Color.red, "\nUnable to convert the config file schema.");
+			cp.appendln(Color.black, "");
+		}
+	}
+
+	private static DocumentBuilder getDocumentBuilder() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(true);
+		return dbf.newDocumentBuilder();
+	}
+
+	private static Document getDocument(File file) throws Exception {
+		DocumentBuilder db = getDocumentBuilder();
+		return db.parse(file);
+	}
+
+	private static Element getFirstNamedChild(Node node, String name) {
+		if (node == null) return null;
+		if (node instanceof Document) node = ((Document)node).getDocumentElement();
+		if ( !(node instanceof Element) ) return null;
+		Node child = node.getFirstChild();
+		while (child != null) {
+			if ((child instanceof Element) && child.getNodeName().equals(name)) {
+				return (Element)child;
+			}
+			child = child.getNextSibling();
+		}
+		return null;
+	}
+
+	private void moveAttributes(Element el, String[] attrNames, String childName) {
+		String[] values = new String[attrNames.length];
+		boolean nonBlank = false;
+		for (int k=0; k<attrNames.length; k++) {
+			values[k] = el.getAttribute(attrNames[k]).trim();
+			nonBlank |= !values[k].equals("");
+			el.removeAttribute(attrNames[k]);
+		}
+		if (nonBlank) {
+			Element child = el.getOwnerDocument().createElement(childName);
+			for (int k=0; k<attrNames.length; k++) {
+				if (!values[k].equals("")) child.setAttribute(attrNames[k], values[k]);
+			}
+			el.appendChild(child);
+		}
+	}
+
+	private void fixRSNAROOT(Element server) {
+		Element ssl = getFirstNamedChild(server, "SSL");
+		if (ssl != null) {
+			ssl.setAttribute("keystore", ssl.getAttribute("keystore").replace("RSNA_ROOT", "RSNA_HOME"));
+			ssl.setAttribute("truststore", ssl.getAttribute("truststore").replace("RSNA_ROOT", "RSNA_HOME"));
+		}
+	}
+
+	private static String toString(Node node) {
+		StringBuffer sb = new StringBuffer();
+		renderNode(sb, node);
+		return sb.toString();
+	}
+
+	//Recursively walk the tree and write the nodes to a StringWriter.
+	private static void renderNode(StringBuffer sb, Node node) {
+		if (node == null) { sb.append("null"); return; }
+		switch (node.getNodeType()) {
+
+			case Node.DOCUMENT_NODE:
+				sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+				Node root = ((Document)node).getDocumentElement();
+				renderNode(sb, root);
+				break;
+
+			case Node.ELEMENT_NODE:
+				String name = getNodeNameWithNamespace(node);
+				NamedNodeMap attributes = node.getAttributes();
+				if (attributes.getLength() == 0) {
+					sb.append("<" + name + ">");
+				}
+				else {
+					sb.append("<" + name + " ");
+					int attrlen = attributes.getLength();
+					for (int i=0; i<attrlen; i++) {
+						Node attr = attributes.item(i);
+						String attrName = getNodeNameWithNamespace(attr);
+						sb.append(attrName + "=\"" + escapeChars(attr.getNodeValue()));
+						if (i < attrlen-1)
+							sb.append("\" ");
+						else
+							sb.append("\">");
+					}
+				}
+				NodeList children = node.getChildNodes();
+				if (children != null) {
+					for (int i=0; i<children.getLength(); i++) {
+						renderNode(sb,children.item(i));
+					}
+				}
+				sb.append("</" + name + ">");
+				break;
+
+			case Node.TEXT_NODE:
+				sb.append(escapeChars(node.getNodeValue()));
+				break;
+
+			case Node.CDATA_SECTION_NODE:
+				sb.append("<![CDATA[" + node.getNodeValue() + "]]>");
+				break;
+
+			case Node.PROCESSING_INSTRUCTION_NODE:
+				sb.append("<?" + node.getNodeName() + " " +
+					escapeChars(node.getNodeValue()) + "?>");
+				break;
+
+			case Node.ENTITY_REFERENCE_NODE:
+				sb.append("&" + node.getNodeName() + ";");
+				break;
+
+			case Node.DOCUMENT_TYPE_NODE:
+				// Ignore document type nodes
+				break;
+
+			case Node.COMMENT_NODE:
+				sb.append("<!--" + node.getNodeValue() + "-->");
+				break;
+		}
+		return;
+	}
+
+	private static String getNodeNameWithNamespace(Node node) {
+		String name = node.getNodeName();
+		String ns = node.getNamespaceURI();
+		String prefix = (ns != null) ? node.lookupPrefix(ns) : null;
+		if ((prefix != null) && !name.startsWith(prefix+":")) {
+			name = prefix + ":" + name;
+		}
+		return name;
+	}
+
+	private static String escapeChars(String theString) {
+		return theString.replace("&","&amp;")
+						.replace(">","&gt;")
+						.replace("<","&lt;")
+						.replace("\"","&quot;")
+						.replace("'","&apos;");
+	}
 }
