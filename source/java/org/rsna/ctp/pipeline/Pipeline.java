@@ -29,6 +29,7 @@ public class Pipeline extends Thread {
 	List<ImportService> importServices = null;
 	List<PipelineStage> stages = null;
 	protected volatile boolean stop = false;
+	final boolean enabled;
 
 	/**
 	 * A Thread representing a processing pipeline for FileObjects
@@ -41,6 +42,7 @@ public class Pipeline extends Thread {
 		super();
 		name = pipeline.getAttribute("name").trim();
 		setName(name);
+		enabled = !pipeline.getAttribute("enabled").equals("no");
 		stages = new ArrayList<PipelineStage>();
 		importServices = new ArrayList<ImportService>();
 		Node child = pipeline.getFirstChild();
@@ -74,6 +76,14 @@ public class Pipeline extends Thread {
 	 */
 	public synchronized String getPipelineName() {
 		return name;
+	}
+
+	/**
+	 * Check whether this pipeline is enabled in the configuration.
+	 * @return true if this pipeline is enabled, false otherwise.
+	 */
+	public boolean isEnabled() {
+		return enabled;
 	}
 
 	/**

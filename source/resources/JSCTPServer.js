@@ -32,7 +32,7 @@ CTPServer.prototype.hasStage = function(javaClass) {
 	if (this.configXML) {
 		var pipe = this.configXML.firstChild;
 		while (pipe) {
-			if ((pipe.nodeType == 1) && (pipe.nodeName == "Pipeline")) {
+			if ((pipe.nodeType == 1) && (pipe.nodeName == "Pipeline") && (pipe.getAttribute("enabled") != "no")) {
 				var stage = pipe.firstChild;
 				while (stage) {
 					if ((stage.nodeType == 1) && (stage.getAttribute("class") == javaClass)) {

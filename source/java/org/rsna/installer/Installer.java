@@ -195,9 +195,6 @@ public class Installer extends JFrame {
 		//Now install the files
 		int count = unpackZipFile( installer, "CTP", directory.getAbsolutePath(), suppressFirstPathElement );
 
-		//Make any necessary schema changes
-		fixConfigSchema();
-
 		//And report the results.
 		if (count > 0) {
 			//Create the service installer batch files.
@@ -207,8 +204,8 @@ public class Installer extends JFrame {
 			//If this was a new installation, set up the config file and set the port
 			installConfigFile(port);
 
-			//Now do any specific configuration required.
-			adjustConfiguration(port, directory);
+			//Make any necessary changes in the config file to reflect schema evolution
+			fixConfigSchema();
 
 			cp.append("Installation complete.");
 
@@ -380,51 +377,6 @@ public class Installer extends JFrame {
 		}
 	}
 
-	private void adjustConfiguration(int port, File directory) {
-		//If this is a new ISN installation and the Edge Server
-		//keystore and truststore files exist, then set the configuration
-		//to use them instead of the ones in the default installation.
-		File dir = new File(directory, "CTP");
-		String keystore = "/usr/local/edgeserver/conf/keystore.jks";
-		String truststore = "/usr/local/edgeserver/conf/truststore.jks";
-		File keystoreFile = new File(keystore);
-		File truststoreFile = new File(truststore);
-		File configFile = new File(dir, "config.xml");
-		if (programName.equals("ISN")
-				&& configFile.exists()
-					&& keystoreFile.exists()
-						&& truststoreFile.exists()) {
-			try {
-				String configText = getFileText(configFile);
-				configText = replaceAttributeValue(configText, "keystore", keystore);
-				configText = replaceAttributeValue(configText, "keystorePassword", "edge1234");
-				configText = replaceAttributeValue(configText, "truststore", truststore);
-				configText = replaceAttributeValue(configText, "truststorePassword", "edge1234");
-				setFileText(configFile, configText);
-				//Delete the default files, just to avoid confusion
-				(new File(dir, "keystore.jks")).delete();
-				(new File(dir, "truststore.jks")).delete();
-				cp.appendln(Color.black, "The keystore attributes were successfully updated");
-			}
-			catch (Exception unable) {
-				cp.appendln(Color.red, "Unable to update the keystore attributes in the config file");
-			}
-		}
-	}
-
-	private String replaceAttributeValue(String text, String name, String value) {
-		String target = name+"=\"";
-		int k1 = text.indexOf(target);
-		if (k1 > 0) {
-			k1 += target.length();
-			int k2 = text.indexOf("\"");
-			if (k2 > k1) {
-				return text.substring(0, k1) + value + text.substring(k2);
-			}
-		}
-		return text;
-	}
-
 	//Let the user select an installation directory.
 	private File getDirectory() {
 		cp.appendln(Color.black, "Finding a directory in which to install the program");
@@ -467,7 +419,9 @@ public class Installer extends JFrame {
 	}
 
 	//If this is a new installation, ask the user for a
-	//port for the server; otherwise, return -1.
+	//port for the server; otherwise, return the negative
+	//of the configured port. If the user selects an illegal
+	//port, return zero.
 	private int getPort() {
 		//Note: directory points to the parent of the CTP directory.
 		File ctp = new File(directory, "CTP");
@@ -492,15 +446,11 @@ public class Installer extends JFrame {
 		}
 		else {
 			try {
-				String text = getFileText(config);
-				String target = "<Server port=\"";
-				int k = text.indexOf(target);
-				if (k != -1) {
-					k += target.length();
-					int kk = text.indexOf("\"", k);
-					String portString = text.substring(k, kk);
-					return -Integer.parseInt(portString);
-				}
+				Document doc = getDocument(config);
+				Element root = doc.getDocumentElement();
+				Element server = getFirstNamedChild(root, "Server");
+				String port = server.getAttribute("port");
+				return -Integer.parseInt(port);
 			}
 			catch (Exception ex) { }
 		}
@@ -508,37 +458,63 @@ public class Installer extends JFrame {
 	}
 
 	private void installConfigFile(int port) {
-		String target = "<Server port=\"";
 		if (port > 0) {
 			cp.appendln(Color.black, "Looking for /config/config.xml");
 			InputStream is = getClass().getResourceAsStream("/config/config.xml");
 			if (is != null) {
-				StringBuffer sb = new StringBuffer();
 				try {
-					BufferedReader br = new BufferedReader( new InputStreamReader(is, "UTF-8") );
-					int size = 1024; int n = 0; char[] buf = new char[size];
-					while ((n = br.read(buf, 0, size)) != -1) sb.append(buf, 0, n);
-					br.close();
-					String text = sb.toString();
-					cp.appendln("...setting the port to "+port);
-					int k = text.indexOf(target);
-					if (k == -1) {
-						cp.appendln(Color.red, "...unable to find the Server element in the default config.xml file");
-						return;
-					}
-					k += target.length();
-					int kk = text.indexOf("\"", k);
-					text = text.substring(0, k) + port + text.substring(kk);
 					File ctp = new File(directory, "CTP");
 					if (suppressFirstPathElement) ctp = ctp.getParentFile();
 					File config = new File(ctp, "config.xml");
-					setFileText(config, text);
+					Document doc = getDocument(is);
+					Element root = doc.getDocumentElement();
+					Element server = getFirstNamedChild(root, "Server");
+					cp.appendln("...setting the port to "+port);
+					server.setAttribute("port", Integer.toString(port));
+					adjustConfiguration(root, ctp);
+					setFileText(config, toString(doc));
 				}
 				catch (Exception ex) {
-					cp.appendln(Color.red, "...I/O error; unable to install the config.xml file");
+					cp.appendln(Color.red, "...Error: unable to install the config.xml file");
 				}
 			}
 			else cp.appendln(Color.red, "...could not find it.");
+		}
+	}
+
+	private void adjustConfiguration(Element root, File dir) {
+		//If this is an ISN installation and the Edge Server
+		//keystore and truststore files do not exist, then set the configuration
+		//to use the keystore.jks and truststore.jks files instead of the ones
+		//in the default installation. If the Edge Server files do exist, then
+		//delete the keystore.jks and truststore.jks files, just to avoid
+		//confusion.
+		if (programName.equals("ISN")) {
+			Element server = getFirstNamedChild(root, "Server");
+			Element ssl = getFirstNamedChild(server, "SSL");
+			String keystore = "/usr/local/edgeserver/conf/keystore.jks";
+			String truststore = "/usr/local/edgeserver/conf/truststore.jks";
+			File keystoreFile = new File(keystore);
+			File truststoreFile = new File(truststore);
+			if (keystoreFile.exists() || truststoreFile.exists()) {
+				//Delete the default files, just to avoid confusion
+				File ks = new File(dir, "keystore.jks");
+				File ts = new File(dir, "truststore.jks");
+				boolean ksok = ks.delete();
+				boolean tsok = ts.delete();
+				if (ksok && tsok) cp.appendln(Color.black, "...Unused default SSL files were removed");
+				else {
+					if (!ksok) cp.appendln(Color.black, "...Unable to delete "+ks);
+					if (!tsok) cp.appendln(Color.black, "...Unable to delete "+ts);
+				}
+			}
+			else {
+				ssl.setAttribute("keystore", "keystore.jks");
+				ssl.setAttribute("keystorePassword", "edge1234");
+				ssl.setAttribute("truststore", "truststore.jks");
+				ssl.setAttribute("truststorePassword", "edge1234");
+				cp.appendln(Color.black, "...SSL attributes were updated for a non-EdgeServer installation");
+			}
 		}
 	}
 
@@ -726,7 +702,7 @@ public class Installer extends JFrame {
 					cp.appendln(Color.red, "...could not find it.");
 				}
 				else {
-					cp.appendln(Color.black, "...could not find it. [OK, this is a CTP installation.]");
+					cp.appendln(Color.black, "...could not find it. [OK, this is a "+programName+" installation.]");
 				}
 				return null;
 			}
@@ -939,6 +915,11 @@ public class Installer extends JFrame {
 		return db.parse(file);
 	}
 
+	private static Document getDocument(InputStream inputStream) throws Exception {
+		DocumentBuilder db = getDocumentBuilder();
+		return db.parse(new InputSource(inputStream));
+	}
+
 	private static Element getFirstNamedChild(Node node, String name) {
 		if (node == null) return null;
 		if (node instanceof Document) node = ((Document)node).getDocumentElement();
@@ -973,8 +954,8 @@ public class Installer extends JFrame {
 	private void fixRSNAROOT(Element server) {
 		Element ssl = getFirstNamedChild(server, "SSL");
 		if (ssl != null) {
-			ssl.setAttribute("keystore", ssl.getAttribute("keystore").replace("RSNA_ROOT", "RSNA_HOME"));
-			ssl.setAttribute("truststore", ssl.getAttribute("truststore").replace("RSNA_ROOT", "RSNA_HOME"));
+			ssl.setAttribute("keystore", ssl.getAttribute("keystore").replace("RSNA_HOME", "RSNA_ROOT"));
+			ssl.setAttribute("truststore", ssl.getAttribute("truststore").replace("RSNA_HOME", "RSNA_ROOT"));
 		}
 	}
 

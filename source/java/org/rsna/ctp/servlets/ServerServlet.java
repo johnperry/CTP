@@ -54,11 +54,13 @@ public class ServerServlet extends Servlet {
 			try {
 				Class c = Class.forName(type);
 				for (Pipeline pipe : config.getPipelines()) {
-					for (PipelineStage stage : pipe.getStages()) {
-						if (c.isAssignableFrom(stage.getClass())) {
-							res.write("<true/>");
-							res.send();
-							return;
+					if (pipe.isEnabled()) {
+						for (PipelineStage stage : pipe.getStages()) {
+							if (c.isAssignableFrom(stage.getClass())) {
+								res.write("<true/>");
+								res.send();
+								return;
+							}
 						}
 					}
 				}

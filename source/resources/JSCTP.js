@@ -163,7 +163,7 @@ function loadPipelines() {
 	var pipe = config.firstChild;
 	var header = false;
 	while (pipe) {
-		if ((pipe.nodeType == 1) && (pipe.tagName == "Pipeline")) {
+		if ((pipe.nodeType == 1) && (pipe.tagName == "Pipeline") && (pipe.getAttribute("enabled") != "no")) {
 			if (!header) {
 				var hdr = document.createElement("DIV");
 				hdr.className = "L1";
