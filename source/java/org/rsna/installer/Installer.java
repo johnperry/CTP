@@ -492,11 +492,15 @@ public class Installer extends JFrame {
 		if (programName.equals("ISN")) {
 			Element server = getFirstNamedChild(root, "Server");
 			Element ssl = getFirstNamedChild(server, "SSL");
-			String keystore = "/usr/local/edgeserver/conf/keystore.jks";
-			String truststore = "/usr/local/edgeserver/conf/truststore.jks";
+			String rsnaroot = System.getenv("RSNA_ROOT");
+			rsnaroot = (rsnaroot == null) ? "/usr/local/edgeserver" : rsnaroot.trim();
+			String keystore = rsnaroot + "/conf/keystore.jks";
+			String truststore = rsnaroot + "/conf/truststore.jks";
 			File keystoreFile = new File(keystore);
 			File truststoreFile = new File(truststore);
+			cp.appendln(Color.black, "Looking for "+keystore);
 			if (keystoreFile.exists() || truststoreFile.exists()) {
+				cp.appendln(Color.black, "...found it [This is an EdgeServer installation");
 				//Delete the default files, just to avoid confusion
 				File ks = new File(dir, "keystore.jks");
 				File ts = new File(dir, "truststore.jks");
@@ -509,6 +513,7 @@ public class Installer extends JFrame {
 				}
 			}
 			else {
+				cp.appendln(Color.black, "...not found [OK, this is a non-EdgeServer installation]");
 				ssl.setAttribute("keystore", "keystore.jks");
 				ssl.setAttribute("keystorePassword", "edge1234");
 				ssl.setAttribute("truststore", "truststore.jks");
@@ -702,7 +707,7 @@ public class Installer extends JFrame {
 					cp.appendln(Color.red, "...could not find it.");
 				}
 				else {
-					cp.appendln(Color.black, "...could not find it. [OK, this is a "+programName+" installation.]");
+					cp.appendln(Color.black, "...could not find it. [OK, this is a "+programName+" installation]");
 				}
 				return null;
 			}
