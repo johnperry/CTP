@@ -126,7 +126,9 @@ public class Configuration {
 			ctpBuild = logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:           ");
 			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:          ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:          ");
+			logManifestAttribute(new File("libraries/isn/ISN.jar"), "Date",    "ISN build:           ");
 			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:        ");
+			logManifestAttribute(new File("libraries/isn/ISN.jar"), "Version",    "ISN version:         ");
 
 			logger.info("Start time:          "+StringUtil.getDateTime(" at "));
 			logger.info("user.dir:            "+System.getProperty("user.dir"));
@@ -164,9 +166,9 @@ public class Configuration {
 					if (tagName.equals("Server")) {
 						serverElement = childElement;
 
-						serverPort = StringUtil.getInt(childElement.getAttribute("port"), 80);
+						serverPort = StringUtil.getInt(serverElement.getAttribute("port"), 80);
 						ssl = serverElement.getAttribute("ssl").equals("yes");
-						String temp = childElement.getAttribute("usersClassName").trim();
+						String temp = serverElement.getAttribute("usersClassName").trim();
 						if (!temp.equals("")) usersClassName = temp;
 						requireAuthentication = serverElement.getAttribute("requireAuthentication").equals("yes");
 

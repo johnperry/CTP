@@ -62,6 +62,22 @@ public class FileObject {
 	}
 
 	/**
+	 * Get the file's name. The filename is all the characters if
+	 * the name minus any standard extension. Files with non-
+	 * standard extensions will have the extension in the returned
+	 * filename.
+	 * @return the extension of the object's filename.
+	 */
+	public String getName() {
+		String name = file.getName();
+		String stdext = getStandardExtension();
+		if (hasStandardExtension()) {
+			name = name.substring( 0, name.length() - stdext.length() );
+		}
+		return name;
+	}
+
+	/**
 	 * Get the file's extension (the last period and the characters after
 	 * it in the file name). Thus, the method returns ".dcm" for a file
 	 * named "image.dcm".
@@ -109,9 +125,9 @@ public class FileObject {
 		String nameLC = name.toLowerCase();
 		if (nameLC.endsWith(extension.toLowerCase())) return file;
 		if (nameLC.endsWith(".md")) {
-			name = name.substring(0,name.length()-3);
+			name = name.substring(0, name.length()-3);
 		}
-		File newFile = new File(file.getParentFile(),name+extension);
+		File newFile = new File(file.getParentFile(), name+extension);
 		file.renameTo(newFile);
 		file = newFile;
 		return file;
@@ -125,6 +141,16 @@ public class FileObject {
 	 */
 	public File setStandardExtension() {
 		return setExtension(getStandardExtension());
+	}
+
+	/**
+	 * Determine whether this object has the standard extension
+	 * for its type.
+	 * @return true if this object's file has the standard
+	 * extension.
+	 */
+	public boolean hasStandardExtension() {
+		return file.getName().toLowerCase().endsWith(getStandardExtension().toLowerCase());
 	}
 
 	/**
@@ -236,6 +262,16 @@ public class FileObject {
 	 * @return the empty string.
 	 */
 	public String getPatientID() {
+		return "";
+	}
+
+	/**
+	 * Dummy method returning an empty string for the accession number.
+	 * This method is overridden by subclasses that can actually determine
+	 * a meaningful value.
+	 * @return the empty string.
+	 */
+	public String getAccessionNumber() {
 		return "";
 	}
 

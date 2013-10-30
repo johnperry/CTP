@@ -192,10 +192,8 @@ public class Installer extends JFrame {
 			}
 		}
 
-		//Now install the files
+		//Now install the files and report the results.
 		int count = unpackZipFile( installer, "CTP", directory.getAbsolutePath(), suppressFirstPathElement );
-
-		//And report the results.
 		if (count > 0) {
 			//Create the service installer batch files.
 			updateWindowsServiceInstaller();

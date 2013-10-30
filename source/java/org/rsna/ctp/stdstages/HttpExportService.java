@@ -164,7 +164,7 @@ public class HttpExportService extends AbstractExportService {
 			//result is for backward compatibility with MIRC.
 			String result = FileUtil.getText( conn.getInputStream() );
 			if (result.equals("OK")) {
-				makeAuditLogEntry(fileObject, Status.OK, "HttpExortService", getName(), url.toString());
+				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
 			}
 			else if (result.equals("")) return Status.RETRY;

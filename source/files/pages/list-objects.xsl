@@ -27,6 +27,10 @@
 					<td><xsl:value-of select="@patientID"/></td>
 				</tr>
 				<tr>
+					<td>Accession:</td>
+					<td><xsl:value-of select="@accessionNumber"/></td>
+				</tr>
+				<tr>
 					<td>Study date:</td>
 					<td><xsl:value-of select="@date"/></td>
 				</tr>

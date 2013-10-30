@@ -201,6 +201,7 @@ public class FileSystem {
 			append(s, "dir", studyDir.getAbsolutePath().substring(dirNameLength+1));
 			append(s, "patientName", fileObject.getPatientName());
 			append(s, "patientID", fileObject.getPatientID());
+			append(s, "accessionNumber", fileObject.getAccessionNumber());
 			append(s, "storageDate", StringUtil.getDate(System.currentTimeMillis(),""));
 			append(s, "studyDate", fileObject.getStudyDate());
 			append(s, "studyName", studyName);

@@ -74,7 +74,7 @@ public class FtpExportService extends AbstractExportService {
 			dirName = (dirName==null) ? "" : dirName.trim();
 			if (dirName.equals("")) dirName = "bullpen";
 			ftpSender.send(fileToExport, ext, dirName);
-			makeAuditLogEntry(fileObject, Status.OK, "FtpExportService", getName(), url.toString());
+			makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 			return Status.OK;
 		}
 		catch (Exception ex) {

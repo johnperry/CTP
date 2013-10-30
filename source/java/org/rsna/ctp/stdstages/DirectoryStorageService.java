@@ -24,6 +24,7 @@ import org.rsna.ctp.stdstages.ObjectCache;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
+import java.io.FileFilter;
 
 /**
  * A class to store objects in a directory system with no index.
@@ -40,6 +41,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
     int storedCount = 0;
     boolean returnStoredFile = true;
     boolean setStandardExtensions = false;
+    boolean acceptDuplicates = true;
+    int filenameTag = 0;
+    String filenameSuffix = "";
     String[] dirs = null;
     String cacheID = "";
 	File dicomScriptFile = null;
@@ -58,6 +62,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		super(element);
 
 		returnStoredFile = !element.getAttribute("returnStoredFile").trim().toLowerCase().equals("no");
+		acceptDuplicates = !element.getAttribute("acceptDuplicates").trim().toLowerCase().equals("no");
+		setStandardExtensions = element.getAttribute("setStandardExtensions").trim().toLowerCase().equals("yes");
+		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
+		filenameSuffix = element.getAttribute("filenameSuffix").trim();
 
 		//Set up for capturing the structure
 		cacheID = element.getAttribute("cacheID").trim();
@@ -65,9 +73,6 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		if (!structure.equals("")) {
 			dirs = structure.split("/");
 		}
-
-		//See if we are to apply extensions to the stored files.
-		setStandardExtensions = element.getAttribute("setStandardExtensions").trim().toLowerCase().equals("yes");
 
 		String temp = element.getAttribute("defaultString").trim();;
 		if (!temp.equals("")) defaultString = temp;
@@ -114,6 +119,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 			//Get a place to store the object.
 			File destDir = root;
+			String name = fileObject.getSOPInstanceUID();
 
 			if (fileObject instanceof DicomObject) {
 				DicomObject dob = (DicomObject)fileObject;
@@ -156,6 +162,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 						destDir = new File(destDir, dir);
 					}
 				}
+				//See if we are to use a filename from the object
+				if (filenameTag != 0) {
+					name = dob.getElementValue(filenameTag, name) + filenameSuffix;
+				}
 			}
 
 			else {
@@ -167,12 +177,14 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			acceptedCount++;
 
 			//At this point, destDir points to where the object is to be stored.
-			//Make a name for the stored object.
-			String name = fileObject.getSOPInstanceUID();
-			if (setStandardExtensions) name += fileObject.getStandardExtension();
-
-			//Store the object.
 			destDir.mkdirs();
+
+			//Fix the filename if necessary
+			String stdext = fileObject.getStandardExtension();
+			if (acceptDuplicates) name = getDuplicateName(destDir, name, stdext);
+			if (setStandardExtensions && (!name.toLowerCase().endsWith(stdext))) name += stdext;
+
+			//Store the file
 			File savedFile = new File(destDir, name);
 			if (fileObject.copyTo(savedFile)) {
 				//The object was successfully saved, count it.
@@ -191,6 +203,38 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		lastFileOut = lastFileStored;
 		lastTimeOut = lastTime;
 		return fileObject;
+	}
+
+	static final Pattern bracketPattern = Pattern.compile("\\[([0-9]+)\\]");
+	private String getDuplicateName(File dir, String name, String ext) {
+		boolean hasExtension = name.toLowerCase().endsWith(ext.toLowerCase());
+		if (hasExtension) name = name.substring( 0, name.length() - ext.length() );
+		File[] files = dir.listFiles(new NameFilter(name));
+		int n = 0;
+		if (files.length == 0) return name;
+		for (File file : files) {
+			Matcher matcher = bracketPattern.matcher(file.getName());
+			if (matcher.find()) {
+				n = Math.max( n, StringUtil.getInt(matcher.group(1)) );
+			}
+		}
+		return name + "["+(n+1)+"]" + (hasExtension ? ext : "");
+	}
+
+	//An implementation of java.io.FileFilter to return
+	//only files whose names begin with a specified string.
+	class NameFilter implements FileFilter {
+		String name;
+		public NameFilter(String name) {
+			this.name = name;
+		}
+		public boolean accept(File file) {
+			if (file.isFile()) {
+				String fn = file.getName();
+				return fn.startsWith(name);
+			}
+			return false;
+		}
 	}
 
 	private boolean checkFilter(FileObject fileObject) {

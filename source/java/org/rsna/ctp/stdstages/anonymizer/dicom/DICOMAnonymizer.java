@@ -1077,16 +1077,27 @@ public class DICOMAnonymizer {
 	//Execute the hashuid function call. Generate a new uid
 	//from a prefix and an old uid. The old uid is hashed and
 	//appended to the prefix.
+	//If there is a third argument, its value must be an element,
+	//in which case its script is computed and the result is
+	//appended to the second argument's value before hashing.
 	private static String hashuid(FnCall fn) {
 		String removeUID = "@remove()";
 		try {
-			if (fn.args.length != 2) return fn.getArgs();
+			if (fn.args.length < 2) return fn.getArgs();
 			String prefix = getParam(fn);
 			String uid = fn.context.contentsNull(fn.args[1], fn.thisTag);
 			//If there is no UID in the dataset, then return @remove().
 			if (uid == null) return removeUID;
 			//Make sure the prefix ends in a period
 			if (!prefix.endsWith(".")) prefix += ".";
+			//See if there is a third argument
+			if (fn.args.length > 2) {
+				int argTag = fn.context.getElementTag(fn.args[2]);
+				String argScript = fn.context.getScriptFor(argTag);
+				if (argScript != null) {
+					uid += makeReplacement(argScript, fn.context, argTag);
+				}
+			}
 			//Create the replacement UID
 			return AnonymizerFunctions.hashUID(prefix,uid);
 		}

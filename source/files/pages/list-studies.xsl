@@ -29,6 +29,7 @@
 					<tr>
 						<th><a href="{$context}?key=name">Patient Name</a></th>
 						<th><a href="{$context}?key=id">Patient ID</a></th>
+						<th><a href="{$context}?key=accession">Accession</a></th>
 						<th><a href="{$context}?key=studyDate">Study Date</a></th>
 						<th><a href="{$context}?key=storageDate">Storage Date</a></th>
 					</tr>
@@ -42,6 +43,11 @@
 					<xsl:when test="$key='id'">
 						<xsl:apply-templates select="study">
 							<xsl:sort select="patientID"/>
+						</xsl:apply-templates>
+					</xsl:when>
+					<xsl:when test="$key='accession'">
+						<xsl:apply-templates select="study">
+							<xsl:sort select="accessionNumber"/>
 						</xsl:apply-templates>
 					</xsl:when>
 					<xsl:when test="$key='studyDate'">
@@ -64,6 +70,7 @@
 	<tr>
 		<td><xsl:value-of select="patientName"/></td>
 		<td><xsl:value-of select="patientID"/></td>
+		<td><xsl:value-of select="accessionNumber"/></td>
 		<td><xsl:value-of select="studyDate"/></td>
 		<td><xsl:value-of select="storageDate"/></td>
 		<td>

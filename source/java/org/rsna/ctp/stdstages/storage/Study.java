@@ -32,6 +32,7 @@ public class Study implements Comparable {
 	String patientName = "";
 	String patientID = "";
 	String studyDate = "";
+	String accessionNumber = "";
 	File dir = null;
 	File indexFile = null;
 	Document indexDoc = null;
@@ -92,6 +93,14 @@ public class Study implements Comparable {
 	 */
 	public String getPatientID() {
 		return patientID;
+	}
+
+	/**
+	 * Get the accession number of this Study.
+	 * @return the accession number of this Study.
+	 */
+	public String getAccessionNumber() {
+		return accessionNumber;
 	}
 
 	/**
@@ -304,6 +313,11 @@ public class Study implements Comparable {
 		if (studyDate.equals("")) {
 			studyDate = getStringDefault(fileObject.getStudyDate(), "");
 			root.setAttribute("studyDate", studyDate);
+		}
+		//Set the accessionNumber if we don't have one
+		if (accessionNumber.equals("") && (fileObject instanceof DicomObject)) {
+			accessionNumber = fileObject.getAccessionNumber().trim();
+			root.setAttribute("accessionNumber", accessionNumber);
 		}
 		//Set the studyName.
 		root.setAttribute("studyName", studyName);

@@ -101,9 +101,15 @@ public class DicomStorageSCU {
     private long lastFailureMessageTime = 0;
     private static long anHour = 60 * 60 * 1000;
 
+    private long lastTransmissionTime = 0;
+    private long associationTimeout = 0;
+    private AssociationCloser associationCloser = null;
+
 	/**
 	 * Class constructor; creates a DICOM sender.
 	 * @param url the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
+	 * @param associationTimeout true to force the closure of the association after a specified
+	 * time during which no further transmissions have occurred.
 	 * @param forceClose true to force the closure of the association after sending an object; false to leave
 	 * the association open after a transmission.
 	 * @param hostTag the tag in the DicomObject from which to get the host name of the destination SCP, or 0 if
@@ -115,26 +121,48 @@ public class DicomStorageSCU {
 	 * @param callingAETTag the tag in the DicomObject from which to get the callingAET, or 0 if
 	 * the callingAET in the URL is to be used for all transmissions
 	 */
-	public DicomStorageSCU(String url, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
+	public DicomStorageSCU(String url, int associationTimeout, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
 		this.url = new DcmURL(url);
+		if (associationTimeout != 0) this.associationTimeout = Math.max(associationTimeout, 5000);
 		this.forceClose = forceClose;
 		this.hostTag = hostTag;
 		this.portTag = portTag;
 		this.calledAETTag = calledAETTag;
 		this.callingAETTag = callingAETTag;
         buffer = new byte[bufferSize];
+        if (!forceClose && (this.associationTimeout > 0)) {
+			associationCloser = new AssociationCloser();
+			associationCloser.start();
+		}
 	}
 
 	/**
-	 * Close the association if it is open.
+	 * Interrupt the timeout thread..
 	 */
-	public void close() {
+	public void interrupt() {
+		if (associationCloser != null) associationCloser.interrupt();
+	}
+
+	//Close the current association if it has not been
+	//used in a specified period of time.
+	public synchronized void closeOnTimeout() {
+		if (lastTransmissionTime > 0) {
+			long currentTime = System.currentTimeMillis();
+			if (currentTime - lastTransmissionTime > associationTimeout) {
+				close();
+			}
+		}
+	}
+
+	//Close the association if it is open.
+	private void close() {
 		if (active != null) {
 			try { active.release(true); }
 			catch (Exception ignore) { }
 			active = null;
 			currentTSUID = null;
 			pc = null;
+			lastTransmissionTime = 0;
 		}
 	}
 
@@ -146,7 +174,7 @@ public class DicomStorageSCU {
 	 * @return the Status from the send(DicomObject) method,
 	 * or Status.FAIL if the file does not parse as a DicomObject.
 	 */
-	public Status send(File file) {
+	public synchronized Status send(File file) {
 		DicomObject dob = null;
 		try {
 			dob = new DicomObject(file, true);
@@ -167,7 +195,7 @@ public class DicomStorageSCU {
 	 * should be opened with the full constructor:
 	 *<br><br><tt>dicomObject = new DicomObject(fileToExport, true);</tt>
 	 */
-	public Status send(DicomObject dicomObject) {
+	public synchronized Status send(DicomObject dicomObject) {
 		DcmParser parser = dicomObject.getDcmParser();
 		Dataset ds = dicomObject.getDataset();
 
@@ -249,7 +277,11 @@ public class DicomStorageSCU {
 			Dimse response = active.invoke(request).get();
 			int status = response.getCommand().getStatus();
 			if (forceClose) close();
-			if (status == 0) { lastFailureMessageTime = 0; return Status.OK; }
+			if (status == 0) {
+				lastFailureMessageTime = 0;
+				lastTransmissionTime = System.currentTimeMillis();
+				return Status.OK;
+			}
 			else { close(); return Status.FAIL; }
 		}
 		catch (Exception ex) {
@@ -478,5 +510,23 @@ public class DicomStorageSCU {
 			}
 		}
     }
+
+    class AssociationCloser extends Thread {
+		public AssociationCloser() {
+			setName("DicomStorageSCU AssociationCloser");
+			logger.info("AssociationCloser instantiated with "+(associationTimeout/1000)+" second timeout");
+		}
+		public void run() {
+			if (associationTimeout > 0) {
+				while (!interrupted()) {
+					try {
+						sleep(associationTimeout);
+						closeOnTimeout();
+					}
+					catch (Exception ignore) { }
+				}
+			}
+		}
+	}
 
 }

@@ -205,10 +205,6 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * Make an entry in the AuditLog for a successfully transmitted DicomObject.
 	 * @param fileObject the object that was transmitted.
 	 * @param status the result of the transmission
-	 * @param className the name of the sending class for inclusion in the log. This
-	 * should be the classname of the sending class (<code>this.getClass().getName()</code>).
-	 * If this parameter is null or empty, the name of this class is used. If non-empty,
-	 * this parameter must be a valid XML element name.
 	 * @param stageName the name of the sending stage (<code>this.getClass().getName()</code>).
 	 * If this parameter is null or empty, the name of the sending stage is not logged.
 	 * @param destination the URL to which the object was sent.
@@ -216,7 +212,6 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	public void makeAuditLogEntry(
 						FileObject fileObject,
 						Status status,
-						String className,
 						String stageName,
 						String destination) {
 		if ((fileObject instanceof DicomObject) && status.equals(Status.OK) && (auditLog != null)) {
@@ -228,10 +223,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 			String entry;
 			try {
 				Document doc = XmlUtil.getDocument();
-				if ((className == null) || className.trim().equals("") || className.contains(" ")) {
-					className = "AbstractExportService";
-				}
-				Element root = doc.createElement(className);
+				Element root = doc.createElement(fileObject.getClassName());
 				if ((stageName != null) && !stageName.trim().equals("")) {
 					root.setAttribute("StageName", stageName);
 				}
@@ -259,7 +251,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 			}
 			catch (Exception ex) {
 				logger.warn("Unable to construct the AuditLog entry", ex);
-				entry = "<"+className+"/>";
+				entry = "<null/>";
 			}
 
 			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }

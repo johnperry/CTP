@@ -8,6 +8,7 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
@@ -35,6 +36,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	String auditLogID;
 	AuditLog auditLog = null;
 	ObjectCache objectCache = null;
+	LinkedList<Integer> auditLogTags = null;
 
 	/**
 	 * Construct the DicomDifferenceLogger PipelineStage.
@@ -46,6 +48,17 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		verbosity = element.getAttribute("verbosity").trim();
 		objectCacheID = element.getAttribute("cacheID").trim();
 		auditLogID = element.getAttribute("auditLogID").trim();
+
+		String[] alts = element.getAttribute("auditLogTags").split(";");
+		auditLogTags = new LinkedList<Integer>();
+		for (String alt : alts) {
+			alt = alt.trim();
+			if (!alt.equals("")) {
+				int tag = DicomObject.getElementTag(alt);
+				if (tag != 0) auditLogTags.add(new Integer(tag));
+				else logger.warn(name+": Unknown DICOM element tag: \""+alt+"\"");
+			}
+		}
 	}
 
 	/**
@@ -57,20 +70,22 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	 */
 	public void start() {
 		Configuration config = Configuration.getInstance();
-
-		if (!verbosity.equals("")) {
+		if (!objectCacheID.equals("")) {
 			PipelineStage stage = config.getRegisteredStage(objectCacheID);
-			if ((stage != null) && (stage instanceof ObjectCache)) {
-				objectCache = (ObjectCache)stage;
+			if (stage != null) {
+				if (stage instanceof ObjectCache) {
+					objectCache = (ObjectCache)stage;
+				}
+				else logger.warn(name+": cacheID \""+objectCacheID+"\" does not reference an ObjectCache");
 			}
-			else logger.warn("Unable to obtain the ObjectCache");
+			else logger.warn(name+": cacheID \""+objectCacheID+"\" does not reference any PipelineStage");
 		}
 
 		Plugin plugin = config.getRegisteredPlugin(auditLogID);
 		if ((plugin != null) && (plugin instanceof AuditLog)) {
 			auditLog = (AuditLog)plugin;
 		}
-		else logger.warn("Unable to obtain the AuditLog");
+		else logger.warn(name+": auditLogID \""+auditLogID+"\" does not reference an AuditLog");
 	}
 
 	/**
@@ -83,20 +98,102 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		lastTimeIn = System.currentTimeMillis();
 
 		if ((auditLog != null) && (fileObject instanceof DicomObject)) {
-			DicomObject dob = (DicomObject)fileObject;
-			String patientID = dob.getPatientID();
-			String studyUID = dob.getStudyInstanceUID();
-			String sopiUID = dob.getSOPInstanceUID();
-			String entry = "PatientID:  " + patientID + "\n"
-						 + "Study UID:  " + studyUID + "\n"
-						 + "Object UID: " + sopiUID;
 
-			try { auditLog.addEntry( entry, "text", patientID, studyUID, sopiUID ); }
-			catch (Exception ex) { logger.warn("Unable to add audit log entry for "+sopiUID, ex); }
+			//Get the cached object, if possible
+			DicomObject cachedObject = null;
+			if (objectCache != null) {
+				FileObject fob = objectCache.getCachedObject();
+				if ( (fob instanceof DicomObject) ) cachedObject = (DicomObject)fob;
+			}
+
+			if (cachedObject != null) makeAuditLogEntry( (DicomObject)fileObject, cachedObject );
+			else makeAuditLogEntry( (DicomObject)fileObject );
 		}
 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
+	}
+
+	private void makeAuditLogEntry( DicomObject dicomObject, DicomObject cachedObject ) {
+		String patientID = cachedObject.getPatientID();
+		String studyInstanceUID = cachedObject.getStudyInstanceUID();
+		String sopInstanceUID = cachedObject.getSOPInstanceUID();
+		String sopClassName = cachedObject.getSOPClassName();
+
+		try {
+			Document doc = XmlUtil.getDocument();
+			Element root = doc.createElement("DicomObject");
+			root.setAttribute("SOPClassName", sopClassName);
+			Element sources = doc.createElement("Sources");
+			sources.setAttribute("a", objectCache.getName());
+			sources.setAttribute("b", this.getName());
+			root.appendChild(sources);
+			Element els = doc.createElement("Elements");
+			root.appendChild(els);
+
+			for (Integer tag : auditLogTags) {
+				int tagint = tag.intValue();
+				String elementName = DicomObject.getElementName(tagint);
+				if (elementName != null) {
+					elementName = elementName.replaceAll("\\s", "");
+				}
+				else {
+					int g = (tagint >> 16) & 0xFFFF;
+					int e = tagint &0xFFFF;
+					elementName = String.format("g%04Xe%04X", g, e);
+				}
+				Element el = doc.createElement(elementName);
+				el.setAttribute("a", cachedObject.getElementValue(tagint, ""));
+				el.setAttribute("b", dicomObject.getElementValue(tagint, ""));
+				el.setAttribute("tag", DicomObject.getElementNumber(tagint));
+				els.appendChild(el);
+			}
+			String entry = XmlUtil.toPrettyString(root);
+			logger.debug("AuditLog entry:\n"+entry);
+			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
+			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
+		}
+		catch (Exception ex) {
+			logger.warn("Unable to construct the AuditLog entry", ex);
+		}
+
+	}
+
+	private void makeAuditLogEntry( DicomObject dicomObject ) {
+		String patientID = dicomObject.getPatientID();
+		String studyInstanceUID = dicomObject.getStudyInstanceUID();
+		String sopInstanceUID = dicomObject.getSOPInstanceUID();
+		String sopClassName = dicomObject.getSOPClassName();
+
+		try {
+			Document doc = XmlUtil.getDocument();
+			Element root = doc.createElement("DicomObject");
+			root.setAttribute("StageName", this.getName());
+			root.setAttribute("SOPClassName", sopClassName);
+			Element els = doc.createElement("Elements");
+			root.appendChild(els);
+
+			for (Integer tag : auditLogTags) {
+				int tagint = tag.intValue();
+				String elementName = DicomObject.getElementName(tagint);
+				if (elementName != null) {
+					elementName = elementName.replaceAll("\\s", "");
+				}
+				else {
+					int g = (tagint >> 16) & 0xFFFF;
+					int e = tagint &0xFFFF;
+					elementName = String.format("g%04Xe%04X", g, e);
+				}
+				els.setAttribute(elementName, dicomObject.getElementValue(tagint, ""));
+			}
+			String entry = XmlUtil.toPrettyString(root);
+			logger.debug("AuditLog entry:\n"+entry);
+			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
+			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
+		}
+		catch (Exception ex) {
+			logger.warn("Unable to construct the AuditLog entry", ex);
+		}
 	}
 }

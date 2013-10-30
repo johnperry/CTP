@@ -798,7 +798,16 @@ public class DicomObject extends FileObject {
 	public static String getElementName(int tag) {
 		TagDictionary.Entry entry = tagDictionary.lookup(tag);
 		if (entry == null) return null;
-		return entry.name;
+		return entry.name.replaceAll("'s\\s", "").replaceAll("[^a-zA-Z0-9]", "");
+	}
+
+	/**
+	 * Get the (group,element) number of a DICOM element.
+	 * @param tag
+	 * @return the tag dictionary string for the tag.
+	 */
+	public static String getElementNumber(int tag) {
+		return Tags.toString(tag);
 	}
 
 	/**

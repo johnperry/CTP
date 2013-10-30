@@ -106,6 +106,7 @@
 			<attr name="minAge" required="no" default="5000"/>
 			<attr name="fsName" required="no" default=""/>
 			<attr name="fsNameTag" required="no" default=""/>
+			<attr name="filenameTag" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -174,6 +175,20 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
 			<attr name="id" required="yes" default="ObjectCache"/>
 			<attr name="root" required="yes" default="roots/ObjectCache"/>
+		</Processor>
+
+		<Processor>
+			<attr name="name" required="yes" default="DicomAuditLogger"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomAuditLogger" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomAuditLogger"/>
+			<attr name="cacheID" required="no" default="">
+				<helptext>
+					The ID of an ObjectCache stage from which to obtain a DicomObject for
+					comparison with the current DicomObject.
+				</helptext>
+			</attr>
+			<attr name="auditLogID" required="yes" default=""/>
+			<attr name="auditLogTags" required="yes" default=""/>
 		</Processor>
 
 		<Processor>
@@ -461,13 +476,22 @@
 			<attr name="name" required="yes" default="DirectoryStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DirectoryStorageService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DirectoryStorageService"/>
-			<attr name="cacheID" required="yes" default=""/>
+			<attr name="cacheID" required="no" default=""/>
 			<attr name="structure" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="setStandardExtensions" required="no" default="no" options="yes|no"/>
+			<attr name="filenameTag" required="no" default="">
+				<helptext>DICOM element containing the filename, if the SOPInstanceUID is not to be used</helptext>
+			</attr>
+			<attr name="filenameSuffix" required="no" default="">
+				<helptext>A text string to be appended to the filename (only if filenameTag is present)</helptext>
+			</attr>
+			<attr name="acceptDuplicates" required="no" default="yes" options="yes|no">
+				<helptext>yes: store duplicate files; no: overwrite duplicate files</helptext>
+			</attr>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
 		</StorageService>
@@ -480,6 +504,11 @@
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip.port)</helptext>
+			</attr>
+			<attr name="associationTimeout" required="no" default="">
+				<helptext>The maximum time (in seconds) after the last transmission to wait
+				before closing the association. (0 = leave the association open unless forceClose
+				is set to "yes")</helptext>
 			</attr>
 			<attr name="forceClose" required="no" default="no" options="yes|no">
 				<helptext>Close the DICOM association after each object transmission</helptext>
@@ -633,8 +662,9 @@
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
+		<filenameTag>DICOM tag in which to store the name of the file (ggggeeee or DICOM PS 3.6 keyword)</filenameTag>
 		<fsName>File System name to insert in DicomObjects (optional)</fsName>
-		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee)</fsNameTag>
+		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee or DICOM PS 3.6 keyword)</fsNameTag>
 		<id>This field is required only when the stage is to be referenced by another stage. If present, it must be unique.</id>
 		<initialContextFactory>The LDAP context factory (e.g., com.sun.jndi.ldap.LdapCtxFactory)</initialContextFactory>
 		<interval>Sleep time in milliseconds between polls of the export queue</interval>

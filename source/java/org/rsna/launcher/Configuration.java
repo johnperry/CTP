@@ -133,7 +133,7 @@ public class Configuration {
 		}
 		boolean javaOK = (thisJava.compareTo(ctpJava) >= 0);
 		javaOK &= (thisJava.compareTo(utilJava) >= 0);
-		if (isMIRC) javaOK &= (thisJava.compareTo(mircJava) >= 0);
+		if (isMIRC && (mircJava != null)) javaOK &= (thisJava.compareTo(mircJava) >= 0);
 		if (!javaOK) {
 			thisJava = "<b><font color=\"red\">"+thisJava+"</font></b>";
 		}

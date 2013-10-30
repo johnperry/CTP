@@ -41,6 +41,7 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	long age;
 	String fsName = null;
 	int fsNameTag = 0;
+	int filenameTag = 0;
 	FileSource source = null;
 
 	/**
@@ -56,7 +57,10 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 		fsName = element.getAttribute("fsName").trim();
 		if (fsName == null) fsName = fsName.trim();
 		if (fsName.equals("")) fsName = null;
-		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag").trim(),fsNameTag);
+		fsNameTag = DicomObject.getElementTag(element.getAttribute("fsNameTag"));
+
+		//See if there is a filenameTag
+		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
 
 		//Initialize the FileSource
 		source = FileSource.getInstance(root, null); //disable checkpointing
@@ -82,8 +86,8 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 
 			FileObject fileObject = FileObject.getInstance(file);
 			if (acceptable(fileObject)) {
+				fileObject = setNames(fileObject);
 				fileObject.setStandardExtension();
-				fileObject = setFSName(fileObject);
 				lastFileOut = fileObject.getFile();
 				lastTimeOut = System.currentTimeMillis();
 				return fileObject;
@@ -98,31 +102,39 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 		return null;
 	}
 
-	//Set the FileSystem name in the object if we can.
-	private FileObject setFSName(FileObject fo) {
+	//Store the FileSystem name and/or the filename in the object if required.
+	private FileObject setNames(FileObject fo) {
 		try {
 			if (fo instanceof DicomObject) {
-				if ((fsName != null) && (fsNameTag != 0)) {
+				boolean doFileSystemName = (fsName != null) && (fsNameTag != 0);
+				boolean doFilename = (filenameTag != 0);
+				if ( doFileSystemName || doFilename ) {
 					//Unfortunately, we have to parse the object again
 					//in order to be able to save it once we modify it.
 					DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
 					File dobFile = dob.getFile();
 
-					//Modify the specified element.
-					//If the fsName is "@filename", use the name of the file;
-					//otherwise, use the value of the fsName attribute.
-					if (fsName.equals("@filename")) {
-						String name = dobFile.getName();
-						name = name.substring(0, name.length()-4).trim();
-						dob.setElementValue(fsNameTag, name);
+					//See if we have to store the FileSystem name
+					if (doFileSystemName) {
+						//Modify the specified element.
+						//If the fsName is "@filename", use the name of the file;
+						//otherwise, use the value of the fsName attribute.
+						if (fsName.equals("@filename")) {
+							String name = dobFile.getName();
+							dob.setElementValue(fsNameTag, name);
+						}
+						else dob.setElementValue(fsNameTag, fsName);
 					}
-					else dob.setElementValue(fsNameTag, fsName);
+
+					if (doFilename) {
+						dob.setElementValue(filenameTag, fo.getFile().getName());
+					}
 
 					//Save the modified object
-					File tFile = File.createTempFile("TMP-",".dcm",dobFile.getParentFile());
+					File tFile = File.createTempFile("TMP-", ".dcm", dobFile.getParentFile());
 					dob.saveAs(tFile, false);
 					dob.close();
-					dob.getFile().delete();
+					dobFile.delete();
 
 					//Okay, we have saved the modified file in the temp file
 					//and deleted the original file; now rename the temp file

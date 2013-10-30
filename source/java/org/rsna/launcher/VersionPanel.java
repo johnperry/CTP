@@ -44,9 +44,9 @@ public class VersionPanel extends BasePanel {
 		if (config.isMIRC) {
 
 			page +=
-				 (!config.mircJava.equals("") ? "<tr><td>MIRC Plugin Java Version:</td><td>"+config.mircJava+"</td></tr>" : "")
-				+(!config.mircDate.equals("") ? "<tr><td>MIRC Plugin Date:</td><td>"+config.mircDate+"</td></tr>" : "")
-				+(!config.mircVersion.equals("") ? "<tr><td>MIRC Plugin Version:</td><td>"+config.mircVersion+"</td></tr>" : "");
+				 (((config.mircJava != null) && !config.mircJava.equals("")) ? "<tr><td>MIRC Plugin Java Version:</td><td>"+config.mircJava+"</td></tr>" : "")
+				+(((config.mircDate != null) && !config.mircDate.equals("")) ? "<tr><td>MIRC Plugin Date:</td><td>"+config.mircDate+"</td></tr>" : "")
+				+(((config.mircVersion != null) && !config.mircVersion.equals("")) ? "<tr><td>MIRC Plugin Version:</td><td>"+config.mircVersion+"</td></tr>" : "");
 		}
 
 		if (config.isISN) {

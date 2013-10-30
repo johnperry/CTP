@@ -43,6 +43,9 @@ public class DicomExportService extends AbstractExportService {
 		//Get the destination url
 		url = element.getAttribute("url").trim();
 
+		//Get the association timeout
+		int timeout = StringUtil.getInt(element.getAttribute("associationTimeout"))*1000;
+
 		//See if we are to force a close of the association on every transfer
 		boolean forceClose = element.getAttribute("forceClose").trim().equals("yes");
 
@@ -59,8 +62,7 @@ public class DicomExportService extends AbstractExportService {
 		int callingAETTag = DicomObject.getElementTag(element.getAttribute("callingAETTag").trim());
 
 		//Get the DicomSender
-		dicomSender = new DicomStorageSCU(url, forceClose, hostTag, portTag, calledAETTag, callingAETTag);
-
+		dicomSender = new DicomStorageSCU(url, timeout, forceClose, hostTag, portTag, calledAETTag, callingAETTag);
 	}
 
 	/**
@@ -81,9 +83,17 @@ public class DicomExportService extends AbstractExportService {
 		dicomObject.close();
 
 		//Make an AuditLog entry if required
-		makeAuditLogEntry(dicomObject, status, "DicomExportService", getName(), url);
+		makeAuditLogEntry(dicomObject, status, getName(), url);
 
 		return status;
+	}
+
+	/**
+	 * Stop the pipeline stage.
+	 */
+	public synchronized void shutdown() {
+		if (dicomSender != null) dicomSender.interrupt();
+		super.shutdown();
 	}
 
 }

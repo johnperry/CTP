@@ -97,7 +97,9 @@ public class Launcher extends JFrame implements ChangeListener {
 		}
 		catch (Exception ex) {
 			setVisible(true);
-			JOptionPane.showMessageDialog(null, ex.getMessage());
+			StringWriter sw = new StringWriter();
+			ex.printStackTrace(new PrintWriter(sw));
+			JOptionPane.showMessageDialog(null, "Unable to start the Launcher program.\n\n" + sw.toString());
 			System.exit(0);
 		}
 	}

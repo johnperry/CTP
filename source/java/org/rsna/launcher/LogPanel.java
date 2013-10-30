@@ -74,7 +74,8 @@ public class LogPanel extends BasePanel implements ActionListener {
 		}
 		else if (event.getSource().equals(delete)) {
 			File logs = new File("logs");
-			FileUtil.deleteAll(logs);
+			File[] files = logs.listFiles();
+			for (File file : files) FileUtil.deleteAll(file);
 			reload();
 		}
 	}
