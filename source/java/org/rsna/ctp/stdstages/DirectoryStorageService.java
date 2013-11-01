@@ -51,7 +51,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	File zipScriptFile = null;
 	String defaultString = "UNKNOWN";
 	String whitespaceReplacement = "_";
-	String periodAndParenthesisReplacement = "";
+	int maxPathLength = 260;
+	String filter = "[^a-zA-Z0-9\\[\\]\\(\\)\\^\\.\\-_,;]+";
 
 	/**
 	 * Construct a DirectoryStorageService for DicomObjects.
@@ -79,15 +80,16 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 		temp = element.getAttribute("whitespaceReplacement").trim();
 		if (!temp.equals("")) whitespaceReplacement = temp;
-		periodAndParenthesisReplacement = element.getAttribute("whitespaceReplacement").trim();
 
-		//See if there are scripts, and if so, get the files
+		//Get the script files
 		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
 		xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript").trim(), "examples/example-filter.script");
 		zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript").trim(), "examples/example-filter.script");
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
+
+		maxPathLength = System.getProperty("os.name", "").toLowerCase().contains("windows") ? 260 : 255;
 	}
 
 	/**
@@ -111,6 +113,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * if the object could not be stored.
 	 */
 	public FileObject store(FileObject fileObject) {
+
+		logger.debug("File received for storage: "+fileObject.getFile());
 
 		//Count all the files
 		totalCount++;
@@ -154,11 +158,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 					//Now construct the child directories under the root.
 					for (String dir : dirs) {
 						dir = replace(dir, xdob);
-						dir = dir.replaceAll("[\\\\/\\s]", whitespaceReplacement).trim();
-						if (!periodAndParenthesisReplacement.equals("")) {
-							dir = dir.replaceAll("[\\.\\(\\)]", periodAndParenthesisReplacement).trim();
-						}
+						dir = dir.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
+						dir = dir.replaceAll(filter, "");
 						if (dir.equals("")) dir = defaultString;
+						logger.debug("...constructing intermediate directory name: "+dir);
 						destDir = new File(destDir, dir);
 					}
 				}
@@ -166,6 +169,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				if (filenameTag != 0) {
 					name = dob.getElementValue(filenameTag, name) + filenameSuffix;
 				}
+
+				logger.debug("...storage directory: "+destDir);
+				logger.debug("...filename: "+name);
 			}
 
 			else {
@@ -173,11 +179,31 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//always stored in the root, so we are now ready to store.
 			}
 
+			name = name.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
+			name = name.replaceAll(filter, "");
+			logger.debug("...filtered filename: "+name);
+
 			//Count the accepted objects
 			acceptedCount++;
 
 			//At this point, destDir points to where the object is to be stored.
-			destDir.mkdirs();
+			if (destDir.getAbsolutePath().length() > maxPathLength) {
+				logger.warn("File path is too long for directory creation:\n"+destDir);
+				return null;
+			}
+
+			if (destDir.exists()) {
+				logger.debug("...storage directory exists: "+destDir);
+			}
+			else {
+				if (destDir.mkdirs()) {
+					logger.debug("...storage directory created successfully: "+destDir);
+				}
+				else {
+					logger.warn("Unable to create the storage directory: "+destDir);
+					return null;
+				}
+			}
 
 			//Fix the filename if necessary
 			String stdext = fileObject.getStandardExtension();
@@ -186,18 +212,27 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 			//Store the file
 			File savedFile = new File(destDir, name);
-			if (fileObject.copyTo(savedFile)) {
-				//The object was successfully saved, count it.
-				storedCount++;
-				if (returnStoredFile) fileObject = FileObject.getInstance(savedFile);
-				lastFileStored = savedFile;
-				lastTime = System.currentTimeMillis();
-			}
-			//If anything went wrong, quarantine the object and abort.
-			else {
-				logger.warn("Unable to save "+fileObject.getFile());
-				if (quarantine != null) quarantine.insert(fileObject);
+			int pathLength = savedFile.getAbsolutePath().length();
+			logger.debug("...absolute path length: "+pathLength);
+			if (pathLength > maxPathLength) {
+				logger.warn("File path is too long for storage:\n"+savedFile);
 				return null;
+			}
+			else {
+				if (fileObject.copyTo(savedFile)) {
+					//The object was successfully saved, count it.
+					storedCount++;
+					if (returnStoredFile) fileObject = FileObject.getInstance(savedFile);
+					lastFileStored = savedFile;
+					lastTime = System.currentTimeMillis();
+					logger.debug("...file stored successfully: "+savedFile);
+				}
+				//If anything went wrong, quarantine the object and abort.
+				else {
+					logger.warn("Unable to save "+savedFile);
+					if (quarantine != null) quarantine.insert(fileObject);
+					return null;
+				}
 			}
 		}
 		lastFileOut = lastFileStored;
