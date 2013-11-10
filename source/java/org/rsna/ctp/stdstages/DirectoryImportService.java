@@ -8,6 +8,7 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.*;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.log4j.Logger;
@@ -43,6 +44,7 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	int fsNameTag = 0;
 	int filenameTag = 0;
 	FileSource source = null;
+	FileTracker tracker = null;
 
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
@@ -64,6 +66,9 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 
 		//Initialize the FileSource
 		source = FileSource.getInstance(root, null); //disable checkpointing
+
+		//Initialize the FileTracker
+		tracker = new FileTracker();
 	}
 
 	/**
@@ -157,12 +162,17 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	//last-modified-time earlier than a specified time.
 	private File findFile(long maxLM) {
 		File file;
+		tracker.purge();
 		while ((file=source.getNextFile()) != null) {
-			if (file.exists()) {
-				if (file.isFile() && (file.lastModified() < maxLM)) {
-					logger.debug("Processing "+file);
-					return file;
-				}
+			if (file.exists()
+					&& !file.isHidden()
+						&& file.isFile()
+							&& (file.lastModified() < maxLM)
+								&& !file.getName().endsWith(".partial")
+									&& !tracker.contains(file)) {
+				logger.debug("Processing "+file);
+				tracker.add(file);
+				return file;
 			}
 		}
 		//If we get here, we didn't get anything.
@@ -210,6 +220,36 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 		else sb.append("<td>No activity</td></tr>");
 		sb.append("</table>");
 		return sb.toString();
+	}
+
+	//This class tracks files that have been processed.
+	//It is designed to solve the problem that occurs when the root directory is
+	//in the cloud and the delete operation at the end of a pipeline may take a
+	//while to complete. The idea is to prevent the stage from seeing the same file
+	//again while the delete operation is proceeding.
+	//
+	//To use this class, only accept a file that is not in the tracker.
+	//You should periodically call the purge method to remove files from
+	//the tracker. This then allows the tracker to process a new file of the
+	//same name if it is subsequently received.
+	class FileTracker {
+		HashSet<File> files;
+		public FileTracker() {
+			files = new HashSet<File>();
+		}
+		public void purge() {
+			for (File file : files) {
+				if (!file.exists()) {
+					files.remove(file);
+				}
+			}
+		}
+		public void add(File file) {
+			files.add(file);
+		}
+		public boolean contains(File file) {
+			return files.contains(file);
+		}
 	}
 
 }

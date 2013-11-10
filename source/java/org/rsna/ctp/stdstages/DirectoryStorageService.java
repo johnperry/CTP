@@ -211,6 +211,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			if (setStandardExtensions && (!name.toLowerCase().endsWith(stdext))) name += stdext;
 
 			//Store the file
+			File tempFile = new File(destDir, name+".partial");
 			File savedFile = new File(destDir, name);
 			int pathLength = savedFile.getAbsolutePath().length();
 			logger.debug("...absolute path length: "+pathLength);
@@ -219,7 +220,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				return null;
 			}
 			else {
-				if (fileObject.copyTo(savedFile)) {
+				if (fileObject.copyTo(tempFile) && tempFile.renameTo(savedFile)) {
 					//The object was successfully saved, count it.
 					storedCount++;
 					if (returnStoredFile) fileObject = FileObject.getInstance(savedFile);
