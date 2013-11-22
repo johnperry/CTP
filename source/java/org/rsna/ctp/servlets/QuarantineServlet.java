@@ -84,7 +84,7 @@ public class QuarantineServlet extends Servlet {
 		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);
 		int sInt = StringUtil.getInt(req.getParameter("s", "-1"), -1);
 		String file = req.getParameter("file", "");
-		boolean list = req.getParameter("list", "yes").equals("yes");
+		boolean list = (req.getParameter("list") != null);
 		boolean display = (req.getParameter("display") != null);
 		boolean queue = (req.getParameter("queue") != null);
 		boolean delete = (req.getParameter("delete") != null);
@@ -298,6 +298,15 @@ public class QuarantineServlet extends Servlet {
 									+"&delete"
 									+suppress
 									+"\">delete</a>");
+						sb.append("</td>");
+						sb.append("<td>");
+						sb.append("<a href=\""
+									+"?p="+pipelineIndex
+									+"&s="+stageIndex
+									+"&file="+files[i].getName()
+									+"&list"
+									+suppress
+									+"\" target=\"dcm\">list</a>");
 						sb.append("</td>");
 						sb.append("<td>");
 						sb.append("<a href=\""

@@ -36,6 +36,9 @@ import org.rsna.servlets.Servlet;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HtmlUtil;
 import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * The Lookup Table Editor servlet.
@@ -46,6 +49,7 @@ import org.rsna.util.StringUtil;
 public class LookupServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(LookupServlet.class);
+	static final String prefix = "..";
 	String home = "/";
 
 	/**
@@ -82,33 +86,24 @@ public class LookupServlet extends Servlet {
 		//or the page listing the contents of the specified file.
 		int p,s;
 		String format;
-		File file = null;
+		File lutFile = null;
+		res.setContentType("html");
 		try {
 			p = Integer.parseInt(req.getParameter("p"));
 			s = Integer.parseInt(req.getParameter("s"));
-			format = req.getParameter("format", "html").toLowerCase();
-			file = getLookupTableFile(p, s);
-
-			if (file != null) {
+			lutFile = getLookupTableFile(p, s);
+			if (lutFile != null) {
+				format = req.getParameter("format", "html").toLowerCase();
 				if (format.equals("csv")) {
-					res.write(getCSV(file));
+					res.write(getCSV(lutFile));
 					res.setContentType("csv");
-					res.setContentDisposition(new File(file.getName()+".csv"));
+					res.setContentDisposition(new File(lutFile.getName()+".csv"));
 				}
-				else {
-					res.write(getEditorPage(p, s, file));
-					res.setContentType("html");
-				}
+				else res.write(getEditorPage(p, s, lutFile));
 			}
-			else {
-				res.write(getListPage());
-				res.setContentType("html");
-			}
+			else res.write(getListPage());
 		}
-		catch (Exception ex) {
-			res.write(getListPage());
-			res.setContentType("html");
-		}
+		catch (Exception ex) { res.write(getListPage()); }
 
 		//Return the page
 		res.disableCaching();
@@ -135,6 +130,8 @@ public class LookupServlet extends Servlet {
 			return;
 		}
 
+		//logger.info("POST:\n"+req.toString()+"\nParameters\n"+req.listParameters("  "));
+
 		if (req.hasParameter("suppress")) home = "";
 
 		File dir = null;
@@ -152,14 +149,14 @@ public class LookupServlet extends Servlet {
 				int p = Integer.parseInt(req.getParameter("p"));
 				int s = Integer.parseInt(req.getParameter("s"));
 				File file = getLookupTableFile(p,s);
+				HashSet<String> keyTypeSet = getKeyTypes(p, s);
+				String defaultKeyType = ( (keyTypeSet.size()==1) ? keyTypeSet.iterator().next() : null );
 
 				//Convert and save the file
 				if ((file != null) && (files.size() > 0)) {
 					File csvFile = files.getFirst().getFile();
-					String props = getProps(csvFile);
-					synchronized (this) {
-						FileUtil.setText(file, props);
-					}
+					String props = getProps(csvFile, defaultKeyType);
+					synchronized (this) { FileUtil.setText(file, props); }
 				}
 
 				//Make a new page from the new data and send it out
@@ -175,26 +172,54 @@ public class LookupServlet extends Servlet {
 		else {
 			//This is a post of the form from the page itself.
 			//Get the parameters from the form.
-			String phi = req.getParameter("phi");
-			String replacement = req.getParameter("replacement");
-			int p,s;
-			File file = null;
 			try {
-				p = Integer.parseInt(req.getParameter("p"));
-				s = Integer.parseInt(req.getParameter("s"));
-				file = getLookupTableFile(p,s);
+				int p = Integer.parseInt(req.getParameter("p"));
+				int s = Integer.parseInt(req.getParameter("s"));
+				File file = getLookupTableFile(p,s);
+				String defaultKeyType = req.getParameter("defaultKeyType", "").trim() + "/";
+				boolean hasDefaultKeyType = !defaultKeyType.equals("/");
 
-				//Update the file if possible.
-				if ((phi != null) && (replacement != null) && (file != null)) {
-
+				if (file != null) {
 					synchronized (this) {
 						Properties props = getProperties(file);
-						phi = phi.trim();
-						replacement = replacement.trim();
-						if (!phi.equals("")) {
-							props.setProperty(phi, replacement);
-							saveProperties(props,file);
+
+						//Handle the main entry fields.
+						String phi = req.getParameter("phi");
+						String replacement = req.getParameter("replacement");
+						boolean changed = false;
+						if ((phi != null) && (replacement != null)) {
+							phi = phi.trim();
+							replacement = replacement.trim();
+							if (!phi.equals("")) {
+								if (hasDefaultKeyType && !phi.startsWith(defaultKeyType) && !phi.startsWith(prefix)) {
+									phi = defaultKeyType + phi;
+								}
+								props.setProperty(phi, replacement);
+								changed = true;
+							}
 						}
+
+						//Handle the preset fields
+						int k = 1;
+						while ( true ) {
+							String index = "[" + k + "]";
+							phi = req.getParameter( "phi"+index );
+							if (phi == null) break;
+							phi = phi.trim();
+							if (!phi.equals("")) {
+								if (hasDefaultKeyType && !phi.startsWith(defaultKeyType)) {
+									phi = defaultKeyType + phi;
+								}
+								String phikey = req.getParameter( "phikey"+index, "" ).trim();
+								props.remove(prefix + phikey);
+								props.setProperty(phi, phikey);
+								changed = true;
+							}
+							k++;
+						}
+
+						//Save the LUT if the properties changed
+						if (changed) saveProperties(props, file);
 					}
 
 					//Make a new page from the new data and send it out
@@ -225,37 +250,48 @@ public class LookupServlet extends Servlet {
 		return null;
 	}
 
-	//Get the lookup table file
-	private File getLookupTableFile(int p, int s) {
+	//Get the anonymizer script file
+	private File getScriptFile(int p, int s) {
 		PipelineStage stage = getPipelineStage(p, s);
 		if ((stage != null) && (stage instanceof DicomAnonymizer)) {
-			return ((DicomAnonymizer)stage).lookupTableFile;
+			return ((DicomAnonymizer)stage).getScriptFile();
 		}
 		return null;
 	}
 
 	//Get the lookup table file
+	private File getLookupTableFile(int p, int s) {
+		PipelineStage stage = getPipelineStage(p, s);
+		if ((stage != null) && (stage instanceof DicomAnonymizer)) {
+			return ((DicomAnonymizer)stage).getLookupTableFile();
+		}
+		return null;
+	}
+
+	//Get a set containing all the KeyTypes in use in the script
 	private HashSet<String> getKeyTypes(int p, int s) {
-		HashSet<String> set = new HashSet<String>();
-		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
-		try {
-			PipelineStage stage = getPipelineStage(p, s);
-			if ((stage != null) && (stage instanceof DicomAnonymizer)) {
-				DicomAnonymizer anonymizer = (DicomAnonymizer)stage;
-				DAScript script = DAScript.getInstance(anonymizer.getScriptFile());
-				Properties props = script.toProperties();
-				for (Object replObject : props.values()) {
-					String repl = (String)replObject;
-					Matcher matcher = pattern.matcher(repl);
-					while (matcher.find()) {
-						String group = matcher.group(1);
-						set.add(group.trim());
-					}
+		PipelineStage stage = getPipelineStage(p, s);
+		return getKeyTypes(stage);
+	}
+
+	private HashSet<String> getKeyTypes(PipelineStage stage) {
+		HashSet<String> keyTypeSet = new HashSet<String>();
+		if (stage instanceof DicomAnonymizer) {
+			DicomAnonymizer anonymizer = (DicomAnonymizer)stage;
+			File scriptFile = anonymizer.getScriptFile();
+			DAScript script = DAScript.getInstance(scriptFile);
+			Properties scriptProps = script.toProperties();
+			Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
+			for (Object replObject : scriptProps.values()) {
+				String repl = (String)replObject;
+				Matcher matcher = pattern.matcher(repl);
+				while (matcher.find()) {
+					String group = matcher.group(1);
+					keyTypeSet.add(group.trim());
 				}
 			}
 		}
-		catch (Exception ex) { logger.warn(ex.getMessage(), ex); }
-		return set;
+		return keyTypeSet;
 	}
 
 	//Convert the lookup table file to a string.
@@ -281,7 +317,9 @@ public class LookupServlet extends Servlet {
 	}
 
 	//Get the properties from a CSV file
-	private String getProps(File csvFile) {
+	private String getProps(File csvFile, String defaultKeyType) {
+		boolean hasDefaultKeyType = (defaultKeyType != null);
+		if (hasDefaultKeyType) defaultKeyType = defaultKeyType.trim() + "/";
 		StringBuffer sb = new StringBuffer();
 		try {
 			BufferedReader br = new BufferedReader(
@@ -290,10 +328,21 @@ public class LookupServlet extends Servlet {
 			while ( (line=br.readLine()) != null ) {
 				String[] s = line.split(",");
 				if (s.length == 2) {
-					sb.append(s[0].trim());
+					String key = s[0].trim();
+					if (hasDefaultKeyType && !key.startsWith(prefix) && !key.startsWith(defaultKeyType)) {
+						key = defaultKeyType + key;
+					}
+					sb.append(key);
 					sb.append("=");
 					sb.append(s[1].trim() );
 					sb.append("\n");
+				}
+				else if (s.length == 1) {
+					String key = s[0].trim();
+					if (key.startsWith(prefix)) {
+						sb.append(key);
+						sb.append("=\n");
+					}
 				}
 			}
 		}
@@ -303,185 +352,114 @@ public class LookupServlet extends Servlet {
 
 	//Create an HTML page containing the list of files.
 	private String getListPage() {
-		return responseHead("Select the Lookup Table File to Edit", "", false, false, null)
-				+ makeList()
-					+ responseTail();
+		try {
+			Document doc = getStages();
+			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/LookupServlet-List.xsl" ) );
+			Object[] params = {
+				"context", context,
+				"home", home
+			};
+			return XmlUtil.getTransformedText( doc, xsl, params );
+		}
+		catch (Exception unable) { }
+		return "";
 	}
 
-	private String makeList() {
-		StringBuffer sb = new StringBuffer();
+	private Document getStages() throws Exception {
 		Configuration config = Configuration.getInstance();
 		List<Pipeline> pipelines = config.getPipelines();
-		if (pipelines.size() != 0) {
-			int count = 0;
-			sb.append("<table border=\"1\" width=\"100%\">");
-			for (int p=0; p<pipelines.size(); p++) {
-				Pipeline pipe = pipelines.get(p);
-				List<PipelineStage> stages = pipe.getStages();
-				for (int s=0; s<stages.size(); s++) {
-					PipelineStage stage = stages.get(s);
-					File file = null;
-					if (stage instanceof ScriptableDicom) {
-						file = ((ScriptableDicom)stage).getLookupTableFile();
-					}
-					if (file != null) {
-						sb.append("<tr>");
-						sb.append("<td class=\"list\">"+pipe.getPipelineName()+"</td>");
-						sb.append("<td class=\"list\">"+stage.getName()+"</td>");
-						sb.append("<td class=\"list\"><a href=\"/"+context
-										+"?p="+p
-										+"&s="+s
-										+(home.equals("") ? "&suppress" : "")
-										+"\">"
-										+file.getAbsolutePath()+"</a></td>");
-						sb.append("</tr>");
-						count++;
-					}
+		Document doc = XmlUtil.getDocument();
+		Element root = doc.createElement("Stages");
+		doc.appendChild(root);
+		for (int p=0; p<pipelines.size(); p++) {
+			Pipeline pipe = pipelines.get(p);
+			List<PipelineStage> stages = pipe.getStages();
+			for (int s=0; s<stages.size(); s++) {
+				PipelineStage stage = stages.get(s);
+				File file = null;
+				if (stage instanceof ScriptableDicom) {
+					file = ((ScriptableDicom)stage).getLookupTableFile();
+				}
+				if (file != null) {
+					Element el = doc.createElement("Stage");
+					el.setAttribute("pipelineName", pipe.getPipelineName());
+					el.setAttribute("p", Integer.toString(p));
+					el.setAttribute("stageName", stage.getName());
+					el.setAttribute("s", Integer.toString(s));
+					el.setAttribute("file", file.getAbsolutePath());
+					root.appendChild(el);
 				}
 			}
-			sb.append("</table>");
-			if (count == 0) sb.append("<p>The configuration contains no lookup tables.</p>");
 		}
-		return sb.toString();
+		return doc;
 	}
 
 	//Create an HTML page containing the form for configuring the file.
-	private String getEditorPage(int p, int s, File file) {
-		HashSet<String> keyTypes = getKeyTypes(p, s);
-		return responseHead("Lookup Table Editor", file.getAbsolutePath(), true, true, keyTypes)
-				+ makeForm(p, s, file)
-					+ responseTail();
+	private String getEditorPage(int p, int s, File lutFile) {
+		try {
+			Configuration config = Configuration.getInstance();
+			List<Pipeline> pipelines = config.getPipelines();
+			Pipeline pipeline = pipelines.get(p);
+			List<PipelineStage> stages = pipeline.getStages();
+			PipelineStage stage = stages.get(s);
+
+			Document doc = getLUTDoc(stage, lutFile);
+			//logger.info("LUTDoc:\n"+XmlUtil.toPrettyString(doc));
+
+			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/LookupServlet-Editor.xsl" ) );
+			Object[] params = {
+				"context", context,
+				"home", home,
+				"pipeline", Integer.toString(p),
+				"stage", Integer.toString(s),
+				"pipelineName", pipeline.getPipelineName(),
+				"stageName", stage.getName()
+			};
+			return XmlUtil.getTransformedText( doc, xsl, params );
+		}
+		catch (Exception unable) { }
+		return "";
 	}
 
-	private String makeForm(int p, int s, File file) {
-		Properties props = getProperties(file);
-		Set<Object> keySet = props.keySet();
-		Object[] keys = new Object[keySet.size()];
+	private Document getLUTDoc(PipelineStage stage, File lutFile) throws Exception {
+		Document doc = XmlUtil.getDocument();
+		Element root = doc.createElement("LookupTable");
+		doc.appendChild(root);
+		root.setAttribute("lutFile", lutFile.getAbsolutePath());
+		if (stage instanceof DicomAnonymizer) {
+			File scriptFile = ((DicomAnonymizer)stage).getScriptFile();
+			root.setAttribute("scriptFile", scriptFile.getAbsolutePath());
+		}
+
+		//Put in the key types
+		HashSet<String> keyTypeSet = getKeyTypes(stage);
+		for (String keyType : keyTypeSet) {
+			Element el = doc.createElement("KeyType");
+			el.setAttribute("type", keyType);
+			root.appendChild(el);
+		}
+
+		//Now add in the individual LUT entries
+		Properties lutProps = getProperties(lutFile);
+		Set<String> keySet = lutProps.stringPropertyNames();
+		String[] keys = new String[keySet.size()];
 		keys = keySet.toArray(keys);
 		Arrays.sort(keys);
-
-		StringBuffer form = new StringBuffer();
-		form.append("<form id=\"URLEncodedFormID\" method=\"POST\" accept-charset=\"UTF-8\" action=\"/"+context+"\">\n");
-		form.append(hidden("p", p + ""));
-		form.append(hidden("s", s + ""));
-		if (home.equals("")) form.append(hidden("suppress", ""));
-
-		form.append("<center>\n");
-		form.append("<table>\n");
-		form.append("<tr>");
-		form.append("<td><b><u>KeyType/PHI value</u></b></td>");
-		form.append("<td/>");
-		form.append("<td><b><u>Replacement value</u></b></td>");
-		form.append("</tr>");
-
-		form.append("<tr>");
-		form.append("<td><input id=\"phi\" name=\"phi\"/></td>");
-		form.append("<td>&nbsp;=&nbsp;</td>");
-		form.append("<td><input name=\"replacement\"/></td>");
-		form.append("</tr>");
-
-		for (int i= 0; i<keys.length; i++) {
-			String key = (String)keys[i];
-			form.append("<tr>");
-			form.append("<td>"+key+"</td>");
-			form.append("<td><b>&nbsp;=&nbsp;</b></td>");
-			form.append("<td>"+props.getProperty(key)+"</td>");
-			form.append("</tr>\n");
-		}
-
-		form.append("</table>\n");
-		form.append("</center>");
-		form.append("<br/>\n");
-		form.append("<input class=\"button\" type=\"submit\" value=\"Update the file\"/>\n");
-		form.append("</form>\n");
-		return form.toString();
-	}
-
-	private String hidden(String name, String text) {
-		return "<input type=\"hidden\" id=\"" + name + "\" name=\"" + name + "\" value=\"" + text + "\"/>";
-	}
-
-	private String responseHead(String title, String subtitle, boolean includeSave, boolean includeCSVLinks, HashSet<String> keyTypes) {
-		String head =
-				"<html>\n"
-			+	" <head>\n"
-			+	"  <title>"+title+"</title>\n"
-			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/BaseStyles.css\"></link>\n"
-			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/JSPopup.css\"></link>\n"
-			+	"  <link rel=\"Stylesheet\" type=\"text/css\" media=\"all\" href=\"/LookupServlet.css\"></link>\n"
-			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSUtil.js\">;</script>\n"
-			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSAJAX.js\">;</script>\n"
-			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/JSPopup.js\">;</script>\n"
-			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/LookupServlet.js\">;</script>\n"
-			+	" </head>\n"
-			+	" <body>\n"
-
-			+	"  <div style=\"float:right;\">\n";
-
-		if (!home.equals("")) {
-			head +=
-					"   <img src=\"/icons/home.png\"\n"
-				+	"    onclick=\"window.open('"+home+"','_self');\"\n"
-				+	"    style=\"margin-right:2px;\"\n"
-				+	"    title=\"Return to the home page\"/>\n"
-				+	"   <br>\n";
-		}
-
-		if (includeSave) {
-			head +=
-					"   <img src=\"/icons/save.png\"\n"
-				+	"    onclick=\"submitURLEncodedForm();\"\n"
-				+	"    style=\"margin-right:2px;\"\n"
-				+	"    title=\"Update the file\"/>\n"
-				+	"   <br>\n";
-		}
-
-		if (includeCSVLinks) {
-			head +=
-				    "   <br>\n"
-				+	"   <img src=\"/icons/arrow-up.png\"\n"
-				+	"    onclick=\"uploadCSV();\"\n"
-				+	"    style=\"margin-left:4px; width:28px;\"\n"
-				+	"    title=\"Upload CSV Lookup Table File\"/>\n"
-				+	"   <br>\n"
-				+	"   <img src=\"/icons/arrow-down.png\"\n"
-				+	"    onclick=\"downloadCSV();\"\n"
-				+	"    style=\"margin-left:4px; width:28px;\"\n"
-				+	"    title=\"Download CSV Lookup Table File\"/>\n";
-		}
-
-		head +=
-			    "  </div>\n"
-			 +	"  <h1>"+title+"</h1>\n"
-			 +	(subtitle.equals("") ? "" : "  <h2>"+subtitle+"</h2>\n")
-			 +	"  <center>\n"
-			 +	(subtitle.equals("") ? "" : "  <p>For instructions, see <a href=\""
-			 +   "http://mircwiki.rsna.org/index.php?title=The_CTP_Lookup_Table_Editor\""
-			 +   "target=\"wiki\">this article</a>.</p>\n");
-
-		if (keyTypes != null) {
-			if (keyTypes.size() == 0) {
-				head += "<p>There are no KeyTypes specified in this DicomAnonymizer script.</p>\n";
+		for (String key : keySet) {
+			if (key.startsWith(prefix)) {
+				Element el = doc.createElement("Preset");
+				el.setAttribute("key", key.substring(prefix.length()));
+				el.setAttribute("value", "");
+				root.appendChild(el);
 			}
 			else {
-				head += "<p>KeyTypes used in this DicomAnonymizer script: ";
-				boolean first = true;
-				for (String kt : keyTypes) {
-					head += (first ? "" : ", ") + kt;
-					first = false;
-				}
+				Element el = doc.createElement("Entry");
+				el.setAttribute("key", key);
+				el.setAttribute("value", lutProps.getProperty(key));
+				root.appendChild(el);
 			}
 		}
-
-		return head;
-	}
-
-	private String responseTail() {
-		String tail =
-				"  </center>\n"
-			+	" </body>\n"
-			+	"</html>\n";
-		return tail;
+		return doc;
 	}
 
 	//Load a Properties file.
@@ -511,14 +489,3 @@ public class LookupServlet extends Servlet {
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2010 by the Radiological Society of North America
+*  Copyright 2013 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -63,11 +63,11 @@ public class Redirector extends AbstractPlugin {
 	 * Stop the plugin.
 	 */
 	public void shutdown() {
-		stop = true;
 		if (monitor != null) {
 			monitor.stopServer();
 			logger.info("Redirector Plugin stopped");
 		}
+		stop = true;
 	}
 
 	class RedirectionHandler implements Service {

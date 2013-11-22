@@ -321,6 +321,15 @@ public class DicomStorageSCP extends DcmServiceBase {
 			DicomObject dob = null;
 			try {
 				dob = new DicomObject(file, true);
+
+				if (logger.isDebugEnabled() && !dob.isImage()) {
+					logger.info("Non-image object received from "+connectionIP+" ["+calledAET+","+callingAET+"]");
+					logger.info("...PatientName: "+dob.getPatientName());
+					logger.info("...PatientID:   "+dob.getPatientID());
+					logger.info("...Modality:    "+dob.getModality());
+					logger.info("...SOPClass:    "+dob.getSOPClassName());
+				}
+
 				if (calledAETTag != 0) dob.setElementValue(calledAETTag, calledAET);
 				if (callingAETTag != 0) dob.setElementValue(callingAETTag, callingAET);
 				if (connectionIPTag != 0) dob.setElementValue(connectionIPTag, connectionIP);

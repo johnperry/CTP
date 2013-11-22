@@ -45,9 +45,15 @@
 		<Plugin>
 			<attr name="name" required="yes" default="Redirector"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdplugins.Redirector" editable="no"/>
-			<attr name="httpPort" required="yes" default="80"/>
-			<attr name="httpsHost" required="yes" default="mirc.mysecuresite.myuniversity.edu"/>
-			<attr name="httpsPort" required="yes" default="443"/>
+			<attr name="httpPort" required="yes" default="80">
+				<helptext>The HTTP port on which to listen.</helptext>
+			</attr>
+			<attr name="httpsHost" required="yes" default="mirc.mysecuresite.myuniversity.edu">
+				<helptext>The IP address or domain name to which to redirect requests.</helptext>
+			</attr>
+			<attr name="httpsPort" required="yes" default="443">
+				<helptext>The HTTPS port to which to redirect requests.</helptext>
+			</attr>
 		</Plugin>
 
 		<Pipeline>
@@ -136,6 +142,7 @@
 			<attr name="port" required="yes" default="104"/>
 			<attr name="callingAETTag" required="no" default=""/>
 			<attr name="calledAETTag" required="no" default=""/>
+			<attr name="connectionIPTag" required="no" default=""/>
 			<attr name="timeTag" required="no" default=""/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="suppressDuplicates" required="no" default="no" options="yes|no"/>
@@ -658,7 +665,8 @@
 		<auditLogTags>List of DICOM tags to log, separated by semicolons (tag1; tag2; etc.)</auditLogTags>
 		<cacheID>The id attribute of an ObjectCache stage from which to obtain PHI for the hierarchy</cacheID>
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
-		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
+		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
+		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>

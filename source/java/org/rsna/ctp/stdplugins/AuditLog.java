@@ -26,7 +26,7 @@ import org.rsna.ctp.servlets.AuditLogServlet;
 
 /**
  * A Plugin to implement an audit log repository that can be
- * accessed through a servlet..
+ * accessed through a servlet.
  */
 public class AuditLog extends AbstractPlugin {
 

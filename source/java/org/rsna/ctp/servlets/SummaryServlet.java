@@ -30,7 +30,7 @@ import org.rsna.util.StringUtil;
 
 /**
  * The Summary servlet.
- * This servlet provides a summary of key parameters of pipelines or stages.
+ * This servlet provides a summary of key parameters of pipelines and stages.
  */
 public class SummaryServlet extends Servlet {
 
