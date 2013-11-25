@@ -828,7 +828,7 @@ public class DicomObject extends FileObject {
 	 * @return the value of the element as a floating point number.
 	 */
 	public float getFloat(String tagName, float defaultValue) {
-		return getFloat(Tags.forName(tagName), defaultValue);
+		return getFloat(getElementTag(tagName), defaultValue);
 	}
 
 	/**
@@ -851,7 +851,7 @@ public class DicomObject extends FileObject {
 	 * element does not exist.
 	 */
 	public String getElementValue(String tagName) {
-		return getElementValue(Tags.forName(tagName),"");
+		return getElementValue(getElementTag(tagName), "");
 	}
 
 	/**
@@ -865,14 +865,7 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(String tagName, String defaultString) {
-		int tag;
-		if (tagName.startsWith("[") && tagName.endsWith("]"))
-			tagName = tagName.replace("[","(").replace("]",")");
-		if (tagName.startsWith("(") && tagName.endsWith(")"))
-			tag = Tags.valueOf(tagName);
-		else
-			tag = Tags.forName(tagName);
-		return getElementValue(tag, defaultString);
+		return getElementValue(getElementTag(tagName), defaultString);
 	}
 
 	/**

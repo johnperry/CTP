@@ -286,6 +286,14 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="LookupTableChecker"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.LookupTableChecker" editable="no"/>
+			<attr name="id" required="yes" default="LookupTableChecker"/>
+			<attr name="root" required="yes" default="roots/LookupTableChecker"/>
+			<attr name="quarantine" required="yes" default="quarantines/LookupTableChecker"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="DicomDecompressor"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomDecompressor" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomDecompressor"/>

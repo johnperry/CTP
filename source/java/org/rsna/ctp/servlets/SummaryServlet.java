@@ -20,6 +20,7 @@ import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Quarantine;
 import org.rsna.ctp.stdplugins.AuditLog;
 import org.rsna.ctp.stdstages.FileStorageService;
+import org.rsna.ctp.stdstages.LookupTableChecker;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
 import org.rsna.server.User;
@@ -215,6 +216,18 @@ public class SummaryServlet extends Servlet {
 						String url = "http://"+getHostWithoutPort(host)+":"+port;
 						sb.append("<p class=\"link\">\n");
 						sb.append("<input type=\"button\" value=\"View the FileStorageService Contents\" onclick=\"window.open('"+url+"','FSS')\"/>\n");
+						sb.append("</p>");
+					}
+				}
+				if ((stage instanceof LookupTableChecker) && userIsAdmin) {
+					LookupTableChecker ltc = (LookupTableChecker)stage;
+					String id = ltc.getID().trim();
+					if (!id.equals("")) {
+						String url = "/" + id + "?suppress";
+						sb.append("<p class=\"link\">\n");
+						sb.append("<input type=\"button\"");
+						sb.append("   value=\"View the LookupTableChecker Database\"");
+						sb.append("   onclick=\"window.location='"+url+"';\"/>\n");
 						sb.append("</p>");
 					}
 				}

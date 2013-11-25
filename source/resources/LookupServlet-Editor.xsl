@@ -16,7 +16,7 @@
 <xsl:template match="/LookupTable">
 	<html>
 		<head>
-			<title>Select the Lookup Table File to Edit</title>
+			<title>Lookup Table Editor</title>
 			<link rel="Stylesheet" type="text/css" media="all" href="/BaseStyles.css"></link>
 			<link rel="Stylesheet" type="text/css" media="all" href="/JSPopup.css"></link>
 			<link rel="Stylesheet" type="text/css" media="all" href="/LookupServlet.css"></link>

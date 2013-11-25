@@ -9,6 +9,7 @@ package org.rsna.ctp.stdstages.anonymizer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Hashtable;
 import java.util.Properties;
 import org.apache.log4j.Logger;
@@ -28,13 +29,23 @@ public class LookupTable {
 	public long lastVersionLoaded = 0;
 
 	/**
+	 * Protected constructor; create a LookupTable from a properties file.
+	 * @param file the file containing the lookup table.
+	 */
+	protected LookupTable(File file) {
+		this.file = file;
+		this.properties = getProps(file);
+		this.lastVersionLoaded = file.lastModified();
+	}
+
+	/**
 	 * Get the singleton instance of a LookupTable, loading a new instance
-	 * if the properties file has changed.
+	 * only if the properties file has changed.
 	 * @param file the file containing the lookup table properties.
 	 */
 	public static LookupTable getInstance(File file) {
 		//If there is no file, then return null.
-		if ((file == null) || !file.exists()) return null;
+		if (file == null) return null;
 
 		//We have a file, see if we already have an instance in the table
 		String path = file.getAbsolutePath().replaceAll("\\\\","/");
@@ -62,13 +73,33 @@ public class LookupTable {
 	}
 
 	/**
-	 * Protected constructor; create a LookupTable from a properties file.
-	 * @param file the file containing the lookup table.
+	 * Save the Properties object for a file.
+	 * This method does nothing if a LookupTable object does not exist
+	 * or cannot be instantiated for the file.
 	 */
-	protected LookupTable(File file) {
-		this.file = file;
-		this.properties = getProps(file);
-		this.lastVersionLoaded = file.lastModified();
+	public static void save(File file) {
+		LookupTable lut = getInstance(file);
+		if (lut != null) {
+			saveProps(file, lut.properties);
+			lut.properties = getProps(file);
+		}
+	}
+
+	/**
+	 * Get the Properties object for this instance.
+	 * This method returns null if a LookupTable object does not exist
+	 * or cannot be instantiated for the file.
+	 * @return the Properties object, or null if it cannot be obtained.
+	 */
+	public Properties getProperties() {
+		return properties;
+	}
+
+	/**
+	 * Save the Properties object for this instance.
+	 */
+	public void save() {
+		saveProps(file, properties);
 	}
 
 	/**
@@ -80,23 +111,42 @@ public class LookupTable {
 	public boolean isCurrent() {
 		long lastModified = file.lastModified();
 		long age = System.currentTimeMillis() - lastModified;
-		return ( (lastVersionLoaded >= lastModified) || (age < 5000) );
+		return ( (lastVersionLoaded >= lastModified) || (age < 1000) );
 	}
 
-	//Load a Properties file
-	private Properties getProps(File propFile) {
+	/**
+	 * Load a properties file.
+	 * @param propsFile the file to load
+	 * @return the properties, or an empty object if the load failed.
+	 */
+	public static Properties getProps(File propsFile) {
 		Properties props = new Properties();
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream(propFile);
+			fis = new FileInputStream(propsFile);
 			props.load(fis);
 		}
-		catch (Exception ex) {
-			props = null;
-		}
+		catch (Exception returnEmptyProps) { }
 		finally {
 			FileUtil.close(fis);
 		}
 		return props;
 	}
+
+	/**
+	 * Save a properties object in a file.
+	 * @param propsFile the file to save
+	 * @param props the properties object to save
+	 */
+	public static void saveProps(File propsFile, Properties props) {
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream( propsFile );
+			props.store( fos, propsFile.getName() );
+			fos.flush();
+		}
+		catch (Exception e) { }
+		FileUtil.close(fos);
+	}
+
 }

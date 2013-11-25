@@ -1,0 +1,43 @@
+body {
+	margin-top:0;
+	margin-right:0;
+}
+
+h1 {
+	text-align:center;
+	margin-top:10;
+}
+
+h2 {
+	text-align:center;
+	font-size:12pt;
+	margin:0;
+	padding:0;
+	font-weight:bold;
+}
+
+input {
+	width:400px;
+	font-family: monospace;
+}
+
+p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	padding-top: 5px;
+	padding:bottom: 15px;
+}
+
+th {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	font-weight: bold;
+	padding-left: 10px;
+	padding-right:10px;
+}
+
+table td {
+	font-family: monospace;
+	border: thin solid gray;
+	padding-left:3px;
+	padding-right: 3px;
+}
