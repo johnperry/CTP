@@ -28,6 +28,7 @@ public class Launcher extends JFrame implements ChangeListener {
 	JavaPanel		javaPanel;
 	VersionPanel	versionPanel;
 	SystemPanel		systemPanel;
+	EnvironmentPanel environmentPanel;
 	ConfigPanel		configPanel;
 	IOPanel			ioPanel;
 	LogPanel		logPanel;
@@ -60,6 +61,7 @@ public class Launcher extends JFrame implements ChangeListener {
 			versionPanel = new VersionPanel();
 			javaPanel = JavaPanel.getInstance();
 			systemPanel = new SystemPanel();
+			environmentPanel = new EnvironmentPanel();
 			configPanel = new ConfigPanel();
 			ioPanel = new IOPanel();
 			logPanel = LogPanel.getInstance();
@@ -70,6 +72,7 @@ public class Launcher extends JFrame implements ChangeListener {
 			tp.add("General", javaPanel);
 			tp.add("Version", versionPanel);
 			tp.add("System", systemPanel);
+			tp.add("Environment", environmentPanel);
 			tp.add("Configuration", configPanel);
 			tp.add("Console", ioPanel);
 			tp.add("Log", logPanel);
@@ -123,7 +126,7 @@ public class Launcher extends JFrame implements ChangeListener {
 
 		boolean noProps = ((w == 0) || (h == 0));
 
-		int wmin = 500;
+		int wmin = 550;
 		int hmin = 600;
 		if ((w < wmin) || (h < hmin)) {
 			w = wmin;

@@ -164,8 +164,6 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 						try { recman.commit(); }
 						catch (Exception unable) { };
 						if (quarantine != null) quarantine.insert(fileObject);
-						lastFileOut = null;
-						lastTimeOut = System.currentTimeMillis();
 						return null;
 					}
 				}
