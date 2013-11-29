@@ -25,7 +25,11 @@
 				</tr>
 				<tr>
 					<td>Study date:</td>
-					<td><xsl:value-of select="@date"/></td>
+					<td>
+						<xsl:call-template name="fixDate">
+							<xsl:with-param name="d" select="@date"/>
+						</xsl:call-template>
+					</td>
 				</tr>
 				<tr>
 					<td>Study name:</td>
@@ -77,6 +81,22 @@ new Image(<xsl:text>"</xsl:text>
 </xsl:for-each>
 );
 </script>
+</xsl:template>
+
+<xsl:template name="fixDate">
+	<xsl:param name="d"/>
+	<xsl:choose>
+		<xsl:when test="string-length($d)=8">
+			<xsl:value-of select="substring($d,1,4)"/>
+			<xsl:text>.</xsl:text>
+			<xsl:value-of select="substring($d,5,2)"/>
+			<xsl:text>.</xsl:text>
+			<xsl:value-of select="substring($d,7,2)"/>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$d"/>
+		</xsl:otherwise>
+	</xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>

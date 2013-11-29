@@ -61,7 +61,7 @@ public class ImageQualifiers {
 
 	//Set up the integers from the string parameters.
 	private void setIntegers() {
-		maxWidth = StringUtil.getInt(maxWidthString, 10000);
+		maxWidth = StringUtil.getInt(maxWidthString, 1280);
 		minWidth = StringUtil.getInt(minWidthString, 96);
 		quality = StringUtil.getInt(qualityString, -1);
 	}

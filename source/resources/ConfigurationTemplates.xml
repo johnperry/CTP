@@ -723,6 +723,47 @@
 
 	<StandardPipelines>
 
+		<Pipeline name="Image Acquisition Site">
+			<DicomImportService
+				name="DicomImportService"
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				root="roots/DicomImportService-IA"
+				port="9104"
+				quarantine="quarantines/DicomImportService-IA" />
+			<FileStorageService
+				name="FileStorageService"
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				root="roots/FileStorageService-IA"
+				port="9105"
+				returnStoredFile="no"
+				quarantine="quarantines/FileStorageService-IA" />
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				name="DicomAnonymizer"
+				root="roots/DicomAnonymizer-IA"
+				script="scripts/DicomAnonymizer-IA.script"/>
+			<HttpExportService
+				name="HttpExportService"
+				class="org.rsna.ctp.stdstages.HttpExportService"
+				root="roots/HttpExportService-IA"
+				url="http://127.0.0.1:9199/" />
+		</Pipeline>
+
+		<Pipeline name="Principal Investigator Site">
+			<HttpImportService
+				class="org.rsna.ctp.stdstages.HttpImportService"
+				logConnections="no"
+				name="HttpImportService"
+				port="9199"
+				root="roots/HttpImportService-PI"/>
+			<FileStorageService
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				name="FileStorageService"
+				root="roots/FileStorageService-PI"
+				port="9106"
+				quarantine="quarantines/FileStorageService-PI" />
+		</Pipeline>
+
 		<Pipeline name="CTP-DICOM Storage with PHI">
 			<DicomImportService
 				name="DICOM Server Import"
@@ -1015,7 +1056,7 @@
 				name="HttpExportService"
 				class="org.rsna.ctp.stdstages.HttpExportService"
 				root="roots/HttpExportService"
-				url="http://http://ncias-d823-v.nci.nih.gov:23104/" />
+				url="http://ncias-d823-v.nci.nih.gov:23104/" />
 		</Pipeline>
 
 	</StandardPipelines>

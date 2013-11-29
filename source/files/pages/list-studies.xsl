@@ -5,7 +5,7 @@
 <xsl:param name="context"/>
 <xsl:param name="dir"/>
 <xsl:param name="delete"/>
-<xsl:param name="key">date</xsl:param>
+<xsl:param name="key">studyDate</xsl:param>
 
 <xsl:template match="/index">
 	<html>
@@ -67,12 +67,24 @@
 </xsl:template>
 
 <xsl:template match="study">
+
+	<xsl:variable name="studyDate">
+		<xsl:call-template name="fixDate">
+			<xsl:with-param name="d" select="studyDate"/>
+		</xsl:call-template>
+	</xsl:variable>
+	<xsl:variable name="storageDate">
+		<xsl:call-template name="fixDate">
+			<xsl:with-param name="d" select="storageDate"/>
+		</xsl:call-template>
+	</xsl:variable>
+
 	<tr>
 		<td><xsl:value-of select="patientName"/></td>
 		<td><xsl:value-of select="patientID"/></td>
 		<td><xsl:value-of select="accessionNumber"/></td>
-		<td><xsl:value-of select="studyDate"/></td>
-		<td><xsl:value-of select="storageDate"/></td>
+		<td><xsl:value-of select="$studyDate"/></td>
+		<td><xsl:value-of select="$storageDate"/></td>
 		<td>
 			<a href="{$context}/{studyName}?format=list">
 				<xsl:text>List</xsl:text>
@@ -125,6 +137,22 @@ function hideRow(theEvent) {
 }
 ]]>
 	</script>
+</xsl:template>
+
+<xsl:template name="fixDate">
+	<xsl:param name="d"/>
+	<xsl:choose>
+		<xsl:when test="string-length($d)=8">
+			<xsl:value-of select="substring($d,1,4)"/>
+			<xsl:text>.</xsl:text>
+			<xsl:value-of select="substring($d,5,2)"/>
+			<xsl:text>.</xsl:text>
+			<xsl:value-of select="substring($d,7,2)"/>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$d"/>
+		</xsl:otherwise>
+	</xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>

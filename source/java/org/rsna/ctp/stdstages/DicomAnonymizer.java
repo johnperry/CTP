@@ -117,8 +117,6 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 				}
 				else if (status.isQUARANTINE()) {
 					if (quarantine != null) quarantine.insert(fileObject);
-					lastFileOut = null;
-					lastTimeOut = System.currentTimeMillis();
 					return null;
 				}
 				else if (status.isSKIP()) ; //keep the input object

@@ -838,9 +838,9 @@ public class DICOMAnonymizer {
 	//Properties as keyType/value = replacement.
 	//Values and replacements are trimmed before use.
 	private static String lookup(FnCall fn) throws Exception {
+		String key = "";
 		try {
 			String[] names = fn.args[0].split("\\|");
-			String key = "";
 			boolean first = true;
 			for (String name : names) {
 				if (!first) key += "|";
@@ -856,8 +856,10 @@ public class DICOMAnonymizer {
 				if (action.equals("keep")) return "@keep()";
 				if (action.equals("remove")) return "@remove()";
 				if (action.equals("empty")) return "@empty()";
-				if (action.equals("default") && (fn.args.length > 3)) return fn.getArg(3).trim();
-				if (action.equals("skip")) throw new Exception("!skip! - "+ex.getMessage());
+				if (fn.args.length > 3) {
+					if (action.equals("default")) return fn.getArg(3).trim();
+					if (action.equals("ignore") && key.matches(fn.getArg(3))) return key;
+				}
 			}
 			throw new Exception("!quarantine! - "+ex.getMessage());
 		}

@@ -8,8 +8,8 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.net.HttpURLConnection;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,11 +28,8 @@ import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Processor;
 import org.rsna.ctp.servlets.LookupTableCheckerServlet;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
-import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
-import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizer;
-import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizerContext;
 import org.rsna.server.ServletSelector;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
@@ -42,6 +39,10 @@ import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.dcm4che.data.SpecificCharacterSet;
+import org.dcm4che.data.Dataset;
+import org.dcm4che.data.DcmElement;
+import org.dcm4che.dict.VRs;
 
 /**
  * A stage for filtering out objects that will fail an @lookup function call
@@ -58,8 +59,12 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
     DicomAnonymizer anonymizer = null;
     File dcmScriptFile = null;
     File lutFile = null;
+	ScriptTable scriptTable = null;
+	Properties lutProps = null;
+	SpecificCharacterSet charset = null;
 
-    static final Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\(([^,]+),([^),]+)");
+    static final Pattern processPattern = Pattern.compile("@\\s*process\\s*\\(\\s*\\)");
+    static final Pattern lookupPattern = Pattern.compile("@\\s*lookup\\s*\\(([^,)]+),([^,)]+),?([^,)]*),?([^\\)]*)\\)");
 
 	/**
 	 * Construct the LookupTableChecker PipelineStage.
@@ -128,38 +133,12 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 			DicomObject dob = (DicomObject)fileObject;
 			if (dcmScriptFile != null) {
 				DAScript daScript = DAScript.getInstance(dcmScriptFile);
-				Document scriptXML = daScript.toXML();
-				Element scriptRoot = scriptXML.getDocumentElement();
-				Properties lutProps = LookupTable.getProperties(lutFile);
+				scriptTable = new ScriptTable(daScript);
+				lutProps = LookupTable.getProperties(lutFile);
 				synchronized(this) {
-					boolean ok = true;
-					Node child = scriptRoot.getFirstChild();
-					while (child != null) {
-						if ( (child instanceof Element) && child.getNodeName().equals("e") ) {
-							Element eChild = (Element)child;
-							if (eChild.getAttribute("en").equals("T")) {
-								String thisTag = eChild.getAttribute("t");
-								String command = eChild.getTextContent();;
-								Matcher matcher = pattern.matcher(command);
-								while (matcher.find()) {
-									String element = matcher.group(1).trim();
-									String keyType = matcher.group(2).trim() + "/";
-
-									//logger.info("keyType: \""+keyType+"\"; element: \""+element+"\"");
-
-									if (element.equals("this")) element = thisTag;
-									String elementValue = dob.getElementValue(element);
-									String key = keyType + elementValue;
-									if (lutProps.getProperty(key) == null) {
-										try { index.insert(key, keyType, true); }
-										catch (Exception unable) { }
-										ok = false;
-									}
-								}
-							}
-						}
-						child = child.getNextSibling();
-					}
+					Dataset ds = dob.getDataset();
+					charset = ds.getSpecificCharacterSet();
+					boolean ok = checkDataset(ds);
 					if (!ok) {
 						try { recman.commit(); }
 						catch (Exception unable) { };
@@ -172,6 +151,88 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
+	}
+
+	private boolean checkDataset(Dataset ds) {
+		boolean ok = true;
+		for (Iterator it=ds.iterator(); it.hasNext(); ) {
+			DcmElement el = (DcmElement)it.next();
+			int tag = 0;
+			try { tag = el.tag(); }
+			catch (Exception useZero) { }
+			String command = scriptTable.get(new Integer(tag));
+			if (command != null) {
+				if (el.vr() == VRs.SQ) {
+					Matcher processMatcher = processPattern.matcher(command);
+					if (processMatcher.find()) {
+						int i = 0;
+						Dataset child;
+						while ((child=el.getItem(i++)) != null) {
+							ok &= checkDataset(child);
+						}
+					}
+				}
+				else {
+					Matcher lookupMatcher = lookupPattern.matcher(command);
+					//logger.info("Parsing: "+command);
+					while (lookupMatcher.find()) {
+
+						int nGroups = lookupMatcher.groupCount();
+						String element = lookupMatcher.group(1).trim();
+						String keyType = lookupMatcher.group(2).trim() + "/";
+						String action = (nGroups > 2) ? lookupMatcher.group(3).trim() : "";
+						String regex = (nGroups > 3) ? lookupMatcher.group(4).trim() : "";
+
+						//logger.info("...nGroups  = "+nGroups);
+						//logger.info("...element: |"+element+"|");
+						//logger.info("...keyType: |"+keyType+"|");
+						//logger.info("...action : |"+action+"|");
+						//logger.info("...regex:   |"+regex+"|");
+
+						int targetTag = ( element.equals("this") ? tag : DicomObject.getElementTag(element) );
+						String targetValue = handleNull( ds.getString(targetTag) );
+
+						if (!targetValue.equals("")) {
+							String key = keyType + targetValue;
+							if (lutProps.getProperty(key) == null) {
+								boolean there = false;
+								if (action.equals("keep")   ||
+									action.equals("skip")   ||
+									action.equals("remove") ||
+									action.equals("empty")  ||
+									action.equals("default")) there = true;
+								else if (action.equals("ignore")) {
+									regex = removeQuotes(regex);
+									there = targetValue.matches(regex);
+								}
+								try {
+									if (!there) {
+										index.insert(key, keyType, true);
+										ok = false;
+									}
+								}
+								catch (Exception ignore) { }
+							}
+						}
+					}
+				}
+			}
+		}
+		return ok;
+	}
+
+	private String handleNull(String s) {
+		if (s != null) return s.trim();
+		return "";
+	}
+
+	private String removeQuotes(String s) {
+		if (s == null) return "";
+		s = s.trim();
+		if ((s.length() > 1) && s.startsWith("\"") && s.endsWith("\"")) {
+			s = s.substring(1, s.length()-1);
+		}
+		return s;
 	}
 
 	/**
@@ -293,5 +354,32 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 			  "<tr><td width=\"20%\">Database size:</td><td>" + index.size() + "</td></tr>";
 		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
 	}
+
+	//A Hashtable of the script, keeping only the @process and @lookup scripts
+	class ScriptTable extends Hashtable<Integer,String> {
+		public ScriptTable(DAScript script) {
+			super();
+			Document scriptXML = script.toXML();
+			Element scriptRoot = scriptXML.getDocumentElement();
+			Node child = scriptRoot.getFirstChild();
+			while (child != null) {
+				if ( (child instanceof Element) && child.getNodeName().equals("e") ) {
+					Element eChild = (Element)child;
+					if (eChild.getAttribute("en").equals("T")) {
+						int tag = StringUtil.getHexInt(eChild.getAttribute("t"));
+						String command = eChild.getTextContent();
+						Matcher processMatcher = processPattern.matcher(command);
+						Matcher lookupMatcher = lookupPattern.matcher(command);
+						Integer tagInteger = new Integer(tag);
+						if (processMatcher.find() || lookupMatcher.find()) {
+							this.put(tagInteger, command);
+						}
+					}
+				}
+				child = child.getNextSibling();
+			}
+		}
+	}
+
 }
 

@@ -142,8 +142,11 @@ public class SummaryServlet extends Servlet {
 			sb.append( plugin.getStatusHTML() );
 			if ((plugin instanceof AuditLog) && userIsAdmin) {
 				AuditLog log = (AuditLog)plugin;
+				String url = "/" + log.getID() + "?suppress";
 				sb.append("<p class=\"link\">\n");
-				sb.append("<input type=\"button\" value=\"Search the AuditLog\" onclick=\"window.open('/"+log.getID()+"?suppress','_self')\"/>\n");
+				sb.append("<input type=\"button\"");
+				sb.append("  value=\"Search the AuditLog\"");
+				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
 				sb.append("</p>");
 			}
 			sb.append( "<h2>Configuration</h2>\n" );
@@ -226,8 +229,8 @@ public class SummaryServlet extends Servlet {
 						String url = "/" + id + "?suppress";
 						sb.append("<p class=\"link\">\n");
 						sb.append("<input type=\"button\"");
-						sb.append("   value=\"View the LookupTableChecker Database\"");
-						sb.append("   onclick=\"window.location='"+url+"';\"/>\n");
+						sb.append("  value=\"View the LookupTableChecker Database\"");
+						sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
 						sb.append("</p>");
 					}
 				}

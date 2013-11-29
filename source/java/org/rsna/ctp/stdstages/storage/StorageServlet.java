@@ -296,8 +296,10 @@ public class StorageServlet extends Servlet {
 
 					//See if the jpeg file already exists.
 					File jpegFile = new File(fo.getFile().getParentFile(), jpegName);
+
 					if (!jpegFile.exists()) {
 						//No, create it
+						q.maxWidth = Math.min(q.maxWidth, 1024);
 						if (dob.saveAsJPEG(jpegFile, 0, q.maxWidth, q.minWidth, q.quality) == null) {
 							//Error, return a code
 							res.setResponseCode( res.servererror );

@@ -1575,7 +1575,9 @@ public class DicomObject extends FileObject {
 		}
 		sb.append("</head>\n");
 		sb.append("<body>\n");
+		sb.append("<center>\n");
 		sb.append(getElementTable(decipherLinks));
+		sb.append("</center>\n");
 		sb.append("</body>\n");
 		sb.append("</html>\n");
 		return sb.toString();
