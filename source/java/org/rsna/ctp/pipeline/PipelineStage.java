@@ -8,6 +8,7 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
+import org.rsna.ctp.servlets.SummaryLink;
 
 public interface PipelineStage {
 
@@ -30,5 +31,7 @@ public interface PipelineStage {
 	public String getStatusHTML();
 
 	public long getLastFileOutTime();
+
+	public SummaryLink[] getLinks(boolean userIsAdmin);
 
 }

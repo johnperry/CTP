@@ -7,6 +7,8 @@
 
 package org.rsna.ctp.plugin;
 
+import org.rsna.ctp.servlets.SummaryLink;
+
 public interface Plugin {
 
 	public void start();
@@ -22,5 +24,7 @@ public interface Plugin {
 	public String getConfigHTML(boolean local);
 
 	public String getStatusHTML();
+
+	public SummaryLink[] getLinks(boolean userIsAdmin);
 
 }

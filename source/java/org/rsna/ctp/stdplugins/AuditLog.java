@@ -18,6 +18,7 @@ import jdbm.RecordManager;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.plugin.AbstractPlugin;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.server.ServletSelector;
 import org.rsna.util.JdbmUtil;
 import org.rsna.util.StringUtil;
@@ -111,6 +112,17 @@ public class AuditLog extends AbstractPlugin {
 		catch (Exception mustBeZero) { size = 0; }
 		String sizeLine = "<tr><td width=\"20%\">Number of entries</td><td>"+size+"</td></tr>";
 		return getStatusHTML(sizeLine);
+	}
+
+	/**
+	 * Get the array of links for display on the summary page.
+	 * @param userIsAdmin true if the requesting user has the admin role.
+	 * @return the array of links for display on the summary page.
+	 */
+	public SummaryLink[] getLinks(boolean userIsAdmin) {
+		return new SummaryLink[] {
+			new SummaryLink("/"+id, null, "Search the AuditLog", false)
+		};
 	}
 
 	/**

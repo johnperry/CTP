@@ -27,6 +27,7 @@ import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Processor;
 import org.rsna.ctp.servlets.LookupTableCheckerServlet;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
@@ -341,6 +342,17 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 			recman = null;
 			logger.warn("Unable to load the index.");
 		}
+	}
+
+	/**
+	 * Get the array of links for display on the summary page.
+	 * @param userIsAdmin true if the requesting user has the admin role.
+	 * @return the array of links for display on the summary page.
+	 */
+	public SummaryLink[] getLinks(boolean userIsAdmin) {
+		return new SummaryLink[] {
+			new SummaryLink("/"+id, null, "View the LookupTableChecker Database", false)
+		};
 	}
 
 	/**

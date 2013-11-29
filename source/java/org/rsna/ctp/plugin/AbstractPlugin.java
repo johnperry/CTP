@@ -8,6 +8,7 @@
 package org.rsna.ctp.plugin;
 
 import java.io.File;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
@@ -105,6 +106,17 @@ public abstract class AbstractPlugin implements Plugin {
 	 */
 	public Element getConfigElement() {
 		return element;
+	}
+
+	/**
+	 * Get the array of links for display on the summary page.
+	 * This method returns an empty array. It should be overridden
+	 * by plugins that provide servlets to access their data.
+	 * @param userIsAdmin true if the requesting user has the admin role.
+	 * @return the array of links for display on the summary page.
+	 */
+	public SummaryLink[] getLinks(boolean userIsAdmin) {
+		return new SummaryLink[0];
 	}
 
 	/**

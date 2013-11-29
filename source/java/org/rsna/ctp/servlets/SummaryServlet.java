@@ -140,15 +140,7 @@ public class SummaryServlet extends Servlet {
 			sb.append("<div id=\"status\" class=\"status\">");
 			sb.append( "<h2>Status</h2>\n" );
 			sb.append( plugin.getStatusHTML() );
-			if ((plugin instanceof AuditLog) && userIsAdmin) {
-				AuditLog log = (AuditLog)plugin;
-				String url = "/" + log.getID() + "?suppress";
-				sb.append("<p class=\"link\">\n");
-				sb.append("<input type=\"button\"");
-				sb.append("  value=\"Search the AuditLog\"");
-				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
-				sb.append("</p>");
-			}
+			sb.append( getLinks(plugin.getLinks(userIsAdmin)) );
 			sb.append( "<h2>Configuration</h2>\n" );
 			sb.append( plugin.getConfigHTML(userIsAdmin) );
 			sb.append("</div>");
@@ -193,7 +185,7 @@ public class SummaryServlet extends Servlet {
 		return getAllPipelinesPage();
 	}
 
-	private String getHostWithoutPort(String host) {
+	private String getHostWithoutPort() {
 		int k = host.indexOf(":");
 		return (k>0) ? host.substring(0,k) : host;
 	}
@@ -212,28 +204,7 @@ public class SummaryServlet extends Servlet {
 				sb.append("<div id=\"status\" class=\"status\">");
 				sb.append( "<h2>Status</h2>\n" );
 				sb.append( stage.getStatusHTML() );
-				if ((stage instanceof FileStorageService) && userIsAdmin) {
-					FileStorageService fss = (FileStorageService)stage;
-					int port = fss.getPort();
-					if (port > 0) {
-						String url = "http://"+getHostWithoutPort(host)+":"+port;
-						sb.append("<p class=\"link\">\n");
-						sb.append("<input type=\"button\" value=\"View the FileStorageService Contents\" onclick=\"window.open('"+url+"','FSS')\"/>\n");
-						sb.append("</p>");
-					}
-				}
-				if ((stage instanceof LookupTableChecker) && userIsAdmin) {
-					LookupTableChecker ltc = (LookupTableChecker)stage;
-					String id = ltc.getID().trim();
-					if (!id.equals("")) {
-						String url = "/" + id + "?suppress";
-						sb.append("<p class=\"link\">\n");
-						sb.append("<input type=\"button\"");
-						sb.append("  value=\"View the LookupTableChecker Database\"");
-						sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
-						sb.append("</p>");
-					}
-				}
+				sb.append( getLinks(stage.getLinks(userIsAdmin)) );
 				sb.append( "<h2>Configuration</h2>\n" );
 				sb.append( stage.getConfigHTML(userIsAdmin) );
 				sb.append("</div>");
@@ -243,6 +214,31 @@ public class SummaryServlet extends Servlet {
 			}
 		}
 		return getAllPipelinesPage();
+	}
+
+	private String getLinks(SummaryLink[] links) {
+		StringBuffer sb = new StringBuffer();
+		for (SummaryLink link : links) {
+			String url = link.getURL();
+			url += (url.contains("?") ? "&" : "?") + "suppress";
+			if (link.needsNewWindow()) {
+				String windowURL = "http://";
+				windowURL += (url.startsWith(":") ? getHostWithoutPort() : host) + url;
+				sb.append("<p class=\"link\">\n");
+				sb.append("<input type=\"button\"");
+				sb.append("  value=\""+link.getTitle()+"\"");
+				sb.append("  onclick=\"window.open('"+windowURL+"','child')\"/>\n");
+				sb.append("</p>");
+			}
+			else {
+				sb.append("<p class=\"link\">\n");
+				sb.append("<input type=\"button\"");
+				sb.append("  value=\"View the LookupTableChecker Database\"");
+				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
+				sb.append("</p>");
+			}
+		}
+		return sb.toString();
 	}
 
 	private String getPipelineSummary(Pipeline pipe) {

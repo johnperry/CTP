@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2013 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -8,6 +8,7 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
@@ -138,6 +139,17 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 */
 	public synchronized long getLastFileOutTime() {
 		return lastTimeOut;
+	}
+
+	/**
+	 * Get the array of links for display on the summary page.
+	 * This method returns an empty array. It should be overridden
+	 * by stages that provide servlets to access their data.
+	 * @param userIsAdmin true if the requesting user has the admin role.
+	 * @return the array of links for display on the summary page.
+	 */
+	public SummaryLink[] getLinks(boolean userIsAdmin) {
+		return new SummaryLink[0];
 	}
 
 	/**

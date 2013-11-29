@@ -21,6 +21,7 @@ import org.rsna.ctp.objects.ZipObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.StorageService;
 import org.rsna.ctp.servlets.DecipherServlet;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.storage.AjaxServlet;
 import org.rsna.ctp.stdstages.storage.FileSystem;
 import org.rsna.ctp.stdstages.storage.FileSystemManager;
@@ -254,6 +255,20 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get the array of links for display on the summary page.
+	 * @param userIsAdmin true if the requesting user has the admin role.
+	 * @return the array of links for display on the summary page.
+	 */
+	public SummaryLink[] getLinks(boolean userIsAdmin) {
+		if (port > 0) {
+			return new SummaryLink[] {
+				new SummaryLink(":"+port+"/", null, "View the FileStorageService Contents", true)
+			};
+		}
+		else return new SummaryLink[0];
 	}
 
 	/**
