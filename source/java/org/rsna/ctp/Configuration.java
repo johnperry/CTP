@@ -59,6 +59,7 @@ public class Configuration {
 	Document configXML = null;
 	int serverPort = 80;
 	boolean ssl = false;
+	int maxThreads = 10;
 	String usersClassName = "org.rsna.server.UsersXmlFileImpl";
 	boolean requireAuthentication = false;
 	String ipAddress = getIPAddress();
@@ -168,6 +169,7 @@ public class Configuration {
 
 						serverPort = StringUtil.getInt(serverElement.getAttribute("port"), 80);
 						ssl = serverElement.getAttribute("ssl").equals("yes");
+						maxThreads = StringUtil.getInt(serverElement.getAttribute("maxThreads"), 4);
 						String temp = serverElement.getAttribute("usersClassName").trim();
 						if (!temp.equals("")) usersClassName = temp;
 						requireAuthentication = serverElement.getAttribute("requireAuthentication").equals("yes");
@@ -368,6 +370,14 @@ public class Configuration {
 	 */
 	public boolean getServerSSL() {
 		return ssl;
+	}
+
+	/**
+	 * Get the maximum number of threads allowed on the HTTP server.
+	 * @return the maximum number of threads allowed on the HTTP server.
+	 */
+	public int getServerMaxThreads() {
+		return maxThreads;
 	}
 
 	/**

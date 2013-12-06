@@ -179,8 +179,9 @@ public class ClinicalTrialProcessor {
 		//Instantiate the server.
 		int port = config.getServerPort();
 		boolean ssl = config.getServerSSL();
+		int maxThreads = config.getServerMaxThreads();
 		HttpServer httpServer = null;
-		try { httpServer = new HttpServer(ssl, port, selector); }
+		try { httpServer = new HttpServer(ssl, port, maxThreads, selector); }
 		catch (Exception ex) {
 			logger.error("Unable to instantiate the HTTP Server on port "+port, ex);
 			System.exit(0);

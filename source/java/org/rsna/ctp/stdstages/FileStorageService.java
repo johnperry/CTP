@@ -311,7 +311,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 
 			//Instantiate the server
 			httpServer = null;
-			try { httpServer = new HttpServer(ssl, port, selector); }
+			try { httpServer = new HttpServer(ssl, port, 4, selector); }
 			catch (Exception ex) {
 				logger.error(
 					"Unable to instantiate the HTTP Server for "
