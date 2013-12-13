@@ -38,6 +38,9 @@ JAVA_BIN=${JAVA_BIN}
 JAVA=$JAVA_BIN/java
 CTP_PID=$CTP_HOME/ctp.pid
 
+. /etc/rsna.conf
+export RSNA_ROOT
+
 . /lib/lsb/init-functions
 
 add_to_path() {
