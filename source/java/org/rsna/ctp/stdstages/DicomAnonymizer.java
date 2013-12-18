@@ -103,7 +103,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		if ( (fileObject instanceof DicomObject) && (scriptFile != null) ) {
 
 			//If there is a dicomScriptFile, use it to determine whether to anonymize
-			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile).getResult()) {
+			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
 
 				//Okay, anonymize the object
 				File file = fileObject.getFile();

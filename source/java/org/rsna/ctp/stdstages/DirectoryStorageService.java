@@ -275,7 +275,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private boolean checkFilter(FileObject fileObject) {
 		if (fileObject instanceof DicomObject) {
-			return (dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile).getResult();
+			return (dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile);
 		}
 		else if (fileObject instanceof XmlObject) {
 			return (xmlScriptFile == null) || ((XmlObject)fileObject).matches(xmlScriptFile);

@@ -44,7 +44,7 @@ public class PixelScript {
 	public Signature getMatchingSignature(DicomObject dicomObject) {
 		if (signatures != null) {
 			for (Signature sig : signatures) {
-				if (dicomObject.matches(sig.script).getResult()) {
+				if (dicomObject.matches(sig.script)) {
 					return sig;
 				}
 			}

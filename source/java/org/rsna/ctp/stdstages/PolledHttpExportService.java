@@ -174,7 +174,6 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 
 		//Send a long as four bytes
 		private void sendLong(OutputStream out, long x) throws Exception {
-
 			for (int i=0; i<4; i++) {
 				out.write((byte)(x & 0xff));
 				x >>>= 8;

@@ -102,7 +102,7 @@ public abstract class AbstractQueuedExportService
 		if (fileObject instanceof DicomObject) {
 			if (acceptDicomObjects) {
 				if ((dicomScriptFile == null)
-					|| ((DicomObject)fileObject).matches(dicomScriptFile).getResult())
+					|| ((DicomObject)fileObject).matches(dicomScriptFile))
 							enqueue(fileObject);
 			}
 		}

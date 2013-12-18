@@ -755,7 +755,7 @@ public class DicomObject extends FileObject {
 	 *<li>10,20
 	 *<li>(10,20)
 	 *<li>[10,20]
-	 </ul>
+	 *</ul>
 	 * @param name the dcm4che element name or the coded hex value.
 	 * @return the tag, or zero if the name is not a parsable element specification.
 	 */
@@ -844,6 +844,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Get the ByteBuffer of a DICOM element in the DicomObject's dataset.
+	 * @param tag the group and element number of the element.
+	 * @return the value of the element.
+	 */
+	public ByteBuffer getElementByteBuffer(int tag) {
+		return dataset.getByteBuffer(tag);
+	}
+
+	/**
 	 * Get the contents of a DICOM element in the DicomObject's dataset.
 	 * This method returns an empty String if the element does not exist.
 	 * @param tagName the dcm4che name of the element.
@@ -851,7 +860,7 @@ public class DicomObject extends FileObject {
 	 * element does not exist.
 	 */
 	public String getElementValue(String tagName) {
-		return getElementValue(getElementTag(tagName), "");
+		return getElementValue(getTagArray(tagName), "");
 	}
 
 	/**
@@ -865,16 +874,7 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(String tagName, String defaultString) {
-		return getElementValue(getElementTag(tagName), defaultString);
-	}
-
-	/**
-	 * Get the ByteBuffer of a DICOM element in the DicomObject's dataset.
-	 * @param tag the group and element number of the element.
-	 * @return the value of the element.
-	 */
-	public ByteBuffer getElementByteBuffer(int tag) {
-		return dataset.getByteBuffer(tag);
+		return getElementValue(getTagArray(tagName), defaultString);
 	}
 
 	/**
@@ -885,7 +885,7 @@ public class DicomObject extends FileObject {
 	 * element does not exist.
 	 */
 	public String getElementValue(int tag) {
-		return getElementValue(tag,"");
+		return getElementValue(tag, "");
 	}
 
 	/**
@@ -898,6 +898,11 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(int tag, String defaultString) {
+		return getElementValue(dataset, tag, defaultString);
+	}
+
+	//Do the actual work of getting an element value from a dataset
+	private String getElementValue(Dataset dataset, int tag, String defaultString) {
 		boolean ctp = false;
 		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
 			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
@@ -924,6 +929,50 @@ public class DicomObject extends FileObject {
 		catch (Exception notAvailable) { value = null; }
 		if (value == null) value = defaultString;
 		return value;
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset as a
+	 * byte array. This method supports accessing the item datasets of SQ elements,
+	 * but it only searches the first item dataset at each level.
+	 * It returns null if the element cannot be obtained.
+	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
+	 * where all the tags but the last must refer to an SQ element.
+	 * @return the text of the element, or the empty string
+	 * if the element does not exist.
+	 */
+	public String getElementValue(int[] tags) {
+		return getElementValue(tags, "");
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset as a
+	 * byte array. This method supports accessing the item datasets of SQ elements,
+	 * but it only searches the first item dataset at each level.
+	 * It returns null if the element cannot be obtained.
+	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
+	 * where all the tags but the last must refer to an SQ element.
+	 * @return the text of the element, or the empty string
+	 * if the element does not exist.
+	 */
+	public String getElementValue(int[] tags, String defaultString) {
+		try {
+			if (tags.length == 0) return defaultString;
+
+			DcmElement de = null;
+			Dataset ds = dataset;
+			//Walk the SQ datasets to get to the last one
+			for (int k=0; k<tags.length-1; k++) {
+				de = ds.get(tags[k]);
+				if (de == null) return defaultString;
+				if (!VRs.toString(de.vr()).equals("SQ")) return defaultString;
+				ds = de.getItem(0);
+				if (ds == null) return defaultString;
+			}
+			//Now get the element specified by the last tag
+			return getElementValue(ds, tags[tags.length -1], defaultString);
+		}
+		catch (Exception e) { return defaultString; }
 	}
 
 	/**
@@ -1857,7 +1906,7 @@ public class DicomObject extends FileObject {
 	 * compute based on the values in this DicomObject.
 	 * @return the computed boolean value of the script.
 	 */
-	public MatchResult matches(File scriptFile) {
+	public boolean matches(File scriptFile) {
 		String script = FileUtil.getText(scriptFile);
 		return matches(script);
 	}
@@ -1870,30 +1919,24 @@ public class DicomObject extends FileObject {
 	 * in this DicomObject.
 	 * @return the computed boolean value of the script.
 	 */
-	public MatchResult matches(String script) {
+	public boolean matches(String script) {
+		logger.debug("Match script:\n"+script);
 
-		logger.debug("Entering matches method with script:\n"+script);
-
-		Properties props = new Properties();
-		Tokenizer tokenizer = new Tokenizer(script, props);
+		Tokenizer tokenizer = new Tokenizer(script);
 		Stack<Operator> operators = new Stack<Operator>();
 		Stack<Token> tokens = new Stack<Token>();
 		operators.push(Operator.createSentinel());
 
 		//Get the expression, evaluate it, and return the result.
+		boolean result = false;
 		try {
 			expression(tokenizer, operators, tokens);
 			tokenizer.expect(Token.END);
-
-			boolean result = unstack(tokens);
-			logger.debug("result = "+result);
-
-			return new MatchResult( result, props );
+			result = unstack(tokens);
 		}
-		catch (Exception ex) {
-			logger.error("",ex);
-		}
-		return new MatchResult( false, null );
+		catch (Exception ex) { logger.error("", ex); }
+		logger.debug("Match result = "+result);
+		return result;
 	}
 
 	boolean unstack(Stack<Token> tokens) {
@@ -1975,13 +2018,11 @@ public class DicomObject extends FileObject {
 	//The rest of the code is for parsing the script and evaluating the result.
 	class Tokenizer {
 		String script;
-		Properties props;
 		int index;
 		Token nextToken;
 
-		public Tokenizer(String script, Properties props) {
+		public Tokenizer(String script) {
 			this.script = script;
-			this.props = props;
 			index = 0;
 			nextToken = getToken();
 		}
@@ -2010,7 +2051,7 @@ public class DicomObject extends FileObject {
 				return new End();
 			char c = script.charAt(index);
 			if ((c == '[') || Character.isLetter(c))
-				return new Operand(this, props);
+				return new Operand(this);
 			else if (c == '(')
 				return new LP(this);
 			else if (c == ')')
@@ -2096,52 +2137,22 @@ public class DicomObject extends FileObject {
 
 	class Operand extends Token {
 		public boolean value = false;
-		public Operand(Tokenizer t, Properties props) {
+		public Operand(Tokenizer t) {
 			super(OPERAND);
 			String identifier = getField(t,'.').trim();
-			logger.debug("identifier: \""+identifier+"\"");
 			if (identifier.equals("true"))
 				value = true;
 			else if (identifier.equals("false"))
 				value = false;
 			else {
 				String method = getField(t,'(').trim();
-				logger.debug("method: \""+method+"\"");
 				String match = getField(t,')').trim();
-				logger.debug("match: \""+match+"\"");
 				if ((match.length() > 1) &&
 						(match.charAt(0) == '"') &&
 							(match.charAt(match.length()-1) == '"')) {
 
 					//Update the properties for the value of the identifier.
-					//Get both the dcm4che tag and the dcm4che name, if possible.
-					int tag;
-					//Change square brackets to parentheses for the TagDictionary lookup.
-					if (identifier.startsWith("[") && identifier.endsWith("]"))
-						identifier = identifier.replace("[","(").replace("]",")");
-
-					//Do the lookup differently, based on whether the identifier is (gggg,eeee) or a name.
-					try {
-						if (identifier.startsWith("(") && identifier.endsWith(")"))
-							tag = Tags.valueOf(identifier);
-						else
-							tag = Tags.forName(identifier);
-					}
-					catch (Exception notFound) { tag = -1; }
-					if (tag == -1) {
-						logger.debug("Unable to get tag for "+identifier);
-						value = false;
-					}
-
-					//Now get the name from the dictonary, if possible.
-					String tagName = Tags.toString(tag);
-					tagName = tagName.replace("(","[").replace(")","]");
-					String name = "";
-					try { name = tagDictionary.lookup(tag).name; }
-					catch (Exception noname) { logger.debug("Unable to find "+tagName); }
-
-					String element = getElementValue(tag);
-					props.setProperty(tagName + " " + name, element);
+					String element = getElementValue(identifier);
 
 					String elementLC = element.toLowerCase();
 					match = match.substring(1, match.length()-1);
@@ -2178,7 +2189,7 @@ public class DicomObject extends FileObject {
 						logger.error("Unknown function: "+identifier+"."+method+"(\""+match+"\")");
 						value = false;
 					}
-					logger.debug("...value = "+value);
+					logger.debug(identifier+"="+element+" -> { "+identifier+"."+method+"(\""+match+"\")="+value+" }");
 				}
 			}
 		}

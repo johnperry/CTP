@@ -69,7 +69,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 		if (fileObject instanceof DicomObject) {
 
 			//If there is a dicomScriptFile, use it to determine whether to anonymize
-			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile).getResult()) {
+			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
 
 				//Okay, correct the object
 				File file = fileObject.getFile();

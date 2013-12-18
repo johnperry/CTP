@@ -82,6 +82,16 @@ PHILIPS
     [0008,0008].containsIgnoreCase("DOSE") }
   (0,0,512,135)
 
+Toshiba Aquilion One CT Dose Series
+  { Modality.equals("CT") *
+    [0008,0070].containsIgnoreCase("TOSHIBA") *
+    [0008,1090].containsIgnoreCase("Aquilion ONE") *
+    [0008,0008].containsIgnoreCase("SECONDARY") *
+    [0028,0011].equals("512") *
+    [0028,0010].equals("512") *
+    [0028,1051].equals("1") }
+  (0,0,410,240)
+
 **************
      PET/CT
 **************
@@ -153,6 +163,14 @@ Acuson
     [0028,0010].equals("480") *
     [0028,0011].equals("640") }
   (0,0,640,30)
+
+Toshiba Aplio 500
+  { Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("TOSHIBA") *
+    [0008,1090].containsIgnoreCase("A500") *
+    [0028,0010].equals("720") *
+    [0028,0011].equals("960") }
+  (0,0,960,60)
 
 ************** 
      MRI
