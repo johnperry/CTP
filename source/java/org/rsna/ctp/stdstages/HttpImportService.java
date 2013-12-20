@@ -251,6 +251,7 @@ public class HttpImportService extends AbstractImportService {
 						name = name.substring(name.lastIndexOf("/")+1).trim();
 						if (!name.equals("")) {
 							File outFile = File.createTempFile("FS-",".tmp",parent);
+							logger.debug("unpacking "+name+" to "+outFile);
 							BufferedOutputStream out =
 								new BufferedOutputStream(
 									new FileOutputStream(outFile));

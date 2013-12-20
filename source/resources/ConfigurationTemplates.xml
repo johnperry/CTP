@@ -101,6 +101,9 @@
 			<attr name="url" required="yes" default="">
 				<helptext>The URL of the PolledHttpExportService to be polled for data objects</helptext>
 			</attr>
+			<attr name="zip" required="no" default="no" options="yes|no">
+				<helptext>Unzip received data objects</helptext>
+			</attr>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
