@@ -28,9 +28,9 @@ import org.w3c.dom.Element;
 
 /**
  * An ImportService that monitors a directory. This is an import service
- * which allows a user to manually drop files into its directory. The
- * import service processes the files and either deletes them or quarantines
- * at the end, depending onwhether there is a quarantine directory defined
+ * that allows a user to manually drop files into its directory. The
+ * import service processes the files and either deletes or quarantines them
+ * at the end, depending on whether there is a quarantine directory defined
  * in the configuration file element for the stage.
  */
 public class DirectoryImportService extends AbstractPipelineStage implements ImportService {

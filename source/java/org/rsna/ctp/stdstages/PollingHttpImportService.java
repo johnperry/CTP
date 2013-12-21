@@ -18,10 +18,6 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.zip.*;
 import org.apache.log4j.Logger;
-import org.rsna.ctp.objects.DicomObject;
-import org.rsna.ctp.objects.FileObject;
-import org.rsna.ctp.objects.XmlObject;
-import org.rsna.ctp.objects.ZipObject;
 import org.rsna.ctp.pipeline.AbstractImportService;
 import org.rsna.ctp.pipeline.Quarantine;
 import org.rsna.util.FileUtil;
@@ -41,9 +37,7 @@ public class PollingHttpImportService extends AbstractImportService {
 	long interval = 10000;
 
 	/**
-	 * Construct a PollingHttpImportService. This import service does
-	 * not queue objects. It connects to the source when a request is
-	 * received.
+	 * Construct a PollingHttpImportService.
 	 * @param element the XML element from the configuration file
 	 * specifying the configuration of the stage.
 	 */
