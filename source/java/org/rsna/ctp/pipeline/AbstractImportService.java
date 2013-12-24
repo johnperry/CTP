@@ -79,6 +79,14 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	}
 
 	/**
+	 * Get the active directory.
+	 * @return the active directory.
+	 */
+	public synchronized File getActiveDirectory() {
+		return active;
+	}
+
+	/**
 	 * Get the size of the import queue.
 	 * @return the number of objects in the import queue.
 	 */

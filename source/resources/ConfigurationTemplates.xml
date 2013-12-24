@@ -115,7 +115,7 @@
 			<attr name="name" required="yes" default="DirectoryImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DirectoryImportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DirectoryImportService"/>
-			<attr name="minAge" required="no" default="5000"/>
+			<attr name="import" required="yes" default="roots/DirectoryImportService/import"/>
 			<attr name="fsName" required="no" default=""/>
 			<attr name="fsNameTag" required="no" default=""/>
 			<attr name="filenameTag" required="no" default=""/>
@@ -958,7 +958,8 @@
 			<DirectoryImportService
 				class="org.rsna.ctp.stdstages.DirectoryImportService"
 				name="DirectoryImportService"
-				root="roots/DirectoryImportService"/>
+				root="roots/DirectoryImportService"
+				import="roots/DirectoryImportService/import"/>
 			<FileStorageService
 				acceptDicomObjects="no"
 				acceptFileObjects="no"

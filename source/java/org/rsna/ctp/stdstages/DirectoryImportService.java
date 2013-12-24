@@ -9,19 +9,12 @@ package org.rsna.ctp.stdstages;
 
 import java.io.*;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
-import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
-import org.rsna.ctp.objects.XmlObject;
-import org.rsna.ctp.objects.ZipObject;
-import org.rsna.ctp.pipeline.AbstractPipelineStage;
-import org.rsna.ctp.pipeline.ImportService;
-import org.rsna.ctp.pipeline.Pipeline;
-import org.rsna.ctp.pipeline.PipelineStage;
-import org.rsna.ctp.stdstages.archive.FileSource;
+import org.rsna.ctp.pipeline.AbstractImportService;
+import org.rsna.ctp.pipeline.QueueManager;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
@@ -33,17 +26,16 @@ import org.w3c.dom.Element;
  * at the end, depending on whether there is a quarantine directory defined
  * in the configuration file element for the stage.
  */
-public class DirectoryImportService extends AbstractPipelineStage implements ImportService {
+public class DirectoryImportService extends AbstractImportService {
 
 	static final Logger logger = Logger.getLogger(DirectoryImportService.class);
 
-	static final int defaultAge = 5000;
-	static final int minAge = 1000;
-	long age;
 	String fsName = null;
 	int fsNameTag = 0;
 	int filenameTag = 0;
-	FileSource source = null;
+	Poller poller = null;
+	long interval = 20000;
+	File importDirectory = null;
 	FileTracker tracker = null;
 
 	/**
@@ -52,8 +44,19 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	 */
 	public DirectoryImportService(Element element) throws Exception {
 		super(element);
-		age = StringUtil.getInt(element.getAttribute("minAge").trim());
-		if (age < minAge) age = defaultAge;
+
+		//Get the import directory and quit if it is blank.
+		//This action is to trap configurations that haven't been
+		//updated to the new version of this import service.
+		String directoryName = element.getAttribute("import").trim();
+		if (!directoryName.equals("")) {
+			importDirectory = new File(directoryName);
+			importDirectory.mkdirs();
+		}
+		if ((importDirectory == null) || !importDirectory.exists()) {
+			logger.error(name+": The import attribute was not specified.");
+			throw new Exception(name+": The import attribute was not specified.");
+		}
 
 		//See if there is a FileSystem name
 		fsName = element.getAttribute("fsName").trim();
@@ -64,20 +67,75 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 		//See if there is a filenameTag
 		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
 
-		//Initialize the FileSource
-		source = FileSource.getInstance(root, null); //disable checkpointing
-
 		//Initialize the FileTracker
 		tracker = new FileTracker();
 	}
 
 	/**
-	 * Get the size of the import directory.
-	 * @return the number of objects in the import queue, or zero if the
-	 * ImportService is not queued.
+	 * Start the service. This method can be overridden by stages
+	 * which can use it to start subordinate threads created in their constructors.
+	 * This method is called by the Pipeline after all the stages have been
+	 * constructed.
 	 */
-	public int getQueueSize() {
-		return FileUtil.getFileCount(root);
+	public synchronized void start() {
+		poller = new Poller();
+		poller.start();
+	}
+
+	/**
+	 * Stop the service.
+	 */
+	public synchronized void shutdown() {
+		if (poller != null) poller.interrupt();
+		super.shutdown();
+	}
+
+	class Poller extends Thread {
+		String prefix = "IS-";
+		LinkedList<File> fileList = null;
+
+		public Poller() {
+			super("Poller");
+		}
+
+		//To ensure that files are not
+		public void run() {
+			while (!isInterrupted()) {
+
+				//Queue all the files that were found last time.
+				//This ensures that they are at least 'interval' old.
+				if (fileList != null) {
+					for (File file : fileList) {
+						fileReceived(file);
+						tracker.add(file);
+					}
+				}
+
+				//Get ready for the next search
+				fileList = new LinkedList<File>();
+				tracker.purge();
+				addFiles(importDirectory);
+				if (!isInterrupted()) {
+					try { sleep(interval); }
+					catch (Exception ignore) { }
+				}
+			}
+		}
+
+		//List all the files currently in a directory and all its children
+		private void addFiles(File dir) {
+			File[] files = dir.listFiles();
+			for (File file : files) {
+				if (!file.isHidden()) {
+					if (file.isFile()
+							&& !file.getName().endsWith(".partial")
+								&& !tracker.contains(file)) {
+						fileList.add(file);
+					}
+					else if (file.isDirectory()) addFiles(file);
+				}
+			}
+		}
 	}
 
 	/**
@@ -86,23 +144,30 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 	 */
 	public FileObject getNextObject() {
 		File file;
-		long maxLM = System.currentTimeMillis() - age;
-		while ((file = findFile(maxLM)) != null) {
-
-			FileObject fileObject = FileObject.getInstance(file);
-			if (acceptable(fileObject)) {
-				fileObject = setNames(fileObject);
-				fileObject.setStandardExtension();
-				lastFileOut = fileObject.getFile();
+		QueueManager queueManager = getQueueManager();
+		File active = getActiveDirectory();
+		if (queueManager != null) {
+			while ((file = queueManager.dequeue(active)) != null) {
+				lastFileOut = file;
 				lastTimeOut = System.currentTimeMillis();
-				return fileObject;
-			}
+				FileObject fileObject = FileObject.getInstance(lastFileOut);
+				fileObject.setStandardExtension();
 
-			//If we get here, this import service does not accept
-			//objects of this type. Try to quarantine the
-			//object, and if that fails, delete it.
-			if (quarantine != null)  quarantine.insert(fileObject);
-			else fileObject.getFile().delete();
+				//Make sure we accept objects of this type.
+				if (acceptable(fileObject)) {
+					fileObject = setNames(fileObject);
+					fileObject.setStandardExtension();
+					lastFileOut = fileObject.getFile();
+					lastTimeOut = System.currentTimeMillis();
+					return fileObject;
+				}
+
+				//If we get here, this import service does not accept
+				//objects of the active type. Try to quarantine the
+				//object, and if that fails, delete it.
+				if (quarantine != null)  quarantine.insert(fileObject);
+				else fileObject.getFile().delete();
+			}
 		}
 		return null;
 	}
@@ -156,70 +221,6 @@ public class DirectoryImportService extends AbstractPipelineStage implements Imp
 			logger.warn("                               in: "+fo.getFile());
 		}
 		return fo;
-	}
-
-	//Walk a directory tree until we find a file with a
-	//last-modified-time earlier than a specified time.
-	private File findFile(long maxLM) {
-		File file;
-		tracker.purge();
-		while ((file=source.getNextFile()) != null) {
-			if (file.exists()
-					&& !file.isHidden()
-						&& file.isFile()
-							&& (file.lastModified() < maxLM)
-								&& !file.getName().endsWith(".partial")
-									&& !tracker.contains(file)) {
-				logger.debug("Processing "+file);
-				tracker.add(file);
-				return file;
-			}
-		}
-		//If we get here, we didn't get anything.
-		//Re-instantiate the FileSource so we'll
-		//start over on the next try.
-		source = FileSource.getInstance(root, null);
-		return null;
-	}
-
-	/**
-	 * Release a file from the import directory. Note that other stages in the
-	 * pipeline may have moved the file, so it is possible that the file will
-	 * no longer exist. This method only deletes the file if it is still in the
-	 * tree under the root directory.
-	 * @param file the file to be released.
-	 */
-	public void release(File file) {
-		if ((file != null) && file.exists()) {
-			//Only delete if the path includes the root.
-			if (file.getAbsolutePath().startsWith(root.getAbsolutePath())) {
-				 file.delete();
-			}
-		}
-	}
-
-	/**
-	 * Get HTML text displaying the active status of the stage.
-	 * This method does not call the method in the parent class
-	 * because there is no time associated with the last file
-	 * that was received.
-	 * @return HTML text displaying the active status of the stage.
-	 */
-	public String getStatusHTML() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("<h3>"+name+"</h3>");
-		sb.append("<table border=\"1\" width=\"100%\">");
-		sb.append("<tr><td width=\"20%\">Queue size:</td>");
-		sb.append("<td>" + FileUtil.getFileCount(root) + "</td></tr>");
-		sb.append("<tr><td width=\"20%\">Last file supplied:</td>");
-		if (lastTimeOut != 0) {
-			sb.append("<td>"+lastFileOut+"</td></tr>");
-			sb.append("<tr><td width=\"20%\">Last file supplied at:</td>");
-			sb.append("<td>"+StringUtil.getDateTime(lastTimeOut,"&nbsp;&nbsp;&nbsp;")+"</td></tr>");
-		}
-		else sb.append("<td>No activity</td></tr>");
-		sb.append("</table>");
-		return sb.toString();
 	}
 
 	//This class tracks files that have been processed.
