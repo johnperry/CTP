@@ -238,17 +238,19 @@ public class DirectoryImportService extends AbstractImportService {
 		public FileTracker() {
 			files = new HashSet<File>();
 		}
-		public void purge() {
-			for (File file : files) {
+		public synchronized void purge() {
+			File[] keys = new File[files.size()];
+			keys = files.toArray(keys);
+			for (File file : keys) {
 				if (!file.exists()) {
 					files.remove(file);
 				}
 			}
 		}
-		public void add(File file) {
+		public synchronized void add(File file) {
 			files.add(file);
 		}
-		public boolean contains(File file) {
+		public synchronized boolean contains(File file) {
 			return files.contains(file);
 		}
 	}
