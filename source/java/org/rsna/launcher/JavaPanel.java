@@ -156,6 +156,15 @@ public class JavaPanel extends BasePanel implements ActionListener {
 			setStatus();
 		}
 		else if (event.getSource().equals(start)) {
+			if (ConfigPanel.getInstance().hasChanged()) {
+				int yesno = JOptionPane.showConfirmDialog(
+								this,
+								"The configuration changes have not been saved. Do you wish to proceed?\n"
+								+ "If you click OK, the program will use the original configuration.\n",
+								"Configuration",
+								JOptionPane.OK_CANCEL_OPTION);
+				if (yesno != JOptionPane.OK_OPTION) return;
+			}
 			clearLogsDir();
 			run();
 			launchBrowser.requestFocusInWindow();

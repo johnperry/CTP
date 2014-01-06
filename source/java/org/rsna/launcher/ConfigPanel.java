@@ -39,6 +39,8 @@ public class ConfigPanel extends BasePanel {
 	JSplitPane split;
 	boolean loaded = false;
 
+	String savedXML = "";
+
 	Hashtable<String,Template> templateTable = new Hashtable<String,Template>();
 	Template server = null;
 	Template pipeline = null;
@@ -50,7 +52,14 @@ public class ConfigPanel extends BasePanel {
 	Hashtable<String,Element> standardPipelines = new Hashtable<String,Element>();
 	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
-	public ConfigPanel() {
+	static ConfigPanel configPanel = null;
+
+	public static ConfigPanel getInstance() {
+		if (configPanel == null) configPanel = new ConfigPanel();
+		return configPanel;
+	}
+
+	protected ConfigPanel() {
 		super();
 
 		loadTemplates();
@@ -88,9 +97,14 @@ public class ConfigPanel extends BasePanel {
 			try {
 				Document configXML = XmlUtil.getDocument( new File("config.xml") );
 				loaded = treePane.load(configXML);
+				savedXML = XmlUtil.toPrettyString(treePane.getXML());
 			}
 			catch (Exception ex) { }
 		}
+	}
+
+	public boolean hasChanged() {
+		return !XmlUtil.toPrettyString(treePane.getXML()).equals(savedXML);
 	}
 
 	public void showHelp() {
@@ -472,7 +486,10 @@ public class ConfigPanel extends BasePanel {
 					String xml = XmlUtil.toPrettyString(config);
 					File configFile = new File("config.xml");
 					backupTarget(configFile);
-					try { FileUtil.setText(configFile, xml); }
+					try {
+						FileUtil.setText(configFile, xml);
+						savedXML = xml;
+					}
 					catch (Exception ignore) { }
 					Configuration.getInstance().reloadXML();
 					JavaPanel.getInstance().reloadXML();

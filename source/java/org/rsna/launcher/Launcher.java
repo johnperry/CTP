@@ -62,7 +62,7 @@ public class Launcher extends JFrame implements ChangeListener {
 			javaPanel = JavaPanel.getInstance();
 			systemPanel = new SystemPanel();
 			environmentPanel = new EnvironmentPanel();
-			configPanel = new ConfigPanel();
+			configPanel = ConfigPanel.getInstance();
 			ioPanel = new IOPanel();
 			logPanel = LogPanel.getInstance();
 			tp = new JTabbedPane();
@@ -186,16 +186,28 @@ public class Launcher extends JFrame implements ChangeListener {
 									JOptionPane.YES_NO_OPTION);
 					close = (response == JOptionPane.YES_OPTION);
 				}
-				if (close) {
+				if (close && configOK()) {
 					save();
 					Util.shutdown();
 					System.exit(0);
 				}
 			}
-			else {
+			else if (configOK()) {
 				save();
 				System.exit(0);
 			}
+		}
+		private boolean configOK() {
+			if (ConfigPanel.getInstance().hasChanged()) {
+				int yesno = JOptionPane.showConfirmDialog(
+								parent,
+								"The configuration changes have not been saved. Do you wish to proceed?\n"
+								+ "If you click OK, the program will end without saving the configuration.\n",
+								"Configuration",
+								JOptionPane.OK_CANCEL_OPTION);
+				return (yesno == JOptionPane.OK_OPTION);
+			}
+			return true;
 		}
 		private void save() {
 			Properties props = Configuration.getInstance().props;
