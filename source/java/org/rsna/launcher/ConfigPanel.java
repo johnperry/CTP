@@ -90,6 +90,8 @@ public class ConfigPanel extends BasePanel {
 		this.add(split, BorderLayout.CENTER);
 		split.setDividerLocation(200);
 		menuPane.setEnables();
+
+		load();
 	}
 
 	public void load() {
