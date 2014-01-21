@@ -143,7 +143,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 			return file.getAbsoluteFile();
 		}
 		catch (Exception noPath) {
-			logger.debug("Unable to find UID ("+uid+") in the index.");
+			logger.info("Unable to find UID ("+uid+") in the index.");
 			return null;
 		}
 	}
@@ -223,8 +223,13 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		if (fileObject.copyTo(savedFile)) {
 			//The store worked; update the index
 			try {
-				index.put(uid, savedFile.getPath());
-				recman.commit();
+				if (index != null) {
+					logger.debug("About to update the index: key="+uid);
+					logger.debug("                         value="+savedFile);
+					index.put(uid, savedFile.getPath());
+					recman.commit();
+				}
+				else logger.info("index is null");
 			}
 			catch (Exception ex) {
 				logger.warn("Unable to update the index for "+uid+" ("+savedFile.getAbsolutePath()+")", ex);
@@ -252,16 +257,18 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 			if (dob.isImage()) {
 				for (ImageQualifiers q : qualifiers) {
 					int frame = q.getSelectedFrames(nFrames);
-					//There are two fundamental situations:
-					//1. If an individual frame has been specified in the qualifiers,
-					//   then just make that JPEG, but don't include the frame
-					//   index in the name. The reason for not including the frame
-					//   index is that it wouldn't be possible for an external
-					//   system (like NBIA) to guess the name.
-					//2. If the qualifiers require all the frames to be saved,
-					//   then make all the JPEGs and include the index in the name.
-					//   To make it easier to sequence through the names, don't
-					//   put leading zeroes in the frame index part of the name.
+					/*
+					There are two fundamental situations:
+					1. If an individual frame has been specified in the qualifiers,
+					   then just make that JPEG, but don't include the frame
+					   index in the name. The reason for not including the frame
+					   index is that it wouldn't be possible for an external
+					   system (like NBIA) to guess the name.
+					2. If the qualifiers require all the frames to be saved,
+					   then make all the JPEGs and include the index in the name.
+					   To make it easier to sequence through the names, don't
+					   put leading zeroes in the frame index part of the name.
+					*/
 					if (frame < 0) {
 						//Save all the frames
 						for (frame=0; frame<nFrames; frame++) {
@@ -317,7 +324,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		//Update the index
 		try { index.put("__lastFile", nextFile.getPath()); }
 		catch (Exception ex) {
-			logger.warn("Unable to update the __lastFile key for "+nextFile.getPath());
+			logger.warn("Unable to update the __lastFile key for "+nextFile.getPath(), ex);
 		}
 		return nextFile;
 	}

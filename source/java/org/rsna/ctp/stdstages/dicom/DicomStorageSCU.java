@@ -155,7 +155,7 @@ public class DicomStorageSCU {
 	}
 
 	//Close the association if it is open.
-	private void close() {
+	public void close() {
 		if (active != null) {
 			try { active.release(true); }
 			catch (Exception ignore) { }

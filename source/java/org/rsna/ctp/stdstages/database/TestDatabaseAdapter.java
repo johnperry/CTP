@@ -55,6 +55,7 @@ public class TestDatabaseAdapter extends DatabaseAdapter {
 		logger.info(id+"      SOPInstanceUID: "+uid);
 		logger.info(id+"               count: "+objectCount);
 		logger.info(id+"              digest: "+digest);
+		logger.info(id+"          storedFile: "+((storedFile!=null)?storedFile:"null"));
 		return Status.OK;
 	}
 

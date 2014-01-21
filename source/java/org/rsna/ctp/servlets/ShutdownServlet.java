@@ -47,9 +47,10 @@ public class ShutdownServlet extends Servlet {
 		User user = req.getUser();
 		String serviceCommand = req.getHeader("servicemanager");
 		boolean serviceManager = (serviceCommand != null);
+		boolean localHost = req.isFromLocalHost();
 
-		if ((serviceManager && req.isFromLocalHost()) ||
-			((user != null) && (req.userHasRole("shutdown") || req.isFromLocalHost())) ) {
+		if ((serviceManager && localHost) ||
+			((user != null) && (req.userHasRole("shutdown") || localHost)) ) {
 
 			//Log the shutdown request
 			String username = serviceManager ? "ServiceManager" : user.getUsername();

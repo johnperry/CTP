@@ -459,7 +459,12 @@
 			<attr name="name" required="yes" default="BasicFileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.BasicFileStorageService" editable="no"/>
 			<attr name="id" required="no" default=""/>
-			<attr name="root" required="yes" default="roots/BasicFileStorageService"/>
+			<attr name="root" required="yes" default="roots/BasicFileStorageService/storage">
+				<helptext>The location of the stored files.</helptext>
+			</attr>
+			<attr name="index" required="yes" default="roots/BasicFileStorageService/index">
+				<helptext>The location of the index to the stored files.</helptext>
+			</attr>
 			<attr name="nLevels" required="yes" default="3">
 				<helptext>Depth of the storage tree</helptext>
 			</attr>

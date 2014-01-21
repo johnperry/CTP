@@ -483,7 +483,6 @@ public class ConfigPanel extends BasePanel {
 		class SaveImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				Element config = treePane.getXML();
-				fixPipelines(config);
 				if (checkConfig(config)) {
 					String xml = XmlUtil.toPrettyString(config);
 					File configFile = new File("config.xml");
@@ -495,26 +494,6 @@ public class ConfigPanel extends BasePanel {
 					catch (Exception ignore) { }
 					Configuration.getInstance().reloadXML();
 					JavaPanel.getInstance().reloadXML();
-				}
-			}
-			private void fixPipelines(Element root) {
-				Node pipe = root.getFirstChild();
-				while (pipe != null) {
-					if ((pipe instanceof Element) && pipe.getNodeName().equals("Pipeline")) {
-						Node n = pipe.getFirstChild();
-						while (n != null) {
-							if (n instanceof Element) {
-								Element stage = (Element)n;
-								String className = stage.getAttribute("class");
-								if (className.contains(".")) {
-									String name = className.substring( className.lastIndexOf(".")+1 );
-									XmlUtil.renameElement(stage, name);
-								}
-							}
-							n = n.getNextSibling();
-						}
-					}
-					pipe = pipe.getNextSibling();
 				}
 			}
 		}
@@ -760,6 +739,7 @@ public class ConfigPanel extends BasePanel {
 		public boolean load(Document doc) {
 			this.doc = doc;
 			root = doc.getDocumentElement();
+			fixPipelines(root);
 			tree = new XMLTree(root);
 			tree.getSelectionModel().addTreeSelectionListener(this);
 			removeAll();
@@ -768,6 +748,27 @@ public class ConfigPanel extends BasePanel {
 			dragSource = new TreeDragSource(tree, DnDConstants.ACTION_COPY_OR_MOVE);
 			dropTarget = new TreeDropTarget(tree);
 			return true;
+		}
+
+		private void fixPipelines(Element root) {
+			Node pipe = root.getFirstChild();
+			while (pipe != null) {
+				if ((pipe instanceof Element) && pipe.getNodeName().equals("Pipeline")) {
+					Node n = pipe.getFirstChild();
+					while (n != null) {
+						if (n instanceof Element) {
+							Element stage = (Element)n;
+							String className = stage.getAttribute("class");
+							if (className.contains(".")) {
+								String name = className.substring( className.lastIndexOf(".")+1 );
+								n = XmlUtil.renameElement(stage, name);
+							}
+						}
+						n = n.getNextSibling();
+					}
+				}
+				pipe = pipe.getNextSibling();
+			}
 		}
 
 		public void valueChanged(TreeSelectionEvent event) {
