@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.StringReader;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -290,5 +291,36 @@ public class DAScript {
 		else if (t.equals("overlays")) n="Remove overlays";
 		r.setAttribute("n", n);
 		return r;
+	}
+
+	/**
+	 * Get a set containing all the LookupTable KeyTypes in use in the script.
+	 */
+	public HashSet<String> getKeyTypes() {
+		HashSet<String> keyTypeSet = new HashSet<String>();
+		Properties scriptProps = toProperties();
+		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
+		for (Object replObject : scriptProps.values()) {
+			String repl = (String)replObject;
+			Matcher matcher = pattern.matcher(repl);
+			while (matcher.find()) {
+				String group = matcher.group(1);
+				keyTypeSet.add(group.trim());
+			}
+		}
+		return keyTypeSet;
+	}
+
+	/**
+	 * Get the default KeyType in use in the script. If more than
+	 * one KeyType is in use in the script, return null;'
+	 */
+	public String getDefaultKeyType() {
+		HashSet<String> keyTypeSet = getKeyTypes();
+		String defaultKeyType = null;
+		if (keyTypeSet.size() == 1) {
+			defaultKeyType = keyTypeSet.iterator().next();
+		}
+		return defaultKeyType;
 	}
 }

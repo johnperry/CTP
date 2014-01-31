@@ -479,6 +479,12 @@
 			<attr name="logDuplicates" required="no" default="no" options="yes|no">
 				<helptext>Make a log entry whenever a duplicate SOPInstanceUID is stored</helptext>
 			</attr>
+			<attr name="rejectDuplicates" required="no" default="no" options="yes|no">
+				<helptext>Quarantine files with SOPInstanceUIDs that have already been stored</helptext>
+			</attr>
+			<attr name="acceptClones" required="no" default="yes" options="yes|no">
+				<helptext>Accept files that are bit-for-bit identical to previously stored files, even if rejectDuplicates is set to "yes".</helptext>
+			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">

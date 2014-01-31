@@ -7,12 +7,19 @@
 
 package org.rsna.ctp.stdstages.anonymizer;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
+import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.util.FileUtil;
 
 /**
@@ -27,14 +34,19 @@ public class LookupTable {
 	public File file;
 	public Properties properties = null;
 	public long lastVersionLoaded = 0;
+	static final String prefix = "..";
+	boolean isCSV = false;
+	String defaultKeyType = null;
 
 	/**
 	 * Protected constructor; create a LookupTable from a properties file.
 	 * @param file the file containing the lookup table.
 	 */
-	protected LookupTable(File file) {
+	protected LookupTable(File file, String defaultKeyType) {
 		this.file = file;
-		this.properties = getProps(file);
+		this.defaultKeyType = defaultKeyType;
+		this.isCSV = file.getName().toLowerCase().endsWith(".csv");
+		this.properties = getProps();
 		this.lastVersionLoaded = file.lastModified();
 	}
 
@@ -44,62 +56,39 @@ public class LookupTable {
 	 * @param file the file containing the lookup table properties.
 	 */
 	public static LookupTable getInstance(File file) {
+		return getInstance(file, null);
+	}
+
+	/**
+	 * Get the singleton instance of a LookupTable, loading a new instance
+	 * only if the properties file has changed.
+	 * @param file the file containing the lookup table properties.
+	 * @param defaultKeyType the KeyType to be used for loading a CSV file.
+	 */
+	public static LookupTable getInstance(File file, String defaultKeyType) {
 		//If there is no file, then return null.
 		if (file == null) return null;
 
 		//We have a file, see if we already have an instance in the table
 		String path = file.getAbsolutePath().replaceAll("\\\\","/");
 		LookupTable lut = tables.get(path);
-		if ( (lut != null) && lut.isCurrent() ) return lut;
-
-		//We didn't get a current instance from the table; create one.
-		lut = new LookupTable(file);
+		if (lut != null){
+			if (lut.isCurrent()) return lut;
+			else {
+				//We got an instance, but it isn't current;
+				//reload it, reuse the defaultKeyType from
+				//the initial instantiation.
+				lut = new LookupTable(file, lut.defaultKeyType);
+			}
+		}
+		else {
+			//We didn't get a current instance from the table; create one.
+			lut = new LookupTable(file, defaultKeyType);
+		}
 
 		//Put this instance in the table and then return it.
 		tables.put(path, lut);
 		return lut;
-	}
-
-	/**
-	 * Get the Properties object for a file.
-	 * This method returns null if a LookupTable object does not exist
-	 * or cannot be instantiated for the file.
-	 * @return the Properties object for a file, or null if it cannot be obtained.
-	 */
-	public static Properties getProperties(File file) {
-		LookupTable lut = getInstance(file);
-		if (lut == null) return null;
-		return lut.properties;
-	}
-
-	/**
-	 * Save the Properties object for a file.
-	 * This method does nothing if a LookupTable object does not exist
-	 * or cannot be instantiated for the file.
-	 */
-	public static void save(File file) {
-		LookupTable lut = getInstance(file);
-		if (lut != null) {
-			saveProps(file, lut.properties);
-			lut.properties = getProps(file);
-		}
-	}
-
-	/**
-	 * Get the Properties object for this instance.
-	 * This method returns null if a LookupTable object does not exist
-	 * or cannot be instantiated for the file.
-	 * @return the Properties object, or null if it cannot be obtained.
-	 */
-	public Properties getProperties() {
-		return properties;
-	}
-
-	/**
-	 * Save the Properties object for this instance.
-	 */
-	public void save() {
-		saveProps(file, properties);
 	}
 
 	/**
@@ -115,22 +104,107 @@ public class LookupTable {
 	}
 
 	/**
-	 * Load a properties file.
-	 * @param propsFile the file to load
-	 * @return the properties, or an empty object if the load failed.
+	 * Get the Properties object for this instance.
+	 * @return the Properties object, or null if it does not exist.
 	 */
-	public static Properties getProps(File propsFile) {
+	public Properties getProperties() {
+		return properties;
+	}
+
+	/**
+	 * Get the Properties object for a file.
+	 * This method returns null if a LookupTable object does not exist
+	 * or cannot be instantiated for the file.
+	 * @param file the file containing the lookup table properties.
+	 * @return the Properties object for a file, or null if it cannot be obtained.
+	 */
+	public static Properties getProperties(File file) {
+		return getProperties(file, null);
+	}
+
+	/**
+	 * Get the Properties object for a file.
+	 * This method returns null if a LookupTable object does not exist
+	 * or cannot be instantiated for the file.
+	 * @param file the file containing the lookup table properties.
+	 * @param defaultKeyType the KeyType to be used for loading a CSV file.
+	 * @return the Properties object for a file, or null if it cannot be obtained.
+	 */
+	public static Properties getProperties(File file, String defaultKeyType) {
+		LookupTable lut = getInstance(file, defaultKeyType);
+		if (lut == null) return null;
+		return lut.properties;
+	}
+
+	//Get a Properties object for the current file,
+	//loading it as either a properties file or a CSV file.
+	private Properties getProps() {
 		Properties props = new Properties();
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream(propsFile);
-			props.load(fis);
-		}
-		catch (Exception returnEmptyProps) { }
-		finally {
+		if (!isCSV) {
+			FileInputStream fis = null;
+			try {
+				fis = new FileInputStream(file);
+				props.load(fis);
+			}
+			catch (Exception returnEmptyProps) { }
 			FileUtil.close(fis);
 		}
+		else {
+			String defKeyType = "";
+			boolean hasDefaultKeyType = (defaultKeyType != null);
+			if (hasDefaultKeyType) defKeyType = defaultKeyType.trim() + "/";
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader( new InputStreamReader(new FileInputStream(file), "UTF-8") );
+				String line;
+				while ( (line=br.readLine()) != null ) {
+					String[] s = line.split(",");
+					if (s.length == 2) {
+						String key = s[0].trim();
+						if (hasDefaultKeyType && !key.startsWith(prefix) && !key.startsWith(defaultKeyType)) {
+							key = defaultKeyType + key;
+						}
+					}
+					else if (s.length == 1) {
+						String key = s[0].trim();
+						if (key.startsWith(prefix)) {
+							props.setProperty(key, "");
+						}
+					}
+				}
+			}
+			catch (Exception returnWhatWeHaveSoFar) { }
+			FileUtil.close(br);
+		}
 		return props;
+	}
+
+	/**
+	 * Save the Properties object for this instance,
+	 * saving it in the format of the original file.
+	 */
+	public void save() {
+		if (!isCSV) {
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(file);
+				properties.store( fos, file.getName() );
+				fos.flush();
+			}
+			catch (Exception e) { }
+			FileUtil.close(fos);
+		}
+		else {
+			StringBuffer sb = new StringBuffer();
+			String[] names = new String[properties.size()];
+			names = properties.stringPropertyNames().toArray(names);
+			Arrays.sort(names);
+			for (String name : names) {
+				String value = properties.getProperty(name, "");
+				sb.append( name + "," + value );
+			}
+			FileUtil.setText(file, sb.toString());
+		}
 	}
 
 	/**

@@ -294,12 +294,12 @@ public class LookupServlet extends Servlet {
 		return keyTypeSet;
 	}
 
-	//Convert the lookup table file to a string.
+	//Convert the lookup table properties file text to a CSV string.
 	private String getCSV(File file) {
 		StringBuffer sb = new StringBuffer();
+		BufferedReader br = null;
 		try {
-			BufferedReader br = new BufferedReader(
-									new InputStreamReader(new FileInputStream(file), "UTF-8") );
+			br = new BufferedReader( new InputStreamReader(new FileInputStream(file), "UTF-8") );
 			String line;
 			while ( (line=br.readLine()) != null ) {
 				int k;
@@ -313,17 +313,18 @@ public class LookupServlet extends Servlet {
 			}
 		}
 		catch (Exception returnWhatWeHaveSoFar) { }
+		FileUtil.close(br);
 		return sb.toString();
 	}
 
-	//Get the properties from a CSV file
+	//Get the properties string from a CSV file
 	private String getProps(File csvFile, String defaultKeyType) {
 		boolean hasDefaultKeyType = (defaultKeyType != null);
 		if (hasDefaultKeyType) defaultKeyType = defaultKeyType.trim() + "/";
 		StringBuffer sb = new StringBuffer();
+		BufferedReader br = null;
 		try {
-			BufferedReader br = new BufferedReader(
-									new InputStreamReader(new FileInputStream(csvFile), "UTF-8") );
+			br = new BufferedReader( new InputStreamReader(new FileInputStream(csvFile), "UTF-8") );
 			String line;
 			while ( (line=br.readLine()) != null ) {
 				String[] s = line.split(",");
@@ -334,7 +335,7 @@ public class LookupServlet extends Servlet {
 					}
 					sb.append(key);
 					sb.append("=");
-					sb.append(s[1].trim() );
+					sb.append(s[1].trim());
 					sb.append("\n");
 				}
 				else if (s.length == 1) {
@@ -347,6 +348,7 @@ public class LookupServlet extends Servlet {
 			}
 		}
 		catch (Exception returnWhatWeHaveSoFar) { }
+		FileUtil.close(br);
 		return sb.toString();
 	}
 
