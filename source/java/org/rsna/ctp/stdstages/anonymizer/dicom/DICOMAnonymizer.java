@@ -50,6 +50,8 @@ import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.UIDs;
 import org.dcm4che.dict.VRs;
 
+import org.rsna.ctp.Configuration;
+import org.rsna.ctp.plugin.Plugin;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
@@ -577,6 +579,7 @@ public class DICOMAnonymizer {
 	static final String skipFn	 		= "skip";
 	static final String timeFn 			= "time";
 	static final String processFn		= "process";
+	static final String callFn			= "call";
 
 
 	//Create the replacement for one element.
@@ -625,6 +628,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(skipFn))		throw new Exception("!skip!");
 				else if (fnCall.name.equals(timeFn)) 		out += time(fnCall);
 				else if (fnCall.name.equals(processFn))		out += processfn(fnCall);
+				else if (fnCall.name.equals(callFn))		out += callfn(fnCall);
 				else out += functionChar + fnCall.getCall();
 			}
 			else out += c;
@@ -1131,6 +1135,25 @@ public class DICOMAnonymizer {
 
 	private static String date(FnCall fn) {
 		return AnonymizerFunctions.date(fn.getArg(0));
+	}
+
+	//Execute the plugin function call. This function provides access
+	//to a method in a plugin that implements the AnonymizerExtension
+	//interface. The first argument of the FnCall must be the id of the
+	//plugin.
+	private static String callfn(FnCall fn) throws Exception {
+		try {
+			String id = fn.args[0];
+			Plugin plugin = Configuration.getInstance().getRegisteredPlugin(id);
+			if (plugin instanceof AnonymizerExtension) {
+				AnonymizerExtension ext = (AnonymizerExtension)plugin;
+				return ext.call(fn);
+			}
+			else throw new Exception("Unable to load plugin "+id);
+		}
+		catch (Exception ex) {
+			throw new Exception("!quarantine! - "+ex.getMessage());
+		}
 	}
 
 //********************** End of function calls ***************************
