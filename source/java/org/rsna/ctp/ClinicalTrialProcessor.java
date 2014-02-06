@@ -135,7 +135,7 @@ public class ClinicalTrialProcessor {
 		Cache.getInstance(new File("CACHE")).clear();
 
 		//Get the configuration
-		Configuration config = Configuration.getInstance();
+		Configuration config = Configuration.load();
 
 		//Instantiate the singleton Users class
 		Users users = Users.getInstance(config.getUsersClassName(), config.getServerElement());

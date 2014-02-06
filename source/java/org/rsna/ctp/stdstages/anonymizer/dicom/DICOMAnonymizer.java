@@ -1144,12 +1144,15 @@ public class DICOMAnonymizer {
 	private static String callfn(FnCall fn) throws Exception {
 		try {
 			String id = fn.args[0];
-			Plugin plugin = Configuration.getInstance().getRegisteredPlugin(id);
-			if (plugin instanceof AnonymizerExtension) {
-				AnonymizerExtension ext = (AnonymizerExtension)plugin;
-				return ext.call(fn);
+			Configuration config = Configuration.getInstance();
+			if (config != null) {
+				Plugin plugin = config.getRegisteredPlugin(id);
+				if (plugin instanceof AnonymizerExtension) {
+					AnonymizerExtension ext = (AnonymizerExtension)plugin;
+					return ext.call(fn);
+				}
 			}
-			else throw new Exception("Unable to load plugin "+id);
+			throw new Exception("Unable to load plugin "+id);
 		}
 		catch (Exception ex) {
 			throw new Exception("!quarantine! - "+ex.getMessage());

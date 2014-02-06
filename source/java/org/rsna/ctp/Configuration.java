@@ -73,12 +73,19 @@ public class Configuration {
 	String ctpJava = "";
 
 	/**
-	 * Get the singleton instance of the Configuration, loading it
-	 * if necessary.
+	 * Load the singleton instance of the Configuration.
+	 * @return the Configuration.
+	 */
+	public static synchronized Configuration load() {
+		if (configuration == null) configuration = new Configuration();
+		return configuration;
+	}
+
+	/**
+	 * Get the singleton instance of the Configuration.
 	 * @return the Configuration.
 	 */
 	public static synchronized Configuration getInstance() {
-		if (configuration == null) configuration = new Configuration();
 		return configuration;
 	}
 
