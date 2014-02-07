@@ -233,7 +233,7 @@ public class SummaryServlet extends Servlet {
 			else {
 				sb.append("<p class=\"link\">\n");
 				sb.append("<input type=\"button\"");
-				sb.append("  value=\"View the LookupTableChecker Database\"");
+				sb.append("  value=\""+link.getTitle()+"\"");
 				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
 				sb.append("</p>");
 			}

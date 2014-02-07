@@ -1155,7 +1155,8 @@ public class DICOMAnonymizer {
 			throw new Exception("Unable to load plugin "+id);
 		}
 		catch (Exception ex) {
-			throw new Exception("!quarantine! - "+ex.getMessage());
+			logger.debug("Exception caught in plugin call",ex);
+			throw new Exception("!quarantine! - plugin call: "+ex.getMessage());
 		}
 	}
 
