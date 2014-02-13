@@ -507,22 +507,35 @@
 		<StorageService>
 			<attr name="name" required="yes" default="DirectoryStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DirectoryStorageService" editable="no"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/DirectoryStorageService"/>
 			<attr name="cacheID" required="no" default=""/>
-			<attr name="structure" required="no" default=""/>
+			<attr name="structure" required="yes" default=""/>
+			<attr name="defaultString" required="yes" default="">
+				<helptext>
+					Value to use in a directory or file name when an element specified in
+					the structure attibute is missing in an object
+				</helptext>
+			</attr>
+			<attr name="whitespaceReplacement" required="yes" default="_">
+				<helptext>Value to substitute for whitespace in directory and file names</helptext>
+			</attr>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="setStandardExtensions" required="no" default="no" options="yes|no"/>
+			<attr name="setStandardExtensions" required="yes" default="no" options="yes|no"/>
 			<attr name="filenameTag" required="no" default="">
 				<helptext>DICOM element containing the filename, if the SOPInstanceUID is not to be used</helptext>
 			</attr>
 			<attr name="filenameSuffix" required="no" default="">
 				<helptext>A text string to be appended to the filename (only if filenameTag is present)</helptext>
 			</attr>
-			<attr name="acceptDuplicates" required="no" default="yes" options="yes|no">
+			<attr name="acceptDuplicates" required="yes" default="yes" options="yes|no">
 				<helptext>yes: store duplicate files; no: overwrite duplicate files</helptext>
+			</attr>
+			<attr name="logDuplicates" required="yes" default="no" options="yes|no">
+				<helptext>If yes, list duplicate files as they are stored</helptext>
 			</attr>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>

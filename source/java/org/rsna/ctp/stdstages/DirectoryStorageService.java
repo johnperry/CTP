@@ -53,6 +53,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	String whitespaceReplacement = "_";
 	int maxPathLength = 260;
 	String filter = "[^a-zA-Z0-9\\[\\]\\(\\)\\^\\.\\-_,;]+";
+	boolean logDuplicates = false;
 
 	/**
 	 * Construct a DirectoryStorageService for DicomObjects.
@@ -64,6 +65,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 		returnStoredFile = !element.getAttribute("returnStoredFile").trim().toLowerCase().equals("no");
 		acceptDuplicates = !element.getAttribute("acceptDuplicates").trim().toLowerCase().equals("no");
+		logDuplicates = element.getAttribute("logDuplicates").trim().toLowerCase().equals("yes");
 		setStandardExtensions = element.getAttribute("setStandardExtensions").trim().toLowerCase().equals("yes");
 		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
 		filenameSuffix = element.getAttribute("filenameSuffix").trim();
@@ -246,8 +248,12 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		boolean hasExtension = name.toLowerCase().endsWith(ext.toLowerCase());
 		if (hasExtension) name = name.substring( 0, name.length() - ext.length() );
 		File[] files = dir.listFiles(new NameFilter(name));
-		int n = 0;
 		if (files.length == 0) return name;
+		if (logDuplicates) {
+			logger.info("Found "+files.length+" duplicate files for: "+name);
+			for (File file: files) logger.info("   "+file);
+		}
+		int n = 0;
 		for (File file : files) {
 			Matcher matcher = bracketPattern.matcher(file.getName());
 			if (matcher.find()) {
@@ -267,7 +273,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		public boolean accept(File file) {
 			if (file.isFile()) {
 				String fn = file.getName();
-				return fn.startsWith(name);
+				return fn.equals(name) || fn.startsWith(name + ".") || fn.startsWith(name + "[");
 			}
 			return false;
 		}

@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -44,7 +45,11 @@ import org.dcm4che.server.DcmHandler;
 import org.dcm4che.server.Server;
 import org.dcm4che.server.ServerFactory;
 import org.dcm4che.util.DcmProtocol;
+
+import org.rsna.ctp.event.FileEvent;
+import org.rsna.ctp.event.FileEventListener;
 import org.rsna.ctp.objects.DicomObject;
+import org.rsna.util.FileUtil;
 
 public class SimpleDicomStorageSCP extends DcmServiceBase {
 
@@ -74,10 +79,14 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	private File directory = null;
 	PCTable pcTable = null;
 
+	HashSet<FileEventListener> listeners;
+
     public SimpleDicomStorageSCP(File directory, int port) {
 		this.directory = directory;
 		pcTable = PCTable.getInstance();
 
+		directory.mkdirs();
+		listeners = new HashSet<FileEventListener>();
         initServer(port);
         initPolicy();
     }
@@ -130,11 +139,12 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
             out = null;
             tempFile.renameTo(savedFile);
         }
-        catch (Exception ex) { logger.warn("Unable to store a received file.",ex); }
-        finally {
-            try { if (out != null) out.close(); }
-            catch (IOException ignore) { }
-        }
+        catch (Exception ex) {
+			logger.warn("Unable to store a received file.",ex);
+			savedFile = null;
+		}
+        finally { FileUtil.close(out); }
+        if (savedFile != null) sendFileEvent(savedFile);
     }
 
     private void copy(InputStream in, OutputStream out, int totLen) throws IOException {
@@ -174,5 +184,29 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 			services.bind(asUID, this);
         }
     }
+
+	/**
+	 * Add a FileEventListener.
+	 * @param listener the FileEventListener.
+	 */
+	public synchronized void addFileEventListener(FileEventListener listener) {
+		listeners.add(listener);
+	}
+
+	/**
+	 * Remove a FileEventListener.
+	 * @param listener the FileEventListener.
+	 */
+	public synchronized void removeFileEventListener(FileEventListener listener) {
+		listeners.remove(listener);
+	}
+
+	//Send a FileEvent to all FileEventListeners.
+	private synchronized void sendFileEvent(File file) {
+		FileEvent event = new FileEvent(file);
+		for (FileEventListener listener : listeners) {
+			listener.fileEventOccurred(event);
+		}
+	}
 
 }
