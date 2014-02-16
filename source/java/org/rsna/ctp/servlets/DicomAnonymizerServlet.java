@@ -24,6 +24,7 @@ import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
 import org.rsna.server.Path;
 import org.rsna.servlets.Servlet;
+import org.rsna.util.Cache;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HtmlUtil;
 import org.rsna.util.StringUtil;
@@ -260,7 +261,7 @@ public class DicomAnonymizerServlet extends Servlet {
 	//Create an HTML page containing the list of script files.
 	private String getListPage() {
 		String template = "/DAList.html";
-		String page = FileUtil.getText( getClass().getResourceAsStream(template) );
+		String page = FileUtil.getText( Cache.getInstance().getFile(template) );
 		String table = makeList();
 		Properties props = new Properties();
 		props.setProperty("home", home);
@@ -318,7 +319,7 @@ public class DicomAnonymizerServlet extends Servlet {
 	//Create an HTML page containing the form for configuring the file.
 	private String getScriptPage(int pipe, int stage, File file) {
 		String template = "/DAEditor.html";
-		String page = FileUtil.getText( getClass().getResourceAsStream(template) );
+		String page = FileUtil.getText( Cache.getInstance().getFile(template) );
 		String table = makeList();
 		Properties props = new Properties();
 		props.setProperty("closebox", "/icons/home.png");

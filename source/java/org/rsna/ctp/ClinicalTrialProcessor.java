@@ -131,8 +131,14 @@ public class ClinicalTrialProcessor {
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
-		//Instantiate the singleton Cache and clear it.
-		Cache.getInstance(new File("CACHE")).clear();
+		//Instantiate the singleton Cache, clear it, and preload
+		//files from the jars. Other files will be loaded as required..
+		Cache cache = Cache.getInstance(new File("CACHE"));
+		cache.clear();
+		logger.info("Cache cleared");
+		File libraries = new File("libraries");
+		cache.load(new File(libraries, "util.jar"));
+		cache.load(new File(libraries, "CTP.jar"));
 
 		//Get the configuration
 		Configuration config = Configuration.load();
@@ -190,5 +196,4 @@ public class ClinicalTrialProcessor {
 		//Start the system
 		config.start(httpServer);
 	}
-
 }

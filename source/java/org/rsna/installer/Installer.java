@@ -889,20 +889,28 @@ public class Installer extends JFrame {
 		"ldapAdmin"
 	};
 	private void fixConfigSchema() {
+		File configFile;
 		File ctpDir = new File(directory, "CTP");
-		File configFile = new File(ctpDir, "config.xml");
-		try {
-			Document doc = getDocument(configFile);
-			Element root = doc.getDocumentElement();
-			Element server = getFirstNamedChild(root, "Server");
-			moveAttributes(server, sslAttrs, "SSL");
-			moveAttributes(server, proxyAttrs, "ProxyServer");
-			moveAttributes(server, ldapAttrs, "LDAP");
-			if (programName.equals("ISN")) fixRSNAROOT(server);
-			setFileText(configFile, toString(doc));
+		if (ctpDir.exists()) configFile = new File(ctpDir, "config.xml");
+		else configFile = new File(directory, "config.xml");
+		if (configFile.exists()) {
+			try {
+				Document doc = getDocument(configFile);
+				Element root = doc.getDocumentElement();
+				Element server = getFirstNamedChild(root, "Server");
+				moveAttributes(server, sslAttrs, "SSL");
+				moveAttributes(server, proxyAttrs, "ProxyServer");
+				moveAttributes(server, ldapAttrs, "LDAP");
+				if (programName.equals("ISN")) fixRSNAROOT(server);
+				setFileText(configFile, toString(doc));
+			}
+			catch (Exception ex) {
+				cp.appendln(Color.red, "\nUnable to convert the config file schema.");
+				cp.appendln(Color.black, "");
+			}
 		}
-		catch (Exception ex) {
-			cp.appendln(Color.red, "\nUnable to convert the config file schema.");
+		else {
+			cp.appendln(Color.red, "\nUnable to find the config file to check the schema.");
 			cp.appendln(Color.black, "");
 		}
 	}
