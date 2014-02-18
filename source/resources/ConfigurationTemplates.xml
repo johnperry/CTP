@@ -9,7 +9,7 @@
 			<attr name="ssl" required="no" default="no" options="yes|no">
 				<helptext>Use secure sockets layer for connection to the server</helptext>
 			</attr>
-			<attr name="maxThreads" required="yes" default="10">
+			<attr name="maxThreads" required="yes" default="20">
 				<helptext>The maximum number of concurrent threads allowed on the server</helptext>
 			</attr>
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>

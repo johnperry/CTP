@@ -59,7 +59,7 @@ public class Configuration {
 	Document configXML = null;
 	int serverPort = 80;
 	boolean ssl = false;
-	int maxThreads = 10;
+	int maxThreads = 20;
 	String usersClassName = "org.rsna.server.UsersXmlFileImpl";
 	boolean requireAuthentication = false;
 	String ipAddress = getIPAddress();
