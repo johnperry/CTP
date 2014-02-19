@@ -1,0 +1,18 @@
+<script>
+ <!-- Retain Patient Characteristics Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <!-- It is up to the user to ensure there is no PHI in these tags. 	-->
+ <e en="T" t="00100040" n="PatientSex">@keep()</e>
+ <e en="T" t="00101010" n="PatientAge">@keep()</e>
+ <e en="T" t="00101020" n="PatientSize">@keep()</e>
+ <e en="T" t="00101030" n="PatientWeight">@keep()</e>
+ <e en="T" t="00102110" n="Allergies">@keep()</e>
+ <e en="T" t="00102160" n="EthnicGroup">@keep()</e>
+ <e en="T" t="001021a0" n="SmokingStatus">@keep()</e>
+ <e en="T" t="001021c0" n="PregnancyStatus">@keep()</e>
+ <e en="T" t="00102203" n="PatientSexNeutered">@keep()</e>
+ <e en="T" t="00380050" n="SpecialNeeds">@keep()</e>
+ <e en="T" t="00380500" n="PatientState">@keep()</e>
+ <e en="T" t="00400012" n="PreMedication">@keep()</e>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113108</e>
+</script>

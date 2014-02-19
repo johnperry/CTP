@@ -908,6 +908,14 @@ public class Installer extends JFrame {
 				cp.appendln(Color.red, "\nUnable to convert the config file schema.");
 				cp.appendln(Color.black, "");
 			}
+			//Remove any old DICOM de-identification profiles (DICOM-S142*)
+			//These are replaced with new profiles (DICOM-PS3.15*)
+			File profiles = new File(configFile.getParentFile(), "profiles");
+			File dicom = new File(profiles, "dicom");
+			File[] files = dicom.listFiles();
+			for (File file: files) {
+				if (file.getName().startsWith("DICOM-S142")) file.delete();
+			}
 		}
 		else {
 			cp.appendln(Color.red, "\nUnable to find the config file to check the schema.");

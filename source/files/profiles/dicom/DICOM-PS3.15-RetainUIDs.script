@@ -1,0 +1,38 @@
+<script>
+ <!-- Retain UID Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <e en="T" t="00001000" n="AffectedSOPInstanceUID">@keep()</e>
+ <e en="T" t="00001001" n="RequestedSOPInstanceUID">@keep()</e>
+ <e en="T" t="00020003" n="MediaStorageSOPInstanceUID">@keep()</e>
+ <e en="T" t="00041511" n="ReferencedSOPInstanceUIDinFile">@keep()</e>
+ <e en="T" t="00080014" n="InstanceCreatorUID">@keep()</e>
+ <e en="T" t="00080018" n="SOPInstanceUID">@keep()</e>
+ <e en="T" t="00080058" n="FailedSOPInstanceUIDList">@keep()</e>
+ <e en="T" t="0008010d" n="ContextGroupExtensionCreatorUID">@keep()</e>
+ <e en="T" t="00081110" n="RefStudySeq">@process()</e>
+ <e en="T" t="00081111" n="RefPPSSeq">@process()</e>
+ <e en="T" t="00081140" n="RefImageSeq">@process()</e>
+ <e en="T" t="00081155" n="RefSOPInstanceUID">@keep()</e>
+ <e en="T" t="00081195" n="TransactionUID">@keep()</e>
+ <e en="T" t="00082112" n="SourceImageSeq">@process()</e>
+ <e en="T" t="00083010" n="IrradiationEventUID">@keep()</e>
+ <e en="T" t="00089123" n="CreatorVersionUID">@keep()</e>
+ <e en="T" t="00181002" n="DeviceUID">@keep()</e>
+ <e en="T" t="0020000d" n="StudyInstanceUID">@keep()</e>
+ <e en="T" t="0020000e" n="SeriesInstanceUID">@keep()</e>
+ <e en="T" t="00200052" n="FrameOfReferenceUID">@keep()</e>
+ <e en="T" t="00200200" n="SynchronizationFrameOfReferenceUID">@keep()</e>
+ <e en="T" t="00209161" n="ConcatenationUID">@keep()</e>
+ <e en="T" t="00209164" n="DimensionOrganizationUID">@keep()</e>
+ <e en="T" t="00281199" n="PaletteColorLUTUID">@keep()</e>
+ <e en="T" t="00281214" n="LargePaletteColorLUTUid">@keep()</e>
+ <e en="T" t="00404023" n="RefGenPurposeSchedProcStepTransUID">@keep()</e>
+ <e en="T" t="0040db0c" n="TemplateExtensionOrganizationUID">@keep()</e>
+ <e en="T" t="0040db0d" n="TemplateExtensionCreatorUID">@keep()</e>
+ <e en="T" t="0070031a" n="FiducialUID">@keep()</e>
+ <e en="T" t="00880140" n="StorageMediaFilesetUID">@keep()</e>
+ <e en="T" t="30060024" n="ReferencedFrameOfReferenceUID">@keep()</e>
+ <e en="T" t="300600c2" n="RelatedFrameOfReferenceUID">@keep()</e>
+ <e en="T" t="300a0013" n="DoseReferenceUID">@keep()</e>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113110</e>
+</script>
