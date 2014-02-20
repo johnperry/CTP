@@ -300,14 +300,19 @@ public class Installer extends JFrame {
 
 	private void cleanup(File directory) {
 		//Clean up from old installations, removing or renaming files.
-		//Note that directory is the parent of the CTP directory.
-		//Also note that if Bill Weadock's all-in-one installer for
-		//Windows was used to create the original installation,
-		//the cleanup doesn't work, but it doesn't matter since the
-		//cleanup is for installations that pre-date Bill's installer.
-		File dir = new File(directory, "CTP");
+		//Note that directory is the parent of the CTP directory
+		//unless the original installation was done by Bill Weadock's
+		//all-in-one installer for Windows.
 
-		//This is a really old CTP main file - not used anymore
+		//Get a file pointing to the CTP directory.
+		//This might be the current directory, or
+		//it might be the CTP child.
+		File dir;
+		if (directory.getName().equals("RSNA")) dir = directory;
+		else dir = new File(directory, "CTP");
+
+		//If CTP.jar exists in this directory, it is a really
+		//old CTP main file - not used anymore
 		File ctp = new File(dir, "CTP.jar");
 		if (ctp.exists()) ctp.delete();
 
@@ -366,12 +371,22 @@ public class Installer extends JFrame {
 				}
 			}
 		}
+
 		//remove the obsolete xml library
 		File xml = new File(dir, "xml");
 		if (xml.exists()) {
 			File[] xmlFiles = xml.listFiles();
 			for (File file : xmlFiles) file.delete();
 			xml.delete();
+		}
+
+		//remove the dicom profiles so any
+		//obsolete files will disappear
+		File profiles = new File(dir, "profiles");
+		File dicom = new File(profiles, "dicom");
+		if (dicom.exists()) {
+			File[] files = dicom.listFiles();
+			for (File file : files) file.delete();
 		}
 	}
 
@@ -907,14 +922,6 @@ public class Installer extends JFrame {
 			catch (Exception ex) {
 				cp.appendln(Color.red, "\nUnable to convert the config file schema.");
 				cp.appendln(Color.black, "");
-			}
-			//Remove any old DICOM de-identification profiles (DICOM-S142*)
-			//These are replaced with new profiles (DICOM-PS3.15*)
-			File profiles = new File(configFile.getParentFile(), "profiles");
-			File dicom = new File(profiles, "dicom");
-			File[] files = dicom.listFiles();
-			for (File file: files) {
-				if (file.getName().startsWith("DICOM-S142")) file.delete();
 			}
 		}
 		else {
