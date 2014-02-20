@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 import org.apache.log4j.Logger;
+import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
@@ -42,7 +43,10 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 */
 	public DicomAnonymizer(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-anonymizer.script");
+
+		//Note: The script is obtained in the start method so that
+		//different default scripts can be used for teaching files
+		//and clinical trials.
 
 		String lookupTable = element.getAttribute("lookupTable").trim();
 		if (!lookupTable.equals("")) {
@@ -56,6 +60,21 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		if (!dicomScript.equals("")) {
 			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
 		}
+	}
+
+	/**
+	 * Start the pipeline stage. This method obtains the script file. This must be done
+	 * in the start method because the Configuration object is not available in the constructor,
+	 * and the Configuration object is used to distinguish teaching file installations from
+	 * clinical trial installations so different default scripts can be used.
+	 */
+	public synchronized void start() {
+		String defaultScript = "examples/example-ctp-dicom-anonymizer.script";
+		if (Configuration.getInstance().isMIRC()) {
+			defaultScript = "examples/example-mirc-dicom-anonymizer.script";
+		}
+		String script = element.getAttribute("script").trim();
+		scriptFile = FileUtil.getFile(script, defaultScript);
 	}
 
 	//Implement the ScriptableDicom interface

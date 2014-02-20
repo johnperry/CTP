@@ -1,0 +1,9 @@
+<script>
+ <!-- Clean Graphics Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <!-- It is up to the user to inspect and clean all tags of PHI. 	-->
+ <e en="T" t="00700001" n="GraphicAnnotationSequence">@process()</e>
+ <r en="F" t="curves">Remove curves</r>
+ <r en="F" t="overlays">Remove overlays</r>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113103</e>
+</script>

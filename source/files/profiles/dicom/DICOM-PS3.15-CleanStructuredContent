@@ -1,0 +1,8 @@
+<script>
+ <!-- Clean Structured Content Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <!-- It is up to the user to inspect and clean all tags within these sequences. 	-->
+ <e en="T" t="00400555" n="AcquisitionContextSeq">@process()</e>
+ <e en="T" t="0040a730" n="ContentSeq">@process()</e>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113104</e>
+</script>

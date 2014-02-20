@@ -1,0 +1,44 @@
+<script>
+ <!-- Clean Descriptors Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <!-- It is up to the user to inspect and clean these tags of PHI. 	-->
+ <e en="T" t="00081030" n="StudyDescription">@keep()</e>
+ <e en="T" t="0008103e" n="SeriesDescription">@keep()</e>
+ <e en="T" t="00081080" n="AdmittingDiagnosesDescription">@keep()</e>
+ <e en="T" t="00081084" n="AdmittingDiagnosesCodeSeq">@process()</e>
+ <e en="T" t="00082111" n="DerivationDescription">@keep()</e>
+ <e en="T" t="00084000" n="IdentifyingComments">@keep()</e>
+ <e en="T" t="00102000" n="MedicalAlerts">@keep()</e>
+ <e en="T" t="00102110" n="Allergies">@keep()</e>
+ <e en="T" t="00102180" n="Occupation">@keep()</e>
+ <e en="T" t="001021b0" n="AdditionalPatientHistory">@keep()</e>
+ <e en="T" t="00104000" n="PatientComments">@keep()</e>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113105</e>
+ <e en="T" t="00180010" n="ContrastBolusAgent">@keep()</e>
+ <e en="T" t="00181030" n="ProtocolName">@keep()</e>
+ <e en="T" t="00181400" n="AcquisitionDeviceProcessingDescription">@keep()</e>
+ <e en="T" t="00184000" n="AcquisitionComments">@keep()</e>
+ <e en="T" t="00189424" n="AcquisitionProtocolDescription">@keep()</e>
+ <e en="T" t="0018a003" n="ContributionDescription">@keep()</e>
+ <e en="T" t="00204000" n="ImageComments">@keep()</e>
+ <e en="T" t="00209158" n="FrameComments">@keep()</e>
+ <e en="T" t="00321030" n="ReasonforStudy">@keep()</e>
+ <e en="T" t="00321060" n="RequestedProcedureDescription">@keep()</e>
+ <e en="T" t="00321070" n="RequestedContrastAgent">@keep()</e>
+ <e en="T" t="00324000" n="StudyComments">@keep()</e>
+ <e en="T" t="00380040" n="DischargeDiagnosisDescription">@keep()</e>
+ <e en="T" t="00380062" n="ServiceEpisodeDescription">@keep()</e>
+ <e en="T" t="00380500" n="PatientState">@keep()</e>
+ <e en="T" t="00384000" n="VisitComments">@keep()</e>
+ <e en="T" t="00400007" n="SPSDescription">@keep()</e>
+ <e en="T" t="00400254" n="PPSDescription">@keep()</e>
+ <e en="T" t="00400275" n="RequestAttributesSeq">@process()</e>
+ <e en="T" t="00400280" n="CommentsOnPPS">@keep()</e>
+ <e en="T" t="00401400" n="RequestedProcedureComments">@keep()</e>
+ <e en="T" t="00402001" n="ReasonForImagingServiceRequest">@keep()</e>
+ <e en="T" t="00402400" n="ImagingServiceRequestComments">@keep()</e>
+ <e en="T" t="4008010b" n="InterpretationText">@keep()</e>
+ <e en="T" t="40080115" n="InterpretationDiagnosisDescription">@keep()</e>
+ <e en="T" t="40080300" n="Impressions">@keep()</e>
+ <e en="T" t="40084000" n="ResultComments">@keep()</e>
+</script>

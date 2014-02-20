@@ -71,6 +71,7 @@ public class Configuration {
 	Element serverElement = null;
 	String ctpBuild = "";
 	String ctpJava = "";
+	boolean isMIRC = false;
 
 	/**
 	 * Load the singleton instance of the Configuration.
@@ -206,6 +207,7 @@ public class Configuration {
 								Plugin plugin = (Plugin)constructor.newInstance(args);
 								registerPlugin(plugin);
 								pluginsList.add(plugin);
+								if (className.equals("mirc.MIRC")) isMIRC = true;
 							}
 							catch (Exception ex) { logger.error(childElement.getAttribute("name") + ": Unable to load "+className,ex); }
 						}
@@ -335,6 +337,15 @@ public class Configuration {
 	 */
 	public Element getServerElement() {
 		return serverElement;
+	}
+
+	/**
+	 * Get a boolean indicating whether the MIRC plugin
+	 * is present in the configuration.
+	 * @return true if the MIRC plugin is present; false otherwise;
+	 */
+	public boolean isMIRC() {
+		return isMIRC;
 	}
 
 	/**

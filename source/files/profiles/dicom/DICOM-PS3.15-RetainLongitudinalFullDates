@@ -1,0 +1,30 @@
+<script>
+ <!-- Retain Longitudinal Full Date Option 	-->
+ <!-- Works with CTP version 5-21-2012 or later -->
+ <!--Time is retained as there is no function to offset time with CTP -->
+ <e en="T" t="00080020" n="StudyDate">@keep()</e>
+ <e en="T" t="00080021" n="SeriesDate">@keep()</e>
+ <e en="T" t="00080022" n="AcquisitionDate">@keep()</e>
+ <e en="T" t="00080023" n="ContentDate">@keep()</e>
+ <e en="T" t="00080024" n="OverlayDate">@keep()</e>
+ <e en="T" t="00080025" n="CurveDate">@keep()</e>
+ <e en="T" t="0008002a" n="AcquisitionDatetime">@keep()</e>
+ <e en="T" t="00080030" n="StudyTime">@keep()</e>
+ <e en="T" t="00080031" n="SeriesTime">@keep()</e>
+ <e en="T" t="00080032" n="AcquisitionTime">@keep()</e>
+ <e en="T" t="00080033" n="ContentTime">@keep()</e>
+ <e en="T" t="00080034" n="OverlayTime">@keep()</e>
+ <e en="T" t="00080035" n="CurveTime">@keep()</e>
+ <e en="T" t="00080201" n="TimezoneOffsetFromUTC">@keep()</e>
+ <e en="T" t="001021d0" n="LastMenstrualDate">@keep()</e>
+ <e en="T" t="00380020" n="AdmittingDate">@keep()</e>
+ <e en="T" t="00380021" n="AdmittingTime">@keep()</e>
+ <e en="T" t="00400002" n="SPSStartDate">@keep()</e>
+ <e en="T" t="00400003" n="SPSStartTime">@keep()</e>
+ <e en="T" t="00400004" n="SPSEndDate">@keep()</e>
+ <e en="T" t="00400005" n="SPSEndTime">@keep()</e>
+ <e en="T" t="00400244" n="PPSStartDate">@keep()</e>
+ <e en="T" t="00400245" n="PPSStartTime">@keep()</e>
+ <e en="T" t="00280303" n="LongitudinalTemporalInformationModified">@always()UNMODIFIED</e>
+ <e en="T" t="00120064" n="DeIdentificationMethodCodeSequence">113106</e>
+</script>
