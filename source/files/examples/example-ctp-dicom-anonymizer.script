@@ -8,7 +8,7 @@
  <p t="SITEID">99</p>
  <p t="SITENAME">SiteName</p>
  <p t="TRIALNAME">Trial</p>
- <p t="UIDROOT">1.3.6.1.4.1.14519.5.2.1.9999.9999</p>
+ <p t="UIDROOT">1.2.840.113654.2.70.1</p>
  <e en="T" t="00080005" n="SpecificCharacterSet">@keep()</e>
  <e en="F" t="00080008" n="ImageType"></e>
  <e en="T" t="00080012" n="InstanceCreationDate">@incrementdate(this,@DATEINC)</e>
@@ -129,8 +129,8 @@
  <e en="F" t="00089209" n="AcquisitionContrast"></e>
  <e en="F" t="00089215" n="DerivationCodeSeq"></e>
  <e en="F" t="00089237" n="RefGrayscalePresentationStateSeq"></e>
- <e en="T" t="00100010" n="PatientName">@always()Patient-@integer(this,4)</e>
- <e en="T" t="00100020" n="PatientID">@always()Patient-@integer(this,4)</e>
+ <e en="T" t="00100010" n="PatientName">Patient-@integer(this,4)</e>
+ <e en="T" t="00100020" n="PatientID">)Patient-@integer(this,4)</e>
  <e en="T" t="00100021" n="IssuerOfPatientID">@remove()</e>
  <e en="T" t="00100030" n="PatientBirthDate">@empty()</e>
  <e en="T" t="00100032" n="PatientBirthTime">@remove()</e>
@@ -283,7 +283,7 @@
  <e en="F" t="00181075" n="RadionuclideHalfLife"></e>
  <e en="F" t="00181076" n="RadionuclidePositronFraction"></e>
  <e en="F" t="00181077" n="RadiopharmaceuticalSpecificActivity"></e>
- <e en="T" t="00181078" n="Radiopharmaceutical Start DateTime">@always()</e>
+ <e en="T" t="00181078" n="Radiopharmaceutical Start DateTime">@incrementdate(this,@DATEINC)</e>
  <e en="T" t="00181079" n="Radiopharmaceutical Stop DateTime">@incrementdate(this,@DATEINC)</e>
  <e en="F" t="00181080" n="BeatRejectionFlag"></e>
  <e en="F" t="00181081" n="LowRRValue"></e>
@@ -780,14 +780,14 @@
  <e en="F" t="0032000a" n="StudyStatusID"></e>
  <e en="F" t="0032000c" n="StudyPriorityID"></e>
  <e en="T" t="00320012" n="StudyIDIssuer">@remove()</e>
- <e en="F" t="00320032" n="StudyVerifiedDate"></e>
- <e en="F" t="00320033" n="StudyVerifiedTime"></e>
- <e en="F" t="00320034" n="StudyReadDate"></e>
- <e en="F" t="00320035" n="StudyReadTime"></e>
+ <e en="T" t="00320032" n="StudyVerifiedDate">@remove()</e>
+ <e en="T" t="00320033" n="StudyVerifiedTime">@remove()</e>
+ <e en="T" t="00320034" n="StudyReadDate">@remove()</e>
+ <e en="T" t="00320035" n="StudyReadTime">@remove()</e>
  <e en="T" t="00321000" n="ScheduledStudyStartDate">@incrementdate(this,@DATEINC)</e>
- <e en="F" t="00321001" n="ScheduledStudyStartTime"></e>
- <e en="F" t="00321010" n="ScheduledStudyStopDate"></e>
- <e en="F" t="00321011" n="ScheduledStudyStopTime"></e>
+ <e en="T" t="00321001" n="ScheduledStudyStartTime">@keep()</e>
+ <e en="T" t="00321010" n="ScheduledStudyStopDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00321011" n="ScheduledStudyStopTime">@keep()</e>
  <e en="T" t="00321020" n="ScheduledStudyLocation">@remove()</e>
  <e en="T" t="00321021" n="ScheduledStudyLocationAET">@remove()</e>
  <e en="T" t="00321030" n="ReasonforStudy">@remove()</e>
@@ -807,15 +807,15 @@
  <e en="T" t="00380010" n="AdmissionID">@remove()</e>
  <e en="T" t="00380011" n="IssuerOfAdmissionID">@remove()</e>
  <e en="F" t="00380016" n="RouteOfAdmissions"></e>
- <e en="F" t="0038001a" n="ScheduledAdmissionDate"></e>
- <e en="F" t="0038001b" n="ScheduledAdmissionTime"></e>
- <e en="F" t="0038001c" n="ScheduledDischargeDate"></e>
- <e en="F" t="0038001d" n="ScheduledDischargeTime"></e>
+ <e en="T" t="0038001a" n="ScheduledAdmissionDate">@remove()</e>
+ <e en="T" t="0038001b" n="ScheduledAdmissionTime">@remove()</e>
+ <e en="T" t="0038001c" n="ScheduledDischargeDate">@remove()</e>
+ <e en="T" t="0038001d" n="ScheduledDischargeTime">@remove()</e>
  <e en="T" t="0038001e" n="ScheduledPatientInstitutionResidence">@remove()</e>
  <e en="T" t="00380020" n="AdmittingDate">@incrementdate(this,@DATEINC)</e>
  <e en="T" t="00380021" n="AdmittingTime">@keep()</e>
- <e en="F" t="00380030" n="DischargeDate"></e>
- <e en="F" t="00380032" n="DischargeTime"></e>
+ <e en="T" t="00380030" n="DischargeDate">@incrementdate(this,@DATEINC)</e>
+ <e en="T" t="00380032" n="DischargeTime">@keep()</e>
  <e en="T" t="00380040" n="DischargeDiagnosisDescription">@remove()</e>
  <e en="F" t="00380044" n="DischargeDiagnosisCodeSeq"></e>
  <e en="T" t="00380050" n="SpecialNeeds">@remove()</e>
@@ -935,8 +935,8 @@
  <e en="T" t="00401103" n="PersonTelephoneNumbers">@remove()</e>
  <e en="T" t="00401400" n="RequestedProcedureComments">@remove()</e>
  <e en="T" t="00402001" n="ReasonForTheImagingServiceRequest">@remove()</e>
- <e en="F" t="00402004" n="IssueDateOfImagingServiceRequest"></e>
- <e en="F" t="00402005" n="IssueTimeOfImagingServiceRequest"></e>
+ <e en="T" t="00402004" n="IssueDateOfImagingServiceRequest">@remove()</e>
+ <e en="T" t="00402005" n="IssueTimeOfImagingServiceRequest">@remove()</e>
  <e en="T" t="00402008" n="OrderEnteredBy">@remove()</e>
  <e en="T" t="00402009" n="OrderEntererLocation">@remove()</e>
  <e en="T" t="00402010" n="OrderCallbackPhoneNumber">@remove()</e>
@@ -963,8 +963,8 @@
  <e en="F" t="00409225" n="RealWorldValueSlope"></e>
  <e en="F" t="0040a010" n="RelationshipType"></e>
  <e en="T" t="0040a027" n="VerifyingOrganization">@remove()</e>
- <e en="F" t="0040a030" n="VerificationDateTime"></e>
- <e en="F" t="0040a032" n="ObservationDateTime"></e>
+ <e en="T" t="0040a030" n="VerificationDateTime">@remove()</e>
+ <e en="T" t="0040a032" n="ObservationDateTime">@remove()</e>
  <e en="F" t="0040a040" n="ValueType"></e>
  <e en="F" t="0040a043" n="ConceptNameCodeSeq"></e>
  <e en="F" t="0040a050" n="ContinuityOfContent"></e>
@@ -975,16 +975,16 @@
  <e en="T" t="0040a07c" n="CustodialOrganizationSeq">@remove()</e>
  <e en="T" t="0040a088" n="VerifyingObserverIdentificationCodeSeq">@remove()</e>
  <e en="F" t="0040a0b0" n="RefWaveformChannels"></e>
- <e en="F" t="0040a120" n="DateTime"></e>
- <e en="F" t="0040a121" n="Date"></e>
- <e en="F" t="0040a122" n="Time"></e>
+ <e en="T" t="0040a120" n="DateTime">@remove()</e>
+ <e en="T" t="0040a121" n="Date">@remove()</e>
+ <e en="T" t="0040a122" n="Time">@remove()</e>
  <e en="T" t="0040a123" n="PersonName">@empty()</e>
  <e en="T" t="0040a124" n="UID">@hashuid(@UIDROOT,this)</e>
  <e en="F" t="0040a130" n="TemporalRangeType"></e>
  <e en="F" t="0040a132" n="RefSamplePositions"></e>
  <e en="F" t="0040a136" n="RefFrameNumbers"></e>
  <e en="F" t="0040a138" n="RefTimeOffsets"></e>
- <e en="F" t="0040a13a" n="RefDatetime"></e>
+ <e en="T" t="0040a13a" n="RefDatetime">@remove()</e>
  <e en="F" t="0040a160" n="TextValue"></e>
  <e en="F" t="0040a168" n="ConceptCodeSeq"></e>
  <e en="F" t="0040a180" n="AnnotationGroupNumber"></e>
@@ -1011,8 +1011,8 @@
  <e en="T" t="0040db0d" n="TemplateExtensionCreatorUID">@hashuid(@UIDROOT,this)</e>
  <e en="F" t="0040db73" n="RefContentItemIdentifier"></e>
  <e en="T" t="00540016" n="RadiopharmaceuticalInformationSeq">@always()@process()</e>
- <e en="F" t="00603000" n="OverlayData"></e>
- <e en="F" t="00604000" n="OverlayComments"></e>
+ <e en="T" t="00603000" n="OverlayData">@remove()</e>
+ <e en="T" t="00604000" n="OverlayComments">@remove()</e>
  <e en="T" t="00700001" n="GraphicAnnotationSequence">@remove()</e>
  <e en="T" t="00700084" n="ContentCreatorsName">@empty()</e>
  <e en="T" t="00700086" n="ContentCreatorsIdCodeSeq">@remove()</e>
