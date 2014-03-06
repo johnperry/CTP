@@ -36,6 +36,10 @@
 				<attr name="securityPrincipal" required="no" default=""/>
 				<attr name="ldapAdmin" required="no" default=""/>
 			</child>
+
+			<child name="OpenAM" required="no" allowMultiples="no">
+				<attr name="openAMURL" required="yes" default="http://nibib-3.wustl.edu:80"/>
+			</child>
 		</Server>
 
 		<Plugin>
@@ -719,6 +723,7 @@
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
+		<openAMURL>The URL of the OpenAM server, including the protocol and the port (http://openam.university.edu:80)</openAMURL>
 		<password>The password for authentication, if required by the destination system</password>
 		<poolSize>The number of active DatabaseAdapters to run concurrently</poolSize>
 		<port>Port on which the stage listens for connections</port>

@@ -1,13 +1,13 @@
 <script>
  <p t="DATEINC">-3210</p>
- <p t="NOTICE1">This script de-identifies everything per DICOM standards except the Series Description.  Be sure to review Series Descriptions for PHI!!</p>
- <p t="NOTICE2">Tags inside of sequences may contain PHI. If your data includes sequences not defined here, be sure to review them for PHI!!</p>
- <p t="PROFILENAME">S142-Basic</p>
+ <p t="NOTICE1">IMPORTANT: Be sure to review Series Descriptions for PHI!!</p>
+ <p t="NOTICE2">IMPORTANT: Tags inside of sequences may contain PHI.</p>
+ <p t="PROFILENAME">CTP Clinical Trial Default</p>
  <p t="PROJECTNAME">Project</p>
- <p t="SHORTNAME">PTID</p>
- <p t="SITEID">99</p>
  <p t="SITENAME">SiteName</p>
+ <p t="SITEID">1</p>
  <p t="TRIALNAME">Trial</p>
+ <p t="SUBJECT">Subject</p>
  <p t="UIDROOT">1.2.840.113654.2.70.1</p>
  <e en="T" t="00080005" n="SpecificCharacterSet">@keep()</e>
  <e en="F" t="00080008" n="ImageType"></e>
@@ -129,8 +129,8 @@
  <e en="F" t="00089209" n="AcquisitionContrast"></e>
  <e en="F" t="00089215" n="DerivationCodeSeq"></e>
  <e en="F" t="00089237" n="RefGrayscalePresentationStateSeq"></e>
- <e en="T" t="00100010" n="PatientName">Patient-@integer(this,4)</e>
- <e en="T" t="00100020" n="PatientID">)Patient-@integer(this,4)</e>
+ <e en="T" t="00100010" n="PatientName">@param(@SUBJECT)-@integer(this,4)</e>
+ <e en="T" t="00100020" n="PatientID">)@param(@SUBJECT)-@integer(this,4)</e>
  <e en="T" t="00100021" n="IssuerOfPatientID">@remove()</e>
  <e en="T" t="00100030" n="PatientBirthDate">@empty()</e>
  <e en="T" t="00100032" n="PatientBirthTime">@remove()</e>
