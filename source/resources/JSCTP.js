@@ -93,8 +93,14 @@ function showNode(node, type) {
 //Login/Logout
 //************************************************
 function loginLogout() {
-	if (user.isLoggedIn) logout('/');
-	else showLoginPopup('/');
+	if (user.isLoggedIn) {
+		if (user.logoutURL == "") logout('/');
+		else window.open(user.logoutURL, "_self");
+	}
+	else {
+		if (user.loginURL == "") showLoginPopup('/');
+		else window.open(user.loginURL, "_self");
+	}
 }
 
 //************************************************
@@ -120,7 +126,7 @@ function showSessionPopup() {
 	var ctpCookie = getCookie("CTP", cooks);
 	if (ctpCookie == "") {
 		setSessionCookie("CTP", "session");
-		if (!user.isLoggedIn) loginLogout();
+		if (!user.isLoggedIn && (user.loginURL == "")) loginLogout();
 	}
 }
 
