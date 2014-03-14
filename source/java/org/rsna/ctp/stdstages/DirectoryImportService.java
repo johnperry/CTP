@@ -35,6 +35,8 @@ public class DirectoryImportService extends AbstractImportService {
 	int filenameTag = 0;
 	Poller poller = null;
 	long interval = 20000;
+	long minInterval = 1000;
+	long defInterval = 20000;
 	File importDirectory = null;
 	FileTracker tracker = null;
 
@@ -57,6 +59,9 @@ public class DirectoryImportService extends AbstractImportService {
 			logger.error(name+": The import attribute was not specified.");
 			throw new Exception(name+": The import attribute was not specified.");
 		}
+
+		//Get the interval
+		interval = Math.max(StringUtil.getLong(element.getAttribute("interval"), defInterval), minInterval);
 
 		//See if there is a FileSystem name
 		fsName = element.getAttribute("fsName").trim();
