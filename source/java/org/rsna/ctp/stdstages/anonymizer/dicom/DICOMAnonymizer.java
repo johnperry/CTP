@@ -424,6 +424,9 @@ public class DICOMAnonymizer {
 			}
 
 			else if (hasScript) {
+				int vr ;
+				if (isPrivate) vr = el.vr();
+				else vr = getVR(tag);
 				if (tag != Tags.DeIdentificationMethodCodeSeq) {
 					//The element wasn't handled globally
 					//and it isn't DeIdentificationMethodCodeSeq,
@@ -448,7 +451,7 @@ public class DICOMAnonymizer {
 							n = Integer.parseInt(nString);
 						}
 						if (n > blanks.length()) n = blanks.length();
-						try { context.putXX(tag, getVR(tag), blanks.substring(0,n)); }
+						try { context.putXX(tag, vr, blanks.substring(0,n)); }
 						catch (Exception e) {
 							String tagString = Tags.toString(tag);
 							logger.warn(tagString + " exception: " + e.toString()
@@ -460,7 +463,7 @@ public class DICOMAnonymizer {
 					else {
 						try {
 							if (value.equals("@empty()")) value = "";
-							context.putXX(tag, getVR(tag), value);
+							context.putXX(tag, vr, value);
 						}
 						catch (Exception e) {
 							String tagString = Tags.toString(tag);

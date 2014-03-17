@@ -334,7 +334,7 @@ public class DICOMAnonymizerContext {
 		}
 		else if ((tag & 0x10000) != 0) {
 			if ((tag & 0xffff) < 0x100) outDS.putLO(tag,value);
-			else outDS.putUN(tag,value.getBytes("UTF-8"));
+			else outDS.putXX(tag,vr,value);
 		}
 		else {
 			//Do this in such a way that we handle multivalued elements.
