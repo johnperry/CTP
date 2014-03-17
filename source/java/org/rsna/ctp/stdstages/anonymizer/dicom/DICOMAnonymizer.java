@@ -546,9 +546,14 @@ public class DICOMAnonymizer {
 	}
 
 	private static int getVR(int tag) {
-		TagDictionary.Entry entry = tagDictionary.lookup(tag);
-		try { return VRs.valueOf(entry.vr); }
-		catch (Exception ex) { return VRs.valueOf("SH"); }
+		if ((tag & 0x10000) == 0) {
+			TagDictionary.Entry entry = tagDictionary.lookup(tag);
+			try { return VRs.valueOf(entry.vr); }
+			catch (Exception ex) { return VRs.valueOf("SH"); }
+		}
+		else { //Private tags default to LO/UN
+			return VRs.valueOf( ((tag & 0xffff) < 0x100) ? "LO" : "UN" ) ;
+		}
 	}
 
 	static final char escapeChar 		= '\\';
