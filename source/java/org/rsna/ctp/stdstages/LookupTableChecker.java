@@ -311,23 +311,15 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	//Find the next anonymizer stage and get its script and lookup table files.
 	private void getContext() {
 		if (dcmScriptFile == null) {
-			pipe = Configuration.getInstance().getPipeline(this);
-			if (pipe != null) {
-				List<PipelineStage> stageList = pipe.getStages();
-				int thisStage = stageList.indexOf(this);
-				if (thisStage != -1) {
-					PipelineStage[] stages = new PipelineStage[stageList.size()];
-					stages = stageList.toArray(stages);
-					//Find the next DicomAnonymizer
-					for (int i=thisStage+1; i<stages.length; i++) {
-						if (stages[i] instanceof DicomAnonymizer) {
-							anonymizer = ((DicomAnonymizer)stages[i]);
-							dcmScriptFile = anonymizer.getScriptFile();
-							lutFile = anonymizer.getLookupTableFile();
-							break;
-						}
-					}
+			PipelineStage next = getNextStage();
+			while (next != null) {
+				if (next instanceof DicomAnonymizer) {
+					anonymizer = ((DicomAnonymizer)next);
+					dcmScriptFile = anonymizer.getScriptFile();
+					lutFile = anonymizer.getLookupTableFile();
+					break;
 				}
+				next = next.getNextStage();
 			}
 		}
 	}

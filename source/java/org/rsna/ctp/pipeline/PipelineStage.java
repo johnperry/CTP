@@ -34,4 +34,16 @@ public interface PipelineStage {
 
 	public SummaryLink[] getLinks(boolean userIsAdmin);
 
+	public Pipeline getPipeline();
+
+	public void setPipeline(Pipeline pipeline);
+
+	public PipelineStage getNextStage();
+
+	public void setNextStage(PipelineStage nextStage);
+
+	public PipelineStage getPreviousStage();
+
+	public void setPreviousStage(PipelineStage previousStage);
+
 }

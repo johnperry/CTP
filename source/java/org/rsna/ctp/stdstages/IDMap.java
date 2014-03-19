@@ -211,38 +211,36 @@ public class IDMap extends AbstractPipelineStage implements Processor {
 	//Find the next anonymizer stage of each type and get its script.
 	private void getScripts() {
 		if (!scripts) {
-			Pipeline pipe = Configuration.getInstance().getPipeline(this);
-			if (pipe != null) {
-				List<PipelineStage> stageList = pipe.getStages();
-				int thisStage = stageList.indexOf(this);
-				if (thisStage != -1) {
-					PipelineStage[] stages = new PipelineStage[stageList.size()];
-					stages = stageList.toArray(stages);
-					//Find the next DicomAnonymizer
-					for (int i=thisStage+1; i<stages.length; i++) {
-						if (stages[i] instanceof DicomAnonymizer) {
-							DicomAnonymizer da = ((DicomAnonymizer)stages[i]);
-							dcmScript = da.scriptFile;
-							dcmLUT = da.lookupTableFile;
-							dcmIntTab = da.intTable;
-							break;
-						}
-					}
-					//Find the next XmlAnonymizer
-					for (int i=thisStage+1; i<stages.length; i++) {
-						if (stages[i] instanceof XmlAnonymizer) {
-							xmlScript = ((XmlAnonymizer)stages[i]).scriptFile;
-							break;
-						}
-					}
-					//Find the next ZipAnonymizer
-					for (int i=thisStage+1; i<stages.length; i++) {
-						if (stages[i] instanceof ZipAnonymizer) {
-							zipScript = ((ZipAnonymizer)stages[i]).scriptFile;
-							break;
-						}
-					}
+			PipelineStage next;
+			//Find the next DicomAnonymizer
+			next = getNextStage();
+			while (next != null) {
+				if (next instanceof DicomAnonymizer) {
+					DicomAnonymizer da = ((DicomAnonymizer)next);
+					dcmScript = da.scriptFile;
+					dcmLUT = da.lookupTableFile;
+					dcmIntTab = da.intTable;
+					break;
 				}
+				next = next.getNextStage();
+			}
+			//Find the next XmlAnonymizer
+			next = getNextStage();
+			while (next != null) {
+				if (next instanceof XmlAnonymizer) {
+					xmlScript = ((XmlAnonymizer)next).scriptFile;
+					break;
+				}
+				next = next.getNextStage();
+			}
+			//Find the next ZipAnonymizer
+			next = getNextStage();
+			while (next != null) {
+				if (next instanceof ZipAnonymizer) {
+					zipScript = ((ZipAnonymizer)next).scriptFile;
+					break;
+				}
+				next = next.getNextStage();
 			}
 			scripts = true;
 		}

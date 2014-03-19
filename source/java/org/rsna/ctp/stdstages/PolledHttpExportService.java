@@ -8,8 +8,7 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import org.apache.log4j.Logger;
@@ -28,6 +27,8 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	int port = 9100;
 	volatile boolean waiting = false;
 	volatile boolean handling = false;
+	WhiteList ipWhiteList = null;
+	BlackList ipBlackList = null;
 
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
@@ -39,6 +40,10 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		//Get the port
 		try { port = Integer.parseInt(element.getAttribute("port").trim()); }
 		catch (Exception ex) { logger.error(name+": Unparseable port value"); }
+
+		//Get the whitelist and blacklist
+		ipWhiteList = new WhiteList(element, "ip");
+		ipBlackList = new BlackList(element, "ip");
 
 		//Create the Connector
 		try { connector = new Connector(); }
@@ -114,6 +119,8 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		//Handle one connection.
 		private void handle(Socket socket) {
 			//logger.warn("Entering handle method");
+			String connectionIP = getRemoteAddress(socket);
+			boolean accept = ipWhiteList.contains(connectionIP) && !ipBlackList.contains(connectionIP);
 			try {
 				//Set parameters on the socket
 				try {
@@ -128,8 +135,9 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 				OutputStream out = socket.getOutputStream();
 
 				//Get the file
-				File next = getNextFile();
-				if (next != null) {
+				File next = null;
+				;
+				if (accept && ((next=getNextFile()) != null)) {
 
 					logger.debug("Exporting "+next);
 
@@ -178,6 +186,15 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 				out.write((byte)(x & 0xff));
 				x >>>= 8;
 			}
+		}
+
+		String getRemoteAddress(Socket socket) {
+			SocketAddress rsa = socket.getRemoteSocketAddress();
+			String rsaString = "unknown";
+			if ((rsa != null) && (rsa instanceof InetSocketAddress)) {
+				rsaString = ((InetSocketAddress)rsa).getAddress().getHostAddress();
+			}
+			return rsaString;
 		}
 	}
 

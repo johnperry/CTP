@@ -55,7 +55,7 @@ public class PerformanceLogger extends AbstractPipelineStage implements Processo
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
 
-		Pipeline pipe = Configuration.getInstance().getPipeline(this);
+		Pipeline pipe = getPipeline();
 		StringBuffer sb = new StringBuffer();
 		for (PipelineStage stage : pipe.getStages()) {
 			long timeOut = stage.getLastFileOutTime();

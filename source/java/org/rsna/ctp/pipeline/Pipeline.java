@@ -130,6 +130,18 @@ public class Pipeline extends Thread {
 	public void run() {
 		//Only run if there are stages in the pipeline.
 		if (stages.size() > 0) {
+
+			//Initialize the pointers
+			PipelineStage last = null;
+			for (PipelineStage stage: stages) {
+				stage.setPipeline(this);
+				if (last != null) {
+					last.setNextStage(stage);
+					stage.setPreviousStage(last);
+				}
+				last = stage;
+			}
+
 			//Start the stages
 			for (PipelineStage stage: stages) stage.start();
 

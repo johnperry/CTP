@@ -632,6 +632,19 @@
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="quarantine" required="yes" default="quarantines/PolledHttpExportService"/>
+
+			<child name="accept" required="no" allowMultiples="yes">
+				<attr name="ip" required="no" default="">
+					<helptext>IP address from which to allow connections</helptext>
+				</attr>
+			</child>
+
+			<child name="reject" required="no" allowMultiples="yes">
+				<attr name="ip" required="no" default="">
+					<helptext>IP address from which to reject connections</helptext>
+				</attr>
+			</child>
+
 		</ExportService>
 
 		<ExportService>

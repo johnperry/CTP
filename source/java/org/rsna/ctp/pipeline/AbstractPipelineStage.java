@@ -40,6 +40,9 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	protected volatile File lastFileOut = null;
 	protected volatile long lastTimeOut = 0;
 	protected volatile boolean stop = false;
+	protected volatile Pipeline pipeline = null;
+	protected volatile PipelineStage nextStage = null;
+	protected volatile PipelineStage previousStage = null;
 
 	/**
 	 * Construct a base pipeline stage which does no processing.
@@ -110,6 +113,51 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 */
 	public synchronized String getID() {
 		return id;
+	}
+
+	/**
+	 * Get the pipeline to which this stage belongs.
+	 * @return this stage's pipeline.
+	 */
+	public synchronized Pipeline getPipeline() {
+		return pipeline;
+	}
+
+	/**
+	 * Set the pipeline for this stage.
+	 */
+	public synchronized void setPipeline(Pipeline pipeline) {
+		this.pipeline = pipeline;
+	}
+
+	/**
+	 * Get the next stage in the pipeline.
+	 * @return the next stage in the pipeline.
+	 */
+	public synchronized PipelineStage getNextStage() {
+		return nextStage;
+	}
+
+	/**
+	 * Set the next stage in the pipeline.
+	 */
+	public synchronized void setNextStage(PipelineStage nextStage) {
+		this.nextStage = nextStage;
+	}
+
+	/**
+	 * Get the prevous stage in the pipeline.
+	 * @return the prevous stage in the pipeline.
+	 */
+	public synchronized PipelineStage getPreviousStage() {
+		return previousStage;
+	}
+
+	/**
+	 * Set the prevous stage in the pipeline.
+	 */
+	public synchronized void setPreviousStage(PipelineStage previousStage) {
+		this.previousStage = previousStage;
 	}
 
 	/**

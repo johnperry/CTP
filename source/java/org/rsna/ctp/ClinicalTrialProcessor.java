@@ -181,6 +181,7 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("shutdown",		ShutdownServlet.class);
 		selector.addServlet("server",		ServerServlet.class);
 		selector.addServlet("summary",		SummaryServlet.class);
+		selector.addServlet("ping",			PingServlet.class);
 
 		//Instantiate the server.
 		int port = config.getServerPort();

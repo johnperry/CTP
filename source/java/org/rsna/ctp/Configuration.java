@@ -443,24 +443,6 @@ public class Configuration {
 	}
 
 	/**
-	 * Get the Pipeline associated with a PipelineStage.
-	 * <br>
-	 * NOTE: This method will return null if called from
-	 * the constructor of a PipelineStage because at that
-	 * point, the Pipeline for the stage has not yet been
-	 * inserted into the pipelines list.
-	 * @param stage the PipelineStage to look for.
-	 * @return the Pipeline which contains the stage,
-	 * or null if no Pipeline exists for the stage.
-	 */
-	public Pipeline getPipeline(PipelineStage stage) {
-		for (Pipeline pipe : pipelines) {
-			if (pipe.getStages().contains(stage)) return pipe;
-		}
-		return null;
-	}
-
-	/**
 	 * Register a Plugin so that other components can access it.
 	 * The plugin is registered only if its id is not null and has at least
 	 * one non-whitespace character.
