@@ -209,6 +209,13 @@ public class DicomStorageSCU {
         String requestedCallingAET = getAET(dicomObject, callingAETTag, url.getCallingAET());
 
 		try {
+			//Test anything that could cause a NullPointerException
+			if (tsUID == null) logger.warn("tsUID is null");
+			if (sopClassUID == null) logger.warn("sopClassUID is null");
+			if (requestedHost == null) logger.warn("requestedHost is null");
+			if (requestedCalledAET == null) logger.warn("requestedCalledAET is null");
+			if (requestedCallingAET == null) logger.warn("requestedCallingAET is null");
+
 			//See if we have to make a new association for this request.
 			if (
 				//if the active association does not exist or if it has been closed by the other end, then YES
