@@ -44,7 +44,11 @@ public class XmlObject extends FileObject {
 			((string.charAt(1) == '?') || Character.isLetter(string.charAt(1)))) {
 
 			//It looks like the start of an XML document, parse it
-			document = XmlUtil.getDocument(file);
+			try { document = XmlUtil.getDocument(file); }
+			catch (Exception ex) {
+				//ex.printStackTrace();
+				throw ex;
+			}
 		}
 		else {
 			//It doesn't look like the start of an XML document, throw an exception.

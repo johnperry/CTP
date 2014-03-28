@@ -41,6 +41,15 @@
 </xsl:template>
 
 <xsl:template match="Stage">
+	<xsl:variable name="url">
+		<xsl:text>/</xsl:text>
+		<xsl:value-of select="$context"/>
+		<xsl:text>?p=</xsl:text><xsl:value-of select="@p"/>
+		<xsl:text>&amp;s=</xsl:text><xsl:value-of select="@s"/>
+		<xsl:if test="$home=''">
+			<xsl:text>&amp;suppress</xsl:text>
+		</xsl:if>
+	</xsl:variable>
 	<tr>
 		<td class="list">
 			<xsl:value-of select="@pipelineName"/>
@@ -48,15 +57,6 @@
 		<td class="list">
 			<xsl:value-of select="@stageName"/>
 		</td>
-		<xsl:variable name="url">
-			<xsl:text>/</xsl:text>
-			<xsl:value-of select="$context"/>
-			<xsl:text>?p=<xsl:value-of select="@p"/></xsl:text>
-			<xsl:text>&amp;s=<xsl:value-of select="@s"/></xsl:text>
-			<xsl:if test="not($home)">
-				<xsl:text>&amp;suppress</xsl:text>
-			</xsl:if>
-		</xsl:variable>
 		<td class="list">
 			<a href="{$url}"><xsl:value-of select="@file"/></a>
 		</td>
