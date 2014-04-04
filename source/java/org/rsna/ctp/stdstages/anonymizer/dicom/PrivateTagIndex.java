@@ -13,6 +13,7 @@ import java.util.Hashtable;
 import org.apache.log4j.Logger;
 import org.rsna.util.Cache;
 import org.rsna.util.FileUtil;
+import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -24,7 +25,7 @@ import org.w3c.dom.Node;
 public class PrivateTagIndex {
 
 	static final Logger logger = Logger.getLogger(PrivateTagIndex.class);
-	static final String xmlResource = "PrivateTags.xml";
+	static final String xmlResource = "PrivateTagIndex.xml";
 	static PrivateTagIndex privateTagIndex = null;
 	Hashtable<PrivateTagKey,PrivateTag> index = null;
 
@@ -56,9 +57,33 @@ public class PrivateTagIndex {
 		try {
 			Document doc = XmlUtil.getDocument( is );
 			Element root = doc.getDocumentElement();
-			//********************** under construction *********************
+			Node groupNode = root.getFirstChild();
+			while (groupNode != null) {
+				if ((groupNode instanceof Element) && groupNode.getNodeName().equals("group")) {
+					Element groupEl = (Element)groupNode;
+					int group = StringUtil.getHexInt(groupEl.getAttribute("n"));
+					String block = groupEl.getAttribute("block");
+					Node eNode = groupEl.getFirstChild();
+					while (eNode != null)  {
+						if ((eNode instanceof Element) && eNode.getNodeName().equals("e")) {
+							Element el = (Element)eNode;
+							int element = StringUtil.getHexInt(el.getAttribute("n"));
+							String code = el.getAttribute("code");
+							String vr = el.getAttribute("vr");
+							index.put(
+									new PrivateTagKey(block, group, element),
+									new PrivateTag(vr, code)
+							);
+						}
+						eNode = eNode.getNextSibling();
+					}
+				}
+				groupNode = groupNode.getNextSibling();
+			}
 		}
-		catch (Exception unable) { }
+		catch (Exception unable) {
+			logger.warn("Unable to load the private tag index");
+		}
 	}
 
 	class PrivateTagKey {
@@ -67,9 +92,9 @@ public class PrivateTagIndex {
 		int element;
 
 		public PrivateTagKey(String owner, int group, int element) {
-			this.owner = owner.toLowerCase();
+			this.owner = owner.toUpperCase();
 			this.group = group;
-			this.element = element;
+			this.element = element & 0xFF;
 		}
 
 		public boolean equals(Object obj) {
@@ -83,13 +108,19 @@ public class PrivateTagIndex {
 
 	class PrivateTag {
 		String vr;
+		String code;
 
-		public PrivateTag(String vr) {
+		public PrivateTag(String vr, String code) {
 			this.vr = vr;
+			this.code = code;
 		}
 
 		public String getVR() {
 			return vr;
+		}
+
+		public String getcode() {
+			return code;
 		}
 	}
 }
