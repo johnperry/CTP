@@ -40,6 +40,13 @@ public class PrivateTagIndex {
 		return privateTagIndex;
 	}
 
+	/**
+	 * Get the VR of a private attribute data element.
+	 * @param owner the string declaring the owner of the block.
+	 * @param group the group number.
+	 * @param element the element number within the block.
+	 * @return the VR, or the empty string if the element is unknown..
+	 */
 	public String getVR(String owner, int group, int element) {
 		PrivateTag tag = index.get( new PrivateTagKey(owner, group, element) );
 		if (tag != null) return tag.getVR();

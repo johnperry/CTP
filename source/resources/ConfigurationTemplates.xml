@@ -89,12 +89,14 @@
 				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to allow connections</helptext>
 				</attr>
+				<attr name="regex" required="no" default=""/>
 			</child>
 
 			<child name="reject" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to reject connections</helptext>
 				</attr>
+				<attr name="regex" required="no" default=""/>
 			</child>
 		</ImportService>
 
@@ -165,6 +167,7 @@
 				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to allow connections</helptext>
 				</attr>
+				<attr name="regex" required="no" default=""/>
 				<attr name="calledAET" required="no" default="">
 					<helptext>Called AE Title for which to allow connections</helptext>
 				</attr>
@@ -180,6 +183,7 @@
 				<attr name="ip" required="no" default="">
 					<helptext>IP address from which to reject connections</helptext>
 				</attr>
+				<attr name="regex" required="no" default=""/>
 				<attr name="calledAET" required="no" default="">
 					<helptext>Called AE Title for which to reject connections</helptext>
 				</attr>
@@ -750,6 +754,7 @@
 		<proxyUsername>The username for proxy authentication (or blank if proxy authentication is not used)</proxyUsername>
 		<quality>The quality parameter to use for lossy compression (1-100), ignored for lossless compression</quality>
 		<quarantine>Storage directory for quarantined objects</quarantine>
+		<regex>A regular expression for matching an IP address. This is an alternative to the ip field for matching ranges.</regex>
 		<requireAuthentication>Require authentication for connections</requireAuthentication>
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>
 		<root>Storage directory for use by the stage for data (must be unique)</root>
