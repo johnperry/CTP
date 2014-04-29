@@ -155,7 +155,7 @@ public class Util {
 
 				//Enable Java monitoring, if required
 				if (props.getProperty("mon", "no").equals("yes")) {
-					command.add("-Dcom.sun.management.jmxremote ");
+					command.add("-Dcom.sun.management.jmxremote");
 				}
 
 				//Set the extensions directories

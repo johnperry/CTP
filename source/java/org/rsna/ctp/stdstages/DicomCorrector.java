@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2014 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -25,7 +25,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 
 	static final Logger logger = Logger.getLogger(DicomCorrector.class);
 
-	File dicomScriptFile = null; //the DicomFilter script that determines whether to anonymize the object
+	File dicomScriptFile = null; //the DicomFilter script that determines whether to correct the object
 	boolean quarantineUncorrectedMismatches = false;
 	boolean logUncorrectedMismatches = false;
 

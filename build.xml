@@ -24,6 +24,11 @@
 		<pathelement location="${libraries}/jdbm.jar"/>
 		<pathelement location="${libraries}/commons-compress-1.0.jar"/>
 		<pathelement location="${libraries}/jai_imageio.jar"/>
+		<pathelement location="${libraries}/email/activation.jar"/>
+		<pathelement location="${libraries}/email/mail.jar"/>
+		<pathelement location="${libraries}/email/mailapi.jar"/>
+		<pathelement location="${libraries}/email/pop3.jar"/>
+		<pathelement location="${libraries}/email/smtp.jar"/>
 	</path>
 
 	<target name="clean">
@@ -96,6 +101,7 @@
 
 	<target name="installer" depends="jar">
 		<mkdir dir="${build}/CTP/libraries"/>
+		<mkdir dir="${build}/CTP/libraries/email"/>
 		<mkdir dir="${build}/config"/>
 
 		<copy overwrite="true" todir="${build}/CTP">
@@ -103,6 +109,9 @@
 		</copy>
 		<copy overwrite="true" todir="${build}/CTP/libraries">
 			<fileset dir="${libraries}" includes="*.*" excludes="jai_imageio.jar"/>
+		</copy>
+		<copy overwrite="true" todir="${build}/CTP/libraries/email">
+			<fileset dir="${libraries}/email" includes="*.*"/>
 		</copy>
 		<copy overwrite="true" todir="${build}/config">
 			<fileset dir="${config}" includes="*.*"/>

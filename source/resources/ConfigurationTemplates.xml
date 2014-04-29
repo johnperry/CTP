@@ -414,6 +414,26 @@
 			<attr name="quarantine" required="yes" default="quarantines/ZipAnonymizer"/>
 		</Processor>
 
+		<Processor>
+			<attr name="name" required="yes" default="EmailService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.EmailService" editable="no"/>
+			<attr name="root" required="yes" default="roots/EmailService"/>
+			<attr name="script" required="yes" default="scripts/EmailService.script">
+				<helptext>The script file determining whether to send an email for a study</helptext>
+			</attr>
+			<attr name="smtpServer" required="yes"/>
+			<attr name="to" required="yes"/>
+			<attr name="from" required="yes"/>
+			<attr name="cc" required="yes"/>
+			<attr name="subject" required="yes"/>
+			<attr name="includePatientName" required="yes" default="no" options="yes|no"/>
+			<attr name="includePatientID" required="yes" default="no" options="yes|no"/>
+			<attr name="includeModality" required="yes" default="no" options="yes|no"/>
+			<attr name="includeStudyDate" required="yes" default="no" options="yes|no"/>
+			<attr name="logSentEmails" required="yes" default="no" options="yes|no"/>
+			<attr name="quarantine" required="yes" default="quarantines/EmailService"/>
+		</Processor>
+
 		<StorageService>
 			<attr name="name" required="yes" default="FileStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FileStorageService" editable="no"/>
@@ -728,18 +748,25 @@
 		<cacheID>The id attribute of an ObjectCache stage from which to obtain PHI for the hierarchy</cacheID>
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
+		<cc>The email addresses of the copied recipients, separated by commas.</cc>
 		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<filenameTag>DICOM tag in which to store the name of the file (ggggeeee or DICOM PS 3.6 keyword)</filenameTag>
+		<from>The email address of the sender.</from>
 		<fsName>File System name to insert in DicomObjects (optional)</fsName>
 		<fsNameTag>DICOM tag in which to store the File System name (ggggeeee or DICOM PS 3.6 keyword)</fsNameTag>
 		<id>This field is required only when the stage is to be referenced by another stage. If present, it must be unique.</id>
+		<includeModality>Include the modality in sent emails</includeModality>
+		<includePatientID>Include the Patient ID in sent emails</includePatientID>
+		<includePatientName>Include the Patient Name in sent emails</includePatientName>
+		<includeStudyDate>Include the Study Date in sent emails</includeStudyDate>
 		<initialContextFactory>The LDAP context factory (e.g., com.sun.jndi.ldap.LdapCtxFactory)</initialContextFactory>
 		<interval>Sleep time in milliseconds between polls of the export queue</interval>
 		<ldapAdmin>The LDAP admin username (e.g., adminUserName)</ldapAdmin>
 		<logConnections>Log IP addresses of received connections</logConnections>
+		<logSentEmails>Log all emails sent</logSentEmails>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
@@ -765,11 +792,14 @@
 		<setStandardExtensions>Assign file extensions based on file type (.dcm, .xml, .zip, .md)</setStandardExtensions>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
+		<smtpServer>The SMTP server to be used to send emails.</smtpServer>
 		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>
+		<subject>The subject for the sent emails. This can be used to indicate the trial name.</subject>
 		<suppressDuplicates>Ignore objects with the same SOPInstanceUID as one of the last 10 objects received</suppressDuplicates>
 		<throttle>Miinimum time in milliseconds between object transmissions</throttle>
 		<timeTag>DICOM tag in which to store the time of the received connection (ggggeeee, optional)</timeTag>
+		<to>The email addresses of the recipients, separated by commas.</to>
 		<treeRoot>The root directory of the archive</treeRoot>
 		<username>The username for authentication, if required by the destination system (or blank if authentication is not used)</username>
 		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
