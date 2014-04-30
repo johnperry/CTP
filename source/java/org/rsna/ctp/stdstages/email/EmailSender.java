@@ -17,12 +17,19 @@ import javax.mail.Transport;
 public class EmailSender {
 
 	Session session;
+	String username;
+	String password;
 
-    public EmailSender(String smtpServer) throws Exception {
-		//Get a session
+    public EmailSender(String smtpServer, String username, String password) throws Exception {
+		this.username = check(username);
+		this.password = check(password);
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", smtpServer);
 		session = Session.getDefaultInstance(props, null);
+	}
+
+	private String check(String s) {
+		return (s != null) ? s.trim() : "";
 	}
 
 	/**
@@ -46,7 +53,8 @@ public class EmailSender {
 			msg.setSentDate(new Date());
 
 			// Send the message
-			Transport.send(msg);
+			if (username.equals("")) Transport.send(msg);
+			else Transport.send(msg, username, password);
 			return true;
 		}
 		catch (Exception ex) {
@@ -89,7 +97,8 @@ public class EmailSender {
 			msg.setContent(mp);
 
 			// Send the message
-			Transport.send(msg);
+			if (username.equals("")) Transport.send(msg);
+			else Transport.send(msg, username, password);
 			return true;
 		}
 		catch (Exception ex) {
@@ -139,7 +148,8 @@ public class EmailSender {
 			msg.setContent(mp);
 
 			// Send the message
-			Transport.send(msg);
+			if (username.equals("")) Transport.send(msg);
+			else Transport.send(msg, username, password);
 			return true;
 		}
 		catch (Exception ex) {

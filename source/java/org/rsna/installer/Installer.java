@@ -359,35 +359,38 @@ public class Installer extends JFrame {
 			linux.delete();
 		}
 
-		//remove obsolete versions of the slf4j libraries
-		//and the dcm4che-imageio libraries
+		//clean up the libraries directory
 		File libraries = new File(dir, "libraries");
 		if (libraries.exists()) {
+			//remove obsolete versions of the slf4j libraries
+			//and the dcm4che-imageio libraries
 			File[] files = libraries.listFiles();
 			for (File file : files) {
-				String name = file.getName();
-				if (name.startsWith("slf4j-") || name.startsWith("dcm4che-imageio-rle")) {
-					file.delete();
+				if (file.isFile()) {
+					String name = file.getName();
+					if (name.startsWith("slf4j-") || name.startsWith("dcm4che-imageio-rle")) {
+						file.delete();
+					}
 				}
 			}
+			//remove the email subdirectory
+			File email = new File(libraries, "email");
+			deleteAll(email);
+			//remove the xml subdirectory
+			File xml = new File(libraries, "xml");
+			deleteAll(xml);
 		}
 
-		//remove the obsolete xml library
+		//remove the obsolete xml library under dir
 		File xml = new File(dir, "xml");
-		if (xml.exists()) {
-			File[] xmlFiles = xml.listFiles();
-			for (File file : xmlFiles) file.delete();
-			xml.delete();
-		}
+		deleteAll(xml);
 
 		//remove the dicom profiles so any
 		//obsolete files will disappear
 		File profiles = new File(dir, "profiles");
 		File dicom = new File(profiles, "dicom");
-		if (dicom.exists()) {
-			File[] files = dicom.listFiles();
-			for (File file : files) file.delete();
-		}
+		deleteAll(dicom);
+		dicom.mkdirs();
 	}
 
 	//Let the user select an installation directory.
@@ -643,6 +646,21 @@ public class Installer extends JFrame {
 		bw.write(text, 0, text.length());
 		bw.flush();
 		bw.close();
+	}
+
+	public static boolean deleteAll(File file) {
+		boolean b = true;
+		if ((file != null) && file.exists()) {
+			if (file.isDirectory()) {
+				try {
+					File[] files = file.listFiles();
+					for (File f : files) b &= deleteAll(f);
+				}
+				catch (Exception e) { return false; }
+			}
+			b &= file.delete();
+		}
+		return b;
 	}
 
 	private String getWelcomePage() {

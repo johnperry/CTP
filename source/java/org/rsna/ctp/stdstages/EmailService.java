@@ -29,6 +29,8 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	File dicomScriptFile = null;
 	Hashtable<String,Study> studies;
 	String smtpServer;
+	String username;
+	String password;
 	String to;
 	String from;
 	String cc;
@@ -68,6 +70,8 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		logSentEmails = element.getAttribute("logSentEmails").toLowerCase().trim().equals("yes");
 
 		smtpServer = element.getAttribute("smtpServer").trim();
+		username = element.getAttribute("username").trim();
+		password = element.getAttribute("password").trim();
 		to = element.getAttribute("to").trim();
 		from = element.getAttribute("from").trim();
 		cc = element.getAttribute("cc").trim();
@@ -171,7 +175,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			return series.size();
 		}
 
-		public boolean isComplete() {
+		public synchronized boolean isComplete() {
 			long age = System.currentTimeMillis() - lastTime;
 			return (age > maxAge);
 		}
@@ -181,7 +185,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		EmailSender sender = null;
 		public Emailer() {
 			super(name + " - email");
-			try { sender = new EmailSender(smtpServer); }
+			try { sender = new EmailSender(smtpServer, username, password); }
 			catch (Exception ex) {
 				logger.warn("Unable to instantiate the EmailSender.");
 			}

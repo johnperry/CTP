@@ -25,10 +25,7 @@
 		<pathelement location="${libraries}/commons-compress-1.0.jar"/>
 		<pathelement location="${libraries}/jai_imageio.jar"/>
 		<pathelement location="${libraries}/email/activation.jar"/>
-		<pathelement location="${libraries}/email/mail.jar"/>
-		<pathelement location="${libraries}/email/mailapi.jar"/>
-		<pathelement location="${libraries}/email/pop3.jar"/>
-		<pathelement location="${libraries}/email/smtp.jar"/>
+		<pathelement location="${libraries}/email/javax.mail.jar"/>
 	</path>
 
 	<target name="clean">

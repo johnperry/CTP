@@ -156,7 +156,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("OphthalmicPhotography16BitImageStorage","$ts-epd,$ts-native"),
 		new PC("OphthalmicPhotography8BitImageStorage","$ts-epd,$ts-native"),
 		new PC("OphthalmicTomographyImageStorage","$ts-epd,$ts-native"),
-		new PC("PositronEmissionTomographyImageStorage","$ts-jpeglossless,$ts-native"),
+		new PC("PositronEmissionTomographyImageStorage","$ts-epd,$ts-native"),
 		new PC("PresentationLUT","$ts-native"),
 		new PC("ProceduralEventLoggingSOPClass","$ts-native"),
 		new PC("ProcedureLogStorage","$ts-native"),

@@ -422,6 +422,12 @@
 				<helptext>The script file determining whether to send an email for a study</helptext>
 			</attr>
 			<attr name="smtpServer" required="yes"/>
+			<attr name="username" required="yes" default="">
+				<helptext>The username of the account on the SMTP server. If blank, no authentication is done.</helptext>
+			</attr>
+			<attr name="password" required="yes" default="">
+				<helptext>The password of the account on the SMTP server (ignored if no authentication is done).</helptext>
+			</attr>
 			<attr name="to" required="yes"/>
 			<attr name="from" required="yes"/>
 			<attr name="cc" required="yes"/>
@@ -792,7 +798,7 @@
 		<setStandardExtensions>Assign file extensions based on file type (.dcm, .xml, .zip, .md)</setStandardExtensions>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
-		<smtpServer>The SMTP server to be used to send emails.</smtpServer>
+		<smtpServer>The SMTP server to be used to send emails (e.g., mail.isp.net).</smtpServer>
 		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>
 		<subject>The subject for the sent emails. This can be used to indicate the trial name.</subject>
