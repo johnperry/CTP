@@ -222,6 +222,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				return null;
 			}
 			else {
+				if (savedFile.exists())
+					savedFile.delete();
+				
 				if (fileObject.copyTo(tempFile) && tempFile.renameTo(savedFile)) {
 					//The object was successfully saved, count it.
 					storedCount++;
