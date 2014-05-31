@@ -222,6 +222,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				return null;
 			}
 			else {
+				savedFile.delete();
 				if (fileObject.copyTo(tempFile) && tempFile.renameTo(savedFile)) {
 					//The object was successfully saved, count it.
 					storedCount++;
@@ -233,6 +234,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//If anything went wrong, quarantine the object and abort.
 				else {
 					logger.warn("Unable to save "+savedFile);
+					tempFile.delete();
 					if (quarantine != null) quarantine.insert(fileObject);
 					return null;
 				}

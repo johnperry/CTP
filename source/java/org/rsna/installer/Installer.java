@@ -516,7 +516,7 @@ public class Installer extends JFrame {
 			File truststoreFile = new File(truststore);
 			cp.appendln(Color.black, "Looking for "+keystore);
 			if (keystoreFile.exists() || truststoreFile.exists()) {
-				cp.appendln(Color.black, "...found it [This is an EdgeServer installation");
+				cp.appendln(Color.black, "...found it [This is an EdgeServer installation]");
 				//Delete the default files, just to avoid confusion
 				File ks = new File(dir, "keystore.jks");
 				File ts = new File(dir, "truststore.jks");

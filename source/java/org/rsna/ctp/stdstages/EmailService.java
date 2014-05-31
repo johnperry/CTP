@@ -39,6 +39,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	boolean includePatientID = false;
 	boolean includeModality = false;
 	boolean includeStudyDate = false;
+	boolean includeAccessionNumber = false;
 	boolean logSentEmails = false;
 
 	static final long aSecond = 1000;
@@ -67,6 +68,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		includePatientID = element.getAttribute("includePatientID").toLowerCase().trim().equals("yes");
 		includeModality = element.getAttribute("includeModality").toLowerCase().trim().equals("yes");
 		includeStudyDate = element.getAttribute("includeStudyDate").toLowerCase().trim().equals("yes");
+		includeAccessionNumber = element.getAttribute("includeAccessionNumber").toLowerCase().trim().equals("yes");
 		logSentEmails = element.getAttribute("logSentEmails").toLowerCase().trim().equals("yes");
 
 		smtpServer = element.getAttribute("smtpServer").trim();
@@ -141,6 +143,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		public String patientID;
 		public String modality;
 		public String studyDate;
+		public String accessionNumber;
 		int objectCount = 0;
 		int imageCount = 0;
 		HashSet<String> series;
@@ -151,6 +154,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			this.patientID = dob.getPatientID();
 			this.modality = dob.getModality();
 			this.studyDate = dob.getStudyDate();
+			this.accessionNumber = dob.getAccessionNumber();
 			series = new HashSet<String>();
 		}
 
@@ -231,10 +235,11 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		private String getPlainText(Study study) {
 			StringBuffer sb = new StringBuffer();
 			sb.append("A study was received and processed by CTP.\n");
-			if (includePatientName) sb.append("Patient Name: "+study.patientName+"\n");
-			if (includePatientID  ) sb.append("Patient ID:   "+study.patientID+"\n");
-			if (includeModality   ) sb.append("Modality:     "+study.modality+"\n");
-			if (includeStudyDate  ) sb.append("Study Date:   "+study.studyDate+"\n");
+			if (includePatientName) 	sb.append("Patient Name: "+study.patientName+"\n");
+			if (includePatientID  ) 	sb.append("Patient ID:   "+study.patientID+"\n");
+			if (includeModality   ) 	sb.append("Modality:     "+study.modality+"\n");
+			if (includeStudyDate  ) 	sb.append("Study Date:   "+study.studyDate+"\n");
+			if (includeAccessionNumber) sb.append("Accession:    "+study.studyDate+"\n");
 			sb.append("Objects:      "+study.getObjectCount()+"\n");
 			sb.append("Series:       "+study.getSeriesCount()+"\n");
 			sb.append("Images:       "+study.getImageCount()+"\n");
@@ -267,6 +272,12 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 				sb.append("<tr>\n");
 				sb.append("<td>Study Date:</td>\n");
 				sb.append("<td>"+study.studyDate+"</td>\n");
+				sb.append("</tr>\n");
+			}
+			if (includeAccessionNumber) {
+				sb.append("<tr>\n");
+				sb.append("<td>Accession Number:</td>\n");
+				sb.append("<td>"+study.accessionNumber+"</td>\n");
 				sb.append("</tr>\n");
 			}
 			sb.append("<tr>\n");

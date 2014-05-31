@@ -37,7 +37,7 @@ import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
 /**
- * The Thread that exports DicomObjects to a database.
+ * The Thread that exports FileObjects to a database.
  */
 public class DatabaseExportService extends AbstractQueuedExportService {
 

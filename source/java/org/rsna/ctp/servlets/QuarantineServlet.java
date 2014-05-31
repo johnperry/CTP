@@ -367,8 +367,8 @@ public class QuarantineServlet extends Servlet {
 			}
 		}
 		if (queueManager == null) return;
-		//Okay, now get all the files from the quarantine and enqueue them.
-		quarantine.queueFile(filename, queueManager);
+		File file = quarantine.getFile(filename);
+		quarantine.queueFile(file, queueManager);
 	}
 
 	//Download a file

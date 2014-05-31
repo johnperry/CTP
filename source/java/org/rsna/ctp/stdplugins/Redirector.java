@@ -77,7 +77,7 @@ public class Redirector extends AbstractPlugin {
 		public void process(HttpRequest req, HttpResponse res) {
 			String host = httpsHost;
 			if (host.equals("")) {
-				req.getHost();
+				host = req.getHost();
 				int k = host.indexOf(":");
 				if (k >= 0) host = host.substring(0,k);
 			}

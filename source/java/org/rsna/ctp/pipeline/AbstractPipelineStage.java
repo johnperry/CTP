@@ -57,8 +57,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects").trim().equals("no");
 		acceptZipObjects	= !element.getAttribute("acceptZipObjects").trim().equals("no");
 		acceptFileObjects	= !element.getAttribute("acceptFileObjects").trim().equals("no");
-		String qPath = element.getAttribute("quarantine").trim();
-		if (!qPath.equals("")) quarantine = new Quarantine(qPath);
+		quarantine = Quarantine.getInstance(element.getAttribute("quarantine"));
 		String rPath = element.getAttribute("root").trim();
 		if (!rPath.equals("")) {
 			root = new File(rPath);
@@ -79,6 +78,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * Stop the pipeline stage.
 	 */
 	public synchronized void shutdown() {
+		if (quarantine != null) quarantine.close();
 		stop = true;
 	}
 

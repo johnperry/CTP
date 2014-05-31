@@ -436,6 +436,7 @@
 			<attr name="includePatientID" required="yes" default="no" options="yes|no"/>
 			<attr name="includeModality" required="yes" default="no" options="yes|no"/>
 			<attr name="includeStudyDate" required="yes" default="no" options="yes|no"/>
+			<attr name="includeAccessionNumber" required="yes" default="no" options="yes|no"/>
 			<attr name="logSentEmails" required="yes" default="no" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/EmailService"/>
 		</Processor>

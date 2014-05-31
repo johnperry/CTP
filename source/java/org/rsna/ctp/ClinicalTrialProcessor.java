@@ -32,7 +32,6 @@ import org.rsna.util.Cache;
 import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
-import org.rsna.util.JarClassLoader;
 import org.rsna.util.ProxyServer;
 
 import org.w3c.dom.Document;
@@ -51,14 +50,6 @@ public class ClinicalTrialProcessor {
 
 	/**
 	 * The main method of the ClinicalTrialProcessor program.
-	 * This method just instantiates the main class.
-	 * IMPORTANT: This approach requires that <u>all</u> the
-	 * directories containing the libraries used by the program
-	 * appear in the java.ext.dirs list. This is done by the
-	 * CTP-startup program when it launches CTP. It is also done
-	 * by the Windows service. The extensions must include the
-	 * directory containing CTP.jar plus the CTP/libraries
-	 * directory.
 	 */
 	public static void main(String[] args) {
 		//Set the context classloader to allow dcm4che to load its classes

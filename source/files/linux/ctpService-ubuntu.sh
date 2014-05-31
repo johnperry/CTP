@@ -12,6 +12,8 @@
 
 ################################################
 # Author: SG Langer 12/11/2012
+#	revised 5/21/2014 (fixed grep lines in start()
+#	and stop()
 #
 # Purpose: used to start/stop CTP on SysV family *NIX
 #	For Ubuntu UpStart equivalent see
@@ -71,7 +73,7 @@ start() {
 #################################
 	log_daemon_msg "Start CTP"
 	echo "in stop"
-	ret=$(ps aux |grep libraries)
+	ret=$(ps aux |grep libraries |grep -v grep)
 	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP already running, stop first"
 		return 0
@@ -105,7 +107,7 @@ stop() {
 #
 ##################################
 	echo "in stop"
-	ret=$(ps aux |grep libraries)
+	ret=$(ps aux |grep libraries |grep -v grep)
 	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP is running"
 		array=($ret)

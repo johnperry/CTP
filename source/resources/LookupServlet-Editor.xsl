@@ -40,14 +40,14 @@
 						title="Update the file"/>
 				<br/>
 				<br/>
-				<img src="/icons/import.png"
+				<img src="/icons/arrow-up.png"
 						onclick="uploadCSV();"
-						style="margin-left:4px; width:28px;"
+						style="margin-right:2px;"
 						title="Upload CSV Lookup Table File"/>
 				<br/>
-				<img src="icons/export.png"
+				<img src="icons/arrow-down.png"
 						onclick="downloadCSV();"
-						style="margin-left:4px; width:28px;"
+						style="margin-right:2px"
 						title="Download CSV Lookup Table File"/>
 			</div>
 
