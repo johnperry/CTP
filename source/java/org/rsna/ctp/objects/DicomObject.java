@@ -104,7 +104,13 @@ public class DicomObject extends FileObject {
 
 			//Get the charset in case we need it for manifest processing.
 			charset = dataset.getSpecificCharacterSet();
+
+			//Get the file meta info
 			fileMetaInfo = dataset.getFileMetaInfo();
+			if (fileMetaInfo == null) {
+				//No file meta info; create it and assume IVRLE
+				fileMetaInfo = oFact.newFileMetaInfo(dataset, UIDs.ImplicitVRLittleEndian);
+			}
 
 			//See if this is a real image.
 			isImage = (parser.getReadTag() == Tags.PixelData);
@@ -125,6 +131,7 @@ public class DicomObject extends FileObject {
 			if (!leaveOpen) close();
 		}
 		catch (Exception ex) {
+			logger.debug("Exception in constructor", ex);
 			close();
 			throw ex;
 		}

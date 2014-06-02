@@ -88,6 +88,7 @@ public class Quarantine {
 			openIndex();
 			String v = (String)versionTable.get(versionKey);
 			if ((v == null) || !v.equals(versionID)) {
+				logger.info("Rebuilding quarantine index: "+directory);
 				closeIndex();
 				deleteIndex();
 				openIndex();
