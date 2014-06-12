@@ -14,17 +14,24 @@ import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.pipeline.AbstractQueuedExportService;
 import org.rsna.ctp.pipeline.AbstractImportService;
+import org.rsna.ctp.pipeline.ImportService;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Quarantine;
 import org.rsna.ctp.pipeline.QueueManager;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
+import org.rsna.server.Path;
 import org.rsna.server.User;
 import org.rsna.servlets.Servlet;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HtmlUtil;
 import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * The QuarantineServlet. This implementation provides access
@@ -33,8 +40,10 @@ import org.rsna.util.StringUtil;
 public class QuarantineServlet extends Servlet {
 
 	static final Logger logger = Logger.getLogger(QuarantineServlet.class);
-	String home = "/";
-	String suppress = "";
+
+	Pipeline pipeline = null;
+	PipelineStage stage = null;
+	Quarantine quarantine = null;
 
 	/**
 	 * Construct a QuarantineServlet.
@@ -47,25 +56,12 @@ public class QuarantineServlet extends Servlet {
 
 	/**
 	 * The GET handler: return a page showing the quarantines.
-	 * There are several possible query strings:
-	 * <ol>
-	 *  <li>no query string:
-	 *      return a page listing of the sizes of the quarantines for all pipelines.</li>
-	 *  <li>?p=[p]:
-	 *      return a listing of the sizes of the quarantines for pipeline p.
-	 *  <li>?p=[p]&s=[s]:
-	 *      return a listing of the contents of the quarantine for pipeline p, stage s.
-	 *  <li>?p=[p]&s=[s]&file=[filename]:
-	 *      return a listing of the file if one is available; otherwise,
-	 *      return the identified file.
-	 *  <li>?p=[p]&s=[s]&file=[filename]&list=no:
-	 *      force return of the file, even if a listing page is available.
-	 * </ol>
-	 * The queue and delete query parameters cause files to be queued or deleted.
 	 * @param req the request object
 	 * @param res the response object
 	 */
-	public void doGet(HttpRequest req, HttpResponse res) {
+	public void doGet(HttpRequest req, HttpResponse res) throws Exception {
+
+		//logger.info("admin = "+req.userHasRole("admin")+"\n"+req.toString());
 
 		//Require that the user have the qadmin or admin role
 		boolean admin = req.userHasRole("qadmin") || req.userHasRole("admin");
@@ -75,41 +71,112 @@ public class QuarantineServlet extends Servlet {
 			return;
 		}
 
-		if (req.hasParameter("suppress")) {
-			home = "";
-			suppress = "&suppress";
-		}
+		//Get the command
+		Path path = req.getParsedPath();
+		String command = path.element(1);
 
-		//Check the path information
+		//Get the parameters and find the quarantine
 		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);
 		int sInt = StringUtil.getInt(req.getParameter("s", "-1"), -1);
-		String file = req.getParameter("file", "");
-		boolean list = (req.getParameter("list") != null);
-		boolean display = (req.getParameter("display") != null);
-		boolean queue = (req.getParameter("queue") != null);
-		boolean delete = (req.getParameter("delete") != null);
-		if (pInt == -1) sizesPage(res, home);
-		else if (sInt == -1) sizesPage(res, pInt, home);
-		else if (file.equals("")) {
-			if (admin && queue) queueAll(pInt, sInt);
-			if (admin && delete) deleteAll(pInt, sInt);
-			contentsPage(req, res, pInt, sInt, admin);
-		}
-		else {
-			if (admin && (queue || delete)) {
-				if (queue) queueFile(pInt, sInt, file);
-				if (delete) deleteFile(pInt, sInt, file);
-				contentsPage(req, res, pInt, sInt, admin);
+		if ((pInt != -1) && (sInt != -1)) {
+			try {
+				pipeline = Configuration.getInstance().getPipelines().get(pInt);
+				stage = pipeline.getStages().get(sInt);
+				quarantine = stage.getQuarantine();
 			}
-			else downloadFile(res, pInt, sInt, file, list, display, admin, home);
+			catch (Exception quit) {  }
 		}
+
+		if (pInt == -1) sizesPage(res);
+
+		else if (sInt == -1) sizesPage(res, pInt);
+
+		else if (command.equals("")) studiesPage(req, res, pInt, sInt);
+
+		else if (command.equals("series")) seriesXML(req, res, pInt, sInt);
+
+		else if (command.equals("files")) filesXML(req, res, pInt, sInt);
+
+		else if (command.equals("queueAll")) {
+			if (quarantine != null) {
+				QueueManager queueManager = getClosestQueueManager();
+				if (queueManager != null) quarantine.queueAll(queueManager);
+			}
+			studiesPage(req, res, pInt, sInt);
+		}
+
+		else if (command.equals("queueStudy")) {
+			String studyUID = req.getParameter("studyUID");
+			if (quarantine != null) {
+				QueueManager queueManager = getClosestQueueManager();
+				if (queueManager != null) quarantine.queueStudy(studyUID, queueManager);
+			}
+			studiesPage(req, res, pInt, sInt);
+		}
+
+		else if (command.equals("queueSeries")) {
+			String seriesUID = req.getParameter("seriesUID");
+			if (quarantine != null) {
+				QueueManager queueManager = getClosestQueueManager();
+				if (queueManager != null) quarantine.queueSeries(seriesUID, queueManager);
+			}
+			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+		}
+
+		else if (command.equals("queueFile")) {
+			String filename = req.getParameter("filename");
+			if ((quarantine != null) && (filename != null)) {
+				QueueManager queueManager = getClosestQueueManager();
+				if (queueManager != null) {
+					File file = quarantine.getFile(filename);
+					quarantine.queueFile(file, queueManager);
+				}
+			}
+			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+		}
+
+		else if (command.equals("deleteAll")) {
+			if (quarantine != null) {
+				quarantine.deleteAll();
+			}
+			studiesPage(req, res, pInt, sInt);
+		}
+
+		else if (command.equals("deleteStudy")) {
+			String studyUID = req.getParameter("studyUID");
+			if (quarantine != null) {
+				quarantine.deleteStudy(studyUID);
+			}
+			studiesPage(req, res, pInt, sInt);
+		}
+
+		else if (command.equals("deleteSeries")) {
+			String seriesUID = req.getParameter("seriesUID");
+			if (quarantine != null) {
+				quarantine.deleteSeries(seriesUID);
+			}
+			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+		}
+
+		else if (command.equals("deleteFile")) {
+			if (quarantine != null) {
+				String filename = req.getParameter("filename");
+				quarantine.deleteFile(filename);
+			}
+			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+		}
+
+		else if (command.equals("displayFile")) displayFile(req, res);
+
+		else if (command.equals("listFile")) listFile(req, res, pInt, sInt);
+
+		else if (command.equals("downloadFile")) downloadFile(req, res);
 	}
 
 	//Get a page listing the sizes of all the quarantines
-	void sizesPage(HttpResponse res, String home) {
+	void sizesPage(HttpResponse res) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>All Quarantines</h1>");
 		sb.append("<table border=\"1\">");
 		Configuration config = Configuration.getInstance();
@@ -129,7 +196,7 @@ public class QuarantineServlet extends Servlet {
 	}
 
 	//Get a page listing the sizes of the quarantines for a single pipeline
-	void sizesPage(HttpResponse res, int pipelineIndex, String home) {
+	void sizesPage(HttpResponse res, int pipelineIndex) {
 		//Make sure the index is valid
 		Pipeline pipeline;
 		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
@@ -139,15 +206,12 @@ public class QuarantineServlet extends Servlet {
 			return;
 		}
 		StringBuffer sb = new StringBuffer();
-
 		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>"+pipeline.getPipelineName()+" Quarantines</h1>");
 		sb.append("<table border=\"1\">");
 		getSizes(sb, pipeline, pipelineIndex);
 		sb.append("</table>");
 		sb.append("</center></body></html>");
-		//Send the response;
 		res.disableCaching();
 		res.write(sb.toString());
 		res.setContentType("html");
@@ -174,303 +238,175 @@ public class QuarantineServlet extends Servlet {
 		if (quarantine == null) return false;
 		sb.append("<tr><td>");
 		if (first) {
-			sb.append("<a href=\"?p="+pipelineIndex+suppress+"\">"+pipeline.getPipelineName()+"</a>");
+			sb.append("<a href=\"?p="+pipelineIndex+"\">"+pipeline.getPipelineName()+"</a>");
 			first = false;
 		}
 		sb.append("</td><td>");
-		sb.append("<a href=\"?p="+pipelineIndex+"&s="+stageIndex+suppress+"\">"+stage.getName()+"</a>");
+		sb.append("<a href=\"?p="+pipelineIndex+"&s="+stageIndex+"\">"+stage.getName()+"</a>");
 		sb.append("</td><td style=\"text-align:right\">"+quarantine.getSize()+"</td></tr>");
 		return true;
 	}
 
-	//Delete all the objects in a quarantine
-	void deleteAll(int pipelineIndex, int stageIndex) {
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) { return; }
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) { return; }
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) return;
-		quarantine.deleteAll();
+	//List the studies in a quarantine
+	void studiesPage(HttpRequest req, HttpResponse res, int pipelineIndex, int stageIndex) {
+		try {
+			Document doc = quarantine.getStudiesXML();
+			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/QuarantineServlet.xsl" ) );
+			Object[] params = {
+				"context", context,
+				"pipeline", pipeline.getName(),
+				"stage", stage.getName(),
+				"p", Integer.toString(pipelineIndex),
+				"s", Integer.toString(stageIndex)
+			};
+			res.write( XmlUtil.getTransformedText( doc, xsl, params ) );
+			res.setContentType("html");
+			res.send();
+		}
+		catch (Exception quit) {
+			logger.warn("studiesPage", quit);
+			res.setResponseCode(res.notfound);
+			res.send();
+		}
 	}
 
-	//Queue all the objects in a quarantine to the closest QueueManager available.
-	void queueAll(int pipelineIndex, int stageIndex) {
-		//First find the pipeline and the stage.
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) { return; }
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) { return; }
-		//Next, get the stage's quarantine.
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) return;
-		//Now find the closest QueueManager.
-		//If the stage is an ExportService with a queue, then use the stage's QueueManager.
-		//If the stage is not an ExportService, then use the QueueManager of the pipeline's ImportService.
-		//If the ImportService does not have a QueueManager, do nothing.
+	void seriesXML(HttpRequest req, HttpResponse res, int pipelineIndex, int stageIndex) {
+		try {
+			String studyUID = req.getParameter("studyUID");
+			Document doc = quarantine.getSeriesXML(studyUID);
+			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/QuarantineSeriesList.xsl" ) );
+			Object[] params = {
+				"context", context,
+				"p", Integer.toString(pipelineIndex),
+				"s", Integer.toString(stageIndex)
+			};
+			res.write( XmlUtil.getTransformedText( doc, xsl, params ) );
+			res.setContentType("xml");
+			res.send();
+		}
+		catch (Exception quit) {
+			res.setResponseCode(res.notfound);
+			res.send();
+		}
+	}
+
+	void filesXML(HttpRequest req, HttpResponse res, int pipelineIndex, int stageIndex) {
+		try {
+			String seriesUID = req.getParameter("seriesUID");
+			Pipeline pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex);
+			PipelineStage stage = pipeline.getStages().get(stageIndex);
+			Quarantine quarantine = stage.getQuarantine();
+			Document doc = quarantine.getFilesXML(seriesUID);
+			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/QuarantineFilesList.xsl" ) );
+			Object[] params = {
+				"context", context,
+				"p", Integer.toString(pipelineIndex),
+				"s", Integer.toString(stageIndex)
+			};
+			res.write( XmlUtil.getTransformedText( doc, xsl, params ) );
+			res.setContentType("xml");
+			res.send();
+		}
+		catch (Exception quit) {
+			res.setResponseCode(res.notfound);
+			res.send();
+		}
+	}
+
+	//Find the closest QueueManager.
+	//If the stage is an ExportService with a queue, then use the stage's QueueManager.
+	//If the stage is not an ExportService, then use the QueueManager of the pipeline's ImportService.
+	//If there are multiple ImportServices, pick the first one with a QueueManager
+	//If there is no QueueManager, return null.
+	QueueManager getClosestQueueManager() {
 		QueueManager queueManager = null;
 		if (stage instanceof AbstractQueuedExportService) {
 			queueManager = ((AbstractQueuedExportService)stage).getQueueManager();
 		}
 		else {
-			//Get the ImportService
-			PipelineStage head = pipeline.getStages().get(0);
-			if (head instanceof AbstractImportService) {
-				queueManager = ((AbstractImportService)head).getQueueManager();
-			}
-		}
-		if (queueManager == null) return;
-		//Okay, now get all the files from the quarantine and enqueue them.
-		quarantine.queueAll(queueManager);
-	}
-
-	//List the contents of a quarantine
-	void contentsPage(HttpRequest req, HttpResponse res, int pipelineIndex, int stageIndex, boolean admin) {
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) {
-			res.setResponseCode(res.notfound);
-			res.send();
-			return;
-		}
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) {
-			res.setResponseCode(res.notfound);
-			res.send();
-			return;
-		}
-		StringBuffer sb = new StringBuffer();
-		sb.append("<html><head><title>Quarantine</title>"+getStyles()+"</head><body>");
-		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
-		sb.append("<br><center><h1>"+pipeline.getPipelineName()
-					+"<br>"+stage.getName()+" Quarantine</h1>");
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) {
-			sb.append("<p>No quarantine is defined.</p>");
-		}
-		else {
-			File[] files = quarantine.getFiles();
-			if (files.length > 0) {
-				if (admin) {
-					sb.append("<input type=\"button\"");
-					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+suppress+"&queue','_self')\"");
-					sb.append(" value=\"Queue All\"/>");
-					sb.append("&nbsp;&nbsp;&nbsp;");
-					sb.append("<input type=\"button\"");
-					sb.append(" onclick=\"window.open('?p="+pipelineIndex+"&s="+stageIndex+suppress+"&delete','_self')\"");
-					sb.append(" value=\"Delete All\"/>");
-					sb.append("<br><br>");
+			//Get the first ImportService with a QueueManager
+			List<ImportService> importServices = pipeline.getImportServices();
+			for (ImportService importService : importServices) {
+				if (importService instanceof AbstractImportService) {
+					queueManager = ((AbstractImportService)importService).getQueueManager();
+					if (queueManager != null) break;
 				}
-				sb.append("<table border=\"1\">");
-				for (int i=0; i<files.length; i++) {
-					sb.append("<tr>");
-					sb.append("<td>");
-					sb.append("<a href=\""
-								+"?p="+pipelineIndex
-								+"&s="+stageIndex
-								+"&file="+files[i].getName()
-								+suppress
-								+"\" target=\"dcm\">"+files[i].getName()+"</a>");
-					sb.append("</td>");
-					sb.append("<td>");
-					sb.append(StringUtil.getDateTime(files[i].lastModified(),"&nbsp;&nbsp;&nbsp;"));
-					sb.append("</td>");
-					if (admin) {
-						sb.append("<td>");
-						sb.append("<a href=\""
-									+"?p="+pipelineIndex
-									+"&s="+stageIndex
-									+"&file="+files[i].getName()
-									+"&queue"
-									+suppress
-									+"\">queue</a>");
-						sb.append("</td>");
-						sb.append("<td>");
-						sb.append("<a href=\""
-									+"?p="+pipelineIndex
-									+"&s="+stageIndex
-									+"&file="+files[i].getName()
-									+"&delete"
-									+suppress
-									+"\">delete</a>");
-						sb.append("</td>");
-						sb.append("<td>");
-						sb.append("<a href=\""
-									+"?p="+pipelineIndex
-									+"&s="+stageIndex
-									+"&file="+files[i].getName()
-									+"&list"
-									+suppress
-									+"\" target=\"dcm\">list</a>");
-						sb.append("</td>");
-						sb.append("<td>");
-						sb.append("<a href=\""
-									+"?p="+pipelineIndex
-									+"&s="+stageIndex
-									+"&file="+files[i].getName()
-									+"&display"
-									+suppress
-									+"\" target=\"dcm\">display</a>");
-						sb.append("</td>");
-					}
-					sb.append("</tr>");
-				}
-				sb.append("</table>");
-			}
-			else sb.append("<p>The quarantine is empty.</p>");
-		}
-		sb.append("</center></body></html>");
-		//Send the response;
-		res.disableCaching();
-		res.write(sb.toString());
-		res.setContentType("html");
-		res.send();
-	}
-
-	//Delete a single object from a quarantine
-	void deleteFile(int pipelineIndex, int stageIndex, String filename) {
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) { return; }
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) { return; }
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) return;
-		quarantine.deleteFile(filename);
-	}
-
-	//Queue a single object in a quarantine to the closest QueueManager available.
-	void queueFile(int pipelineIndex, int stageIndex, String filename) {
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) { return; }
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) { return; }
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) return;
-		QueueManager queueManager = null;
-		if (stage instanceof AbstractQueuedExportService) {
-			queueManager = ((AbstractQueuedExportService)stage).getQueueManager();
-		}
-		else {
-			//Get the ImportService
-			PipelineStage head = pipeline.getStages().get(0);
-			if (head instanceof AbstractImportService) {
-				queueManager = ((AbstractImportService)head).getQueueManager();
 			}
 		}
-		if (queueManager == null) return;
+		return queueManager;
+	}
+
+	//Get the file specified in a req
+	File getFile(HttpRequest req, HttpResponse res) {
+		if (quarantine == null) return null;
+		String filename = req.getParameter("filename");
 		File file = quarantine.getFile(filename);
-		quarantine.queueFile(file, queueManager);
+		if (file == null) {
+			res.setResponseCode(res.notfound);
+			res.send();
+		}
+		return file;
 	}
 
 	//Download a file
-	void downloadFile(HttpResponse res,
-					  int pipelineIndex,
-					  int stageIndex,
-					  String filename,
-					  boolean list,
-					  boolean display,
-					  boolean admin,
-					  String home) {
-		Pipeline pipeline;
-		PipelineStage stage;
-		try { pipeline = Configuration.getInstance().getPipelines().get(pipelineIndex); }
-		catch (Exception quit) {
-			res.setResponseCode(res.notfound);
-			res.send();
-			return;
-		}
-		try { stage = pipeline.getStages().get(stageIndex); }
-		catch (Exception quit) {
-			res.setResponseCode(res.notfound);
-			res.send();
-			return;
-		}
+	void downloadFile(HttpRequest req, HttpResponse res) {
+		File file = getFile(req, res);
+		if (file == null) return;
 		res.disableCaching();
-		StringBuffer sb = new StringBuffer();
-		Quarantine quarantine = stage.getQuarantine();
-		if (quarantine == null) {
-			sb.append(getPageStart(pipeline, stage, false, null, home));
-			sb.append("<p>No quarantine is defined.</p>");
-			sb.append("</center></body></html>");
-			res.write(sb.toString());
-			res.setContentType("html");
-			res.send();
-			return;
-		}
-		File file = quarantine.getFile(filename);
-		if (!file.exists()) {
-			sb.append(getPageStart(pipeline, stage, false, null, home));
-			sb.append("<p>The requested file is not in the quarantine.</p>");
-			sb.append("</center></body></html>");
-			res.write(sb.toString());
-			res.setContentType("html");
-			res.send();
-			return;
-		}
-		//Okay, we finally have the file to download.
-		//First, parse it to see if it is a DicomObject.
-		DicomObject dicomObject = null;
-		try { dicomObject = new DicomObject(file); }
-		catch (Exception ignore) { dicomObject = null; }
-
-		if ((dicomObject == null) || (!list && !display)) {
-			//Just download the file with a standard
-			//Content-Type as defined by its extension.
-			res.write(file);
-			res.setContentType(file);
-			res.setHeader("Content-Disposition","attachment; filename=\"" + file.getName() + "\"");
-			res.send();
-			return;
-		}
-
-		//See if this is a display request
-		if (display) {
-			if (dicomObject.isImage()) {
-				try {
-					File temp = File.createTempFile("Image-", ".jpeg");
-					dicomObject.saveAsJPEG(temp, 0, 1500, 256, -1);
-					res.write(temp);
-					res.setContentType(temp);
-					res.send();
-					temp.delete();
-					return;
-				}
-				catch (Exception unable) { }
-			}
-		}
-
-		//If we get here, then it was not a display
-		//or the display request failed. The only thing
-		//to do is download a page containing an element
-		//listing and a button allowing downloading of the file.
-		sb.append(getPageStart(pipeline, stage, admin, file, home));
-		sb.append("<body>");
-		sb.append(dicomObject.getElementTable(admin));
-		sb.append("<p>");
-		sb.append("<a href=\""
-					+"?p="+pipelineIndex
-					+"&s="+stageIndex
-					+"&file="+file.getName()
-					+"&list=no"
-					+"\">Download the file</a>");
-		sb.append("</p>");
-		sb.append("</center></body></html>");
-		res.write(sb.toString());
-		res.setContentType("html");
+		res.write(file);
+		res.setContentType(file);
+		res.setHeader("Content-Disposition","attachment; filename=\"" + file.getName() + "\"");
 		res.send();
 	}
 
+	void displayFile(HttpRequest req, HttpResponse res) {
+		File file = getFile(req, res);
+		if (file == null) return;
+		DicomObject dicomObject = null;
+		try {
+			dicomObject = new DicomObject(file);
+			if (dicomObject.isImage()) {
+				File temp = File.createTempFile("Image-", ".jpeg");
+				dicomObject.saveAsJPEG(temp, 0, 1500, 256, -1);
+				res.write(temp);
+				res.setContentType(temp);
+				res.send();
+				temp.delete();
+				return;
+			}
+		}
+		catch (Exception unable) { }
+		downloadFile(req, res);
+	}
+
+	void listFile(HttpRequest req, HttpResponse res, int pipelineIndex, int stageIndex) {
+		File file = getFile(req, res);
+		if (file == null) return;
+		DicomObject dicomObject = null;
+		try {
+			dicomObject = new DicomObject(file);
+			StringBuffer sb = new StringBuffer();
+			sb.append(getPageStart(pipeline, stage, true, file));
+			sb.append("<body>");
+			sb.append(dicomObject.getElementTable(true));
+			sb.append("<p>");
+			sb.append("<a href=\""
+						+"/quarantines/downloadFile?p="+pipelineIndex
+						+"&s="+stageIndex
+						+"&filename="+file.getName()
+						+"\">Download the file</a>");
+			sb.append("</p>");
+			sb.append("</center></body></html>");
+			res.write(sb.toString());
+			res.setContentType("html");
+			res.send();
+		}
+		catch (Exception unable) { }
+		downloadFile(req, res);
+	}
+
 	//Get the head part of the page.
-	private String getPageStart(Pipeline pipeline, PipelineStage stage, boolean admin, File file, String home) {
+	private String getPageStart(Pipeline pipeline, PipelineStage stage, boolean admin, File file) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html><head><title>Quarantine</title>");
 		sb.append(getStyles());
@@ -486,7 +422,6 @@ public class QuarantineServlet extends Servlet {
 		}
 		sb.append("</head>");
 		sb.append("<body>");
-		if (!home.equals("")) sb.append(HtmlUtil.getCloseBox(home));
 		sb.append("<center><h1>"+pipeline.getPipelineName()
 					+"<br>"+stage.getName()+" Quarantine</h1>");
 		return sb.toString();

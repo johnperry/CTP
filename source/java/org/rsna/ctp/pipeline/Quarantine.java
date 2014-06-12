@@ -250,12 +250,46 @@ public class Quarantine {
 	}
 
 	/**
+	 * Delete all the files in in a study.
+	 * @param studyUID the UID of the study to delete.
+	 */
+	public void deleteStudy(String studyUID) {
+		try {
+			QStudy study = (QStudy)studyTable.get(studyUID);
+			if (study != null) {
+				for (String seriesUID : study.getSeriesUIDs()) {
+					deleteSeries(seriesUID);
+				}
+			}
+		}
+		catch (Exception unable) { }
+	}
+
+	/**
+	 * Delete all the files in in a series.
+	 * @param seriesUID the UID of the series to delete.
+	 */
+	public void deleteSeries(String seriesUID) {
+		try {
+			QSeries series = (QSeries)seriesTable.get(seriesUID);
+			if (series != null) {
+				for (String filename : series.getFilenames()) {
+					deleteFile( getFile(filename) );
+				}
+			}
+		}
+		catch (Exception unable) { }
+	}
+
+	/**
 	 * Delete a file from the Quarantine.
 	 * @param filename the filename to delete
 	 */
 	public void deleteFile(String filename) {
-		File file = new File(directory, filename);
-		deleteFile(file);
+		if (filename != null) {
+			File file = new File(directory, filename);
+			deleteFile(file);
+		}
 	}
 
 	/**
@@ -263,7 +297,7 @@ public class Quarantine {
 	 * @param file the file to delete
 	 */
 	public void deleteFile(File file) {
-		if (file.isFile() && file.getParentFile().equals(directory)) {
+		if ((file != null) && file.isFile() && file.getParentFile().equals(directory)) {
 			deindex(file);
 			file.delete();
 		}
@@ -281,12 +315,46 @@ public class Quarantine {
 	}
 
 	/**
+	 * Queue all the files in in a study to a QueueManager.
+	 * @param studyUID the UID of the study to queue.
+	 * @param queueManager the QueueManager to receive the files.
+	 */
+	public void queueStudy(String studyUID, QueueManager queueManager) {
+		try {
+			QStudy study = (QStudy)studyTable.get(studyUID);
+			if (study != null) {
+				for (String seriesUID : study.getSeriesUIDs()) {
+					queueSeries(seriesUID, queueManager);
+				}
+			}
+		}
+		catch (Exception unable) { }
+	}
+
+	/**
+	 * Queue all the files in in a series to a QueueManager.
+	 * @param seriesUID the UID of the series to queue.
+	 * @param queueManager the QueueManager to receive the files.
+	 */
+	public void queueSeries(String seriesUID, QueueManager queueManager) {
+		try {
+			QSeries series = (QSeries)seriesTable.get(seriesUID);
+			if (series != null) {
+				for (String filename : series.getFilenames()) {
+					queueFile( getFile(filename), queueManager);
+				}
+			}
+		}
+		catch (Exception unable) { }
+	}
+
+	/**
 	 * Queue a file in the Quarantine to a QueueManager.
 	 * @param file the file to queue
 	 * @param queueManager the QueueManager to receive the file.
 	 */
 	public void queueFile(File file, QueueManager queueManager) {
-		if (file.isFile() && file.getParentFile().equals(directory)) {
+		if ((file != null) && file.isFile() && file.getParentFile().equals(directory)) {
 			try {
 				deindex(file);
 				queueManager.enqueue(file);
@@ -446,52 +514,68 @@ public class Quarantine {
 	 * @param filename the name of the file.
 	 */
 	public File getFile(String filename) {
+		if (filename == null) return null;
 		File file = new File(filename);
 		String name = file.getName();
 		return new File(directory, name);
 	}
 
 	/**
-	 * Get an XML document listing the QuarantinedObjects
+	 * Get an XML document listing the studies in the quarantine.
 	 */
-/*
-	public Document getXML() throws Exception {
-		QuarantinedObject[] objects = getQuarantinedObjects();
+	public Document getStudiesXML() throws Exception {
 		Document doc = XmlUtil.getDocument();
-		Element root = doc.createElement("QuarantinedObjects");
-		String lastPatientID = null;
-		String lastStudyUID = null;
-		String lastSeriesNumber = null;
-		Element patient = null;
-		Element study = null;
-		Element series = null;
-		for (QuarantinedObject object : objects) {
-			if ((lastPatientID == null) || !object.patientID.equals(lastPatientID)) {
-				patient = doc.createElement("Patient");
-				root.appendChild(patient);
-				patient.setAttribute("id", object.patientID);
-				patient.setAttribute("name", object.patientName);
-				lastStudyUID = null;
-			}
-			if ((lastStudyUID == null) || !object.studyUID.equals(lastStudyUID)) {
-				study = doc.createElement("Study");
-				patient.appendChild(study);
-				study.setAttribute("uid", object.studyUID);
-				study.setAttribute("date", object.studyDate);
-				lastSeriesNumber = null;
-			}
-			if ((lastSeriesNumber == null) || !object.seriesNumber.equals(lastSeriesNumber)) {
-				series = doc.createElement("Series");
-				study.appendChild(series);
-				series.setAttribute("number", object.seriesNumber);
-			}
-			Element file = doc.createElement("Object");
-			series.appendChild(file);
-			file.setAttribute("type", object.type);
-			file.setAttribute("instance", object.instanceNumber);
-			file.setAttribute("file", object.file.getName());
+		Element root = doc.createElement("Studies");
+		doc.appendChild(root);
+		for (QStudy q : getStudies()) {
+			Element study = doc.createElement("Study");
+			root.appendChild(study);
+			study.setAttribute("patientName", q.patientName);
+			study.setAttribute("patientID", q.patientID);
+			study.setAttribute("studyDate", q.studyDate);
+			study.setAttribute("studyUID", q.studyUID);
+			study.setAttribute("nSeries", Integer.toString(q.getNumberOfSeries()));
 		}
 		return doc;
 	}
-*/
+
+	/**
+	 * Get an XML document listing the series in a study.
+	 * @param studyUID the studyUID of the QStudy
+	 */
+	public Document getSeriesXML(String studyUID) throws Exception {
+		QStudy study = getStudy(studyUID);
+		Document doc = XmlUtil.getDocument();
+		Element root = doc.createElement("Study");
+		root.setAttribute("studyUID", studyUID);
+		doc.appendChild(root);
+		for (QSeries q : getSeries(study)) {
+			Element series = doc.createElement("Series");
+			root.appendChild(series);
+			series.setAttribute("seriesUID", q.seriesUID);
+			series.setAttribute("seriesNumber", q.seriesNumber);
+			series.setAttribute("nFiles", Integer.toString(q.getNumberOfFiles()));
+		}
+		return doc;
+	}
+
+	/**
+	 * Get an XML document listing the files in a series.
+	 * @param seriesUID the seriesUID of the QSeries
+	 */
+	public Document getFilesXML(String seriesUID) throws Exception {
+		QSeries series = getSeries(seriesUID);
+		Document doc = XmlUtil.getDocument();
+		Element root = doc.createElement("Files");
+		root.setAttribute("seriesUID", seriesUID);
+		doc.appendChild(root);
+		for (QFile q : getFiles(series)) {
+			Element file = doc.createElement("File");
+			root.appendChild(file);
+			file.setAttribute("type", q.type);
+			file.setAttribute("instanceNumber", q.instanceNumber);
+			file.setAttribute("filename", q.filename);
+		}
+		return doc;
+	}
 }

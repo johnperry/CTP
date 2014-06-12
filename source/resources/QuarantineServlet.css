@@ -1,0 +1,38 @@
+h1 {
+	text-align:center;
+	margin-top:10;
+	margin-bottom:10;
+}
+
+table {
+	width: 100%;
+}
+
+th {
+	font-family: Arial, Helvetica, Verdana, sans-serif;
+	padding: 5px;
+}
+
+td {
+	background-color: white;
+	padding: 5px;
+	font-family: Arial, Helvetica, Verdana, sans-serif;
+	cursor: pointer;
+}
+
+td.button {
+	width: 10px;
+	cursor: default;
+	/*background-color: #b9d0ed;*/
+}
+
+.left { text-align: left; }
+.center { text-align: center; }
+.right { text-align: right; }
+
+a {
+	text-decoration:none;
+	color:black;
+}
+a:visited { color:black; }
+a:hover { text-decoration:underline; }

@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.HashSet;
 import org.rsna.ctp.objects.*;
+import org.rsna.util.StringUtil;
 
 /**
   * A class to encapsulate a file in a quarantine.
@@ -90,8 +91,9 @@ public class QFile implements Serializable, Comparable<QFile> {
 	public int compareTo(QFile file) {
 		int c;
 		if ( (c=this.type.compareTo(file.type)) != 0) return c;
-		if ( (c=this.instanceNumber.compareTo(file.instanceNumber)) != 0) return c;
-		return 0;
+		int thisInstanceNumber = StringUtil.getInt(this.instanceNumber);
+		int fileInstanceNumber = StringUtil.getInt(file.instanceNumber);
+		return (thisInstanceNumber - fileInstanceNumber);
 	}
 
 }

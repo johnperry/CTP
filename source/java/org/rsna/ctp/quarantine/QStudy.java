@@ -70,6 +70,13 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 	}
 
 	/**
+	 * Get the number of series for this study.
+	 */
+	public int getNumberOfSeries() {
+		return seriesUIDs.size();
+	}
+
+	/**
 	 * Get the seriesUIDs for this study.
 	 */
 	public String[] getSeriesUIDs() {

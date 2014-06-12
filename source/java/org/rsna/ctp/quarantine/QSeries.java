@@ -90,6 +90,13 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 	}
 
 	/**
+	 * Get the number of files for this series.
+	 */
+	public int getNumberOfFiles() {
+		return filenames.size();
+	}
+
+	/**
 	 * Get the filenames for this series.
 	 */
 	public String[] getFilenames() {
