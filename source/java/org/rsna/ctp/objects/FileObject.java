@@ -236,13 +236,34 @@ public class FileObject {
 
 	/**
 	 * Get the StudyInstanceUID of the object. This method is overridden
-	 * by the DicomObject subclass, where the concept of StudyInstanceUID is
+	 * by subclasses where the concept of StudyInstanceUID is
 	 * well-defined. For other subclasses, this method returns the value
 	 * of the getStudyUID() method.
 	 * @return the study's unique identifier, if available; otherwise, the empty string.
 	 */
 	public String getStudyInstanceUID() {
 		return getStudyUID();
+	}
+
+	/**
+	 * Dummy method returning an empty string for the UID of the series.
+	 * This method is overridden by subclasses that can actually determine
+	 * a meaningful value.
+	 * @return the empty string.
+	 */
+	public String getSeriesUID() {
+		return "";
+	}
+
+	/**
+	 * Get the SeriesInstanceUID of the object. This method is overridden
+	 * by subclasses where the concept of SeriesInstanceUID is
+	 * well-defined. For other subclasses, this method returns the value
+	 * of the getSeriesUID() method.
+	 * @return the study's unique identifier, if available; otherwise, the empty string.
+	 */
+	public String getSeriesInstanceUID() {
+		return getSeriesUID();
 	}
 
 	/**

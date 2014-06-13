@@ -48,10 +48,8 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 	 * @param fileObject the object.
 	 */
 	public static String getSeriesUID(FileObject fileObject) {
-		String seriesUID = "unknown";
-		if (fileObject instanceof DicomObject) {
-			seriesUID = ((DicomObject)fileObject).getSeriesInstanceUID();
-		}
+		String seriesUID = fileObject.getSeriesUID();
+		if ((seriesUID == null) || seriesUID.equals("")) seriesUID = "unknown";
 		return seriesUID;
 	}
 

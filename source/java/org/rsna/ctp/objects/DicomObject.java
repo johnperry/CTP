@@ -1309,6 +1309,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the SeriesInstanceUID element.
+	 * Included for compatibility with other FileObjects.
+	 * @return the text of the element or null if the element does not exist.
+	 */
+	public String getSeriesUID() {
+		return getSeriesInstanceUID();
+	}
+
+	/**
 	 * Convenience method to get the contents of the SeriesDescription element.
 	 * @return the text of the element or the empty string if the element does not exist.
 	 */

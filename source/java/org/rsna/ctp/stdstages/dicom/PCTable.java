@@ -72,6 +72,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 			while (stk.hasMoreTokens()) {
 				String tk = stk.nextToken();
 				if (tk.equals("$ts-native")) tokenize(tsNative, list);
+                else if (tk.equals("$ts-implicitleonly")) tokenize(tsImplicitLEOnly, list); // <-- Disney - 20140612
 				else if (tk.equals("$ts-jpeglossless")) tokenize(tsJPEGLossless, list);
 				else if (tk.equals("$ts-epd")) tokenize(tsEPD, list);
 				else list.add(UIDs.forName(tk));
@@ -94,6 +95,8 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 	static String tsNative =
 			"ExplicitVRLittleEndian,"+
 			"ImplicitVRLittleEndian";
+    static String tsImplicitLEOnly =
+            "ImplicitVRLittleEndian";
 
 	static PC[] pcs = {
 		new PC("AgfaAttributePresentationState","$ts-native"),
@@ -170,7 +173,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("RTIonBeamsTreatmentRecordStorage","$ts-native"),
 		new PC("RTIonPlanStorage","$ts-native"),
 		new PC("RTPlanStorage","$ts-native"),
-		new PC("RTStructureSetStorage","$ts-native"),
+		new PC("RTStructureSetStorage","$ts-implicitleonly"),
 		new PC("RTTreatmentSummaryRecordStorage","$ts-native"),
 		new PC("SecondaryCaptureImageStorage","$ts-epd,$ts-native"),
 		new PC("SegmentationStorage","$ts-native"),

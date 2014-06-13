@@ -51,7 +51,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 	 */
 	public static String getStudyUID(FileObject fileObject) {
 		String studyUID = fileObject.getStudyUID();
-		if (studyUID.equals("")) studyUID = "unknown";
+		if ((studyUID == null) || studyUID.equals("")) studyUID = "unknown";
 		return studyUID;
 	}
 

@@ -206,7 +206,7 @@ public class Quarantine {
 				studyTable.put(studyUID, qstudy);
 				return true;
 			}
-			catch (Exception unable) { }
+			catch (Exception unable) { logger.warn("index", unable); }
 		}
 		return false;
 	}
