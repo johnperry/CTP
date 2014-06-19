@@ -169,6 +169,7 @@ public class DICOMDecompressor {
                 int bytesPerSample = bitsAllocated / 8;
                 int nPixelBytes = numberOfFrames * rows * columns * samplesPerPixel * bytesPerSample;
                 int pixelBytesLength = nPixelBytes + (nPixelBytes & 1);
+                int pixelsVR = ((bytesPerSample == 1) && (samplesPerPixel == 1)) ? VRs.OB : VRs.OW;
                 logger.debug("planarConfig     = "+planarConfig);
                 logger.debug("photometricInt   = "+photometricInterpretation);
                 logger.debug("numberOfFrames   = "+numberOfFrames);
@@ -176,15 +177,17 @@ public class DICOMDecompressor {
                 logger.debug("columns          = "+columns);
                 logger.debug("samplesPerPixel  = "+samplesPerPixel);
                 logger.debug("bytesPerSample   = "+bytesPerSample);
+                logger.debug("pixelsVR         = "+VRs.toString(pixelsVR));
                 logger.debug("nPixelBytes      = "+nPixelBytes);
                 logger.debug("pixelBytesLength = "+pixelBytesLength);
+
 
                 //Write the element header
                 dataset.writeHeader(
                     out,
                     encoding,
                     parser.getReadTag(),
-                    VRs.OW,
+                    pixelsVR,
                     pixelBytesLength);
 
                 //Now put in the decompressed frames
