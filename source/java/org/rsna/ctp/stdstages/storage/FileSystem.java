@@ -272,6 +272,15 @@ public class FileSystem {
 	}
 
 	/**
+	 * Delete all the studies in the FileSystem.
+	 */
+	public synchronized void deleteAll() {
+		for (String studyUID : uidTable.keySet()) {
+			deleteStudyByUID(studyUID);
+		}
+	}
+
+	/**
 	 * Get an array of the studies in the index.
 	 * @return the studies in order as determined by the compareTo
 	 * method in the Study class.

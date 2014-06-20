@@ -240,8 +240,9 @@ public class DICOMAnonymizer {
 							&& (tag != 0xFFFAFFFA)
 							&& (tag != 0xFFFCFFFC)) {
 				int len = parser.getReadLength();
+				boolean isPrivate = ((tag & 0x10000) != 0);
 				String script = context.getScriptFor(tag);
-				if ( ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()")) ) {
+				if ( (isPrivate && context.rpg) || ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()") ) ) {
 					//skip this element
 					parser.setStreamPosition(parser.getStreamPosition() + len);
 				}
@@ -407,6 +408,8 @@ public class DICOMAnonymizer {
 							(group == 0x7FE00000) 		||	//the image
 							(isOverlay && !context.rol && !(isPrivate & context.rpg)) || //overlays
 							(isCurve && !context.rc && !(isPrivate & context.rpg));      //curves
+
+			logger.debug("Processing "+Tags.toString(tag) + ": "+context.rpg+" / "+isPrivate+" / "+hasScript+" / "+keep);
 
 			if (context.rpg && isPrivate && !hasScript && !keep) {
 				try { ds.remove(tag); }
@@ -933,8 +936,9 @@ public class DICOMAnonymizer {
 			}
 			return AnonymizerFunctions.hashName(string, length, wordCount);
 		}
-		catch (Exception ex) {
-			logger.warn("Exception in hashname"+fn.getArgs()+": "+ex.getMessage());
+		catch (Exception e) {
+			logger.warn(Tags.toString(fn.thisTag)+": Exception in hashname"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -950,7 +954,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.round(ageString,size);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in round"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in round"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -971,7 +976,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.hashPtID(siteid, ptid, maxlen);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in hashptid"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hashptid"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -995,7 +1001,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.hash(value,len);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in hash"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hash"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -1014,6 +1021,7 @@ public class DICOMAnonymizer {
 		try {
 			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
+			if (date.length() < 8) return emptyDate;
 			String unhashed = fn.context.contentsNull(fn.args[1], fn.thisTag);
 			if (unhashed == null) return removeDate;
 			String incString = AnonymizerFunctions.hash(unhashed, -1);
@@ -1024,7 +1032,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.incrementDate(date, inc);
 		}
 		catch (Exception e) {
-			logger.debug("Exception caught in hashdate"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hashdate"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return emptyDate;
 		}
 	}
@@ -1041,12 +1050,14 @@ public class DICOMAnonymizer {
 		try {
 			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
+			if (date.length() < 8) return emptyDate;
 			String incString = fn.context.getParam(fn.args[1]);
 			long inc = Long.parseLong(incString);
 			return AnonymizerFunctions.incrementDate(date, inc);
 		}
 		catch (Exception e) {
-			logger.debug("Exception caught in incrementdate"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in incrementdate"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return emptyDate;
 		}
 	}
@@ -1064,13 +1075,15 @@ public class DICOMAnonymizer {
 		try {
 			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
+			if (date.length() < 8) return emptyDate;
 			int y = getReplacementValue(fn.context.getParam(fn.args[1]).trim());
 			int m = getReplacementValue(fn.context.getParam(fn.args[2]).trim());
 			int d = getReplacementValue(fn.context.getParam(fn.args[3]).trim());
 			return AnonymizerFunctions.modifyDate(date, y, m, d);
 		}
 		catch (Exception e) {
-			logger.debug("Exception caught in modifydate"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in modifydate"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return emptyDate;
 		}
 	}
@@ -1108,7 +1121,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.hashUID(prefix,uid);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in hashuid"+fn.getArgs()+": "+e.getMessage());
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hashuid"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -1124,7 +1138,8 @@ public class DICOMAnonymizer {
 			return AnonymizerFunctions.encrypt(value, key);
 		}
 		catch (Exception e) {
-			logger.warn("Exception caught in encrypt"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(Tags.toString(fn.thisTag)+": Exception caught in encrypt"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}
 	}
@@ -1154,9 +1169,10 @@ public class DICOMAnonymizer {
 			}
 			throw new Exception("Unable to load plugin "+id);
 		}
-		catch (Exception ex) {
-			logger.debug("Exception caught in plugin call",ex);
-			throw new Exception("!quarantine! - plugin call: "+ex.getMessage());
+		catch (Exception e) {
+			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in plugin call", e);
+			logger.debug(e.getMessage(), e);
+			throw new Exception("!quarantine! - plugin call: "+e.getMessage());
 		}
 	}
 
