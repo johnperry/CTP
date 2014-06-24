@@ -8,7 +8,9 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
 
 public interface PipelineStage {
 
@@ -26,17 +28,19 @@ public interface PipelineStage {
 
 	public Quarantine getQuarantine();
 
-	public String getConfigHTML(boolean local);
+	public String getConfigHTML(User user);
 
 	public String getStatusHTML();
 
 	public long getLastFileOutTime();
 
-	public SummaryLink[] getLinks(boolean userIsAdmin);
+	public LinkedList<SummaryLink> getLinks(User user);
 
 	public Pipeline getPipeline();
 
 	public void setPipeline(Pipeline pipeline);
+
+	public void setStageIndex(int index);
 
 	public PipelineStage getNextStage();
 

@@ -8,11 +8,14 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
-import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.objects.FileObject;
+import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,5 +68,22 @@ public class XmlFilter extends AbstractPipelineStage implements Processor, Scrip
 	 */
 	public File[] getScriptFiles() {
 		return new File[] {scriptFile};
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		boolean admin = (user != null) && user.hasRole("admin");
+		if (admin) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex+"&f=0";
+			if (scriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs, null, "Edit the Script File", false) );
+			}
+		}
+		return links;
 	}
 }

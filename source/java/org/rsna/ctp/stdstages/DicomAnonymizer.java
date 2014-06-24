@@ -9,6 +9,7 @@ package org.rsna.ctp.stdstages;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.LinkedList;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
@@ -16,11 +17,13 @@ import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizer;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -106,6 +109,27 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 */
 	public File[] getScriptFiles() {
 		return new File[] { dicomScriptFile, null, null };
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		boolean admin = (user != null) && user.hasRole("admin");
+		if (admin) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			if (lookupTableFile != null) {
+				links.addFirst( new SummaryLink("/lookup"+qs, null, "Edit the Lookup Table", false) );
+			}
+			links.addFirst( new SummaryLink("/daconfig"+qs, null, "Edit the Anonymizer Script", false) );
+			if (dicomScriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs+"&f=0", null, "Edit the Stage Filter Script", false) );
+			}
+		}
+		return links;
 	}
 
 	/**

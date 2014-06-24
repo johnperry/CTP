@@ -10,6 +10,7 @@ package org.rsna.ctp.servlets;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.plugin.Plugin;
@@ -38,7 +39,7 @@ public class SummaryServlet extends Servlet {
 	static final Logger logger = Logger.getLogger(SummaryServlet.class);
 	String home = "/";
 	String suppress = "";
-	boolean userIsAdmin = false;
+	User user;
 	String host = "";
 
 	/**
@@ -66,7 +67,7 @@ public class SummaryServlet extends Servlet {
 			suppress = "&suppress";
 		}
 
-		userIsAdmin = req.userHasRole("admin");
+		user = req.getUser();
 		host = req.getHeader("Host");
 
 		//Get the parameters.
@@ -140,9 +141,9 @@ public class SummaryServlet extends Servlet {
 			sb.append("<div id=\"status\" class=\"status\">");
 			sb.append( "<h2>Status</h2>\n" );
 			sb.append( plugin.getStatusHTML() );
-			sb.append( getLinks(plugin.getLinks(userIsAdmin)) );
+			sb.append( getLinks(plugin.getLinks(user)) );
 			sb.append( "<h2>Configuration</h2>\n" );
-			sb.append( plugin.getConfigHTML(userIsAdmin) );
+			sb.append( plugin.getConfigHTML(user) );
 			sb.append("</div>");
 			sb.append("<center>");
 			sb.append( responseTail() );
@@ -204,9 +205,9 @@ public class SummaryServlet extends Servlet {
 				sb.append("<div id=\"status\" class=\"status\">");
 				sb.append( "<h2>Status</h2>\n" );
 				sb.append( stage.getStatusHTML() );
-				sb.append( getLinks(stage.getLinks(userIsAdmin)) );
+				sb.append( getLinks(stage.getLinks(user)) );
 				sb.append( "<h2>Configuration</h2>\n" );
-				sb.append( stage.getConfigHTML(userIsAdmin) );
+				sb.append( stage.getConfigHTML(user) );
 				sb.append("</div>");
 				sb.append("<center>");
 				sb.append( responseTail() );
@@ -216,7 +217,7 @@ public class SummaryServlet extends Servlet {
 		return getAllPipelinesPage();
 	}
 
-	private String getLinks(SummaryLink[] links) {
+	private String getLinks(LinkedList<SummaryLink> links) {
 		StringBuffer sb = new StringBuffer();
 		for (SummaryLink link : links) {
 			String url = link.getURL();
@@ -225,14 +226,14 @@ public class SummaryServlet extends Servlet {
 				String windowURL = "http://";
 				windowURL += (url.startsWith(":") ? getHostWithoutPort() : host) + url;
 				sb.append("<p class=\"link\">\n");
-				sb.append("<input type=\"button\"");
+				sb.append("<input type=\"button\" class=\"summarylink\"");
 				sb.append("  value=\""+link.getTitle()+"\"");
 				sb.append("  onclick=\"window.open('"+windowURL+"','child')\"/>\n");
 				sb.append("</p>");
 			}
 			else {
 				sb.append("<p class=\"link\">\n");
-				sb.append("<input type=\"button\"");
+				sb.append("<input type=\"button\" class=\"summarylink\"");
 				sb.append("  value=\""+link.getTitle()+"\"");
 				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
 				sb.append("</p>");

@@ -15,6 +15,7 @@ import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.plugin.Plugin;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
+import org.rsna.server.User;
 import org.rsna.servlets.Servlet;
 import org.rsna.util.HtmlUtil;
 
@@ -42,15 +43,15 @@ public class ConfigurationServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
-		boolean admin = req.isFromLocalHost() || req.userHasRole("admin");
 
 		//Require that the user be an admin or be local
-		if (!admin) {
+		if (!req.userHasRole("admin")) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
+		User user = req.getUser();
 		Configuration config = Configuration.getInstance();
 		String ipAddress = config.getIPAddress();
 		int serverPort = config.getServerPort();
@@ -82,11 +83,11 @@ public class ConfigurationServlet extends Servlet {
 
 		//Insert information for each plugin
 		Iterator<Plugin> xit = config.getPlugins().iterator();
-		while (xit.hasNext()) sb.append(xit.next().getConfigHTML(admin));
+		while (xit.hasNext()) sb.append(xit.next().getConfigHTML(user));
 
 		//Insert information for each pipeline
 		Iterator<Pipeline> pit = config.getPipelines().iterator();
-		while (pit.hasNext()) sb.append(pit.next().getConfigHTML(admin));
+		while (pit.hasNext()) sb.append(pit.next().getConfigHTML(user));
 
 		sb.append("</body></html>");
 

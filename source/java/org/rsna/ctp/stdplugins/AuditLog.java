@@ -21,6 +21,7 @@ import org.rsna.ctp.plugin.AbstractPlugin;
 import org.rsna.ctp.servlets.AuditLogServlet;
 import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.server.ServletSelector;
+import org.rsna.server.User;
 import org.rsna.util.JdbmUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
@@ -115,14 +116,14 @@ public class AuditLog extends AbstractPlugin {
 	}
 
 	/**
-	 * Get the array of links for display on the summary page.
-	 * @param userIsAdmin true if the requesting user has the admin role.
-	 * @return the array of links for display on the summary page.
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
 	 */
-	public SummaryLink[] getLinks(boolean userIsAdmin) {
-		return new SummaryLink[] {
-			new SummaryLink("/"+id, null, "Search the AuditLog", false)
-		};
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		links.addFirst( new SummaryLink("/"+id, null, "Search the AuditLog", false) );
+		return links;
 	}
 
 	/**

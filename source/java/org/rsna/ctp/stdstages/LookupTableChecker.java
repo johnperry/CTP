@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Properties;
@@ -32,6 +33,7 @@ import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.server.ServletSelector;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.JdbmUtil;
@@ -337,14 +339,17 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	}
 
 	/**
-	 * Get the array of links for display on the summary page.
-	 * @param userIsAdmin true if the requesting user has the admin role.
-	 * @return the array of links for display on the summary page.
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
 	 */
-	public SummaryLink[] getLinks(boolean userIsAdmin) {
-		return new SummaryLink[] {
-			new SummaryLink("/"+id, null, "View the LookupTableChecker Database", false)
-		};
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		boolean admin = (user != null) && user.hasRole("admin");
+		if (admin) {
+			links.addFirst( new SummaryLink("/"+id, null, "View the LookupTableChecker Database", false) );
+		}
+		return links;
 	}
 
 	/**

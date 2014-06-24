@@ -15,6 +15,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.objects.FileObject;
+import org.rsna.server.User;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -30,6 +31,7 @@ public class Pipeline extends Thread {
 	List<PipelineStage> stages = null;
 	protected volatile boolean stop = false;
 	final boolean enabled;
+	int pipelineIndex = -1;
 
 	/**
 	 * A Thread representing a processing pipeline for FileObjects
@@ -38,8 +40,9 @@ public class Pipeline extends Thread {
 	 * @param pipeline the XML element from the configuration file
 	 * specifying the stages in the pipeline.
 	 */
-	public Pipeline(Element pipeline) {
+	public Pipeline(Element pipeline, int index) {
 		super();
+		pipelineIndex = index;
 		name = pipeline.getAttribute("name").trim();
 		setName(name);
 		enabled = !pipeline.getAttribute("enabled").equals("no");
@@ -57,6 +60,8 @@ public class Pipeline extends Thread {
 						Constructor constructor = theClass.getConstructor(signature);
 						Object[] args = { childElement };
 						PipelineStage stage = (PipelineStage)constructor.newInstance(args);
+						//Tell the stage its index
+						stage.setStageIndex(stages.size());
 						//Put the ImportServices in a special list.
 						if (stage instanceof ImportService) importServices.add((ImportService)stage);
 						//Put all the stages in the stages list so the servlets can get at them easily.
@@ -84,6 +89,15 @@ public class Pipeline extends Thread {
 	 */
 	public boolean isEnabled() {
 		return enabled;
+	}
+
+	/**
+	 * Get the index of this Pipeline object. This is used by
+	 * some servlets to identify the pipeline of a stage
+	 * @return the index of this Pipeline object.
+	 */
+	public synchronized int getPipelineIndex() {
+		return pipelineIndex;
 	}
 
 	/**
@@ -232,15 +246,16 @@ public class Pipeline extends Thread {
 	 * Get HTML text describing the configuration of the pipeline
 	 * by calling the getConfigHTML methods of each of the pipeline
 	 * stages in turn. This method is called by the ConfigurationServlet.
-	 * @param admin true if the configuration is allowed to display
-	 * the values of username and password attributes.
+	 * @param user the requesting user (if the user has the admin role,
+	 * the configuration is displays the values of username and password
+	 * attributes.
 	 * @return HTML text describing the configuration of the pipeline.
 	 */
-	public synchronized String getConfigHTML(boolean admin) {
+	public synchronized String getConfigHTML(User user) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h2>"+name+"</h2>");
 		Iterator<PipelineStage> sit = stages.iterator();
-		while (sit.hasNext()) sb.append(sit.next().getConfigHTML(admin));
+		while (sit.hasNext()) sb.append(sit.next().getConfigHTML(user));
 		return sb.toString();
 	}
 

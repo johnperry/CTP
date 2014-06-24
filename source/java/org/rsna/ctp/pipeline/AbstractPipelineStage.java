@@ -8,12 +8,14 @@
 package org.rsna.ctp.pipeline;
 
 import java.io.File;
-import org.rsna.ctp.servlets.SummaryLink;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NamedNodeMap;
-import org.rsna.util.StringUtil;
+import java.util.LinkedList;
 import org.rsna.ctp.objects.*;
+import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
+import org.rsna.util.StringUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * An abstract class implementing the PipelineStage interface.
@@ -43,6 +45,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	protected volatile Pipeline pipeline = null;
 	protected volatile PipelineStage nextStage = null;
 	protected volatile PipelineStage previousStage = null;
+	public int stageIndex = -1;
 
 	/**
 	 * Construct a base pipeline stage which does no processing.
@@ -131,6 +134,13 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	/**
+	 * Set the index for this stage.
+	 */
+	public synchronized void setStageIndex(int index) {
+		this.stageIndex = index;
+	}
+
+	/**
 	 * Get the next stage in the pipeline.
 	 * @return the next stage in the pipeline.
 	 */
@@ -190,14 +200,19 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	/**
-	 * Get the array of links for display on the summary page.
+	 * Get the list of links for display on the summary page.
 	 * This method returns an empty array. It should be overridden
 	 * by stages that provide servlets to access their data.
-	 * @param userIsAdmin true if the requesting user has the admin role.
-	 * @return the array of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
 	 */
-	public SummaryLink[] getLinks(boolean userIsAdmin) {
-		return new SummaryLink[0];
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = new LinkedList<SummaryLink>();
+		if (quarantine != null) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			links.add( new SummaryLink("/quarantines"+qs, null, "View the Quarantine Contents", false) );
+		}
+		return links;
 	}
 
 	/**
@@ -205,11 +220,11 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * consisting of a header element containing the
 	 * stage's name and a table containing the rest of the
 	 * stage's configuration element's attributes.
-	 * @param admin true if the configuration is allowed to display
-	 * the values of username and password attributes.
+	 * @param user the requesting user.
 	 * @return HTML text describing the configuration of the stage.
 	 */
-	public synchronized String getConfigHTML(boolean admin) {
+	public synchronized String getConfigHTML(User user) {
+		boolean admin = (user != null) && user.hasRole("admin");
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

@@ -8,12 +8,14 @@
 package org.rsna.ctp.plugin;
 
 import java.io.File;
-import org.rsna.ctp.servlets.SummaryLink;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NamedNodeMap;
-import org.rsna.util.StringUtil;
+import java.util.LinkedList;
 import org.rsna.ctp.objects.*;
+import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
+import org.rsna.util.StringUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * An abstract class implementing the Plugin interface.
@@ -109,14 +111,14 @@ public abstract class AbstractPlugin implements Plugin {
 	}
 
 	/**
-	 * Get the array of links for display on the summary page.
+	 * Get the list of links for display on the summary page.
 	 * This method returns an empty array. It should be overridden
 	 * by plugins that provide servlets to access their data.
-	 * @param userIsAdmin true if the requesting user has the admin role.
-	 * @return the array of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
 	 */
-	public SummaryLink[] getLinks(boolean userIsAdmin) {
-		return new SummaryLink[0];
+	public LinkedList<SummaryLink> getLinks(User user) {
+		return new LinkedList<SummaryLink>();
 	}
 
 	/**
@@ -124,11 +126,11 @@ public abstract class AbstractPlugin implements Plugin {
 	 * consisting of a header element containing the
 	 * plugin's name and a table containing the rest of the
 	 * plugin's configuration element's attributes.
-	 * @param admin true if the configuration is allowed to display
-	 * the values of username and password attributes.
+	 * @param user the requesting user.
 	 * @return HTML text describing the configuration of the stage.
 	 */
-	public String getConfigHTML(boolean admin) {
+	public String getConfigHTML(User user) {
+		boolean admin = (user != null) && user.hasRole("admin");
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

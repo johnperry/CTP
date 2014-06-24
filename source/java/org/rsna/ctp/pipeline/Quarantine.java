@@ -371,7 +371,7 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insert(File file) {
-		FileObject fileObject = new FileObject(file);
+		FileObject fileObject = FileObject.getInstance(file);
 		return insert(fileObject);
 	}
 
@@ -382,12 +382,23 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insert(FileObject fileObject) {
-		boolean ok = fileObject.moveToDirectory(directory, false);
+		File qfile = getTempFile(fileObject.getExtension());
+		boolean ok = fileObject.moveTo(qfile);
 		if (ok) {
 			try { index(fileObject); }
 			catch (Exception ignore) { }
 		}
 		return ok;
+	}
+
+	private File getTempFile(String ext) {
+		File file = null;
+		try {
+			file = File.createTempFile("TQ-", ext, directory);
+			file.delete();
+		}
+		catch (Exception ignore) { }
+		return file;
 	}
 
 	/**
@@ -397,9 +408,13 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insertCopy(FileObject fileObject) {
-		File file = fileObject.copyToDirectory(directory);
-		boolean ok = (file != null);
-		if (ok) insert(file);
+		File qfile = getTempFile(fileObject.getExtension());
+		boolean ok = fileObject.copyTo(qfile);
+		if (ok) {
+			fileObject = FileObject.getInstance(qfile);
+			try { index(fileObject); }
+			catch (Exception ignore) { }
+		}
 		return ok;
 	}
 

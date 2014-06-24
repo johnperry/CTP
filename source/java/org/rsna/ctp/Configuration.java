@@ -191,7 +191,7 @@ public class Configuration {
 						sslConfig.setSystemParameters();
 					}
 					else if (tagName.equals("Pipeline") && !childElement.getAttribute("enabled").equals("no")) {
-						Pipeline pipe = new Pipeline(childElement);
+						Pipeline pipe = new Pipeline(childElement, pipelines.size());
 						pipelines.add(pipe);
 						List<PipelineStage> list = pipe.getStages();
 						for (PipelineStage stage : list) registerStage(stage);

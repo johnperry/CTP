@@ -339,6 +339,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomAnonymizer"/>
 			<attr name="lookupTable" required="yes" default="scripts/LookupTable.properties"/>
+			<attr name="dicomScript" required="no"  default=""/>
 			<attr name="script" required="yes" default="scripts/DicomAnonymizer.script">
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
@@ -562,6 +563,9 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="dicomScript" required="no"  default=""/>
+			<attr name="xmlScript" required="no"  default=""/>
+			<attr name="zipScript" required="no"  default=""/>
 			<attr name="setStandardExtensions" required="yes" default="no" options="yes|no"/>
 			<attr name="filenameTag" required="no" default="">
 				<helptext>DICOM element containing the filename, if the SOPInstanceUID is not to be used</helptext>
@@ -757,7 +761,7 @@
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
 		<cc>The email addresses of the copied recipients, separated by commas.</cc>
 		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
-		<dicomScript>The script file determining whether DicomObjects are to be accepted for transmission</dicomScript>
+		<dicomScript>The script file determining whether DicomObjects are to be accepted for processing</dicomScript>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<filenameTag>DICOM tag in which to store the name of the file (ggggeeee or DICOM PS 3.6 keyword)</filenameTag>
@@ -810,8 +814,8 @@
 		<treeRoot>The root directory of the archive</treeRoot>
 		<username>The username for authentication, if required by the destination system (or blank if authentication is not used)</username>
 		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
-		<xmlScript>The script file determining whether XmlObjects are to be accepted for transmission</xmlScript>
-		<zipScript>The script file determining whether ZipObjects are to be accepted for transmission</zipScript>
+		<xmlScript>The script file determining whether XmlObjects are to be accepted for processing</xmlScript>
+		<zipScript>The script file determining whether ZipObjects are to be accepted for processing</zipScript>
 	</DefaultHelpText>
 
 	<StandardPipelines>

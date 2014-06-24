@@ -7,7 +7,9 @@
 
 package org.rsna.ctp.plugin;
 
+import java.util.LinkedList;
 import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
 
 public interface Plugin {
 
@@ -21,10 +23,10 @@ public interface Plugin {
 
 	public String getID();
 
-	public String getConfigHTML(boolean local);
+	public String getConfigHTML(User user);
 
 	public String getStatusHTML();
 
-	public SummaryLink[] getLinks(boolean userIsAdmin);
+	public LinkedList<SummaryLink> getLinks(User user);
 
 }
