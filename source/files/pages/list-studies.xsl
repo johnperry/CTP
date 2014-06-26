@@ -11,19 +11,17 @@
 	<html>
 		<head>
 			<title>Study List for <xsl:value-of select="@fileSystemName"/></title>
-			<style>
-				th,td {padding-left:10px; padding-right:10px; cursor:target;}
-				body {background-color:#b9d0ed;}
-				td {background-color:white;}
-				th a {text-decoration: none; color:black;}
-				th a:visited {color: black;}
-				td a {color:black;}
-				td a:visited {color: black;}
-			</style>
-			<xsl:call-template name="script"/>
+			<link rel="stylesheet" href="/JSPopup.css" type="text/css"/>
+			<link rel="stylesheet" href="/list-studies.css" type="text/css"/>
+			<script language="JavaScript" type="text/javascript" src="/JSUtil.js">;</script>
+			<script language="JavaScript" type="text/javascript" src="/JSPopup.js">;</script>
+			<script language="JavaScript" type="text/javascript" src="/list-studies.js">;</script>
 		</head>
 		<body><center>
 			<h1>Study List for <xsl:value-of select="@fileSystemName"/></h1>
+			<xsl:if test="$delete='yes'">
+				<h2><input type="button" value="Delete All Studies" onclick="deleteAll();"/></h2>
+			</xsl:if>
 			<table border="1">
 				<thead>
 					<tr>
@@ -125,18 +123,6 @@
 			</td>
 		</xsl:if>
 	</tr>
-</xsl:template>
-
-<xsl:template name="script">
-	<script>
-<![CDATA[
-function hideRow(theEvent) {
-	var tr = ((document.all) ? theEvent.srcElement : theEvent.target);
-	while (tr.tagName != "TR") tr = tr.parentNode;
-	tr.parentNode.removeChild(tr);
-}
-]]>
-	</script>
 </xsl:template>
 
 <xsl:template name="fixDate">

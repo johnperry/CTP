@@ -131,6 +131,10 @@ public class StorageServlet extends Servlet {
 		String fsName = path.element(1);
 		FileSystem fs = fsm.getFileSystem(fsName, false);
 
+		if (req.userHasRole("delete") && req.hasParameter("deleteAll")) {
+			fs.deleteAll();
+		}
+
 		String page = "Access to the requested File System is not allowed.";
 		if ((fs != null) && fs.allowsAccessBy(req.getUser())) {
 			File xslFile = new File("pages/list-studies.xsl");

@@ -288,8 +288,9 @@ public class FileSystem {
 	 * Delete all the studies in the FileSystem.
 	 */
 	public synchronized void deleteAll() {
-		for (String studyUID : uidTable.keySet()) {
-			deleteStudyByUID(studyUID);
+		String[] uids = uidTable.keySet().toArray( new String[uidTable.size()] );
+		for (String uid : uids) {
+			deleteStudyByUID(uid);
 		}
 	}
 
