@@ -126,7 +126,7 @@ public class ConfigPanel extends BasePanel {
 	}
 
 	//Class to encapsulate a template element
-	class Template {
+	class Template implements Comparable<Template> {
 		Element template;
 		Hashtable<String,Element> attrs;
 		Hashtable<String,Template> children;
@@ -148,6 +148,9 @@ public class ConfigPanel extends BasePanel {
 		}
 		public String getName() {
 			return template.getTagName();
+		}
+		public String getClassName() {
+			return getAttrValue("class", "default");
 		}
 		public Element getTemplateElement() {
 			return template;
@@ -202,6 +205,13 @@ public class ConfigPanel extends BasePanel {
 				return element;
 			}
 			catch (Exception ex) { ex.printStackTrace(); return null; }
+		}
+		public int compareTo(Template t) {
+			String thisCName = this.getClassName();
+			thisCName = thisCName.substring( thisCName.lastIndexOf(".") + 1 );
+			String thatCName = t.getClassName();
+			thatCName = thatCName.substring( thatCName.lastIndexOf(".") + 1 );
+			return thisCName.compareTo(thatCName);
 		}
 	}
 
@@ -276,6 +286,21 @@ public class ConfigPanel extends BasePanel {
 			}
 			child = child.getNextSibling();
 		}
+		//Sort the component lists
+		plugins = sort(plugins);
+		importServices = sort(importServices);
+		processors = sort(processors);
+		storageServices = sort(storageServices);
+		exportServices = sort(exportServices);
+	}
+
+	private LinkedList<Template> sort(LinkedList<Template> list) {
+		Template[] array = new Template[list.size()];
+		array = list.toArray(array);
+		Arrays.sort(array);
+		list = new LinkedList<Template>();
+		for (Template t : array) list.add(t);
+		return list;
 	}
 
 	private void loadStandardPipelines(Element sp) {
@@ -353,8 +378,7 @@ public class ConfigPanel extends BasePanel {
 			JMenu pluginMenu = new JMenu("Plugin");
 			ComponentImpl impl = new ComponentImpl("Configuration");
 			for (Template template : plugins) {
-				String className = template.getAttrValue("class", "default");
-				ComponentMenuItem item = new ComponentMenuItem(className);
+				ComponentMenuItem item = new ComponentMenuItem(template.getClassName());
 				item.addActionListener(impl);
 				pluginMenu.add(item);
 			}
@@ -379,32 +403,28 @@ public class ConfigPanel extends BasePanel {
 			JMenu importServiceMenu = new JMenu("ImportService");
 			impl = new ComponentImpl("Pipeline");
 			for (Template template : importServices) {
-				String className = template.getAttrValue("class", "default");
-				ComponentMenuItem item = new ComponentMenuItem(className);
+				ComponentMenuItem item = new ComponentMenuItem(template.getClassName());
 				item.addActionListener(impl);
 				importServiceMenu.add(item);
 			}
 
 			JMenu processorMenu = new JMenu("Processor");
 			for (Template template : processors) {
-				String className = template.getAttrValue("class", "default");
-				ComponentMenuItem item = new ComponentMenuItem(className);
+				ComponentMenuItem item = new ComponentMenuItem(template.getClassName());
 				item.addActionListener(impl);
 				processorMenu.add(item);
 			}
 
 			JMenu storageServiceMenu = new JMenu("StorageService");
 			for (Template template : storageServices) {
-				String className = template.getAttrValue("class", "default");
-				ComponentMenuItem item = new ComponentMenuItem(className);
+				ComponentMenuItem item = new ComponentMenuItem(template.getClassName());
 				item.addActionListener(impl);
 				storageServiceMenu.add(item);
 			}
 
 			JMenu exportServiceMenu = new JMenu("ExportService");
 			for (Template template : exportServices) {
-				String className = template.getAttrValue("class", "default");
-				ComponentMenuItem item = new ComponentMenuItem(className);
+				ComponentMenuItem item = new ComponentMenuItem(template.getClassName());
 				item.addActionListener(impl);
 				exportServiceMenu.add(item);
 			}
