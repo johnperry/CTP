@@ -265,7 +265,17 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if (port > 0) {
-			links.addFirst( new SummaryLink(":"+port+"/", null, "View the FileStorageService Contents", true) );
+			boolean isAuthenticated = (user != null);
+			boolean admin = isAuthenticated && user.hasRole("admin");
+			boolean canView = !requireAuthentication || (isAuthenticated && user.hasRole("read"));
+			if (isAuthenticated) links.addFirst( new SummaryLink(":"+port+"/guests", null, "Manage the Guest List", false) );
+			List<String> fsList = fsm.getFileSystemsFor(user);
+			for (String fsName : fsList) {
+				FileSystem fs = fsm.getFileSystem(fsName);
+				if (fs.getNumberOfStudies() > 0) {
+					links.addFirst( new SummaryLink(":"+port+"/storage/"+fsName, null, "View Stored Studies for "+fsName, false) );
+				}
+			}
 		}
 		return links;
 	}

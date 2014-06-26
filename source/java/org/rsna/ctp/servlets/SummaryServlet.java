@@ -222,9 +222,9 @@ public class SummaryServlet extends Servlet {
 		for (SummaryLink link : links) {
 			String url = link.getURL();
 			url += (url.contains("?") ? "&" : "?") + "suppress";
+			String windowURL = "http://";
+			windowURL += (url.startsWith(":") ? getHostWithoutPort() : host) + url;
 			if (link.needsNewWindow()) {
-				String windowURL = "http://";
-				windowURL += (url.startsWith(":") ? getHostWithoutPort() : host) + url;
 				sb.append("<p class=\"link\">\n");
 				sb.append("<input type=\"button\" class=\"summarylink\"");
 				sb.append("  value=\""+link.getTitle()+"\"");
@@ -235,7 +235,7 @@ public class SummaryServlet extends Servlet {
 				sb.append("<p class=\"link\">\n");
 				sb.append("<input type=\"button\" class=\"summarylink\"");
 				sb.append("  value=\""+link.getTitle()+"\"");
-				sb.append("  onclick=\"window.location='"+url+"';\"/>\n");
+				sb.append("  onclick=\"window.location='"+windowURL+"';\"/>\n");
 				sb.append("</p>");
 			}
 		}

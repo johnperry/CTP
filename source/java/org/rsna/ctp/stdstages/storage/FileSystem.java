@@ -162,6 +162,19 @@ public class FileSystem {
 	}
 
 	/**
+	 * Get the number of studies in this FileSystem.
+	 * @return the number of studies in this FileSystem.
+	 */
+	public int getNumberOfStudies() {
+		try {
+			getIndex();
+			return uidTable.size();
+		}
+		catch (Exception unable) { }
+		return 0;
+	}
+
+	/**
 	 * Get the ImageQualifiers list for this FileSystem.
 	 * @return the ImageQualifiers list for this FileSystem.
 	 */

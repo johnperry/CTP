@@ -13,8 +13,9 @@
 		<head>
 			<title><xsl:value-of select="$user"/> Guest List</title>
 			<style>
+				body {background-color:#b9d0ed;; margin-right:0px; margin-top:0px;}
 				td {padding-left:10px; padding-right:10px; background-color:white;}
-				body {background-color:white; margin-right:0px; margin-top:0px;}
+				.username {width:150px;}
 				.box {border:thin solid gray; width:500px; padding:20px; margin:10px; margin-bottom:30px;}
 				h1 {margin-top:15px;}
 			</style>
@@ -56,7 +57,7 @@
 				<xsl:if test="$guest-users">
 					<p>To add a guest to this list, select the guest's name.</p>
 					<p>
-						<select name="addguest">
+						<select class="username" name="addguest">
 							<option value=""/>
 							<xsl:call-template name="make-options">
 								<xsl:with-param name="list" select="$guest-users"/>
@@ -67,7 +68,7 @@
 
 				<xsl:if test="not($guest-users)">
 					<p>To add a guest, enter the guest's name in this box:</p>
-					<p><input name="addguest" type="text"/></p>
+					<p><input class="username" name="addguest" type="text"/></p>
 				</xsl:if>
 
 				<p><input type="submit" value="Submit Changes"/></p>
@@ -80,7 +81,7 @@
 						the user's name and click the "Switch User" button.
 					</p>
 					<p>
-						<select id="proxyuser">
+						<select class="username" id="proxyuser">
 							<option value=""/>
 							<xsl:call-template name="make-options">
 								<xsl:with-param name="list" select="$all-users"/>
