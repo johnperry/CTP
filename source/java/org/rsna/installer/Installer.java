@@ -578,6 +578,8 @@ public class Installer extends JFrame {
 			Properties props = new Properties();
 			String ctpHome = dir.getAbsolutePath();
 			cp.appendln(Color.black, "...CTP_HOME: "+ctpHome);
+
+			//do the parameter substitutions
 			ctpHome = ctpHome.replaceAll("\\\\", "\\\\\\\\");
 			props.put("CTP_HOME", ctpHome);
 			File javaHome = new File(System.getProperty("java.home"));
@@ -585,9 +587,15 @@ public class Installer extends JFrame {
 			cp.appendln(Color.black, "...JAVA_BIN: "+javaBin);
 			javaBin = javaBin.replaceAll("\\\\", "\\\\\\\\");
 			props.put("JAVA_BIN", javaBin);
+			bat = replace(bat, props); //do the substitutions
 
-			bat = replace(bat, props);
+			//Remove \r characters for Linux
+			bat = bat.replace("\r", "");
+
+			//Store the modified script in the linux directory
 			setFileText(install, bat);
+
+			//If this is an ISN installation, put the script in the correct place.
 			String osName = System.getProperty("os.name").toLowerCase();
 			if (programName.equals("ISN") && !osName.contains("windows")) {
 				File initDir = new File("/etc/init.d");
