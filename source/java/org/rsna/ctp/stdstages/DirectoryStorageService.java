@@ -298,7 +298,6 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private String replace(String string, DicomObject dob) {
 		try {
-
 			String singleTag = "[\\[\\(][0-9a-fA-F]{0,4}[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
 			Pattern pattern = Pattern.compile( singleTag + "(::"+singleTag+")*" );
 
