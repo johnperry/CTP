@@ -1004,10 +1004,18 @@ public class Installer extends JFrame {
 	}
 
 	private void fixRSNAROOT(Element server) {
-		Element ssl = getFirstNamedChild(server, "SSL");
-		if (ssl != null) {
-			ssl.setAttribute("keystore", ssl.getAttribute("keystore").replace("RSNA_HOME", "RSNA_ROOT"));
-			ssl.setAttribute("truststore", ssl.getAttribute("truststore").replace("RSNA_HOME", "RSNA_ROOT"));
+		if (programName.equals("ISN")) {
+			Element ssl = getFirstNamedChild(server, "SSL");
+			if (ssl != null) {
+				if (System.getProperty("os.name").contains("Windows")) {
+					ssl.setAttribute("keystore", ssl.getAttribute("keystore").replace("RSNA_HOME", "RSNA_ROOT"));
+					ssl.setAttribute("truststore", ssl.getAttribute("truststore").replace("RSNA_HOME", "RSNA_ROOT"));
+				}
+				else {
+					ssl.setAttribute("keystore", "${RSNA_ROOT}/conf/keystore.jks");
+					ssl.setAttribute("truststore", "${RSNA_ROOT}/conf/truststore.jks");
+				}
+			}
 		}
 	}
 
