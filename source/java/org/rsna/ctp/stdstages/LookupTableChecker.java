@@ -345,8 +345,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		boolean admin = (user != null) && user.hasRole("admin");
-		if (admin) {
+		if (allowsAdminBy(user)) {
 			links.addFirst( new SummaryLink("/"+id, null, "View the LookupTableChecker Database", false) );
 		}
 		return links;

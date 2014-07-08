@@ -37,10 +37,9 @@ import org.rsna.util.StringUtil;
  * <p>
  * This servlet responds to both HTTP GET and POST.
  */
-public class DicomAnonymizerServlet extends Servlet {
+public class DicomAnonymizerServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(DicomAnonymizerServlet.class);
-	String home = "/";
 
 	File dicomProfiles = new File("profiles/dicom");
 	File savedProfiles = new File("profiles/saved");
@@ -59,33 +58,21 @@ public class DicomAnonymizerServlet extends Servlet {
 	 * @param req The HttpServletRequest provided by the servlet container.
 	 * @param res The HttpServletResponse provided by the servlet container.
 	 */
-	public void doGet(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Disable caching of the response
 		res.disableCaching();
 
-		//Get the possible query parameters
-		//and get the script file, if one is specified
-		int p = -1;
-		int s = -1;
-		File file = null;
-		try {
-			p = Integer.parseInt(req.getParameter("p"));
-			s = Integer.parseInt(req.getParameter("s"));
-			file = getScriptFile(p, s);
-		}
-		catch (Exception ex) { }
+		//Get the script file, if one is specified
+		File file = getScriptFile();
 
 		//Figure out what kind of GET this is
 		Path path = new Path(req.getPath());
@@ -139,34 +126,22 @@ public class DicomAnonymizerServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Set up the response
 		res.disableCaching();
 		res.setContentType("txt");
 
-		//Get the possible query parameters
-		//and get the script file, if one is specified
-		int p = -1;
-		int s = -1;
-		File file = null;
-		try {
-			p = Integer.parseInt(req.getParameter("p"));
-			s = Integer.parseInt(req.getParameter("s"));
-			file = getScriptFile(p, s);
-		}
-		catch (Exception ex) { }
+		//Get the script file, if one is specified
+		File file = getScriptFile();
 
 		//Get the XML text to store
 		String xml = req.getParameter("xml");
@@ -205,18 +180,10 @@ public class DicomAnonymizerServlet extends Servlet {
 	}
 
 	//Get the script file, if possible
-	private File getScriptFile(int p, int s) {
-		try {
-			Configuration config = Configuration.getInstance();
-			List<Pipeline> pipelines = config.getPipelines();
-			Pipeline pipe = pipelines.get(p);
-			List<PipelineStage> stages = pipe.getStages();
-			PipelineStage stage = stages.get(s);
-			if (stage instanceof ScriptableDicom) {
-				return ((ScriptableDicom)stage).getScriptFile();
-			}
+	private File getScriptFile() {
+		if (stage instanceof ScriptableDicom) {
+			return ((ScriptableDicom)stage).getScriptFile();
 		}
-		catch (Exception ex) { }
 		return null;
 	}
 

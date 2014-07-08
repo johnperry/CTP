@@ -128,8 +128,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		boolean admin = (user != null) && user.hasRole("admin");
-		if (admin) {
+		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex+"&f=0";
 			if (scriptFile != null) {
 				links.addFirst( new SummaryLink("/script"+qs, null, "Edit the Anonymizer Script File", false) );

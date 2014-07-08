@@ -41,11 +41,9 @@ import org.w3c.dom.NodeList;
 /**
  * A Servlet which provides web access to the indexed data stored by a DatabaseVerifier pipeline stage.
  */
-public class DBVerifierServlet extends Servlet {
+public class DBVerifierServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(DBVerifierServlet.class);
-	String home = "/";
-	String suppress = "";
 
 	/**
 	 * Construct a DBVerifierServlet.
@@ -64,9 +62,10 @@ public class DBVerifierServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
@@ -79,20 +78,7 @@ public class DBVerifierServlet extends Servlet {
 
 		//Get the selected stage, if possible.
 		DatabaseVerifier verifier = null;
-		int p = -1;
-		int s = -1;
-		String pipeAttr = req.getParameter("p", "");
-		String stageAttr = req.getParameter("s", "");
-		if (!pipeAttr.equals("") && !stageAttr.equals("")) {
-			try {
-				p = Integer.parseInt(pipeAttr);
-				s = Integer.parseInt(stageAttr);
-				Pipeline pipe = Configuration.getInstance().getPipelines().get(p);
-				PipelineStage stage = pipe.getStages().get(s);
-				if (stage instanceof DatabaseVerifier) verifier = (DatabaseVerifier)stage;
-			}
-			catch (Exception ex) { verifier = null; }
-		}
+		if (stage instanceof DatabaseVerifier) verifier = (DatabaseVerifier)stage;
 
 		//Now make either the page listing the various DatabaseVerifier stages
 		//or the search page for the specified DatabaseVerifier.

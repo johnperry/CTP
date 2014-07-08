@@ -35,10 +35,9 @@ import org.rsna.util.StringUtil;
  * <p>
  * This servlet responds to both HTTP GET and POST.
  */
-public class ScriptServlet extends Servlet {
+public class ScriptServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(ScriptServlet.class);
-	String home = "/";
 
 	/**
 	 * Construct a ScriptServlet.
@@ -60,18 +59,15 @@ public class ScriptServlet extends Servlet {
 	 * @param req The HttpServletRequest provided by the servlet container.
 	 * @param res The HttpServletResponse provided by the servlet container.
 	 */
-	public void doGet(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
-
-		if (req.hasParameter("suppress")) home = "";
 
 		//Get the script file, if possible.
 		int p,s,f;
@@ -111,18 +107,15 @@ public class ScriptServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
-
-		if (req.hasParameter("suppress")) home = "";
 
 		//Get the parameters from the form.
 		String script = req.getParameter("script");
@@ -199,7 +192,7 @@ public class ScriptServlet extends Servlet {
 												+"?p="+p
 												+"&s="+s
 												+"&f="+f
-												+(home.equals("") ? "&suppress" : "")
+												+suppress
 												+"\">"
 												+file.getAbsolutePath()+"</a></td>");
 								sb.append("</tr>");

@@ -37,10 +37,9 @@ import org.w3c.dom.NodeList;
 /**
  * A Servlet that provides web access to the indexed data stored by an ObjectTracker pipeline stage.
  */
-public class ObjectTrackerServlet extends Servlet {
+public class ObjectTrackerServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(ObjectTrackerServlet.class);
-	String home = "/";
 
 	/**
 	 * Construct an ObjectTrackerServlet.
@@ -58,32 +57,18 @@ public class ObjectTrackerServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Get the selected stage, if possible.
 		ObjectTracker tracker = null;
-		int p = -1;
-		int s = -1;
-		String pipeAttr = req.getParameter("p");
-		String stageAttr = req.getParameter("s");
-		if ((pipeAttr != null) && !pipeAttr.equals("") && (stageAttr != null) && !stageAttr.equals("")) {
-			try {
-				p = Integer.parseInt(pipeAttr);
-				s = Integer.parseInt(stageAttr);
-				Pipeline pipe = Configuration.getInstance().getPipelines().get(p);
-				PipelineStage stage = pipe.getStages().get(s);
-				if (stage instanceof ObjectTracker) tracker = (ObjectTracker)stage;
-			}
-			catch (Exception ex) { tracker = null; }
-		}
+		if (stage instanceof ObjectTracker) tracker = (ObjectTracker)stage;
 
 		//Now make either the page listing the various ObjectTracker stages
 		//or the search page for the specified ObjectTracker.
@@ -104,41 +89,25 @@ public class ObjectTrackerServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Get the parameters from the form.
 		String keyType = req.getParameter("keytype");
 		String keys = req.getParameter("keys");
 		String format = req.getParameter("format");
-		String pParam = req.getParameter("p");
-		String sParam = req.getParameter("s");
 
 		//Find the ObjectTracker stage.
 		ObjectTracker tracker = null;
-		int p = -1;
-		int s = -1;
-		try {
-			p = Integer.parseInt(pParam);
-			s = Integer.parseInt(sParam);
-			Pipeline pipe = Configuration.getInstance().getPipelines().get(p);
-			PipelineStage stage = pipe.getStages().get(s);
-			if (stage instanceof ObjectTracker) tracker = (ObjectTracker)stage;
-		}
-		catch (Exception ex) {
-			doGet(req,res);
-			return;
-		}
+		if (stage instanceof ObjectTracker) tracker = (ObjectTracker)stage;
+
 		if (tracker == null) {
 			res.setResponseCode(res.notfound);
 			res.setContentType("html");
@@ -174,7 +143,7 @@ public class ObjectTrackerServlet extends Servlet {
 				res.setContentType("html");
 				res.write(
 					responseHead("Search Results from "+tracker.getName(),
-								 "/" + context + "?p="+p+"&s="+s+(home.equals("")?"&suppress":""),
+								 "/" + context + "?p="+p+"&s="+s+suppress,
 								 "/icons/go-previous-32.png",
 								 "_self",
 								 "Return to the search page")

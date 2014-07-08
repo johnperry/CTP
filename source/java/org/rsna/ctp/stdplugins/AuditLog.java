@@ -122,7 +122,9 @@ public class AuditLog extends AbstractPlugin {
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		links.addFirst( new SummaryLink("/"+id, null, "Search the AuditLog", false) );
+		if ((user != null) && user.hasRole("admin")) {
+			links.addFirst( new SummaryLink("/"+id, null, "Search the AuditLog", false) );
+		}
 		return links;
 	}
 

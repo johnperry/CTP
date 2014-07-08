@@ -34,13 +34,9 @@ import org.rsna.util.StringUtil;
  * The Summary servlet.
  * This servlet provides a summary of key parameters of pipelines and stages.
  */
-public class SummaryServlet extends Servlet {
+public class SummaryServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(SummaryServlet.class);
-	String home = "/";
-	String suppress = "";
-	User user;
-	String host = "";
 
 	/**
 	 * Construct a SummaryServlet.
@@ -58,21 +54,10 @@ public class SummaryServlet extends Servlet {
 	 * @param req The HttpServletRequest provided by the servlet container.
 	 * @param res The HttpServletResponse provided by the servlet container.
 	 */
-	public void doGet(
-			HttpRequest req,
-			HttpResponse res) {
-
-		if (req.hasParameter("suppress")) {
-			home = "";
-			suppress = "&suppress";
-		}
-
-		user = req.getUser();
-		host = req.getHeader("Host");
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Get the parameters.
-		int p = StringUtil.getInt(req.getParameter("pipeline"), -1);
-		int s = StringUtil.getInt(req.getParameter("stage"), -1);
 		int x = StringUtil.getInt(req.getParameter("plugin"), -1);
 
 		//Return the page
@@ -92,6 +77,7 @@ public class SummaryServlet extends Servlet {
 		catch (Exception ex) { }
 		return null;
 	}
+
 	//Get the referenced Pipeline, if possible
 	private Pipeline getPipeline(int p) {
 		try {
@@ -102,7 +88,6 @@ public class SummaryServlet extends Servlet {
 		catch (Exception ex) { }
 		return null;
 	}
-
 
 	//Get the referenced PipelineStage, if possible
 	private PipelineStage getPipelineStage(int p, int s) {
@@ -307,22 +292,8 @@ public class SummaryServlet extends Servlet {
 			+	"  <script language=\"JavaScript\" type=\"text/javascript\" src=\"/SummaryServlet.js\">;</script>\n"
 			+	" </head>\n"
 			+	" <body>\n"
-
-			+	"  <div style=\"float:right;\">\n";
-
-		if (!home.equals("")) {
-			head +=
-					"   <img src=\"/icons/home.png\"\n"
-				+	"    onclick=\"window.open('"+home+"','_self');\"\n"
-				+	"    style=\"margin-right:2px;\"\n"
-				+	"    title=\"Return to the home page\"/>\n"
-				+	"   <br>\n";
-		}
-
-		head +=
-			    "  </div>\n"
-			 +	"  <h1>"+title+"</h1>\n"
-			 +	"  <center>\n";
+			+	"  <h1>"+title+"</h1>\n"
+			+	"  <center>\n";
 
 		return head;
 	}

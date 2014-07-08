@@ -65,6 +65,13 @@
 
 		<Pipeline>
 			<attr name="name" required="yes" default="Pipeline"/>
+			<attr name="admin" required="no" default="">
+				<helptext>
+					The username of a user who is allowed to access the configuration
+					pages for this pipeline. If blank, only a user with the admin role will
+					have access.
+				</helptext>
+			</attr>
 			<attr name="enabled" required="no" default="yes" options="yes|no"/>
 		</Pipeline>
 
@@ -213,6 +220,13 @@
 			</attr>
 			<attr name="auditLogID" required="yes" default=""/>
 			<attr name="auditLogTags" required="yes" default=""/>
+			<attr name="level" required="yes" default="instance" options="patient|study|instance">
+				<helptext>
+					The level at which log entries are to be made. For example, at the patient level,
+					an entry is made only when a new patient is encountered. At the instance level,
+					an entry is made for every object.
+				</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>

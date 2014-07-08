@@ -37,12 +37,10 @@ import org.w3c.dom.Node;
  * The QuarantineServlet. This implementation provides access
  * to the contents of the quarantines.
  */
-public class QuarantineServlet extends Servlet {
+public class QuarantineServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(QuarantineServlet.class);
 
-	Pipeline pipeline = null;
-	PipelineStage stage = null;
 	Quarantine quarantine = null;
 
 	/**
@@ -59,13 +57,10 @@ public class QuarantineServlet extends Servlet {
 	 * @param req the request object
 	 * @param res the response object
 	 */
-	public void doGet(HttpRequest req, HttpResponse res) throws Exception {
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
-		//logger.info("admin = "+req.userHasRole("admin")+"\n"+req.toString());
-
-		//Require that the user have the qadmin or admin role
-		boolean admin = req.userHasRole("qadmin") || req.userHasRole("admin");
-		if (!admin) {
+		if (!userIsAuthorized(req)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
@@ -76,33 +71,34 @@ public class QuarantineServlet extends Servlet {
 		String command = path.element(1);
 
 		//Get the parameters and find the quarantine
-		int pInt = StringUtil.getInt(req.getParameter("p", "-1"), -1);
-		int sInt = StringUtil.getInt(req.getParameter("s", "-1"), -1);
-		if ((pInt != -1) && (sInt != -1)) {
-			try {
-				pipeline = Configuration.getInstance().getPipelines().get(pInt);
-				stage = pipeline.getStages().get(sInt);
-				quarantine = stage.getQuarantine();
-			}
-			catch (Exception quit) {  }
-		}
 
-		if (pInt == -1) sizesPage(res);
+		/*
+		logger.info(req.toString()+"\n"+
+			("pipeline is "+((pipeline!=null)?"not ":"")+"null")+"  (p="+p+")\n"+
+			("stage is "+((stage!=null)?"not ":"")+"null")+"  (s="+s+")\n"+
+			"command: \""+command+"\"");
+		*/
 
-		else if (sInt == -1) sizesPage(res, pInt);
+		if (stage != null) quarantine = stage.getQuarantine();
 
-		else if (command.equals("")) studiesPage(req, res, pInt, sInt);
+		if (pipeline == null) sizesPage(res);
 
-		else if (command.equals("series")) seriesXML(req, res, pInt, sInt);
+		else if (stage == null) sizesPage(res, p);
 
-		else if (command.equals("files")) filesXML(req, res, pInt, sInt);
+		else if (quarantine == null) sizesPage(res, p);
+
+		else if (command.equals("")) studiesPage(req, res, p, s);
+
+		else if (command.equals("series")) seriesXML(req, res, p, s);
+
+		else if (command.equals("files")) filesXML(req, res, p, s);
 
 		else if (command.equals("queueAll")) {
 			if (quarantine != null) {
 				QueueManager queueManager = getClosestQueueManager();
 				if (queueManager != null) quarantine.queueAll(queueManager);
 			}
-			studiesPage(req, res, pInt, sInt);
+			studiesPage(req, res, p, s);
 		}
 
 		else if (command.equals("queueStudy")) {
@@ -111,7 +107,7 @@ public class QuarantineServlet extends Servlet {
 				QueueManager queueManager = getClosestQueueManager();
 				if (queueManager != null) quarantine.queueStudy(studyUID, queueManager);
 			}
-			studiesPage(req, res, pInt, sInt);
+			studiesPage(req, res, p, s);
 		}
 
 		else if (command.equals("queueSeries")) {
@@ -120,7 +116,7 @@ public class QuarantineServlet extends Servlet {
 				QueueManager queueManager = getClosestQueueManager();
 				if (queueManager != null) quarantine.queueSeries(seriesUID, queueManager);
 			}
-			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+			studiesPage(req, res, p, s); //******remove this when switching to AJAX
 		}
 
 		else if (command.equals("queueFile")) {
@@ -132,14 +128,14 @@ public class QuarantineServlet extends Servlet {
 					quarantine.queueFile(file, queueManager);
 				}
 			}
-			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+			studiesPage(req, res, p, s); //******remove this when switching to AJAX
 		}
 
 		else if (command.equals("deleteAll")) {
 			if (quarantine != null) {
 				quarantine.deleteAll();
 			}
-			studiesPage(req, res, pInt, sInt);
+			studiesPage(req, res, p, s);
 		}
 
 		else if (command.equals("deleteStudy")) {
@@ -147,7 +143,7 @@ public class QuarantineServlet extends Servlet {
 			if (quarantine != null) {
 				quarantine.deleteStudy(studyUID);
 			}
-			studiesPage(req, res, pInt, sInt);
+			studiesPage(req, res, p, s);
 		}
 
 		else if (command.equals("deleteSeries")) {
@@ -155,7 +151,7 @@ public class QuarantineServlet extends Servlet {
 			if (quarantine != null) {
 				quarantine.deleteSeries(seriesUID);
 			}
-			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+			studiesPage(req, res, p, s); //******remove this when switching to AJAX
 		}
 
 		else if (command.equals("deleteFile")) {
@@ -163,14 +159,19 @@ public class QuarantineServlet extends Servlet {
 				String filename = req.getParameter("filename");
 				quarantine.deleteFile(filename);
 			}
-			studiesPage(req, res, pInt, sInt); //******remove this when switching to AJAX
+			studiesPage(req, res, p, s); //******remove this when switching to AJAX
 		}
 
 		else if (command.equals("displayFile")) displayFile(req, res);
 
-		else if (command.equals("listFile")) listFile(req, res, pInt, sInt);
+		else if (command.equals("listFile")) listFile(req, res, p, s);
 
 		else if (command.equals("downloadFile")) downloadFile(req, res);
+	}
+
+	private boolean userIsAuthorized(HttpRequest req) {
+		boolean userIsAdmin = req.userHasRole("qadmin") || req.userHasRole("admin");
+		return userIsAdmin || userIsStageAdmin;
 	}
 
 	//Get a page listing the sizes of all the quarantines

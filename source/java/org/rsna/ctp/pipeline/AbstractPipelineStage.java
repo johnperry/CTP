@@ -200,6 +200,18 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	/**
+	 * Determine whether a user has admin privileges for this stage.
+	 * Admin privileges are conferred on users who have the admin role
+	 * or who are designated as an admin of the pipeline in which this
+	 * stage appears..
+	 * @param user the requesting user.
+	 * @return true if the user is an admin of this stage.
+	 */
+	public boolean allowsAdminBy(User user) {
+		return getPipeline().allowsAdminBy(user);
+	}
+
+	/**
 	 * Get the list of links for display on the summary page.
 	 * This method returns an empty array. It should be overridden
 	 * by stages that provide servlets to access their data.
@@ -208,7 +220,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = new LinkedList<SummaryLink>();
-		if (quarantine != null) {
+		if ((quarantine != null) && (allowsAdminBy(user) || ((user != null) && user.hasRole("qadmin")))) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
 			links.add( new SummaryLink("/quarantines"+qs, null, "View the Quarantine Contents", false) );
 		}

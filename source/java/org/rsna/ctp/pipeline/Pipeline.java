@@ -32,6 +32,7 @@ public class Pipeline extends Thread {
 	protected volatile boolean stop = false;
 	final boolean enabled;
 	int pipelineIndex = -1;
+	String admin = "";
 
 	/**
 	 * A Thread representing a processing pipeline for FileObjects
@@ -45,6 +46,7 @@ public class Pipeline extends Thread {
 		pipelineIndex = index;
 		name = pipeline.getAttribute("name").trim();
 		setName(name);
+		admin = pipeline.getAttribute("admin").trim();
 		enabled = !pipeline.getAttribute("enabled").equals("no");
 		stages = new ArrayList<PipelineStage>();
 		importServices = new ArrayList<ImportService>();
@@ -89,6 +91,16 @@ public class Pipeline extends Thread {
 	 */
 	public boolean isEnabled() {
 		return enabled;
+	}
+
+	/**
+	 * Check whether a user has admin privileges for this pipeline. To have admin
+	 * privileges, the user must either have the global admin role or be named
+	 * in the admin attribute of the pipeline.
+	 * @return true if the user has admin privileges for this pipeline, false otherwise.
+	 */
+	public boolean allowsAdminBy(User user) {
+		return (user != null) && (user.hasRole("admin") || (!admin.equals("") && user.getUsername().equals(admin)));
 	}
 
 	/**

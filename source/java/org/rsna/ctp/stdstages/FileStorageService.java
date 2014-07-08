@@ -266,7 +266,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if (port > 0) {
 			boolean isAuthenticated = (user != null);
-			boolean admin = isAuthenticated && user.hasRole("admin");
+			boolean admin = allowsAdminBy(user);
 			boolean canView = !requireAuthentication || (isAuthenticated && user.hasRole("read"));
 			if (isAuthenticated) links.addFirst( new SummaryLink(":"+port+"/guests", null, "Manage the Guest List", false) );
 			List<String> fsList = fsm.getFileSystemsFor(user);

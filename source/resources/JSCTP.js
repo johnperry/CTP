@@ -228,10 +228,10 @@ function createStage(stage, p, s) {
 //Load the summary pages
 //************************************************
 function getPipeSummary(p) {
-	loadFrame("/summary?pipeline="+p+"&suppress");
+	loadFrame("/summary?p="+p+"&suppress");
 }
 function getStageSummary(p, s) {
-	loadFrame("/summary?pipeline="+p+"&stage="+s+"&suppress");
+	loadFrame("/summary?p="+p+"&s="+s+"&suppress");
 }
 function getPluginSummary(x) {
 	loadFrame("/summary?plugin="+x+"&suppress");

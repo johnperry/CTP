@@ -31,7 +31,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 
 	static final Logger logger = Logger.getLogger(DicomAuditLogger.class);
 
-	String verbosity;
+	String level;
 	String objectCacheID;
 	String auditLogID;
 	AuditLog auditLog = null;
@@ -45,7 +45,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	 */
 	public DicomAuditLogger(Element element) {
 		super(element);
-		verbosity = element.getAttribute("verbosity").trim();
+		level = element.getAttribute("level").trim();
 		objectCacheID = element.getAttribute("cacheID").trim();
 		auditLogID = element.getAttribute("auditLogID").trim();
 
@@ -99,6 +99,9 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 
 		if ((auditLog != null) && (fileObject instanceof DicomObject)) {
 
+			//Make a DicomObject for the current objecy
+			DicomObject currentObject = (DicomObject)fileObject;
+
 			//Get the cached object, if possible
 			DicomObject cachedObject = null;
 			if (objectCache != null) {
@@ -106,13 +109,33 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 				if ( (fob instanceof DicomObject) ) cachedObject = (DicomObject)fob;
 			}
 
-			if (cachedObject != null) makeAuditLogEntry( (DicomObject)fileObject, cachedObject );
-			else makeAuditLogEntry( (DicomObject)fileObject );
+			if (cachedObject != null) {
+				if (objectShouldBeLogged(cachedObject)) {
+					makeAuditLogEntry( currentObject, cachedObject );
+				}
+			}
+			else {
+				if (objectShouldBeLogged(currentObject)) {
+					makeAuditLogEntry( currentObject );
+				}
+			}
 		}
 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
+	}
+
+	private boolean objectShouldBeLogged(DicomObject dob) {
+		if (level.equals("patient")) {
+			String id = dob.getPatientID();
+			return (auditLog.getEntriesForPatientID(id).size() == 0);
+		}
+		else if (level.equals("study")) {
+			String id = dob.getStudyInstanceUID();
+			return (auditLog.getEntriesForStudyUID(id).size() == 0);
+		}
+		else return true;
 	}
 
 	private void makeAuditLogEntry( DicomObject dicomObject, DicomObject cachedObject ) {

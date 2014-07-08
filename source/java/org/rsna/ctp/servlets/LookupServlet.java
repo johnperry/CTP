@@ -46,11 +46,10 @@ import org.w3c.dom.Element;
  * configuring the lookup table file for an anonymizer.
  * This servlet responds to both HTTP GET and POST.
  */
-public class LookupServlet extends Servlet {
+public class LookupServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(LookupServlet.class);
 	static final String prefix = "..";
-	String home = "/";
 
 	/**
 	 * Construct a LookupServlet.
@@ -69,18 +68,15 @@ public class LookupServlet extends Servlet {
 	 * @param req The HttpServletRequest provided by the servlet container.
 	 * @param res The HttpServletResponse provided by the servlet container.
 	 */
-	public void doGet(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
-
-		if (req.hasParameter("suppress")) home = "";
 
 		//Now make either the page listing the various editable stages
 		//or the page listing the contents of the specified file.
@@ -119,20 +115,15 @@ public class LookupServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
-
-		//logger.info("POST:\n"+req.toString()+"\nParameters\n"+req.listParameters("  "));
-
-		if (req.hasParameter("suppress")) home = "";
 
 		File dir = null;
 		String contentType = req.getContentType().toLowerCase();

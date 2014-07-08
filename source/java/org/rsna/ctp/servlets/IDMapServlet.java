@@ -32,10 +32,9 @@ import org.rsna.util.XmlUtil;
 /**
  * A Servlet which provides web access to the indexed data stored by an IDMap pipeline stage.
  */
-public class IDMapServlet extends Servlet {
+public class IDMapServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(IDMapServlet.class);
-	String home = "/";
 
 	/**
 	 * Construct an IDMapServlet.
@@ -53,32 +52,18 @@ public class IDMapServlet extends Servlet {
 	 * @param res the response object
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Get the selected stage, if possible.
 		IDMap idMap = null;
-		int p = -1;
-		int s = -1;
-		String pipeAttr = req.getParameter("p");
-		String stageAttr = req.getParameter("s");
-		if ((pipeAttr != null) && !pipeAttr.equals("") && (stageAttr != null) && !stageAttr.equals("")) {
-			try {
-				p = Integer.parseInt(pipeAttr);
-				s = Integer.parseInt(stageAttr);
-				Pipeline pipe = Configuration.getInstance().getPipelines().get(p);
-				PipelineStage stage = pipe.getStages().get(s);
-				if (stage instanceof IDMap) idMap = (IDMap)stage;
-			}
-			catch (Exception ex) { idMap = null; }
-		}
+		if (stage instanceof IDMap) idMap = (IDMap)stage;
 
 		//Now make either the page listing the various IDMap stages
 		//or the search page for the specified IDMap.
@@ -99,42 +84,25 @@ public class IDMapServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
 
-		if (req.hasParameter("suppress")) home = "";
-
 		//Get the parameters from the form.
 		String keyType = req.getParameter("keytype");
 		String keys = req.getParameter("keys");
 		String format = req.getParameter("format");
-		String pParam = req.getParameter("p");
-		String sParam = req.getParameter("s");
-		if (req.hasParameter("suppress")) home = "";
 
 		//Find the IDMap stage.
 		IDMap idMap = null;
-		int p = -1;
-		int s = -1;
-		try {
-			p = Integer.parseInt(pParam);
-			s = Integer.parseInt(sParam);
-			Pipeline pipe = Configuration.getInstance().getPipelines().get(p);
-			PipelineStage stage = pipe.getStages().get(s);
-			if (stage instanceof IDMap) idMap = (IDMap)stage;
-		}
-		catch (Exception ex) {
-			doGet(req,res);
-			return;
-		}
+		if (stage instanceof IDMap) idMap = (IDMap)stage;
+
 		if (idMap == null) {
 			res.setResponseCode(res.notfound);
 			res.setContentType("html");

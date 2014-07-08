@@ -8,6 +8,7 @@
 package org.rsna.ctp.servlets;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
@@ -31,10 +32,9 @@ import org.w3c.dom.Element;
  * started. The context is the id of the LookupTableChecker stage.
  * This servlet responds to both HTTP GET and POST.
  */
-public class LookupTableCheckerServlet extends Servlet {
+public class LookupTableCheckerServlet extends CTPServlet {
 
 	static final Logger logger = Logger.getLogger(LookupTableCheckerServlet.class);
-	String home = "/";
 
 	/**
 	 * Construct a LookupTableCheckerServlet.
@@ -52,18 +52,15 @@ public class LookupTableCheckerServlet extends Servlet {
 	 * @param req The HttpServletRequest provided by the servlet container.
 	 * @param res The HttpServletResponse provided by the servlet container.
 	 */
-	public void doGet(
-			HttpRequest req,
-			HttpResponse res) throws Exception {
+	public void doGet(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!userIsAuthorized) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
 		}
-
-		if (req.hasParameter("suppress")) home = "";
 
 		//Make a page containing a form for updating the lookup table.
 		res.write(getEditorPage());
@@ -105,12 +102,11 @@ public class LookupTableCheckerServlet extends Servlet {
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
-	public void doPost(
-			HttpRequest req,
-			HttpResponse res) {
+	public void doPost(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin") || !req.isReferredFrom(context)) {
+		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
@@ -154,4 +150,5 @@ public class LookupTableCheckerServlet extends Servlet {
 		res.write(getEditorPage());
 		res.send();
 	}
+
 }

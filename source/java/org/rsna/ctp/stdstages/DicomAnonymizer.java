@@ -118,8 +118,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		boolean admin = (user != null) && user.hasRole("admin");
-		if (admin) {
+		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
 			if (lookupTableFile != null) {
 				links.addFirst( new SummaryLink("/lookup"+qs, null, "Edit the Lookup Table", false) );

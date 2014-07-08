@@ -364,8 +364,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		boolean admin = (user != null) && user.hasRole("admin");
-		if (admin) {
+		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
 			if (zipScriptFile != null) {
 				links.addFirst( new SummaryLink("/script"+qs+"&f=2", null, "Edit the Stage Zip Filter Script File", false) );

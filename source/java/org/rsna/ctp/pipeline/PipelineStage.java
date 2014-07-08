@@ -36,6 +36,8 @@ public interface PipelineStage {
 
 	public LinkedList<SummaryLink> getLinks(User user);
 
+	public boolean allowsAdminBy(User user);
+
 	public Pipeline getPipeline();
 
 	public void setPipeline(Pipeline pipeline);

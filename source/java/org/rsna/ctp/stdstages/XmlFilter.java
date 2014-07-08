@@ -77,8 +77,7 @@ public class XmlFilter extends AbstractPipelineStage implements Processor, Scrip
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		boolean admin = (user != null) && user.hasRole("admin");
-		if (admin) {
+		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex+"&f=0";
 			if (scriptFile != null) {
 				links.addFirst( new SummaryLink("/script"+qs, null, "Edit the Script File", false) );

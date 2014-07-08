@@ -382,7 +382,7 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insert(FileObject fileObject) {
-		File qfile = getTempFile(fileObject.getExtension());
+		File qfile = getTempFile(fileObject.getStandardExtension());
 		boolean ok = fileObject.moveTo(qfile);
 		if (ok) {
 			try { index(fileObject); }

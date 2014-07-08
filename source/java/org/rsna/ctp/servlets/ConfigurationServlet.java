@@ -44,7 +44,7 @@ public class ConfigurationServlet extends Servlet {
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
 
-		//Require that the user be an admin or be local
+		//Require that the user be an admin
 		if (!req.userHasRole("admin")) {
 			res.setResponseCode(res.forbidden);
 			res.send();
