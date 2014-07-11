@@ -320,8 +320,7 @@ public class DICOMAnonymizerContext {
 	 * VR (SH) when storing an empty element of VR = PN. It also handles the
 	 * problem in older dcm4che versions which threw an exception when an
 	 * empty DA element was created. It also forces the VR of private
-	 * elements to UN unless they are in the private creator block, in which
-	 * case they are LO. And finally, it handles multi-valued elements.
+	 * elements to LO. And finally, it handles multi-valued elements.
 	 * @param tag the element tag.
 	 * @param vr the value representation.
 	 * @param value the value to store.
@@ -336,7 +335,7 @@ public class DICOMAnonymizerContext {
 			if ((tag & 0xffff) < 0x100) outDS.putLO(tag,value);
 			else outDS.putLO(tag,value);
 			//*******************************************
-			//Replaced bu the line above
+			//Replaced by the line above
 			//else outDS.put(tag,value.getBytes("UTF-8"));
 			//*******************************************
 		}
