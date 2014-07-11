@@ -7,18 +7,21 @@
 
 package org.rsna.ctp.stdstages.anonymizer.dicom;
 
+import java.util.LinkedList;
 import java.util.Properties;
+import org.apache.log4j.Logger;
 import org.dcm4che.data.Dataset;
+import org.dcm4che.dict.Tags;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
-import java.util.LinkedList;
-import org.dcm4che.dict.Tags;
 
 /**
  * Encapsulate one function call, providing the parsing for the
  * function name and the argument list.
  */
 public class FnCall {
+
+	static final Logger logger = Logger.getLogger(FnCall.class);
 
 	static final char escapeChar = '\\';
 	static final String ifFn	 = "if";
@@ -55,6 +58,8 @@ public class FnCall {
 	public FnCall(String call, DICOMAnonymizerContext context, int thisTag) {
 		this.context = context;
 		this.thisTag = thisTag;
+
+		logger.debug("FnCall: \""+call+"\"");
 
 		//find the function name
 		int k = call.indexOf("(");

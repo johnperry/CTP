@@ -587,6 +587,7 @@ public class DICOMAnonymizer {
 
 	//Create the replacement for one element.
 	public static String makeReplacement(String cmd, DICOMAnonymizerContext context, int thisTag) throws Exception {
+		logger.debug("Script: \""+cmd+"\"");
 		if (cmd == null) return "";
 		String out = "";
 		char c;

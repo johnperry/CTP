@@ -17,7 +17,9 @@ import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Processor;
 import org.rsna.ctp.plugin.Plugin;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdplugins.AuditLog;
+import org.rsna.server.User;
 import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
@@ -218,5 +220,18 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		catch (Exception ex) {
 			logger.warn("Unable to construct the AuditLog entry", ex);
 		}
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if ((user != null) && user.hasRole("admin") && !auditLogID.equals("")) {
+			links.addFirst( new SummaryLink("/"+auditLogID, null, "Search the AuditLog", false) );
+		}
+		return links;
 	}
 }

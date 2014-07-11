@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2011 by the Radiological Society of North America
+*  Copyright 2014 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -227,10 +227,13 @@ public class Installer extends JFrame {
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
 	private File getInstallerProgramFile() {
 		cp.appendln(Color.black, "Looking for the installer program file");
-		String name = getProgramName();
-		File programFile = new File(name+"-installer.jar");
+		File programFile;
+		try { programFile = new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()); }
+		catch (Exception ex) {
+			String name = getProgramName();
+			programFile = new File(name+"-installer.jar");
+		}
 		programFile = new File( programFile.getAbsolutePath() );
-
 		if (programFile.exists()) cp.appendln(Color.black, "...found "+programFile);
 		else {
 			cp.appendln(Color.red, "...unable to find the program file "+programFile+"\n...exiting.");
@@ -391,6 +394,14 @@ public class Installer extends JFrame {
 		File dicom = new File(profiles, "dicom");
 		deleteAll(dicom);
 		dicom.mkdirs();
+
+		//Remove the index.html file so it will be rebuilt from
+		//example-index.html when the system next starts.
+		File root = new File(dir, "ROOT");
+		if (root.exists()) {
+			File index = new File(root, "index.html");
+			index.delete();
+		}
 	}
 
 	//Let the user select an installation directory.
@@ -679,7 +690,7 @@ public class Installer extends JFrame {
 			+	"<center>"
 			+	"<h1 style=\"color:#2977b9\">" + windowTitle + "</h1>"
 			+	"Version: " + programDate + "<br>"
-			+	"Copyright 2011: RSNA<br><br>"
+			+	"Copyright 2014: RSNA<br><br>"
 
 			+	"<p>"
 
