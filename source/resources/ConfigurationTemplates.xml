@@ -337,7 +337,7 @@
 		<Processor>
 			<attr name="name" required="yes" default="DicomTranscoder"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomTranscoder" editable="no"/>
-			<attr name="root" required="yes" default="roots/DicomDecompressor"/>
+			<attr name="root" required="yes" default="roots/DicomTranscoder"/>
 			<attr name="script" required="yes" default="scripts/DicomTranscoder.script">
 				<helptext>The script file determining whether objects are to be transcoded</helptext>
 			</attr>
@@ -604,7 +604,7 @@
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="dicomScript" required="no" default=""/>
 			<attr name="url" required="yes" default="">
-				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip.port)</helptext>
+				<helptext>URL of the destination DICOM Storage SCP (dicom://calledAET:callingAET@ip:port)</helptext>
 			</attr>
 			<attr name="associationTimeout" required="no" default="">
 				<helptext>The maximum time (in seconds) after the last transmission to wait
@@ -772,7 +772,7 @@
 		<auditLogTags>List of DICOM tags to log, separated by semicolons (tag1; tag2; etc.)</auditLogTags>
 		<cacheID>The id attribute of an ObjectCache stage from which to obtain PHI for the hierarchy</cacheID>
 		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
-		<calledAETTag>DICOM tag in which to store the Called AE Title (ggggeeee, optional)</calledAETTag>
+		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
 		<cc>The email addresses of the copied recipients, separated by commas.</cc>
 		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for processing</dicomScript>

@@ -165,6 +165,7 @@ public class HttpImportService extends AbstractImportService {
 				else {
 					discardPostedFile(req);
 					res.setResponseCode(res.unauthorized);
+					res.setHeader("WWW-Authenticate", "Basic realm=\"HttpImportService\"");
 				}
 				res.send();
 			}
