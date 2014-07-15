@@ -75,6 +75,7 @@ public class DicomStorageSCP extends DcmServiceBase {
     private final long rspDelay = 0L;
 
 	private File temp = null;
+	private String localAddress = null; //the IP on which to open the server
 	private int calledAETTag = 0;
 	private int callingAETTag = 0;
 	private int connectionIPTag = 0;
@@ -99,6 +100,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 
     public DicomStorageSCP(DicomImportService dicomImportService) {
 		this.dicomImportService  = dicomImportService;
+		localAddress = dicomImportService.getLocalAddress();
 		temp = dicomImportService.getTempDirectory();
 		calledAETTag = dicomImportService.getCalledAETTag();
 		callingAETTag = dicomImportService.getCallingAETTag();
@@ -266,6 +268,9 @@ public class DicomStorageSCP extends DcmServiceBase {
 
     private void initServer(int port) {
         server.setPort(port);
+        if ((localAddress != null) && !localAddress.trim().equals("")) {
+        	server.setLocalAddress(localAddress.trim());
+		}
         server.setMaxClients(maxClients);
         handler.setRqTimeout(rqTimeout);
         handler.setDimseTimeout(dimseTimeout);

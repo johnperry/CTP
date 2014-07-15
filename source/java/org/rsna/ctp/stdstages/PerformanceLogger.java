@@ -30,6 +30,7 @@ public class PerformanceLogger extends AbstractPipelineStage implements Processo
 	long startTime = 0;
 
 	int count = 0;
+	int interval = 1;
 	long prevStageTime = 0;
 	final String margin = "\n                              ";
 
@@ -43,6 +44,7 @@ public class PerformanceLogger extends AbstractPipelineStage implements Processo
 	 */
 	public PerformanceLogger(Element element) {
 		super(element);
+		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval").trim(), 1) );
 		count = 0;
 	}
 
@@ -55,36 +57,38 @@ public class PerformanceLogger extends AbstractPipelineStage implements Processo
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
 
-		Pipeline pipe = getPipeline();
-		StringBuffer sb = new StringBuffer();
-		for (PipelineStage stage : pipe.getStages()) {
-			long timeOut = stage.getLastFileOutTime();
-			long processTime = 0;
-			if (stage instanceof ImportService) {
-				if ((prevStageTime > 0) && (timeOut > prevStageTime)) {
-					processTime = timeOut - prevStageTime;
+		if ((count % interval) == 0) {
+			Pipeline pipe = getPipeline();
+			StringBuffer sb = new StringBuffer();
+			for (PipelineStage stage : pipe.getStages()) {
+				long timeOut = stage.getLastFileOutTime();
+				long processTime = 0;
+				if (stage instanceof ImportService) {
+					if ((prevStageTime > 0) && (timeOut > prevStageTime)) {
+						processTime = timeOut - prevStageTime;
+					}
+					prevStageTime = timeOut;
 				}
-				prevStageTime = timeOut;
+				else if (stage.equals(this)) {
+					long currentTime = System.currentTimeMillis();
+					processTime = currentTime - prevStageTime;
+					prevStageTime = currentTime;
+				}
+				else {
+					processTime = timeOut - prevStageTime;
+					prevStageTime = timeOut;
+				}
+				sb.append(margin + String.format("%6d",processTime) + " ms: " + stage.getName());
 			}
-			else if (stage.equals(this)) {
-				long currentTime = System.currentTimeMillis();
-				processTime = currentTime - prevStageTime;
-				prevStageTime = currentTime;
-			}
-			else {
-				processTime = timeOut - prevStageTime;
-				prevStageTime = timeOut;
-			}
-			sb.append(margin + String.format("%6d",processTime) + " ms: " + stage.getName());
-		}
 
-		logger.info(
-			name
-			+ ": (" + (count+1) + ") "
-			+ fileObject.getClassName()
-			+ String.format(" [%,d bytes]", fileObject.getFile().length())
-			+ sb.toString()
-		);
+			logger.info(
+				name
+				+ ": (" + (count+1) + ") "
+				+ fileObject.getClassName()
+				+ String.format(" [%,d bytes]", fileObject.getFile().length())
+				+ sb.toString()
+			);
+		}
 		count++;
 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());

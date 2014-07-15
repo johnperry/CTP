@@ -26,6 +26,7 @@ public class DicomImportService extends AbstractImportService {
 	static final Logger logger = Logger.getLogger(DicomImportService.class);
 
 	DicomStorageSCP dicomStorageSCP = null;
+	String ip = "";
 	int port = 104;
 	int calledAETTag = 0;
 	int callingAETTag = 0;
@@ -48,6 +49,9 @@ public class DicomImportService extends AbstractImportService {
 	 */
 	public DicomImportService(Element element) throws Exception {
 		super(element);
+
+		//Get the address on which to open the SCP
+		ip = element.getAttribute("ip").trim();
 
 		//Get the port
 		port = StringUtil.getInt(element.getAttribute("port").trim(), port);
@@ -113,6 +117,14 @@ public class DicomImportService extends AbstractImportService {
 	public void shutdown() {
 		dicomStorageSCP.stop();
 		stop = true;
+	}
+
+	/**
+	 * Get the IP address onm which to open the SCP
+	 * @return the IP address on which to listen for DICOM transfers
+	 */
+	public String getLocalAddress() {
+		return ip;
 	}
 
 	/**

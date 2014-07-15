@@ -161,6 +161,9 @@
 			<attr name="name" required="yes" default="DicomImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomImportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomImportService"/>
+			<attr name="ip" required="no" default="">
+				<helptext>The IP address on which to open the SCP</helptext>
+			</attr>
 			<attr name="port" required="yes" default="104"/>
 			<attr name="callingAETTag" required="no" default=""/>
 			<attr name="calledAETTag" required="no" default=""/>
@@ -243,6 +246,9 @@
 		<Processor>
 			<attr name="name" required="yes" default="PerformanceLogger"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PerformanceLogger" editable="no"/>
+			<attr name="interval" required="yes" default="1">
+				<helptext>Interval (in objects received) between actions taken by this stage</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>
