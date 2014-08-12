@@ -1014,6 +1014,28 @@ public class DicomObject extends FileObject {
 		return defaultString;
 	}
 
+	//Private method to find the DicomElement referenced by a tag array.
+	//This method is used by getElementBytes and getElementString
+	private DcmElement getElement(int[] tags) {
+		DcmElement de = null;
+		try {
+			if (tags.length == 0) return null;
+			Dataset ds = dataset;
+			//Walk the SQ datasets to get to the last one
+			for (int k=0; k<tags.length-1; k++) {
+				de = ds.get(tags[k]);
+				if (de == null) return null;
+				if (!VRs.toString(de.vr()).equals("SQ")) return null;
+				ds = de.getItem(0);
+				if (ds == null) return null;
+			}
+			//Now get the element specified by the last tag
+			de = ds.get(tags[tags.length -1]);
+		}
+		catch (Exception keepNull) { }
+		return de;
+	}
+
 	/**
 	 * Get the contents of a DICOM element in the DicomObject's dataset as a
 	 * byte array. This method supports accessing the item datasets of SQ elements,
@@ -1026,20 +1048,7 @@ public class DicomObject extends FileObject {
 	 */
 	public byte[] getElementBytes(int[] tags) {
 		try {
-			if (tags.length == 0) return null;
-
-			DcmElement de = null;
-			Dataset ds = dataset;
-			//Walk the SQ datasets to get to the last one
-			for (int k=0; k<tags.length-1; k++) {
-				de = ds.get(tags[k]);
-				if (de == null) return null;
-				if (!VRs.toString(de.vr()).equals("SQ")) return null;
-				ds = de.getItem(0);
-				if (ds == null) return null;
-			}
-			//Now get the element specified by the last tag
-			de = ds.get(tags[tags.length -1]);
+			DcmElement de = getElement(tags);
 			if (de == null) return null;
 			int len = de.length();
 			ByteBuffer bb = de.getByteBuffer();
@@ -1068,6 +1077,32 @@ public class DicomObject extends FileObject {
 			return bytes;
 		}
 		catch (Exception e) { return null; }
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset as a
+	 * String. This method supports accessing the item datasets of SQ elements,
+	 * but it only searches the first item dataset at each level.
+	 * It returns null if the element cannot be obtained.
+	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
+	 * where all the tags but the last must refer to an SQ element.
+	 * @return the String value of the element, or the empty string
+	 * if the element does not exist.
+	 */
+	public String getElementString(int[] tags) {
+		try {
+			DcmElement de = getElement(tags);
+			if (de == null) return "";
+			String[] s = de.getStrings(charset);
+			if (s.length == 1) return s[0];
+			if (s.length == 0) return "";
+			StringBuffer sb = new StringBuffer( s[0] );
+			for (int i=1; i<s.length; i++) {
+				sb.append( "|" + s[i] );
+			}
+			return sb.toString();
+		}
+		catch (Exception e) { return ""; }
 	}
 
 	/**

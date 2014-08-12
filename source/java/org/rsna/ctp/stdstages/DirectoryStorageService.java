@@ -161,6 +161,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 					//Now construct the child directories under the root.
 					for (String dir : dirs) {
+						logger.debug("...processing directory path element: "+dir);
 						dir = replace(dir, xdob);
 						dir = dir.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 						dir = dir.replaceAll(filter, "");
@@ -322,13 +323,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		String value = "";
 		try {
 			int[] tags = DicomObject.getTagArray(group);
-			if (tags.length != 0) {
-				byte[] bytes = dob.getElementBytes(tags);
-				value = new String(bytes);
-				value = value.trim();
-			}
+			value = dob.getElementString(tags);
 		}
-		catch (Exception ex) { }
+		catch (Exception ex) { logger.debug("......exception processing: "+group); }
 		return value;
 	}
 

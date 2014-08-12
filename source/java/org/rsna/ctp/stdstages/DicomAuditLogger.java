@@ -229,7 +229,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		if ((user != null) && user.hasRole("admin") && !auditLogID.equals("")) {
+		if ((user != null) && user.hasRole("admin") && !auditLogID.equals("") && (auditLog != null)) {
 			links.addFirst( new SummaryLink("/"+auditLogID, null, "Search the AuditLog", false) );
 		}
 		return links;
