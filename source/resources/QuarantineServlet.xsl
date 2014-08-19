@@ -34,6 +34,9 @@
 				</h1>
 
 				<xsl:if test="Study">
+					<input type="button" value="Rebuild Index"
+						onclick="window.open('/{$context}/rebuildIndex?p={$p}&amp;s={$s}','_self');"/>
+					<xsl:text>&#160;&#160;&#160;</xsl:text>
 					<input type="button" value="Queue All"
 						onclick="window.open('/{$context}/queueAll?p={$p}&amp;s={$s}','_self');"/>
 					<xsl:text>&#160;&#160;&#160;</xsl:text>

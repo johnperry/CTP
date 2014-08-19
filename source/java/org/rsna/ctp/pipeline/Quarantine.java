@@ -26,7 +26,7 @@ import org.w3c.dom.Element;
 
 
 /**
- * A class representing a quarantine directory and providing
+ * A singleton class representing the quarantine directories and providing
  * methods for inserting FileObjects.
  */
 public class Quarantine {
@@ -45,7 +45,7 @@ public class Quarantine {
 	private static final String seriesTableName = "SERIES";
 	private static final String instanceTableName = "INSTANCE";
 	private static final String versionKey = "version";
-	private static final String versionID = "1";
+	private static final String versionID = "2";
 
 	private HTree versionTable = null;
 	private HTree studyTable = null; 	//Map from StudyInstanceUID to QStudy
@@ -89,16 +89,23 @@ public class Quarantine {
 			String v = (String)versionTable.get(versionKey);
 			if ((v == null) || !v.equals(versionID)) {
 				logger.info("Rebuilding quarantine index: "+directory);
-				closeIndex();
-				deleteIndex();
-				openIndex();
-				loadIndex();
+				rebuildIndex();
 			}
 		}
 		catch (Exception ex) {
 			logger.warn("Unable to create the quarantine index for "+directory);
 			throw ex;
 		}
+	}
+
+	/**
+	 * Rebuild the index of the directory from scratch.
+	 */
+	public synchronized void rebuildIndex() throws Exception {
+		closeIndex();
+		deleteIndex();
+		openIndex();
+		loadIndex();
 	}
 
 	/**
@@ -590,6 +597,7 @@ public class Quarantine {
 			file.setAttribute("type", q.type);
 			file.setAttribute("instanceNumber", q.instanceNumber);
 			file.setAttribute("filename", q.filename);
+			file.setAttribute("lmdate", q.lmdate);
 		}
 		return doc;
 	}

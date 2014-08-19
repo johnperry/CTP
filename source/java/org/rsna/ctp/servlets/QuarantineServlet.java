@@ -72,12 +72,10 @@ public class QuarantineServlet extends CTPServlet {
 
 		//Get the parameters and find the quarantine
 
-		/*
-		logger.info(req.toString()+"\n"+
+		if (logger.isDebugEnabled()) logger.debug(req.toString()+"\n"+
 			("pipeline is "+((pipeline!=null)?"not ":"")+"null")+"  (p="+p+")\n"+
 			("stage is "+((stage!=null)?"not ":"")+"null")+"  (s="+s+")\n"+
 			"command: \""+command+"\"");
-		*/
 
 		if (stage != null) quarantine = stage.getQuarantine();
 
@@ -97,6 +95,14 @@ public class QuarantineServlet extends CTPServlet {
 			if (quarantine != null) {
 				QueueManager queueManager = getClosestQueueManager();
 				if (queueManager != null) quarantine.queueAll(queueManager);
+			}
+			studiesPage(req, res, p, s);
+		}
+
+		else if (command.equals("rebuildIndex")) {
+			if (quarantine != null) {
+				try { quarantine.rebuildIndex(); }
+				catch (Exception ignore) { }
 			}
 			studiesPage(req, res, p, s);
 		}

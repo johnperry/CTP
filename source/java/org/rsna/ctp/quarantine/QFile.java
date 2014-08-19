@@ -23,6 +23,7 @@ public class QFile implements Serializable, Comparable<QFile> {
 	public final String type;
 	public final String seriesUID;
 	public final String studyUID;
+	public final String lmdate;
 
 	/**
 	 * Construct a QFile from a File.
@@ -38,11 +39,13 @@ public class QFile implements Serializable, Comparable<QFile> {
 	 * @param fileObject the quarantined object.
 	 */
 	public QFile(FileObject fileObject) {
+		File file = fileObject.getFile();
 		this.instanceNumber = getInstanceNumber(fileObject);
 		this.seriesUID = QSeries.getSeriesUID(fileObject);
 		this.studyUID = QStudy.getStudyUID(fileObject);
-		this.filename = fileObject.getFile().getName();
+		this.filename = file.getName();
 		this.type = fileObject.getType();
+		this.lmdate = StringUtil.getDate( file.lastModified(), "." );
 	}
 
 

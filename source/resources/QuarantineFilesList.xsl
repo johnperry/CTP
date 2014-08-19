@@ -18,6 +18,9 @@
 						<td class="left" style="cursor:default" onmouseenter="showImagePopup('{@filename}');">
 							<xsl:value-of select="@type"/>
 						</td>
+						<td class="center" style="cursor:default">
+							<xsl:value-of select="@lmdate"/>
+						</td>
 						<td class="right" style="cursor:default">
 							<xsl:value-of select="@instanceNumber"/>
 						</td>
@@ -55,6 +58,7 @@
 <xsl:template name="FilesHeadings">
 	<tr>
 		<th class="left">Type</th>
+		<th class="center">Date</th>
 		<th class="right">Instance</th>
 		<th class="left">Name</th>
 	</tr>
