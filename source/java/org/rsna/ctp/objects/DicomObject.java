@@ -910,6 +910,20 @@ public class DicomObject extends FileObject {
 
 	//Do the actual work of getting an element value from a dataset
 	private String getElementValue(Dataset dataset, int tag, String defaultString) {
+
+		//Handle FileMetaInfo references
+		if ((fileMetaInfo != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
+			DcmElement el = fileMetaInfo.get(tag);
+			if (el == null) return defaultString;
+			try {
+				String value = el.getString(charset);
+				if (value == null) return defaultString;
+				return value;
+			}
+			catch (Exception ex) { return defaultString; }
+		}
+
+		//Not FMI, handle DataSet references
 		boolean ctp = false;
 		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
 			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);

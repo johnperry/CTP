@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.dcm4che.data.Dataset;
 import org.dcm4che.data.DcmElement;
+import org.dcm4che.data.FileMetaInfo;
 import org.dcm4che.data.SpecificCharacterSet;
 import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.VRs;
@@ -38,6 +39,7 @@ public class DICOMAnonymizerContext {
 	public Properties cmds;
 	public Properties lkup;
 	public IntegerTable intTable;
+	public FileMetaInfo inFMI;
 	public Dataset inDS;
 	public Dataset outDS;
 
@@ -72,6 +74,7 @@ public class DICOMAnonymizerContext {
 		this.lkup = lkup;
 		this.intTable = intTable;
 		this.inDS = inDS;
+		this.inFMI = inDS.getFileMetaInfo();
 		this.outDS = outDS;
 
 		//Build the index of private groups
@@ -281,6 +284,16 @@ public class DICOMAnonymizerContext {
 	 * or null if the element is missing.
 	 */
 	public String contents(int tag) throws Exception {
+		SpecificCharacterSet cs = inDS.getSpecificCharacterSet();
+
+		//Handle FileMetaInfo references
+		if ((inFMI != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
+			DcmElement el = inFMI.get(tag);
+			if (el == null) throw new Exception(Tags.toString(tag) + " missing");
+			return el.getString(cs);
+		}
+
+		//Not FMI, handle DataSet references
 		boolean ctp = false;
 		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
 			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
@@ -292,7 +305,6 @@ public class DICOMAnonymizerContext {
 
 		if (ctp) return new String(inDS.getByteBuffer(tag).array());
 
-		SpecificCharacterSet cs = inDS.getSpecificCharacterSet();
 		String[] s = el.getStrings(cs);
 		if (s.length == 1) return s[0];
 		if (s.length == 0) return "";
