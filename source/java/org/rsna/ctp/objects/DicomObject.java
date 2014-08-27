@@ -920,7 +920,8 @@ public class DicomObject extends FileObject {
 				if (value == null) return defaultString;
 				return value;
 			}
-			catch (Exception ex) { return defaultString; }
+			catch (Exception returnDefault) { }
+			return defaultString;
 		}
 
 		//Not FMI, handle DataSet references
@@ -1044,7 +1045,11 @@ public class DicomObject extends FileObject {
 				if (ds == null) return null;
 			}
 			//Now get the element specified by the last tag
-			de = ds.get(tags[tags.length -1]);
+			int tag = tags[tags.length -1];
+			if ((fileMetaInfo != null) && (tag & 0x7FFFFFFF) < 0x80000) {
+				de = fileMetaInfo.get(tag);
+			}
+			else de = ds.get(tag);
 		}
 		catch (Exception keepNull) { }
 		return de;
