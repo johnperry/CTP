@@ -84,4 +84,14 @@ public class PixelScript {
 		}
 		return signatures;
 	}
+
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for (Signature sig : signatures) {
+			sb.append(sig.script + "\n");
+			sb.append(sig.regions.toString() + "\n");
+			sb.append("-------------\n");
+		}
+		return sb.toString();
+	}
 }

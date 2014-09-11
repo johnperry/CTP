@@ -112,11 +112,13 @@ public class DICOMPixelAnonymizer {
 			String photometricInterpretation = getString(dataset, Tags.PhotometricInterpretation, "");
 			if ((rows == 0) || (columns == 0)) {
 				close(in);
+				logger.debug("Unable to get the rows and columns");
 				return AnonymizerStatus.SKIP(inFile, "Unable to get the rows and columns");
 			}
 			if ((bitsAllocated % 8) != 0) {
 				close(in);
-				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
+				logger.debug("Unsupported BitsAllocated: "+bitsAllocated);
+ 				return AnonymizerStatus.SKIP(inFile, "Unsupported BitsAllocated: "+bitsAllocated);
 			}
 
 			//Set the encoding
@@ -131,6 +133,7 @@ public class DICOMPixelAnonymizer {
 /**/		if (encoding.encapsulated) {
 				logger.debug("Encapsulated pixel data found");
 				close(in);
+				logger.debug("Encapsulated pixel data not supported");
 				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
 			}
 
@@ -140,6 +143,7 @@ public class DICOMPixelAnonymizer {
             out = new FileOutputStream(tempFile);
 
             //Create and write the metainfo for the encoding we are using
+			logger.debug("About to create and write the metadata");
 			fmi = oFact.newFileMetaInfo(dataset, prefEncodingUID);
             dataset.setFileMetaInfo(fmi);
             fmi.write(out);
@@ -150,6 +154,7 @@ public class DICOMPixelAnonymizer {
 			}
 
 			//Write the dataset as far as was parsed
+			logger.debug("About to write the dataset up to the pixels");
 			dataset.writeDataset(out, encoding);
 
 			//Process the pixels
@@ -281,6 +286,7 @@ public class DICOMPixelAnonymizer {
 							boolean test) throws Exception {
 
 		int len = parser.getReadLength();
+		logger.debug("ProcessPixels:");
 		logger.debug("Read length       = "+len);
 
 		int bytesPerPixel = bitsAllocated/8;
