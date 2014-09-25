@@ -251,8 +251,8 @@ public class DICOMAnonymizer {
 					dataset.writeHeader(
 						out,
 						encoding,
-						tag,
-						len,
+						parser.getReadTag(),
+						parser.getReadVR(),
 						parser.getReadLength());
 					writeValueTo(parser, buffer, out, swap);
 				}
