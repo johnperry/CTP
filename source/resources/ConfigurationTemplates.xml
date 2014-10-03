@@ -162,7 +162,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomImportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomImportService"/>
 			<attr name="ip" required="no" default="">
-				<helptext>The IP address on which to open the SCP</helptext>
+				<helptext>The IP address on which to open the SCP (use only when the server has multiple NICs).</helptext>
 			</attr>
 			<attr name="port" required="yes" default="104"/>
 			<attr name="callingAETTag" required="no" default=""/>

@@ -434,7 +434,7 @@ public class DICOMAnonymizer {
 					value = makeReplacement(script, context, tag);
 					value = (value != null) ? value.trim() : "";
 
-					if (value.equals("") || value.contains("@remove()")) {
+					if (value.contains("@remove()")) { //note, value.equals("") no longer supported
 						try { ds.remove(tag); }
 						catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }
 					}
