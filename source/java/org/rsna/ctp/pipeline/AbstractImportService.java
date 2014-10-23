@@ -99,17 +99,19 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 	 * @param file the file that was received.
 	 */
 	public synchronized void fileReceived(File file) {
-		count++; //Count the file
-		//The received file is in the temp directory.
-		File qFile = getQueueManager().enqueue(file);
+		if (file.length() > 0) {
+			count++; //Count the file
+			//The received file is in the temp directory.
+			File qFile = getQueueManager().enqueue(file);
+			//Now log the file. Here, we're logging the enqueued
+			//file instead of the version in the temp directory.
+			lastFileIn = qFile;
+			lastTimeIn = System.currentTimeMillis();
+		}
 		//Enqueuing the file does not delete it
 		//from the source directory, so we have to
 		//delete it here.
 		file.delete();
-		//Now log the file. Here, we're logging the enqueued
-		//file instead of the version in the temp directory.
-		lastFileIn = qFile;
-		lastTimeIn = System.currentTimeMillis();
 	}
 
 	/**

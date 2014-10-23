@@ -31,6 +31,8 @@ public class HttpExportService extends AbstractExportService {
 
 	static final Logger logger = Logger.getLogger(HttpExportService.class);
 
+	final int readTimeout = 5000;
+
 	URL url;
 	String protocol;
 	boolean zip = false;
@@ -99,6 +101,7 @@ public class HttpExportService extends AbstractExportService {
 
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
+			conn.setReadTimeout(readTimeout);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
@@ -162,7 +165,7 @@ public class HttpExportService extends AbstractExportService {
 			//Get the response.
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
-			String result = FileUtil.getText( conn.getInputStream() );
+			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8 );
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
