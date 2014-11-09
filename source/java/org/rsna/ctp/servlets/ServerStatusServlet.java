@@ -11,11 +11,14 @@ import java.io.File;
 import org.rsna.server.*;
 import org.rsna.servlets.Servlet;
 import org.rsna.ctp.Configuration;
+import org.rsna.util.Attack;
+import org.rsna.util.AttackLog;
 
 /**
- * The ServerStatusServlet. This servlet returns a text/plain
- * response containing the number of active threads currently
- * servicing requests.
+ * The ServerStatusServlet. This servlet returns the status of the
+ * server, including the number of active threads currently
+ * servicing requests, the size of the server thread pool, and
+ * the number of requests waiting in the queue.
  */
 public class ServerStatusServlet extends Servlet {
 
@@ -37,8 +40,12 @@ public class ServerStatusServlet extends Servlet {
 		HttpServer server = Configuration.getInstance().getServer();
 		int maxThreads = server.getMaxThreads();
 		int activeThreads = server.getActiveThreads();
+		int queuedThreads = server.getQueuedThreads();
 
-		String response = activeThreads + " of " + maxThreads + " server threads are currently active.";
+		String response = activeThreads + " of " + maxThreads + " server threads are currently active.\n"
+							+ queuedThreads + " thread"
+							+ ((queuedThreads == 1) ? " is" : "s are")
+							+ " waiting in the queue.";
 
 		res.write(response);
 		res.setContentType("txt");
