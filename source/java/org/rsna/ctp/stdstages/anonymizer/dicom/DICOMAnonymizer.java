@@ -429,7 +429,7 @@ public class DICOMAnonymizer {
 			else if (hasScript) {
 				if (tag != Tags.DeIdentificationMethodCodeSeq) {
 					//The element wasn't handled globally
-					//and it isn't DeIdentificationMethodCodeSeq,
+					//and it isn't DeIdentificationMethodCodeSequence,
 					//process it now.
 					value = makeReplacement(script, context, tag);
 					value = (value != null) ? value.trim() : "";

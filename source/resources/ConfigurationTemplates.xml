@@ -1176,6 +1176,35 @@
 				root="roots/HttpExportService"
 				url="http://ncias-d823-v.nci.nih.gov:23104/" />
 		</Pipeline>
+		<Pipeline name="CTP Classroom">
+			<DicomImportService
+				class="org.rsna.ctp.stdstages.DicomImportService"
+				logConnections="no"
+				name="DICOM Server Import"
+				port="8104"
+				quarantine="quarantines/classroom/DicomImportService"
+				root="roots/classroom/DicomImportService"/>
+			<FileStorageService
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				name="FileStorageService-PHI"
+				quarantine="quarantines/classroom/FileStorageService1"
+				returnStoredFile="no"
+				root="roots/classroom/FileStorageService1"/>
+			<DicomAnonymizer
+				class="org.rsna.ctp.stdstages.DicomAnonymizer"
+				lookupTable="scripts/LookupTable.properties"
+				name="DicomAnonymizer"
+				quarantine="quarantines/classroom/DicomAnonymizer"
+				root="roots/classroom/DicomAnonymizer"
+				script="scripts/DicomAnonymizer.script"/>
+			<FileStorageService
+				class="org.rsna.ctp.stdstages.FileStorageService"
+				name="FileStorageService-Anonymized"
+				port="8105"
+				quarantine="quarantines/classroom/FileStorageService2"
+				returnStoredFile="no"
+				root="roots/classroom/FileStorageService2"/>
+		</Pipeline>
 
 	</StandardPipelines>
 
