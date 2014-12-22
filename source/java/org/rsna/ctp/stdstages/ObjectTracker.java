@@ -65,8 +65,7 @@ public class ObjectTracker extends AbstractPipelineStage implements Processor {
 				logger.warn("Unable to commit and close the database.");
 			}
 		}
-		//Set stop so the isDown method will return the correct value.
-		stop = true;
+		super.shutdown();
 	}
 
 	/**

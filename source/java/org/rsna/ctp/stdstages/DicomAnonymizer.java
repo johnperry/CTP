@@ -175,6 +175,6 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	 */
 	public void shutdown() {
 		intTable.close();
-		stop = true;
+		super.shutdown();
 	}
 }

@@ -117,8 +117,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 				logger.debug("Unable to commit and close the database");
 			}
 		}
-		//Set stop so the isDown method will return the correct value.
-		stop = true;
+		super.shutdown();
 	}
 
 	/**

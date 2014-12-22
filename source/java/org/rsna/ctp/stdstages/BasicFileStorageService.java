@@ -96,7 +96,6 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	 * Stop the stage.
 	 */
 	public void shutdown() {
-		//Commit and close the database
 		if (recman != null) {
 			try {
 				recman.commit();
@@ -106,8 +105,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 				logger.warn("Unable to commit and close the index.");
 			}
 		}
-		//Set stop so the isDown method will return the correct value.
-		stop = true;
+		super.shutdown();
 	}
 
 	private void getIndex(String indexPath) {

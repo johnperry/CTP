@@ -90,7 +90,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	 */
 	public void shutdown() {
 		if (verifierService != null) verifierService.stopServer();
-		stop = true;
+		super.shutdown();
 	}
 
 	/**

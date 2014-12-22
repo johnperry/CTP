@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
+import org.rsna.ctp.pipeline.Quarantine;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
 import org.rsna.server.User;
@@ -105,6 +106,9 @@ public class ShutdownServlet extends Servlet {
 			try { Thread.sleep(2000); }
 			catch (Exception quit) { break; }
 		}
+
+		//Close all thed Quarantines.
+		Quarantine.closeAll();
 
 		//Log the result
 		boolean clean = pipesClean & pluginsClean;

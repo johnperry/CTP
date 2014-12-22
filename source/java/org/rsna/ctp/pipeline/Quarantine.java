@@ -109,6 +109,16 @@ public class Quarantine {
 	}
 
 	/**
+	 * Close all quarantines.
+	 */
+	public static synchronized void closeAll() {
+		for (Quarantine q : quarantines.values()) {
+			try { q.close(); }
+			catch (Exception skip) { }
+		}
+	}
+
+	/**
 	 * Close the quarantine.
 	 */
 	public synchronized void close() {
@@ -125,6 +135,13 @@ public class Quarantine {
 		studyTable = JdbmUtil.getHTree(recman, studyTableName);
 		seriesTable = JdbmUtil.getHTree(recman, seriesTableName);
 		instanceTable = JdbmUtil.getHTree(recman, instanceTableName);
+	}
+
+	/**
+	 * See if the quarantine is open.
+	 */
+	public synchronized boolean isOpen() {
+		return (recman != null);
 	}
 
 	// Commit the index.

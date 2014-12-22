@@ -94,7 +94,7 @@ public class HttpImportService extends AbstractImportService {
 	 */
 	public void shutdown() {
 		if (httpReceiver != null) httpReceiver.stopServer();
-		stop = true;
+		super.shutdown();
 	}
 
 	/**

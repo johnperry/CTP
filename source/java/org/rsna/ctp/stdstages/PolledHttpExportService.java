@@ -59,6 +59,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	public void shutdown() {
 		stop = true;
 		if (connector != null) connector.interrupt();
+		super.shutdown();
 	}
 
 	/**

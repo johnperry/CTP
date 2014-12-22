@@ -116,7 +116,7 @@ public class DicomImportService extends AbstractImportService {
 	 */
 	public void shutdown() {
 		dicomStorageSCP.stop();
-		stop = true;
+		super.shutdown();
 	}
 
 	/**

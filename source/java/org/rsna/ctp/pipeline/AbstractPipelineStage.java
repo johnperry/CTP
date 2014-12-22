@@ -81,7 +81,6 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * Stop the pipeline stage.
 	 */
 	public synchronized void shutdown() {
-		if (quarantine != null) quarantine.close();
 		stop = true;
 	}
 

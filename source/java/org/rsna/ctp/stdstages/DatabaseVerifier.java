@@ -93,7 +93,6 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 	 * Stop the stage.
 	 */
 	public void shutdown() {
-		//Commit and close the database
 		if (recman != null) {
 			try {
 				recman.commit();
@@ -103,8 +102,7 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 				logger.debug("Unable to commit and close the database");
 			}
 		}
-		//Set stop so the isDown method will return the correct value.
-		stop = true;
+		super.shutdown();
 	}
 
 	/**
