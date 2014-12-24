@@ -23,6 +23,7 @@ import org.rsna.ctp.pipeline.ExportService;
 import org.rsna.ctp.pipeline.ImportService;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
+import org.rsna.ctp.pipeline.Quarantine;
 import org.rsna.ctp.plugin.Plugin;
 import org.rsna.server.HttpServer;
 import org.rsna.util.CipherUtil;
@@ -255,6 +256,8 @@ public class Configuration {
 		//Start the web server.
 		httpServer.start();
 
+		//Start the quarantine purge thread
+		Quarantine.startQuarantinePurge();
 	}
 
 	/**

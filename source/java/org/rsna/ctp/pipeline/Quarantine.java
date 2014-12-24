@@ -34,6 +34,9 @@ public class Quarantine {
 	static final Logger logger = Logger.getLogger(Quarantine.class);
 
 	private static Hashtable<File,Quarantine> quarantines = new Hashtable<File,Quarantine>();
+	private static PurgeThread purgeThread = new PurgeThread();
+	private static long oneHour = 60 * 60 * 1000; //ms
+	private static long oneDay = 24 * oneHour; //ms
 
 	File directory = null;
 	File indexDir = null;
@@ -52,8 +55,6 @@ public class Quarantine {
 	private HTree studyTable = null; 	//Map from StudyInstanceUID to QStudy
 	private HTree seriesTable = null; 	//Map from SeriesInstanceUID to QSeries
 	private HTree instanceTable = null; //Map from filename to QInstance
-
-	private static long oneDay = 24 * 60 * 60 * 1000; //ms
 
 	/**
 	 * Get the Quarantine object for a directory.
@@ -268,14 +269,45 @@ public class Quarantine {
 		}
 	}
 
-	//Purge the quarantine of all objects older than the timeDepth
-	private synchronized void purge() {
-		if (timeDepth > 0) {
-			long minLM = System.currentTimeMillis() - timeDepth;
-			for (File file : directory.listFiles()) {
-				if (file.isFile() && (file.lastModified() < minLM)) {
-					deleteFile(file);
+	/**
+	 * Start the PurgeThread if it isn't already running.
+	 */
+	public static synchronized void startQuarantinePurge() {
+		if (!purgeThread.isAlive()) {
+			purgeThread.start();
+		}
+	}
+
+	//Thread to purge all quarantines
+	static class PurgeThread extends Thread {
+		public PurgeThread() { }
+		public void run() {
+			while (!interrupted()) {
+				int totalCount = 0;
+				boolean foundPurgeableQuarantine = false;
+				for (Quarantine q : quarantines.values()) {
+					if (q.timeDepth > 0) {
+						foundPurgeableQuarantine = true;
+						long minLM = System.currentTimeMillis() - q.timeDepth;
+						int count = 0;
+						for (File file : q.directory.listFiles()) {
+							if (file.isFile() && (file.lastModified() < minLM)) {
+								q.deleteFile(file);
+								count++;
+							}
+						}
+						if (count > 0) {
+							totalCount += count;
+							logger.info("Quarantine directory "+q.directory.getAbsolutePath()+" purged; " +
+										count + " file" + ((count!=1)?"s":"") + " removed.");
+						}
+					}
 				}
+				if (foundPurgeableQuarantine) {
+					logger.info("Quarantine purge complete; " + totalCount + " file" + ((totalCount!=1)?"s":"") + " removed.");
+				}
+				try { Thread.sleep(oneDay); }
+				catch (Exception ex) { }
 			}
 		}
 	}
@@ -337,7 +369,7 @@ public class Quarantine {
 	 * Delete a file from the Quarantine.
 	 * @param file the file to delete
 	 */
-	public void deleteFile(File file) {
+	public synchronized void deleteFile(File file) {
 		if ((file != null) && file.isFile() && file.getParentFile().equals(directory)) {
 			deindex(file);
 			file.delete();
@@ -423,7 +455,6 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insert(FileObject fileObject) {
-		purge();
 		File qfile = getTempFile(fileObject.getStandardExtension());
 		boolean ok = fileObject.moveTo(qfile);
 		if (ok) {
