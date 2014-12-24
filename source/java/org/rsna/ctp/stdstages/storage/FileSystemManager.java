@@ -52,7 +52,7 @@ public class FileSystemManager {
 	 * @param qualifiers the list of qualifiers for the creation of JPEG images when a
 	 * DICOM image is stored.
 	 */
-	public static FileSystemManager getInstance(
+	public static synchronized FileSystemManager getInstance(
 											File root,
 											String type,
 											boolean requireAuthentication,

@@ -37,6 +37,7 @@ public class Quarantine {
 
 	File directory = null;
 	File indexDir = null;
+	long timeDepth = 0; //Maximum age to be kept in the quarantine (ms)
 
 	private RecordManager recman;
 	private static final String databaseName = "QuarantineIndex";
@@ -52,13 +53,16 @@ public class Quarantine {
 	private HTree seriesTable = null; 	//Map from SeriesInstanceUID to QSeries
 	private HTree instanceTable = null; //Map from filename to QInstance
 
+	private static long oneDay = 24 * 60 * 60 * 1000; //ms
+
 	/**
 	 * Get the Quarantine object for a directory.
 	 * @param directoryPath the path to the base directory of the quarantine.
+	 * @param timeDepth the maximum time depth of the quarantine in days.
 	 * @return the Quarantine object for the directory, or null if the
 	 * Quarantine object cannot be created.
 	 */
-	public static synchronized Quarantine getInstance(String directoryPath) {
+	public static synchronized Quarantine getInstance(String directoryPath, long timeDepth) {
 		Quarantine q = null;
 		directoryPath = directoryPath.trim();
 		if (!directoryPath.equals("")) {
@@ -67,7 +71,7 @@ public class Quarantine {
 				dir = dir.getCanonicalFile();
 				q = quarantines.get(dir);
 				if (q == null) {
-					q = new Quarantine(dir);
+					q = new Quarantine(dir, timeDepth);
 					quarantines.put(dir, q);
 				}
 			}
@@ -80,8 +84,9 @@ public class Quarantine {
 	 * Create a Quarantine object for a directory, creating
 	 * the directory and the index if necessary.
 	 */
-	protected Quarantine(File directory) throws Exception {
+	protected Quarantine(File directory, long timeDepth) throws Exception {
 		this.directory = directory;
+		this.timeDepth = timeDepth * oneDay;
 		indexDir = new File(directory, "..index");
 		indexDir.mkdirs();
 		try {
@@ -263,6 +268,18 @@ public class Quarantine {
 		}
 	}
 
+	//Purge the quarantine of all objects older than the timeDepth
+	private synchronized void purge() {
+		if (timeDepth > 0) {
+			long minLM = System.currentTimeMillis() - timeDepth;
+			for (File file : directory.listFiles()) {
+				if (file.isFile() && (file.lastModified() < minLM)) {
+					deleteFile(file);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Delete all the files in the Quarantine.
 	 */
@@ -339,7 +356,7 @@ public class Quarantine {
 	}
 
 	/**
-	 * Queue all the files in in a study to a QueueManager.
+	 * Queue all the files in a study to a QueueManager.
 	 * @param studyUID the UID of the study to queue.
 	 * @param queueManager the QueueManager to receive the files.
 	 */
@@ -356,7 +373,7 @@ public class Quarantine {
 	}
 
 	/**
-	 * Queue all the files in in a series to a QueueManager.
+	 * Queue all the files in a series to a QueueManager.
 	 * @param seriesUID the UID of the series to queue.
 	 * @param queueManager the QueueManager to receive the files.
 	 */
@@ -406,6 +423,7 @@ public class Quarantine {
 	 * @return true if the move was successful, false otherwise.
 	 */
 	public boolean insert(FileObject fileObject) {
+		purge();
 		File qfile = getTempFile(fileObject.getStandardExtension());
 		boolean ok = fileObject.moveTo(qfile);
 		if (ok) {

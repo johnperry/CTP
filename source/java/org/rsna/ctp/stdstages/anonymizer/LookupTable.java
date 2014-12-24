@@ -65,7 +65,7 @@ public class LookupTable {
 	 * @param file the file containing the lookup table properties.
 	 * @param defaultKeyType the KeyType to be used for loading a CSV file.
 	 */
-	public static LookupTable getInstance(File file, String defaultKeyType) {
+	public static synchronized LookupTable getInstance(File file, String defaultKeyType) {
 		//If there is no file, then return null.
 		if (file == null) return null;
 

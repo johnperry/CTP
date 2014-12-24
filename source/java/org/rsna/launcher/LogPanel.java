@@ -25,7 +25,7 @@ public class LogPanel extends BasePanel implements ActionListener {
 
 	static LogPanel logPanel = null;
 
-	public static LogPanel getInstance() {
+	public static synchronized LogPanel getInstance() {
 		if (logPanel == null) logPanel = new LogPanel();
 		return logPanel;
 	}

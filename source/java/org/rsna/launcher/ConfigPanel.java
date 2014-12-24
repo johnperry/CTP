@@ -54,7 +54,7 @@ public class ConfigPanel extends BasePanel {
 
 	static ConfigPanel configPanel = null;
 
-	public static ConfigPanel getInstance() {
+	public static synchronized ConfigPanel getInstance() {
 		if (configPanel == null) configPanel = new ConfigPanel();
 		return configPanel;
 	}

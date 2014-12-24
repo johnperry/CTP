@@ -60,7 +60,8 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects").trim().equals("no");
 		acceptZipObjects	= !element.getAttribute("acceptZipObjects").trim().equals("no");
 		acceptFileObjects	= !element.getAttribute("acceptFileObjects").trim().equals("no");
-		quarantine = Quarantine.getInstance(element.getAttribute("quarantine"));
+		long quarantineTimeDepth = StringUtil.getLong(element.getAttribute("quarantineTimeDepth"));
+		quarantine = Quarantine.getInstance(element.getAttribute("quarantine"), quarantineTimeDepth);
 		String rPath = element.getAttribute("root").trim();
 		if (!rPath.equals("")) {
 			root = new File(rPath);

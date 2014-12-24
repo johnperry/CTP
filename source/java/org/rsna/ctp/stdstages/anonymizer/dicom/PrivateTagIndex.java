@@ -33,7 +33,7 @@ public class PrivateTagIndex {
 	 * Get the singleton instance of the PrivateTagIndex.
 	 * @return the PrivateTagIndex.
 	 */
-	public static PrivateTagIndex getInstance() {
+	public static synchronized PrivateTagIndex getInstance() {
 		if (privateTagIndex == null) {
 			privateTagIndex = new PrivateTagIndex();
 		}

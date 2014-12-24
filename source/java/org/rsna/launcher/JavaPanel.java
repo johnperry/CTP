@@ -45,7 +45,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 
 	static JavaPanel javaPanel = null;
 
-	public static JavaPanel getInstance() {
+	public static synchronized JavaPanel getInstance() {
 		if (javaPanel == null) javaPanel = new JavaPanel();
 		return javaPanel;
 	}

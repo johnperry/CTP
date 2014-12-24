@@ -50,7 +50,7 @@ public class Configuration {
 
 	static Configuration config = null;
 
-	public static Configuration getInstance() {
+	public static synchronized Configuration getInstance() {
 		return config;
 	}
 

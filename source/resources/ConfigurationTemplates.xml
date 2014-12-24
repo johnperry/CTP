@@ -91,6 +91,7 @@
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/HttpImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
@@ -122,6 +123,7 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/PollingHttpImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ImportService>
 
 		<ImportService>
@@ -140,6 +142,7 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ImportService>
 
 		<ImportService>
@@ -155,6 +158,7 @@
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/ArchiveImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ImportService>
 
 		<ImportService>
@@ -172,6 +176,7 @@
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="suppressDuplicates" required="no" default="no" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
@@ -271,6 +276,7 @@
 			<attr name="root" required="yes" default="roots/DicomFilter"/>
 			<attr name="script" required="yes" default="scripts/DicomFilter.script"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomFilter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -279,6 +285,7 @@
 			<attr name="root" required="yes" default="roots/XmlFilter"/>
 			<attr name="script" required="yes" default="scripts/XmlFilter.script"/>
 			<attr name="quarantine" required="yes" default="quarantines/XmlFilter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -287,6 +294,7 @@
 			<attr name="root" required="yes" default="roots/ZipFilter"/>
 			<attr name="script" required="yes" default="scripts/ZipFilter.script"/>
 			<attr name="quarantine" required="yes" default="quarantines/ZipFilter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -328,6 +336,7 @@
 			<attr name="id" required="yes" default="LookupTableChecker"/>
 			<attr name="root" required="yes" default="roots/LookupTableChecker"/>
 			<attr name="quarantine" required="yes" default="quarantines/LookupTableChecker"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -338,6 +347,7 @@
 				<helptext>The script file determining whether objects are to be decompressed</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomDecompressor"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -352,6 +362,7 @@
 			</attr>
 			<attr name="quality" required="no" default="100"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomTranscoder"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -364,6 +375,7 @@
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomAnonymizer"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -374,6 +386,7 @@
 				<helptext>The filter script file determining whether DicomObjects are to be processed</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomCorrector"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 			<attr name="quarantineUncorrectedMismatches" required="no" options="yes|no" default="no">
 				<helptext>Quarantine objects that cannot be completely corrected.</helptext>
 			</attr>
@@ -390,6 +403,7 @@
 				<helptext>The script file containing document signatures and blanking regions</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomPixelAnonymizer"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 			<attr name="log" required="no" default="no" options="yes|no">
 				<helptext>Log the matching signature</helptext>
 			</attr>
@@ -406,6 +420,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomMammoPixelAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomMammoPixelAnonymizer"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomMammoPixelAnonymizer"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -413,6 +428,7 @@
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPlanarConfigurationConverter" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomPlanarConfigurationConverter"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomPlanarConfigurationConverter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -423,6 +439,7 @@
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/XmlAnonymizer"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -433,6 +450,7 @@
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/ZipAnonymizer"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<Processor>
@@ -460,6 +478,7 @@
 			<attr name="includeAccessionNumber" required="yes" default="no" options="yes|no"/>
 			<attr name="logSentEmails" required="yes" default="no" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/EmailService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 
 		<StorageService>
@@ -496,6 +515,7 @@
 			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
 			<attr name="exportDirectory" required="no" default=""/>
 			<attr name="quarantine" required="yes" default="quarantines/FileStorageService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
 				<attr name="frame" required="no" default="" options="first|middle|last|all">
@@ -545,6 +565,7 @@
 				<helptext>Accept files that are bit-for-bit identical to previously stored files, even if rejectDuplicates is set to "yes".</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/BasicFileStorageService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
 			<child name="jpeg" required="no" allowMultiples="yes">
 				<attr name="frame" required="no" default="" options="first|middle|last|all">
@@ -601,6 +622,7 @@
 			</attr>
 			<attr name="returnStoredFile" required="no" default="yes" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</StorageService>
 
 		<ExportService>
@@ -640,6 +662,7 @@
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ExportService>
 
 		<ExportService>
@@ -670,6 +693,7 @@
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ExportService>
 
 		<ExportService>
@@ -687,6 +711,7 @@
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="quarantine" required="yes" default="quarantines/PolledHttpExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
 			<child name="accept" required="no" allowMultiples="yes">
 				<attr name="ip" required="no" default="">
@@ -723,6 +748,7 @@
 			<attr name="auditLogTags" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/FtpExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ExportService>
 
 		<ExportService>
@@ -739,6 +765,7 @@
 			</attr>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/AimExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ExportService>
 
 		<ExportService>
@@ -757,6 +784,7 @@
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/DatabaseExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
 			<attr name="port" required="no" default="">
 				<helptext>The port on which the DatabaseExportService listens for request for verification of objects</helptext>
 			</attr>
@@ -812,6 +840,7 @@
 		<proxyUsername>The username for proxy authentication (or blank if proxy authentication is not used)</proxyUsername>
 		<quality>The quality parameter to use for lossy compression (1-100), ignored for lossless compression</quality>
 		<quarantine>Storage directory for quarantined objects</quarantine>
+		<quarantineTimeDepth>Length of time in days before objects are automatically purged from the quarantine (0 = forever)</quarantine>
 		<regex>A regular expression for matching an IP address. This is an alternative to the ip field for matching ranges.</regex>
 		<requireAuthentication>Require authentication for connections</requireAuthentication>
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>

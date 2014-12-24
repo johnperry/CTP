@@ -50,7 +50,7 @@ public class FileSource implements Serializable {
 	 * @param checkpointDir the directory in which to write checkpoints,
 	 * or null if a deserialized instance is not to be obtained.
 	 */
-	public static FileSource getInstance(File treeRoot, File checkpointDir) {
+	public static synchronized FileSource getInstance(File treeRoot, File checkpointDir) {
 		Object fileSource = null;
 		if (checkpointDir != null) {
 			fileSource = SerializerUtil.deserialize( new File(checkpointDir, checkpointName) );
