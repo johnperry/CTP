@@ -160,40 +160,35 @@ public class Launcher extends JFrame implements ChangeListener {
     //Class to capture a window close event and give the
     //user a chance to change his mind.
     class WindowCloser extends WindowAdapter {
-		private boolean keyIsDown = false;
 		private Component parent;
 		public WindowCloser(JFrame parent) {
 			this.parent = parent;
 			parent.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
-			//Set up to capture the modifier key
-			KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-			kfm.addKeyEventDispatcher(new KeyEventDispatcher() {
-				public boolean dispatchKeyEvent(KeyEvent e) {
-					keyIsDown = e.isControlDown();
-					return false; //let the event continue on.
-				}
-			});
 		}
 		public void windowClosing(WindowEvent evt) {
+			save();
 			if (Util.isRunning()) {
-				boolean close = keyIsDown;
-				if (!close) {
-					int response = JOptionPane.showConfirmDialog(
-									parent,
-									"Are you sure you want to stop the "+config.programName+" server?",
-									"Are you sure?",
-									JOptionPane.YES_NO_OPTION);
-					close = (response == JOptionPane.YES_OPTION);
-				}
-				if (close && configOK()) {
-					save();
+				int response = JOptionPane.showConfirmDialog(
+								parent,
+								"Do you want to stop the "+config.programName+" server?\n\n" +
+								"If you click YES, the server will be stopped before the Launcher exits.\n" +
+								"If you click NO, the server will be left running after the Launcher exits.\n" +
+								"To keep both the server and the Launcher running, click CANCEL.\n\n",
+								"Are you sure?",
+								JOptionPane.YES_NO_CANCEL_OPTION);
+
+				boolean stop = (response == JOptionPane.YES_OPTION);
+				boolean exit = (response == JOptionPane.NO_OPTION);
+
+				if (stop && configOK()) {
 					Util.shutdown();
+					System.exit(0);
+				}
+				if (exit && configOK()) {
 					System.exit(0);
 				}
 			}
 			else if (configOK()) {
-				save();
 				System.exit(0);
 			}
 		}
@@ -201,8 +196,8 @@ public class Launcher extends JFrame implements ChangeListener {
 			if (ConfigPanel.getInstance().hasChanged()) {
 				int yesno = JOptionPane.showConfirmDialog(
 								parent,
-								"The configuration changes have not been saved. Do you wish to proceed?\n"
-								+ "If you click OK, the program will end without saving the configuration.\n",
+								"The configuration changes have not been saved. Do you wish to proceed?\n\n"
+								+ "If you click OK, the program will end without saving the configuration.\n\n",
 								"Configuration",
 								JOptionPane.OK_CANCEL_OPTION);
 				return (yesno == JOptionPane.OK_OPTION);
