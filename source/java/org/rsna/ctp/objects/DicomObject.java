@@ -1472,6 +1472,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Tests whether the DicomObject has the specified TransferSyntaxUID.
+	 * @return true if the object has the specified TransferSyntaxUID; false otherwise.
+	 */
+	public boolean hasTransferSyntaxUID(String transferSyntaxUID) {
+		String tsuid = getTransferSyntaxUID();
+		return (tsuid != null) && (transferSyntaxUID != null) && tsuid.equals(transferSyntaxUID);
+	}
+
+	/**
 	 * Tests whether the DicomObject corresponds to an SR.
 	 * The test is done by comparing the SOPClassUID to known SR SOPClassUIDs.
 	 * @return true if the object corresponds to an SR; false otherwise.
