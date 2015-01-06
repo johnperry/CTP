@@ -346,6 +346,7 @@
 			<attr name="script" required="yes" default="scripts/DicomDecompressor.script">
 				<helptext>The script file determining whether objects are to be decompressed</helptext>
 			</attr>
+			<attr name="skipJPEGBaseline" required="no" options="yes|no" default="no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomDecompressor"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
@@ -361,6 +362,7 @@
 				<helptext>The transfer syntax UID to which to convert selected DicomObjects</helptext>
 			</attr>
 			<attr name="quality" required="no" default="100"/>
+			<attr name="skipJPEGBaseline" required="no" options="yes|no" default="no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomTranscoder"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
@@ -852,6 +854,7 @@
 		<setStandardExtensions>Assign file extensions based on file type (.dcm, .xml, .zip, .md)</setStandardExtensions>
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
+		<skipJPEGBaseline>Skip objects with the JPEGBaseline TransferSyntaxUID.</skipJPEGBaseline>
 		<smtpServer>The SMTP server to be used to send emails (e.g., mail.isp.net).</smtpServer>
 		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>

@@ -27,8 +27,10 @@ import org.w3c.dom.Element;
 public class DicomDecompressor extends AbstractPipelineStage implements Processor, Scriptable  {
 
 	static final Logger logger = Logger.getLogger(DicomDecompressor.class);
+	static final String JPEGBaseline = "1.2.840.10008.1.2.4.50";
 
 	public File scriptFile = null;
+	boolean skipJPEGBaseline = false;
 
 	/**
 	 * Construct the DicomDecompressor PipelineStage.
@@ -38,6 +40,7 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 	public DicomDecompressor(Element element) {
 		super(element);
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		skipJPEGBaseline = element.getAttribute("skipJPEGBaseline").trim().equals("yes");
 	}
 
 	/**
@@ -56,7 +59,10 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
 			if (dob.isEncapsulated()) {
-				if ((scriptFile == null) || dob.matches(FileUtil.getText(scriptFile))) {
+				String transferSyntaxUID = dob.getTransferSyntaxUID();
+				boolean isJPEGBaseline = transferSyntaxUID.equals(JPEGBaseline);
+				boolean skip = (isJPEGBaseline && skipJPEGBaseline);
+				if (dob.isImage() && !skip && ((scriptFile == null) || dob.matches(FileUtil.getText(scriptFile)))) {
 					File file = dob.getFile();
 					AnonymizerStatus status = DICOMDecompressor.decompress(file, file);
 					if (status.isOK()) {

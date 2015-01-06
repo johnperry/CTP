@@ -7,20 +7,23 @@
 
 package org.rsna.ctp.stdstages.anonymizer.dicom;
 
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.*;
-import java.util.Arrays;
-import java.util.Calendar;
+import java.util.Vector;
 
 import org.dcm4che.data.Dataset;
 import org.dcm4che.data.DcmDecodeParam;
@@ -39,6 +42,8 @@ import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.UIDs;
 import org.dcm4che.dict.VRs;
 
+import com.pixelmed.codec.jpeg.*;
+
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 
@@ -49,6 +54,8 @@ import org.apache.log4j.Logger;
  * DICOM objects for clinical trials.
  */
 public class DICOMPixelAnonymizer {
+
+	static final String JPEGBaseline = "1.2.840.10008.1.2.4.50";
 
 	static final Logger logger = Logger.getLogger(DICOMPixelAnonymizer.class);
 	static final DcmParserFactory pFact = DcmParserFactory.getInstance();
@@ -76,7 +83,7 @@ public class DICOMPixelAnonymizer {
 
 		long fileLength = inFile.length();
 		logger.debug("Entering DICOMPixelAnonymizer.anonymize");
-		logger.debug("File length       = "+fileLength);
+		logger.debug("File length = "+fileLength);
 
 		BufferedInputStream in = null;
 		FileOutputStream out = null;
@@ -95,11 +102,24 @@ public class DICOMPixelAnonymizer {
 			Dataset dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
+			FileMetaInfo fmi = dataset.getFileMetaInfo();
+			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
 
 			//Make sure this is an image
             if (parser.getReadTag() != Tags.PixelData) {
 				close(in);
 				return AnonymizerStatus.SKIP(inFile, "Not an image");
+			}
+
+			//Make sure the encoding is supported
+			if (fmi != null) {
+				String transferSyntaxUID = fmi.getTransferSyntaxUID();
+				DcmEncodeParam encoding = DcmEncodeParam.valueOf(transferSyntaxUID);
+				if (encoding.encapsulated && !transferSyntaxUID.equals(JPEGBaseline)) {
+					close(in);
+					logger.debug("Unsupported TransferSyntaxUID: "+transferSyntaxUID+")");
+					return AnonymizerStatus.SKIP(inFile, "Unsupported TransferSyntaxUID: "+transferSyntaxUID+")");
+				}
 			}
 
 			//Get the required parameters and make sure they are okay
@@ -122,20 +142,10 @@ public class DICOMPixelAnonymizer {
 			}
 
 			//Set the encoding
-			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
         	String prefEncodingUID = UIDs.ImplicitVRLittleEndian;
-			FileMetaInfo fmi = dataset.getFileMetaInfo();
             if (fmi != null) prefEncodingUID = fmi.getTransferSyntaxUID();
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(prefEncodingUID);
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
-
-/**/		//While in development, abort on encapsulated pixel data
-/**/		if (encoding.encapsulated) {
-				logger.debug("Encapsulated pixel data found");
-				close(in);
-				logger.debug("Encapsulated pixel data not supported");
-				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
-			}
 
 			//Save the dataset to a temporary file, and rename at the end.
 			File tempDir = outFile.getParentFile();
@@ -158,51 +168,36 @@ public class DICOMPixelAnonymizer {
 			dataset.writeDataset(out, encoding);
 
 			//Process the pixels
-            if (parser.getReadTag() == Tags.PixelData) {
-                dataset.writeHeader(
-                    out,
-                    encoding,
-                    parser.getReadTag(),
-                    parser.getReadVR(),
-                    parser.getReadLength());
-                if (encoding.encapsulated) {
-                    parser.parseHeader();
-                    while (parser.getReadTag() == Tags.Item) {
-                        dataset.writeHeader(
-                            out,
-                            encoding,
-                            parser.getReadTag(),
-                            parser.getReadVR(),
-                            parser.getReadLength());
-                        writeValueTo(parser, buffer, out, false);
-                        parser.parseHeader();
-                    }
-                    if (parser.getReadTag() != Tags.SeqDelimitationItem) {
-                        throw new Exception(
-                            "Unexpected Tag: " + Tags.toString(parser.getReadTag()));
-                    }
-                    if (parser.getReadLength() != 0) {
-                        throw new Exception(
-                            "(fffe,e0dd), Length:" + parser.getReadLength());
-                    }
-                    dataset.writeHeader(
-                        out,
-                        encoding,
-                        Tags.SeqDelimitationItem,
-                        VRs.NONE,
-                        0);
-                } else {
-					processPixels(parser,
-								  out,
-								  swap && (parser.getReadVR() == VRs.OW),
-								  numberOfFrames, samplesPerPixel, planarConfiguration, photometricInterpretation,
-								  rows, columns, bitsAllocated,
-								  regions, test);
-					logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
-                }
-				if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
+			if (parser.getReadTag() == Tags.PixelData) {
+				dataset.writeHeader(
+					out,
+					encoding,
+					parser.getReadTag(),
+					parser.getReadVR(),
+					parser.getReadLength());
+				if (!encoding.encapsulated) {
+					//Handle the non-encapsulated case
+					processUnencapsulatedPixels(parser,
+												out,
+												swap && (parser.getReadVR() == VRs.OW),
+												numberOfFrames, samplesPerPixel, planarConfiguration, photometricInterpretation,
+												rows, columns, bitsAllocated,
+												regions, test);
+					}
+				else {
+					//Handle the encapsulated case
+					processEncapsulatedPixels(parser,
+											  dataset,
+											  out,
+											  encoding,
+											  regions);
+				}
 			}
 			logger.debug("Finished writing the pixels");
+			logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
+
+			if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
+
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -222,7 +217,7 @@ public class DICOMPixelAnonymizer {
 				writeValueTo(parser, buffer, out, swap);
 				parser.parseHeader();
 			}
-			logger.debug("Finished writing the post-pixels elements");
+			logger.debug("Done");
 			out.flush();
 			out.close();
 			in.close();
@@ -271,7 +266,104 @@ public class DICOMPixelAnonymizer {
 		catch (Exception ex) { return defaultValue; }
 	}
 
-    private static void processPixels(
+	private static void processEncapsulatedPixels(
+							DcmParser parser,
+							Dataset dataset,
+							OutputStream out,
+							DcmEncodeParam encoding,
+							Regions regions) throws Exception {
+
+		logger.debug("Process Encapsulated Pixels:");
+
+		Vector<Shape> shapes = regions.getRegionsVector();
+		if (logger.isDebugEnabled()) {
+			for (Shape shape : shapes) {
+				Rectangle rect = shape.getBounds();
+				logger.debug("Shape: "+rect.toString());
+			}
+		}
+
+		//Skip the Basic Offset Table item and write an empty one
+		parser.parseHeader();
+		byte[] itemBytes = getItemBytes(parser);
+		dataset.writeHeader(out, encoding, Tags.Item, VRs.NONE, 0);
+		logger.debug("Wrote empty Basic OffsetTable item");
+
+		int frameNumber = 0;
+
+		//Process frames
+		ByteArrayOutputStream frame = new ByteArrayOutputStream();
+		parser.parseHeader();
+		while (parser.getReadTag() == Tags.Item) {
+			itemBytes = getItemBytes(parser);
+			frame.write(itemBytes);
+			if (isFrameEnd(itemBytes)) {
+				//Process the frame
+				ByteArrayInputStream inFrame = new ByteArrayInputStream(frame.toByteArray());
+				ByteArrayOutputStream outFrame = new ByteArrayOutputStream();
+				Parse.parse(inFrame, outFrame, shapes);
+
+				//Pad the frame if necessary
+				if ((outFrame.size() & 1) != 0) outFrame.write(0);
+
+				//Write the frame
+				int size = outFrame.size();
+				dataset.writeHeader(out, encoding, Tags.Item, VRs.NONE, size);
+				out.write(outFrame.toByteArray());
+/***************************************************************************************
+//Save the JPEGs as files for testing
+				File jpegs = new File("JPEGs");
+				jpegs.mkdirs();
+				File anon = new File(jpegs, "Frame"+frameNumber+".anon.jpeg");
+				File orig = new File(jpegs, "Frame"+frameNumber+".orig.jpeg");
+				try {
+					FileOutputStream anonfos = new FileOutputStream(anon);
+					anonfos.write(outFrame.toByteArray());
+					anonfos.flush();
+					anonfos.close();
+					FileOutputStream origfos = new FileOutputStream(orig);
+					origfos.write(frame.toByteArray());
+					origfos.flush();
+					origfos.close();
+				}
+				catch (Exception ex) { logger.warn("Unable to write JPEG for frame "+frameNumber); }
+***************************************************************************************/
+				logger.debug("Processed frame " + frameNumber++ + "; item length = " + size);
+
+				//Reset for the next frame
+				frame.reset();
+			}
+			parser.parseHeader();
+		}
+
+		//End the sequence
+		dataset.writeHeader(out, encoding, Tags.SeqDelimitationItem, VRs.NONE, 0);
+	}
+
+	private static byte[] getItemBytes(DcmParser parser) throws Exception {
+		if (parser.getReadTag() == Tags.Item) {
+			int len = parser.getReadLength();
+			if (len > 0) {
+				InputStream in = parser.getInputStream();
+				byte[] b = new byte[len];
+				in.read(b, 0, len);
+				parser.setStreamPosition(parser.getStreamPosition() + len);
+				return b;
+			}
+		}
+		return new byte[0];
+	}
+
+	private static boolean isFrameEnd(byte[] b) {
+		int len = b.length;
+		byte ff = (byte) 0xFF;
+		byte d9 = (byte) 0xD9;
+		if ( (b[len-2] == ff) && (b[len-1] == d9) ) return true;
+		if ( (b[len-3] == ff) && (b[len-2] == d9) && (b[len-1] == 0) ) return true;
+		return false;
+	}
+
+    private static void processUnencapsulatedPixels(
 							DcmParser parser,
 							OutputStream out,
 							boolean swap,
@@ -286,8 +378,8 @@ public class DICOMPixelAnonymizer {
 							boolean test) throws Exception {
 
 		int len = parser.getReadLength();
-		logger.debug("ProcessPixels:");
-		logger.debug("Read length       = "+len);
+		logger.debug("Process Unencapsulated Pixels:");
+		logger.debug("Read length = "+len);
 
 		int bytesPerPixel = bitsAllocated/8;
 

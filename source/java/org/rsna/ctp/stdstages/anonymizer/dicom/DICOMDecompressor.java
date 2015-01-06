@@ -90,7 +90,10 @@ public class DICOMDecompressor {
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
 
 			//Make sure this is an image
-            if (parser.getReadTag() != Tags.PixelData) return AnonymizerStatus.SKIP(inFile, "Not an image");
+            if (parser.getReadTag() != Tags.PixelData) {
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "Not an image");
+			}
 
 			//Get the required parameters and make sure they are okay
 			int numberOfFrames = getInt(dataset, Tags.NumberOfFrames, 1);
