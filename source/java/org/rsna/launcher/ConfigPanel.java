@@ -635,8 +635,10 @@ public class ConfigPanel extends BasePanel {
 
 	//Check the configuration, looking for duplicate ports and root directories.
 	private boolean checkConfig(Element config) {
-		DupTable portTable = new DupTable(config, "port");
-		DupTable rootTable = new DupTable(config, "root");
+		DupTable portTable = new DupTable("port");
+		portTable.addElement(config);
+		RootTable rootTable = new RootTable("root");
+		rootTable.addElement(config);
 		if (portTable.hasDuplicates) {
 			String dups = portTable.getDuplicates();
 			JOptionPane.showMessageDialog(
@@ -656,7 +658,7 @@ public class ConfigPanel extends BasePanel {
 							"The following root directories appear multiple times\n"
 							+ "in the configuration. Except in special situations,\n"
 							+ "root directories must be unique.\n"
-							+ "If you click OK, the configuration will be saved.\n"
+							+ "If you click OK, the configuration will be saved.\n\n"
 							+dups,
 							"Duplicate root directories",
 							JOptionPane.OK_CANCEL_OPTION);
@@ -668,10 +670,9 @@ public class ConfigPanel extends BasePanel {
 	class DupTable extends Hashtable<String,Integer> {
 		String attrName;
 		public boolean hasDuplicates = false;
-		public DupTable(Element el, String attrName) {
+		public DupTable(String attrName) {
 			super();
 			this.attrName = attrName;
-			addElement(el);
 		}
 		public void addElement(Element el) {
 			if (!el.getAttribute("enabled").equals("no")) {
@@ -685,7 +686,7 @@ public class ConfigPanel extends BasePanel {
 				}
 			}
 		}
-		private void addAttribute(Element el) {
+		void addAttribute(Element el) {
 			String attrValue = el.getAttribute(attrName).trim();
 			if (!attrValue.equals("")) {
 				Integer i = get(attrValue);
@@ -708,6 +709,36 @@ public class ConfigPanel extends BasePanel {
 				}
 			}
 			return sb.toString();
+		}
+	}
+
+	class RootTable extends DupTable {
+		public RootTable(String attrName) {
+			super(attrName);
+		}
+		void addAttribute(Element el) {
+			String attrValue = el.getAttribute(attrName).trim();
+			if (!attrValue.equals("")) {
+				Element parent = (Element)el.getParentNode();
+				if (parent != null) {
+					String parentValue = parent.getAttribute(attrName).trim();
+					File root = new File(attrValue);
+					if (!root.isAbsolute() && !parentValue.equals("")) {
+						File parentRoot = new File(parentValue);
+						root = new File(parentRoot, attrValue);
+						attrValue = root.getPath();
+					}
+				}
+				Integer i = get(attrValue);
+				if (i == null) {
+					put(attrValue, new Integer(1));
+				}
+				else {
+					i = new Integer(i.intValue() + 1);
+					put(attrValue, i);
+					hasDuplicates = true;
+				}
+			}
 		}
 	}
 

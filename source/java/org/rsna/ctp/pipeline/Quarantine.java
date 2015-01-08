@@ -58,22 +58,20 @@ public class Quarantine {
 
 	/**
 	 * Get the Quarantine object for a directory.
-	 * @param directoryPath the path to the base directory of the quarantine.
+	 * @param directory the base directory of the quarantine.
 	 * @param timeDepth the maximum time depth of the quarantine in days.
 	 * @return the Quarantine object for the directory, or null if the
 	 * Quarantine object cannot be created.
 	 */
-	public static synchronized Quarantine getInstance(String directoryPath, long timeDepth) {
+	public static synchronized Quarantine getInstance(File directory, long timeDepth) {
 		Quarantine q = null;
-		directoryPath = directoryPath.trim();
-		if (!directoryPath.equals("")) {
-			File dir = new File(directoryPath);
+		if ((directory != null) && !directory.getPath().equals("")) {
 			try {
-				dir = dir.getCanonicalFile();
-				q = quarantines.get(dir);
+				directory = directory.getCanonicalFile();
+				q = quarantines.get(directory);
 				if (q == null) {
-					q = new Quarantine(dir, timeDepth);
-					quarantines.put(dir, q);
+					q = new Quarantine(directory, timeDepth);
+					quarantines.put(directory, q);
 				}
 			}
 			catch (Exception ex) { }

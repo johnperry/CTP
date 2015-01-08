@@ -65,6 +65,13 @@
 
 		<Pipeline>
 			<attr name="name" required="yes" default="Pipeline"/>
+			<attr name="root" required="no" default="">
+				<helptext>
+					The root directory for this pipeline. This directory serves as the base for any
+					stages with relative paths for their root directories. If this attribute is blank,
+					the application directory (CTP) serves as the base.
+				</helptext>
+			</attr>
 			<attr name="admin" required="no" default="">
 				<helptext>
 					The username of a user who is allowed to access the configuration

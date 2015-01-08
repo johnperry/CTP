@@ -223,6 +223,7 @@ public class DicomObject extends FileObject {
 
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);
+
 			//Write the pixels if the parser actually stopped at the pixeldata
             if (parser.getReadTag() == Tags.PixelData) {
                 dataset.writeHeader(

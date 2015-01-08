@@ -60,12 +60,24 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects").trim().equals("no");
 		acceptZipObjects	= !element.getAttribute("acceptZipObjects").trim().equals("no");
 		acceptFileObjects	= !element.getAttribute("acceptFileObjects").trim().equals("no");
-		long quarantineTimeDepth = StringUtil.getLong(element.getAttribute("quarantineTimeDepth"));
-		quarantine = Quarantine.getInstance(element.getAttribute("quarantine"), quarantineTimeDepth);
-		String rPath = element.getAttribute("root").trim();
-		if (!rPath.equals("")) {
-			root = new File(rPath);
+		String pipelinePath = ((Element)element.getParentNode()).getAttribute("root").trim();
+		String stagePath = element.getAttribute("root").trim();
+		File pipelineRoot = new File(pipelinePath);
+		if (!stagePath.equals("")) {
+			root = new File(stagePath);
+			if (!root.isAbsolute() && !pipelinePath.equals("")) {
+				root = new File(pipelineRoot, stagePath);
+			}
 			root.mkdirs();
+		}
+		String quarantinePath = element.getAttribute("quarantine");
+		long quarantineTimeDepth = StringUtil.getLong(element.getAttribute("quarantineTimeDepth"));
+		if (!quarantinePath.equals("")) {
+			File qFile = new File(quarantinePath);
+			if (!qFile.isAbsolute() && !pipelinePath.equals("")) {
+				qFile = new File(pipelineRoot, quarantinePath);
+			}
+			quarantine = Quarantine.getInstance(qFile, quarantineTimeDepth);
 		}
 	}
 
