@@ -47,7 +47,7 @@ import org.dcm4che.server.ServerFactory;
 import org.dcm4che.util.DcmProtocol;
 
 import org.rsna.ui.FileEvent;
-import org.rsna.ui.FileEventListener;
+import org.rsna.ui.FileListener;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.util.FileUtil;
 
@@ -79,14 +79,14 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	private File directory = null;
 	PCTable pcTable = null;
 
-	HashSet<FileEventListener> listeners;
+	HashSet<FileListener> listeners;
 
     public SimpleDicomStorageSCP(File directory, int port) {
 		this.directory = directory;
 		pcTable = PCTable.getInstance();
 
 		directory.mkdirs();
-		listeners = new HashSet<FileEventListener>();
+		listeners = new HashSet<FileListener>();
         initServer(port);
         initPolicy();
     }
@@ -186,25 +186,25 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
     }
 
 	/**
-	 * Add a FileEventListener.
-	 * @param listener the FileEventListener.
+	 * Add a FileListener.
+	 * @param listener the FileListener.
 	 */
-	public synchronized void addFileEventListener(FileEventListener listener) {
+	public synchronized void addFileListener(FileListener listener) {
 		listeners.add(listener);
 	}
 
 	/**
-	 * Remove a FileEventListener.
-	 * @param listener the FileEventListener.
+	 * Remove a FileListener.
+	 * @param listener the FileListener.
 	 */
-	public synchronized void removeFileEventListener(FileEventListener listener) {
+	public synchronized void removeFileListener(FileListener listener) {
 		listeners.remove(listener);
 	}
 
-	//Send a FileEvent to all FileEventListeners.
+	//Send a FileEvent to all FileListeners.
 	private synchronized void sendFileEvent(File file) {
 		FileEvent event = new FileEvent(this, file);
-		for (FileEventListener listener : listeners) {
+		for (FileListener listener : listeners) {
 			listener.fileEventOccurred(event);
 		}
 	}
