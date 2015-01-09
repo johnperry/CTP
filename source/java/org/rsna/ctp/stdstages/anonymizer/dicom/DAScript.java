@@ -110,11 +110,7 @@ public class DAScript {
 
 		if (!scriptIsXML) {
 			try {
-				//This is a kludge to make it compile in Java 1.5 so the folks at NCI can
-				//build it. The props.load(Reader) method is not supported in 1.5; only 1.6.
-/*Java1.5*/		ByteArrayInputStream sr = new ByteArrayInputStream(script.getBytes("ISO-8859-1"));
-/*Java1.6*/		/*StringReader sr = new StringReader(script);*/
-
+				StringReader sr = new StringReader(script);
 				properties = new Properties();
 				properties.load(sr);
 			}
@@ -127,8 +123,6 @@ public class DAScript {
 	}
 
 	//This method must only be called when the script is XML.
-	//If it is called with an XML script, it returns an empty
-	//Properties object.
 	private Properties makeProperties() {
 		Properties props = new Properties();
 		if (toXML() == null) return props;
@@ -313,7 +307,7 @@ public class DAScript {
 
 	/**
 	 * Get the default KeyType in use in the script. If more than
-	 * one KeyType is in use in the script, return null;'
+	 * one KeyType is in use in the script, return null.
 	 */
 	public String getDefaultKeyType() {
 		HashSet<String> keyTypeSet = getKeyTypes();

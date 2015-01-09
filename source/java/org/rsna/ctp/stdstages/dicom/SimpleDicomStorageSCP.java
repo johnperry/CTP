@@ -46,8 +46,8 @@ import org.dcm4che.server.Server;
 import org.dcm4che.server.ServerFactory;
 import org.dcm4che.util.DcmProtocol;
 
-import org.rsna.ctp.event.FileEvent;
-import org.rsna.ctp.event.FileEventListener;
+import org.rsna.ui.FileEvent;
+import org.rsna.ui.FileEventListener;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.util.FileUtil;
 
@@ -203,7 +203,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 
 	//Send a FileEvent to all FileEventListeners.
 	private synchronized void sendFileEvent(File file) {
-		FileEvent event = new FileEvent(file);
+		FileEvent event = new FileEvent(this, file);
 		for (FileEventListener listener : listeners) {
 			listener.fileEventOccurred(event);
 		}
