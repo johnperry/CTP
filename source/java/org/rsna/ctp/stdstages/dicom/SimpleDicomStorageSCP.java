@@ -203,7 +203,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 
 	//Send a FileEvent to all FileListeners.
 	private synchronized void sendFileEvent(File file) {
-		FileEvent event = new FileEvent(this, file);
+		FileEvent event = FileEvent.STORE(this, file);
 		for (FileListener listener : listeners) {
 			listener.fileEventOccurred(event);
 		}
