@@ -172,6 +172,22 @@ Toshiba Aplio 500
     [0028,0011].equals("960") }
   (0,0,960,60)
 
+Toshiba Aplio 400
+  { Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("TOSHIBA") *
+    [0008,1090].containsIgnoreCase("A400") *
+    [0028,0010].equals("720") *
+    [0028,0011].equals("960") }
+  (0,0,960,60)
+
+Supersonic Imagine 5A
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("SuperSonic Imagine SA") *
+    ManufacturerModelName.containsIgnoreCase("Aixplorer") *
+    Rows.equals("1050") *
+    Columns.equals("1400") }
+  (0,0,1000,89)
+
 ************** 
      MRI
 **************
