@@ -129,7 +129,7 @@ public class ScriptServlet extends CTPServlet {
 
 			//Update the file if possible.
 			if (scriptFile != null) {
-				synchronized (this) { FileUtil.setText(scriptFile, script); }
+				FileUtil.setText(scriptFile, script);
 
 				//Make a new page from the new data and send it out
 				res.disableCaching();
