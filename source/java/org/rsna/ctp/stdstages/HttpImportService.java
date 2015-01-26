@@ -114,6 +114,8 @@ public class HttpImportService extends AbstractImportService {
 		}
 
 		public void process(HttpRequest req, HttpResponse res) {
+			logger.debug("Entering process");
+
 			String connectionIP = req.getRemoteAddress();
 			boolean accept = ipWhiteList.contains(connectionIP) && !ipBlackList.contains(connectionIP);
 
@@ -133,6 +135,7 @@ public class HttpImportService extends AbstractImportService {
 				}
 			}
 
+			logger.debug("accept = "+accept);
 			if (accept) {
 				res.setContentType("txt");
 				if (!requireAuthentication || req.userHasRole("import")) {
@@ -169,6 +172,7 @@ public class HttpImportService extends AbstractImportService {
 				}
 				res.send();
 			}
+			logger.debug("Leaving process");
 		}
 
 		//Read one file from the HttpRequest and discard it.

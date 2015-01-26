@@ -148,7 +148,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 					if ((getQueueSize()>0) && connect().equals(Status.OK)) {
 						while (!stop && ((file = getNextFile()) != null)) {
 							long startTime = System.nanoTime();
+							logger.debug("About to call export("+file+")");
 							Status result = export(file);
+							logger.debug("Export status: "+result.toString());
 							lastElapsedTime = System.nanoTime() - startTime;
 							if (result.equals(Status.FAIL)) {
 								//Something is wrong with the file.
@@ -177,7 +179,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 									try { Thread.sleep(throttle); }
 									catch (Exception ignore) { }
 								}
-								release(file);
+								logger.debug("About to release the file");
+								boolean ok = release(file);
+								logger.debug("...ok = "+ok+"\n-------------------");
 								successCount++;
 								retryCount = 0;
 							}

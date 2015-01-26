@@ -75,6 +75,6 @@ public class ZipAnonymizer extends AbstractPipelineStage implements Processor, S
 	 * @return the script file used by this stage.
 	 */
 	public File[] getScriptFiles() {
-		return new File[] {scriptFile};
+		return new File[] { scriptFile };
 	}
 }

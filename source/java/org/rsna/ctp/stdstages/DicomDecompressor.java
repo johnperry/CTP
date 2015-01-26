@@ -88,6 +88,6 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 	 * @return the script file used by this stage.
 	 */
 	public File[] getScriptFiles() {
-		return new File[] {scriptFile};
+		return new File[] { scriptFile };
 	}
 }

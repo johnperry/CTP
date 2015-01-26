@@ -156,14 +156,17 @@ public abstract class AbstractQueuedExportService
 	 * a way that a retry is appropriate, the file must be requeued.
 	 */
 	protected synchronized File getNextFile() {
+		logger.debug("Entering getNextFile");
 		if (queueManager != null) {
 			File file = queueManager.dequeue(active);
 			if (file != null) {
 				lastFileDequeued = file;
 				lastTimeDequeued = System.currentTimeMillis();
 			}
+			logger.debug("...returning "+file);
 			return file;
 		}
+		logger.debug("...returning null");
 		return null;
 	}
 
@@ -175,12 +178,14 @@ public abstract class AbstractQueuedExportService
 	 * @param file the file to be released, which must be the original file
 	 * supplied by the ExportService.
 	 */
-	protected synchronized void release(File file) {
+	protected synchronized boolean release(File file) {
+		boolean ok = false;
 		if ((file != null)
 				&& file.exists()
 					&& file.getParentFile().getAbsolutePath().equals(activePath)) {
-			boolean ok = file.delete();
+			ok = file.delete();
 		}
+		return ok;
 	}
 
 	/**

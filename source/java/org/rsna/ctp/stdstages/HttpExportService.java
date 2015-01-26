@@ -31,7 +31,7 @@ public class HttpExportService extends AbstractExportService {
 
 	static final Logger logger = Logger.getLogger(HttpExportService.class);
 
-	final int readTimeout = 5000;
+	final int readTimeout = 10000;
 
 	URL url;
 	String protocol;
@@ -94,14 +94,18 @@ public class HttpExportService extends AbstractExportService {
 	 * @return the status of the attempt to export the file.
 	 */
 	public Status export(File fileToExport) {
-		HttpURLConnection conn;
-		OutputStream svros;
+		logger.debug("Entering export");
+		HttpURLConnection conn = null;
+		OutputStream svros = null;
 		try {
 			FileObject fileObject = FileObject.getInstance( fileToExport );
 
 			//Establish the connection
+//try { Thread.sleep(5000); } catch (Exception ex) { }
+			logger.debug("About to establish the connection to "+url);
 			conn = HttpUtil.getConnection(url);
 			conn.setReadTimeout(readTimeout);
+			conn.setConnectTimeout(readTimeout);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
@@ -110,6 +114,7 @@ public class HttpExportService extends AbstractExportService {
 				conn.setRequestProperty("Digest", fileObject.getDigest());
 			}
 			conn.connect();
+			logger.debug("...back from conn.connect()");
 
 			if (logDuplicates) {
 				//*********************************************************************************************
@@ -137,12 +142,18 @@ public class HttpExportService extends AbstractExportService {
 			}
 
 			//Send the file to the server
+			logger.debug("About to send the file");
+try { Thread.sleep(5000); } catch (Exception ex) { }
 			svros = conn.getOutputStream();
 			if (!zip) FileUtil.streamFile(fileToExport, svros);
 			else FileUtil.zipStreamFile(fileToExport, svros);
+try { Thread.sleep(5000); } catch (Exception ex) { }
 
 			//Get the response code and log Unauthorized responses
+			logger.debug("About to get the response code");
 			int responseCode = conn.getResponseCode();
+			logger.debug("Response code = "+responseCode);
+			
 			if (responseCode == HttpResponse.unauthorized) {
 				if (logUnauthorizedResponses) {
 					logger.warn(name + ": Credentials for "+username+" were not accepted by "+url);
@@ -162,10 +173,12 @@ public class HttpExportService extends AbstractExportService {
 				logUnauthorizedResponses = true;
 			}
 
-			//Get the response.
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
+			//Get the response.
 			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8 );
+			conn.disconnect();
+			logger.debug("Export result: "+result);
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
@@ -174,6 +187,7 @@ public class HttpExportService extends AbstractExportService {
 			else return Status.FAIL;
 		}
 		catch (Exception e) {
+			if (conn != null) conn.disconnect();
 			logger.warn(name+": export failed: " + e.getMessage());
 			logger.debug(e);
 			return Status.RETRY;

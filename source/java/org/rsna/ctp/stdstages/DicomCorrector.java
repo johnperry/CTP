@@ -52,7 +52,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 	 * @return the script files used by this stage.
 	 */
 	public File[] getScriptFiles() {
-		return new File[] { dicomScriptFile, null, null };
+		return new File[] { dicomScriptFile };
 	}
 
 	/**

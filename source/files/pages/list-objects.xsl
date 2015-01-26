@@ -47,6 +47,7 @@
 			<table border="1">
 				<thead>
 					<tr>
+						<th/>
 						<th>File</th>
 						<th>Series</th>
 						<th>Acquisition</th>
@@ -60,14 +61,15 @@
 					<xsl:sort select="instance" data-type="number"/>
 
 					<tr>
+						<td style="text-align:right"><xsl:value-of select="position()"/></td>
 						<td>
 							<a href="{$context}/{$studyName}/{file}">
 								<xsl:value-of select="file"/>
 							</a>
 						</td>
-						<td><xsl:value-of select="series"/></td>
-						<td><xsl:value-of select="acquisition"/></td>
-						<td><xsl:value-of select="instance"/></td>
+						<td style="text-align:right"><xsl:value-of select="series"/></td>
+						<td style="text-align:right"><xsl:value-of select="acquisition"/></td>
+						<td style="text-align:right"><xsl:value-of select="instance"/></td>
 						<td>
 							<a href="{$context}/{$studyName}/{file}?format=list">
 								<xsl:text>List</xsl:text>
