@@ -143,11 +143,11 @@ public class HttpExportService extends AbstractExportService {
 
 			//Send the file to the server
 			logger.debug("About to send the file");
-try { Thread.sleep(5000); } catch (Exception ex) { }
+//try { Thread.sleep(5000); } catch (Exception ex) { }
 			svros = conn.getOutputStream();
 			if (!zip) FileUtil.streamFile(fileToExport, svros);
 			else FileUtil.zipStreamFile(fileToExport, svros);
-try { Thread.sleep(5000); } catch (Exception ex) { }
+//try { Thread.sleep(5000); } catch (Exception ex) { }
 
 			//Get the response code and log Unauthorized responses
 			logger.debug("About to get the response code");
