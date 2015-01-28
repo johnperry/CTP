@@ -91,7 +91,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 		//Get the AuditLog plugin, if there is one.
 		auditLog = (AuditLog)Configuration.getInstance().getRegisteredPlugin(auditLogID);
 
-		if (enableExport && (exporter != null)) exporter.start();
+		if (enableExport && (exporter != null)) {
+			exporter.start();
+		}
 	}
 
 	/**

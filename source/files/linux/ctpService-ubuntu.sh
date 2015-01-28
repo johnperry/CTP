@@ -42,6 +42,7 @@ CTP_PID=$CTP_HOME/ctp.pid
 
 . /etc/rsna.conf
 export RSNA_ROOT
+export OPENAM_URL
 
 . /lib/lsb/init-functions
 

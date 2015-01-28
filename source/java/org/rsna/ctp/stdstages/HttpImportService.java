@@ -93,7 +93,9 @@ public class HttpImportService extends AbstractImportService {
 	 * Stop the pipeline stage.
 	 */
 	public void shutdown() {
-		if (httpReceiver != null) httpReceiver.stopServer();
+		if (httpReceiver != null) {
+			httpReceiver.stopServer();
+		}
 		super.shutdown();
 	}
 
@@ -101,7 +103,10 @@ public class HttpImportService extends AbstractImportService {
 	 * Start the receiver.
 	 */
 	public void start() {
-		if (httpReceiver != null) httpReceiver.start();
+		if (httpReceiver != null) {
+			//httpReceiver.setPriority(Thread.MAX_PRIORITY);
+			httpReceiver.start();
+		}
 	}
 
 	class Receiver implements Service {

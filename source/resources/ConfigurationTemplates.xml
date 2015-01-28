@@ -651,7 +651,6 @@
 			<attr name="forceClose" required="no" default="no" options="yes|no">
 				<helptext>Close the DICOM association after each object transmission</helptext>
 			</attr>
-			<attr name="throttle" required="no" default="0"/>
 			<attr name="hostTag" required="no" default="">
 				<helptext>DICOM tag from which to obtain the destination SCP host (ggggeeee, optional)</helptext>
 			</attr>
@@ -669,6 +668,7 @@
 			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
@@ -700,6 +700,7 @@
 			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
@@ -755,6 +756,7 @@
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/FtpExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
@@ -772,6 +774,7 @@
 			<attr name="logResponses" required="yes" default="no" options="all|failed|none">
 				<helptext>Log the contents of the responses from the AIM data service</helptext>
 			</attr>
+			<attr name="throttle" required="no" default="0"/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/AimExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
