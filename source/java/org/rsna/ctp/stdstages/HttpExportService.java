@@ -31,7 +31,7 @@ public class HttpExportService extends AbstractExportService {
 
 	static final Logger logger = Logger.getLogger(HttpExportService.class);
 
-	final int readTimeout = 10000;
+	final int timeout = 5000;
 
 	URL url;
 	String protocol;
@@ -85,6 +85,7 @@ public class HttpExportService extends AbstractExportService {
 			logger.error(name+": No port specified: "+element.getAttribute("url"));
 			throw new Exception();
 		}
+		System.setProperty("http.keepAlive", "false");
 /**/	logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 	}
 
@@ -101,11 +102,10 @@ public class HttpExportService extends AbstractExportService {
 			FileObject fileObject = FileObject.getInstance( fileToExport );
 
 			//Establish the connection
-//try { Thread.sleep(5000); } catch (Exception ex) { }
 			logger.debug("About to establish the connection to "+url);
 			conn = HttpUtil.getConnection(url);
-			conn.setReadTimeout(readTimeout);
-			conn.setConnectTimeout(readTimeout);
+			conn.setReadTimeout(timeout);
+			conn.setConnectTimeout(timeout);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
@@ -113,6 +113,8 @@ public class HttpExportService extends AbstractExportService {
 			if (sendDigestHeader && !zip) {
 				conn.setRequestProperty("Digest", fileObject.getDigest());
 			}
+			logger.debug("...connectTimeout = "+conn.getConnectTimeout());
+//*********/	try { Thread.sleep(5000); } catch (Exception ex) { }
 			conn.connect();
 			logger.debug("...back from conn.connect()");
 
@@ -173,11 +175,11 @@ public class HttpExportService extends AbstractExportService {
 				logUnauthorizedResponses = true;
 			}
 
+			//Get the response.
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
-			//Get the response.
 			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8 );
-			conn.disconnect();
+			//conn.disconnect();
 			logger.debug("Export result: "+result);
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
@@ -187,10 +189,23 @@ public class HttpExportService extends AbstractExportService {
 			else return Status.FAIL;
 		}
 		catch (Exception e) {
-			if (conn != null) conn.disconnect();
+			//if (conn != null) conn.disconnect();
 			logger.warn(name+": export failed: " + e.getMessage());
 			logger.debug(e);
 			return Status.RETRY;
 		}
 	}
+/*	
+	private int getResponseCode(HttpURLConnection conn) throws Exception {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		Future<int> future = executor.submit(new Callable<int>() {
+			public int call() throws Exception {
+				//do operations you want
+				return "OK";
+			}
+		});
+		return future.get(3, TimeUnit.SECONDS));
+		executor.shutdownNow();
+	}
+*/
 }

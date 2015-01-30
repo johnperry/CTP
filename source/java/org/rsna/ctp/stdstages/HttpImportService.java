@@ -104,7 +104,6 @@ public class HttpImportService extends AbstractImportService {
 	 */
 	public void start() {
 		if (httpReceiver != null) {
-			//httpReceiver.setPriority(Thread.MAX_PRIORITY);
 			httpReceiver.start();
 		}
 	}
