@@ -86,7 +86,7 @@ public class HttpExportService extends AbstractExportService {
 			throw new Exception();
 		}
 		System.setProperty("http.keepAlive", "false");
-/**/	logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
+		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 	}
 
 	/**

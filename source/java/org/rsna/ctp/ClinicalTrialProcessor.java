@@ -114,13 +114,16 @@ public class ClinicalTrialProcessor {
 
 		//Set up the classpath
 		ClasspathUtil.addJARs( new File("libraries") );
-
+		
 		//Initialize Log4J
 		File logs = new File("logs");
 		logs.mkdirs();
 		File logProps = new File("log4j.properties");
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
+
+		//Force the http.keepAlive property
+		System.setProperty("http.keepAlive", "false");
 
 		//Instantiate the singleton Cache, clear it, and preload
 		//files from the jars. Other files will be loaded as required..
