@@ -157,6 +157,7 @@ public class DicomStorageSCU {
 	//Close the association if it is open.
 	public void close() {
 		if (active != null) {
+			logger.debug("...closing the open association");
 			try { active.release(true); }
 			catch (Exception ignore) { }
 			active = null;
@@ -196,6 +197,7 @@ public class DicomStorageSCU {
 	 *<br><br><tt>dicomObject = new DicomObject(fileToExport, true);</tt>
 	 */
 	public synchronized Status send(DicomObject dicomObject) {
+		logger.debug("Exporting "+dicomObject.getFile().getName()+" to "+url.toString());
 		DcmParser parser = dicomObject.getDcmParser();
 		Dataset ds = dicomObject.getDataset();
 
@@ -248,8 +250,12 @@ public class DicomStorageSCU {
 				//Create a new association
 		        initAssocParam(requestedCalledAET, maskNull(requestedCallingAET));
 				initPresContext(sopClassUID);
+				logger.debug("...attempting to open a new association");
 				active = openAssoc(requestedHost, requestedPort);
-				if (active == null) return Status.RETRY; //probably off-line
+				if (active == null) {
+					logger.info("...unable to open a new association; returning Status.RETRY");
+					return Status.RETRY; //probably off-line
+				}
 				assoc = active.getAssociation();
 
 				//Negotiate the transfer syntax
@@ -265,10 +271,12 @@ public class DicomStorageSCU {
 				if (pc == null) {
 					currentTSUID = null;
 					currentSOPClassUID = null;
-					logger.debug("Unable to negotiate a transfer syntax for "+dicomObject.getSOPInstanceUID());
-					logger.debug("...SOPClass: "+dicomObject.getSOPClassName());
+					logger.debug("...unable to negotiate a transfer syntax for "+dicomObject.getSOPInstanceUID());
+					logger.debug("......SOPClass: "+dicomObject.getSOPClassName());
 					return Status.FAIL;
 				}
+				logger.debug("...successfully negotiated transfer syntax for "+dicomObject.getSOPInstanceUID());
+				logger.debug("......SOPClass: "+dicomObject.getSOPClassName());
 				currentTSUID = pc.getTransferSyntaxUID();
 				currentSOPClassUID = sopClassUID;
 				currentHost = requestedHost;
@@ -276,6 +284,7 @@ public class DicomStorageSCU {
 				currentCalledAET = requestedCalledAET;
 				currentCallingAET = requestedCallingAET;
 			}
+			else logger.debug("...reusing the open association");
 
 			//Make the command and do the transfer.
 			Command command = oFact.newCommand();
@@ -287,9 +296,14 @@ public class DicomStorageSCU {
 			if (status == 0) {
 				lastFailureMessageTime = 0;
 				lastTransmissionTime = System.currentTimeMillis();
+				logger.debug("...transmission succeeded; returning Status.OK");
 				return Status.OK;
 			}
-			else { close(); return Status.FAIL; }
+			else { 
+				logger.debug("...transmission failed ("+status+"); returning Status.FAIL");
+				close(); 
+				return Status.FAIL; 
+			}
 		}
 		catch (Exception ex) {
 			close();
