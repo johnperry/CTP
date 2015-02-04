@@ -102,7 +102,6 @@ public class HttpExportService extends AbstractExportService {
 			FileObject fileObject = FileObject.getInstance( fileToExport );
 
 			//Establish the connection
-			logger.debug("About to establish the connection to "+url);
 			conn = HttpUtil.getConnection(url);
 			conn.setReadTimeout(timeout);
 			conn.setConnectTimeout(timeout);
@@ -113,8 +112,6 @@ public class HttpExportService extends AbstractExportService {
 			if (sendDigestHeader && !zip) {
 				conn.setRequestProperty("Digest", fileObject.getDigest());
 			}
-			logger.debug("...connectTimeout = "+conn.getConnectTimeout());
-//*********/	try { Thread.sleep(5000); } catch (Exception ex) { }
 			conn.connect();
 			logger.debug("...back from conn.connect()");
 
@@ -144,17 +141,12 @@ public class HttpExportService extends AbstractExportService {
 			}
 
 			//Send the file to the server
-			logger.debug("About to send the file");
-//try { Thread.sleep(5000); } catch (Exception ex) { }
 			svros = conn.getOutputStream();
 			if (!zip) FileUtil.streamFile(fileToExport, svros);
 			else FileUtil.zipStreamFile(fileToExport, svros);
-//try { Thread.sleep(5000); } catch (Exception ex) { }
 
 			//Get the response code and log Unauthorized responses
-			logger.debug("About to get the response code");
 			int responseCode = conn.getResponseCode();
-			logger.debug("Response code = "+responseCode);
 			
 			if (responseCode == HttpResponse.unauthorized) {
 				if (logUnauthorizedResponses) {
@@ -179,8 +171,6 @@ public class HttpExportService extends AbstractExportService {
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
 			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8 );
-			//conn.disconnect();
-			logger.debug("Export result: "+result);
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
@@ -189,23 +179,9 @@ public class HttpExportService extends AbstractExportService {
 			else return Status.FAIL;
 		}
 		catch (Exception e) {
-			//if (conn != null) conn.disconnect();
 			logger.warn(name+": export failed: " + e.getMessage());
 			logger.debug(e);
 			return Status.RETRY;
 		}
 	}
-/*	
-	private int getResponseCode(HttpURLConnection conn) throws Exception {
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		Future<int> future = executor.submit(new Callable<int>() {
-			public int call() throws Exception {
-				//do operations you want
-				return "OK";
-			}
-		});
-		return future.get(3, TimeUnit.SECONDS));
-		executor.shutdownNow();
-	}
-*/
 }

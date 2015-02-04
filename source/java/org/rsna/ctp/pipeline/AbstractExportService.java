@@ -150,9 +150,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 					if ((getQueueSize()>0) && connect().equals(Status.OK)) {
 						while (!stop && ((file = getNextFile()) != null)) {
 							long startTime = System.nanoTime();
-							logger.debug("About to call export("+file+")");
 							Status result = export(file);
-							logger.debug("Export status: "+result.toString());
 							lastElapsedTime = System.nanoTime() - startTime;
 							if (result.equals(Status.FAIL)) {
 								//Something is wrong with the file.
@@ -181,9 +179,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 									try { Thread.sleep(throttle); }
 									catch (Exception ignore) { }
 								}
-								logger.debug("About to release the file");
-								boolean ok = release(file);
-								logger.debug("...ok = "+ok+"\n-------------------");
+								release(file);
 								successCount++;
 								retryCount = 0;
 							}
@@ -203,7 +199,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 					stop = true;
 				}
 			}
-			logger.info(name+" Thread: Interrupt received; thread stopped");
+			logger.info(name+" Thread: Interrupt received; exporter thread stopped");
 		}
 	}
 
@@ -247,13 +243,9 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 						int e = tagint &0xFFFF;
 						elementName = String.format("g%04Xe%04X", g, e);
 					}
-					logger.debug("About to call setAttribute");
-					logger.debug("name: "+elementName);
-					logger.debug("value: \""+dicomObject.getElementValue(tagint, "")+"\"\n");
 					root.setAttribute(elementName, dicomObject.getElementValue(tagint, ""));
 				}
 				entry = XmlUtil.toPrettyString(root);
-				logger.debug("AuditLog entry:\n"+entry);
 			}
 			catch (Exception ex) {
 				logger.warn("Unable to construct the AuditLog entry", ex);
