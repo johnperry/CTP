@@ -685,6 +685,12 @@
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
+			<attr name="cacheSize" required="no" default="0">
+				<helptext>
+					The number of files to group into a zip file before transmission.
+					Note: This should normally be used when zip is set to "no".
+				</helptext>
+			</attr>
 			<attr name="sendDigestHeader" required="yes" default="no" options="yes|no"/>
 			<attr name="username" required="no" default=""/>
 			<attr name="password" required="no" default=""/>

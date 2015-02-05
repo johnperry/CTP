@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2015 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -33,6 +33,7 @@ public abstract class AbstractQueuedExportService
 	protected File active = null;
 	protected String activePath = "";
 	protected File temp = null;
+	protected QueueManager cacheManager = null;
 	protected QueueManager queueManager = null;
 	protected File dicomScriptFile = null;
 	protected File xmlScriptFile = null;
@@ -56,11 +57,19 @@ public abstract class AbstractQueuedExportService
 
 			temp = new File(root, "temp");
 			temp.mkdirs();
+			
 			File queue = new File(root, "queue");
 			queueManager = new QueueManager(queue, 0, 0); //use default settings
 			active = new File(root, "active");
 			activePath = active.getAbsolutePath();
 			queueManager.enqueueDir(active); //requeue any files that are left from an ungraceful shutdown.
+
+			cacheManager = queueManager;
+			int cacheSize = StringUtil.getInt(element.getAttribute("cacheSize").trim());
+			if (cacheSize > 0) {
+				File cache = new File(root, "cache");
+				cacheManager = new QueueManager(cache, 0, 0);
+			}
 		}
 	}
 
@@ -81,11 +90,19 @@ public abstract class AbstractQueuedExportService
 	}
 
 	/**
-	 * Get the QueueManager.
+	 * Get the QueueManager of the export queue.
 	 * @return the QueueManager.
 	 */
 	public synchronized QueueManager getQueueManager() {
 		return queueManager;
+	}
+
+	/**
+	 * Get the QueueManager of the cache.
+	 * @return the QueueManager.
+	 */
+	public synchronized QueueManager getCacheManager() {
+		return cacheManager;
 	}
 
 	/**
@@ -125,9 +142,11 @@ public abstract class AbstractQueuedExportService
 		lastTimeOut = System.currentTimeMillis();
 	}
 
-	//Add a fileObject to the export queue
+	//Queue a fileObject.
+	//Note: if caching is enabled, this puts the object in the cache;
+	//if caching is not enabled, it puts the object directly in the export queue.
 	private void enqueue(FileObject fileObject) {
-		if (queueManager.enqueue(lastFileIn) == null) {
+		if (cacheManager.enqueue(lastFileIn) == null) {
 			if (quarantine != null) quarantine.insertCopy(fileObject);
 		}
 	}
