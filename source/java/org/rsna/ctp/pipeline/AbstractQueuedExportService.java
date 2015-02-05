@@ -156,17 +156,14 @@ public abstract class AbstractQueuedExportService
 	 * a way that a retry is appropriate, the file must be requeued.
 	 */
 	protected synchronized File getNextFile() {
-		logger.debug("Entering getNextFile");
 		if (queueManager != null) {
 			File file = queueManager.dequeue(active);
 			if (file != null) {
 				lastFileDequeued = file;
 				lastTimeDequeued = System.currentTimeMillis();
 			}
-			logger.debug("...returning "+file);
 			return file;
 		}
-		logger.debug("...returning null");
 		return null;
 	}
 

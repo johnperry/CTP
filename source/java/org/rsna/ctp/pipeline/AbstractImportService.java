@@ -177,8 +177,15 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 		if ((file != null)
 				&& file.exists()
 					&& file.getParentFile().getAbsolutePath().equals(activePath)) {
-			if (!file.delete()) {
-				logger.warn("Unable to release the processed file from the active directory:\n"+file.getAbsolutePath());
+			boolean ok = false;
+			for (int i=0; i<5; i++) {
+				if (ok = file.delete()) break;
+				try { Thread.sleep(100); }
+				catch (Exception ex) { }
+			}
+			if (!ok) {
+				logger.warn("Unable to release the processed file from the active directory:\n"
+							+"               "+file.getAbsolutePath());
 			}
 		}
 	}
