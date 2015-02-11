@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2015 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -17,11 +17,13 @@ import javax.net.ssl.HttpsURLConnection;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractExportService;
+import org.rsna.ctp.pipeline.QueueManager;
 import org.rsna.ctp.pipeline.Status;
 import org.rsna.server.HttpResponse;
 import org.rsna.util.Base64;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
+import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
 /**
@@ -36,6 +38,7 @@ public class HttpExportService extends AbstractExportService {
 	URL url;
 	String protocol;
 	boolean zip = false;
+	int cacheSize = 0;
 	String username = null;
 	String password = null;
 	boolean authenticate = false;
@@ -43,6 +46,7 @@ public class HttpExportService extends AbstractExportService {
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
 	boolean sendDigestHeader = false;
+	Compressor compressor = null;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -58,6 +62,16 @@ public class HttpExportService extends AbstractExportService {
 		//Get the attribute which specifies whether files
 		//are to be zipped before transmission.
 		zip = element.getAttribute("zip").trim().equals("yes");
+
+		//Get the attribute which specifies how many files
+		//are to be cached into a zip file before transmission.
+		//Note that the function of this attribute is independent 
+		//of the zip attribute. If both are enabled, then the file
+		//that is ultimately transmitted is a zip file containing
+		//one zip file that itself contains cacheSize files. If 
+		//neither is enabled, the individual files are transmitted
+		//without compression.
+		cacheSize = StringUtil.getInt(element.getAttribute("cacheSize").trim());
 
 		//See if we are to log duplicate transmissions
 		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
@@ -87,6 +101,18 @@ public class HttpExportService extends AbstractExportService {
 		}
 		System.setProperty("http.keepAlive", "false");
 		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
+		
+	}
+
+	/**
+	 * Start the compressor thread if enabled..
+	 */
+	public void start() {
+		super.start();
+		if (cacheSize > 0) {
+			compressor = new Compressor();
+			compressor.start();
+		}
 	}
 
 	/**
@@ -184,6 +210,7 @@ public class HttpExportService extends AbstractExportService {
 			return Status.RETRY;
 		}
 	}
+<<<<<<< HEAD
 
 	/**
 	 * Get HTML text displaying the active status of the stage.
@@ -198,5 +225,45 @@ public class HttpExportService extends AbstractExportService {
 			sb.append("<td>" + ((cacheManager!=null) ? cacheManager.size() : "???") + "</td></tr>");
 		}
 		return super.getStatusHTML(childUniqueStatus + sb.toString());
+=======
+	
+	class Compressor extends Thread {
+		int maxFiles = 100;
+		File cacheTemp;
+		File cacheZip;
+		File zip;
+		public Compressor() {
+			super(name + " - compressor");
+			cacheTemp = new File(root, "cacheTemp");
+			cacheZip = new File(root, "cacheTemp");
+			cacheTemp.mkdirs();
+			cacheZip.mkdirs();
+			zip = new File(cacheZip, "cache.zip");
+		}
+		public void run() {
+			while (!stop && !interrupted()) {
+				LinkedList<File> fileList = new LinkedList<File>();
+				QueueManager cache = getCacheManager();
+				for (int i=0; i<maxFiles; i++) {
+					if (cache.dequeue(cacheTemp) == null) break;
+				}
+				File[] files = cacheTemp.listFiles();
+				if (files.length > 0) {
+					try {
+						FileOutputStream out = new FileOutputStream(zip);
+						FileUtil.zipStreamFiles(files, out);
+						getQueueManager().enqueue(zip);
+					}
+					catch (Exception ex) { cache.enqueueDir(cacheTemp); }
+				}
+				zip.delete();
+				for (File file : files) file.delete();
+				if (cache.size() <= 0) {
+					try { Thread.sleep(getInterval()); }
+					catch (Exception ex) { }
+				}
+			}
+		}
+>>>>>>> compress
 	}
 }

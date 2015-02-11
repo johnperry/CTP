@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2005 by the Radiological Society of North America
+*  Copyright 2015 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
@@ -87,7 +87,6 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * that does the actual exporting after it has had time to set up.
 	 */
 	public void start() {
-
 		//Get the AuditLog plugin, if there is one.
 		auditLog = (AuditLog)Configuration.getInstance().getRegisteredPlugin(auditLogID);
 
@@ -136,6 +135,14 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 */
 	public synchronized Status disconnect() {
 		return Status.OK;
+	}
+	
+	/**
+	 * Get the interval for polling the export queue.
+	 * @return the interval in milliseconds
+	 */
+	public int getInterval() {
+		return interval;
 	}
 
 	class Exporter extends Thread {
