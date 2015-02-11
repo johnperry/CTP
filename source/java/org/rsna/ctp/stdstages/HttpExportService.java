@@ -210,12 +210,9 @@ public class HttpExportService extends AbstractExportService {
 			return Status.RETRY;
 		}
 	}
-<<<<<<< HEAD
 
 	/**
 	 * Get HTML text displaying the active status of the stage.
-	 * @param childUniqueStatus the status of the stage of which
-	 * this class is the parent.
 	 * @return HTML text displaying the active status of the stage.
 	 */
 	public synchronized String getStatusHTML() {
@@ -224,8 +221,8 @@ public class HttpExportService extends AbstractExportService {
 			sb.append("<tr><td width=\"20%\">Cache queue size:</td>");
 			sb.append("<td>" + ((cacheManager!=null) ? cacheManager.size() : "???") + "</td></tr>");
 		}
-		return super.getStatusHTML(childUniqueStatus + sb.toString());
-=======
+		return super.getStatusHTML(sb.toString());
+	}
 	
 	class Compressor extends Thread {
 		int maxFiles = 100;
@@ -264,6 +261,5 @@ public class HttpExportService extends AbstractExportService {
 				}
 			}
 		}
->>>>>>> compress
 	}
 }
