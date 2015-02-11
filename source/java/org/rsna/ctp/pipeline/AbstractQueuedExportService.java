@@ -193,7 +193,7 @@ public abstract class AbstractQueuedExportService
 	 */
 	public synchronized String getStatusHTML(String childUniqueStatus) {
 		StringBuffer sb = new StringBuffer();
-		sb.append("<tr><td width=\"20%\">Queue size:</td>");
+		sb.append("<tr><td width=\"20%\">Export queue size:</td>");
 		sb.append("<td>" + ((queueManager!=null) ? queueManager.size() : "???") + "</td></tr>");
 		sb.append("<tr><td width=\"20%\">Last file dequeued:</td>");
 		if (lastTimeDequeued != 0) {

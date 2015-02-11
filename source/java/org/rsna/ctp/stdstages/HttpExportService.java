@@ -184,4 +184,19 @@ public class HttpExportService extends AbstractExportService {
 			return Status.RETRY;
 		}
 	}
+
+	/**
+	 * Get HTML text displaying the active status of the stage.
+	 * @param childUniqueStatus the status of the stage of which
+	 * this class is the parent.
+	 * @return HTML text displaying the active status of the stage.
+	 */
+	public synchronized String getStatusHTML() {
+		StringBuffer sb = new StringBuffer();
+		if (cacheSize > 0) {
+			sb.append("<tr><td width=\"20%\">Cache queue size:</td>");
+			sb.append("<td>" + ((cacheManager!=null) ? cacheManager.size() : "???") + "</td></tr>");
+		}
+		return super.getStatusHTML(childUniqueStatus + sb.toString());
+	}
 }

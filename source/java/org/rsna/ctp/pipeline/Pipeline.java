@@ -100,7 +100,9 @@ public class Pipeline extends Thread {
 	 * @return true if the user has admin privileges for this pipeline, false otherwise.
 	 */
 	public boolean allowsAdminBy(User user) {
-		return (user != null) && (user.hasRole("admin") || (!admin.equals("") && user.getUsername().equals(admin)));
+		return (user != null) && 
+					( user.hasRole("admin") || 
+							( !admin.equals("") && user.getUsername().equals(admin) ) );
 	}
 
 	/**
