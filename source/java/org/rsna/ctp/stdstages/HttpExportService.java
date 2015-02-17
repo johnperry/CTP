@@ -11,10 +11,14 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
 import org.apache.log4j.Logger;
+import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractExportService;
 import org.rsna.ctp.pipeline.QueueManager;
@@ -24,6 +28,7 @@ import org.rsna.util.Base64;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
 import org.w3c.dom.Element;
 
 /**
@@ -38,7 +43,6 @@ public class HttpExportService extends AbstractExportService {
 	URL url;
 	String protocol;
 	boolean zip = false;
-	int cacheSize = 0;
 	String username = null;
 	String password = null;
 	boolean authenticate = false;
@@ -46,6 +50,12 @@ public class HttpExportService extends AbstractExportService {
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
 	boolean sendDigestHeader = false;
+
+	int cacheSize = 0;
+    String[] dirs = null;
+	String defaultString = "UNKNOWN";
+	String whitespaceReplacement = "_";
+	String filter = "[^a-zA-Z0-9\\[\\]\\(\\)\\^\\.\\-_,;]+";
 	Compressor compressor = null;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
@@ -62,16 +72,9 @@ public class HttpExportService extends AbstractExportService {
 		//Get the attribute which specifies whether files
 		//are to be zipped before transmission.
 		zip = element.getAttribute("zip").trim().equals("yes");
-
-		//Get the attribute which specifies how many files
-		//are to be cached into a zip file before transmission.
-		//Note that the function of this attribute is independent 
-		//of the zip attribute. If both are enabled, then the file
-		//that is ultimately transmitted is a zip file containing
-		//one zip file that itself contains cacheSize files. If 
-		//neither is enabled, the individual files are transmitted
-		//without compression.
-		cacheSize = StringUtil.getInt(element.getAttribute("cacheSize").trim());
+		
+		//Get the compressor parameters, if any
+		getCompressorParaameters(element);
 
 		//See if we are to log duplicate transmissions
 		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
@@ -102,6 +105,38 @@ public class HttpExportService extends AbstractExportService {
 		System.setProperty("http.keepAlive", "false");
 		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 		
+	}
+	
+	private void getCompressorParaameters(Element element) {
+		//Get the compression child element, if present
+		Element compressor = XmlUtil.getFirstNamedChild(element, "compressor");
+		if (compressor != null) {
+			//Get the attribute that specifies how many files
+			//are to be cached into a zip file before transmission.
+			//Note that the function of this attribute is independent 
+			//of the zip attribute. If both are enabled, then the file
+			//that is ultimately transmitted is a zip file containing
+			//one zip file that itself contains cacheSize files. If 
+			//neither is enabled, the individual files are transmitted
+			//without compression.
+			cacheSize = StringUtil.getInt(compressor.getAttribute("cacheSize").trim());
+			if (cacheSize > 0) {
+				File cache = new File(root, "cache");
+				cacheManager = new QueueManager(cache, 0, 0);
+			}
+			//Get the structure of the directory tree and filename for files
+			//to be stored in the zip file. This attribute is not used for 
+			//non-DicomObjects or for non-cached files.
+			String structure = compressor.getAttribute("structure").trim();
+			if (!structure.equals("")) {
+				dirs = structure.split("/");
+			}
+			//Get the replacement parameters, if supplied.
+			String temp = compressor.getAttribute("defaultString").trim();
+			if (!temp.equals("")) defaultString = temp;
+			temp = compressor.getAttribute("whitespaceReplacement").trim();
+			if (!temp.equals("")) whitespaceReplacement = temp;		
+		}
 	}
 
 	/**
@@ -225,41 +260,132 @@ public class HttpExportService extends AbstractExportService {
 	}
 	
 	class Compressor extends Thread {
-		int maxFiles = 100;
 		File cacheTemp;
 		File cacheZip;
 		File zip;
+		NameTable names;
 		public Compressor() {
 			super(name + " - compressor");
 			cacheTemp = new File(root, "cacheTemp");
-			cacheZip = new File(root, "cacheTemp");
+			cacheZip = new File(root, "cacheZip");
 			cacheTemp.mkdirs();
 			cacheZip.mkdirs();
 			zip = new File(cacheZip, "cache.zip");
 		}
 		public void run() {
-			while (!stop && !interrupted()) {
+			while (!stop && !interrupted() && (cacheSize > 0)) {
+				names = new NameTable();
 				LinkedList<File> fileList = new LinkedList<File>();
-				QueueManager cache = getCacheManager();
-				for (int i=0; i<maxFiles; i++) {
-					if (cache.dequeue(cacheTemp) == null) break;
-				}
-				File[] files = cacheTemp.listFiles();
-				if (files.length > 0) {
+				int nFiles = 0;
+				for (int i=0; i<cacheSize; i++) {
+					File file = cacheManager.dequeue(cacheTemp);
+					if (file == null) break;
+					nFiles++;
+					File destDir = cacheTemp;
+
+					//If this is a DicomObject, put it in the hierarchy
 					try {
-						FileOutputStream out = new FileOutputStream(zip);
-						FileUtil.zipStreamFiles(files, out);
-						getQueueManager().enqueue(zip);
+						//Construct the child directories under cacheTemp.
+						DicomObject dob = new DicomObject(file);
+						for (int k=0; k<dirs.length - 1; k++) {
+							String dir = dirs[k].trim();
+							dir = replace(dir, dob);
+							if (dir.equals("")) dir = defaultString;
+							destDir = new File(destDir, dir);
+						}
+						destDir.mkdirs();
+						String name = dirs[dirs.length - 1].trim();
+						if (!name.equals("")) {
+							name = replace(name, dob);
+							if (name.equals("")) name = defaultString;
+							name += ".dcm";
+							name = names.getDuplicateName(destDir, name, ".dcm");
+							File dobFile = new File(destDir, name);
+							dob.renameTo(dobFile);
+							dob.setStandardExtension();						
+						}
 					}
-					catch (Exception ex) { cache.enqueueDir(cacheTemp); }
+					catch (Exception notDICOM) { }
 				}
-				zip.delete();
-				for (File file : files) file.delete();
-				if (cache.size() <= 0) {
+				if (nFiles > 0) {
+					if (FileUtil.zipDirectory(cacheTemp, zip, true)) {
+						getQueueManager().enqueue(zip);
+						zip.delete();
+						for (File file : cacheTemp.listFiles()) FileUtil.deleteAll(file);
+					}
+				}
+				if (cacheManager.size() <= 0) {
 					try { Thread.sleep(getInterval()); }
 					catch (Exception ex) { }
 				}
 			}
 		}
+		private String replace(String string, DicomObject dob) {
+			try {
+				String singleTag = "[\\[\\(][0-9a-fA-F]{0,4}[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
+				Pattern pattern = Pattern.compile( singleTag + "(::"+singleTag+")*" );
+
+				Matcher matcher = pattern.matcher(string);
+				StringBuffer sb = new StringBuffer();
+				while (matcher.find()) {
+					String group = matcher.group();
+					String repl = getElementValue(dob, group);
+					if (repl.equals("")) repl = defaultString;
+					matcher.appendReplacement(sb, repl);
+				}
+				matcher.appendTail(sb);
+				string = sb.toString();
+				string = string.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
+				string = string.replaceAll(filter, "");
+			}
+			catch (Exception ex) { logger.warn(ex); }
+			return string;
+		}
+		private String getElementValue(DicomObject dob, String group) {
+			String value = "";
+			try {
+				int[] tags = DicomObject.getTagArray(group);
+				value = dob.getElementString(tags);
+			}
+			catch (Exception ex) { logger.debug("......exception processing: "+group); }
+			return value;
+		}
+		
+		//An implementation of java.io.FileFilter to return
+		//only files whose names begin with a specified string.
+		class NameFilter implements FileFilter {
+			String name;
+			public NameFilter(String name) {
+				this.name = name;
+			}
+			public boolean accept(File file) {
+				if (file.isFile()) {
+					String fn = file.getName();
+					return fn.equals(name) || fn.startsWith(name + ".") || fn.startsWith(name + "[");
+				}
+				return false;
+			}
+		}
+		
+		class NameTable {
+			Hashtable<String,Integer> names;
+			public NameTable() {
+				names = new Hashtable<String,Integer>();
+			}
+			private String getDuplicateName(File dir, String name, String ext) {
+				boolean hasExtension = name.toLowerCase().endsWith(ext.toLowerCase());
+				if (hasExtension) name = name.substring( 0, name.length() - ext.length() );
+				Integer count = names.get(name);
+				if (count == null) {
+					names.put(name, new Integer(1));
+					return name + (hasExtension ? ext : "");
+				}
+				else {
+					int n = count.intValue();
+					names.put(name, new Integer(n + 1));
+					return name + "["+n+"]" + (hasExtension ? ext : "");
+				}
+			}
+		}			
 	}
 }

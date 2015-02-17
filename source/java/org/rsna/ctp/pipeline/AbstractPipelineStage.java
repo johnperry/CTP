@@ -268,7 +268,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		while (child != null) {
 			if (child.getNodeType() == Node.ELEMENT_NODE) {
 				Element e = (Element)child;
-				sb.append("<tr><td width=\"20%\">"+e.getNodeName()+":</td>");
+				sb.append("<tr><td width=\"20%\" style=\"vertical-align:top\">"+e.getNodeName()+":</td>");
 				sb.append("<td>"+getTableFor(e)+"</td></tr>");
 			}
 			child = child.getNextSibling();

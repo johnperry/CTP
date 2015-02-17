@@ -685,12 +685,6 @@
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
-			<attr name="cacheSize" required="no" default="0">
-				<helptext>
-					The number of files to group into a zip file before transmission.
-					Note: This should normally be used when zip is set to "no".
-				</helptext>
-			</attr>
 			<attr name="sendDigestHeader" required="yes" default="no" options="yes|no"/>
 			<attr name="username" required="no" default=""/>
 			<attr name="password" required="no" default=""/>
@@ -710,6 +704,32 @@
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
+
+			<child name="compressor" required="no" allowMultiples="no">
+				<attr name="cacheSize" required="no" default="0">
+					<helptext>
+						The number of files to group into a zip file before transmission.
+						Note: This should normally be used when zip is set to "no".
+					</helptext>
+				</attr>
+				<attr name="structure" required="yes" default="">
+					<helptext>
+						Sequence of text and DICOM tags specifying the elements that define the directory hierarchy and the filename in the zip file. 
+						Path segments are separated by / characters. The last segment defines the name of the file. 
+						Do not include an extension in the name.
+					</helptext>
+				</attr>
+				<attr name="defaultString" required="no" default="">
+					<helptext>
+						Value to use in a file name when an element specified in
+						the cachedName attibute is missing in an object
+					</helptext>
+				</attr>
+				<attr name="whitespaceReplacement" required="no" default="_">
+					<helptext>Value to substitute for whitespace in file names</helptext>
+				</attr>
+			</child>
+
 		</ExportService>
 
 		<ExportService>

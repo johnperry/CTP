@@ -161,12 +161,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 					//Now construct the child directories under the root.
 					for (String dir : dirs) {
-						logger.debug("...processing directory path element: "+dir);
 						dir = replace(dir, xdob);
 						dir = dir.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 						dir = dir.replaceAll(filter, "");
 						if (dir.equals("")) dir = defaultString;
-						logger.debug("...constructing intermediate directory name: "+dir);
 						destDir = new File(destDir, dir);
 					}
 				}
@@ -174,11 +172,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				if (filenameTag != 0) {
 					name = dob.getElementValue(filenameTag, name) + filenameSuffix;
 				}
-
-				logger.debug("...storage directory: "+destDir);
-				logger.debug("...filename: "+name);
 			}
-
 			else {
 				//All other object types have already passed the filter, and they are
 				//always stored in the root, so we are now ready to store.
@@ -197,18 +191,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				return null;
 			}
 
-			if (destDir.exists()) {
-				logger.debug("...storage directory exists: "+destDir);
-			}
-			else {
-				if (destDir.mkdirs()) {
-					logger.debug("...storage directory created successfully: "+destDir);
-				}
-				else {
-					logger.warn("Unable to create the storage directory: "+destDir);
-					return null;
-				}
-			}
+			//Make the directory and all its parents
+			destDir.mkdirs();
 
 			//Fix the filename if necessary
 			String stdext = fileObject.getStandardExtension();
@@ -256,7 +240,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		if (files.length == 0) return name;
 		if (logDuplicates) {
 			logger.info("Found "+files.length+" duplicate files for: "+name);
-			for (File file: files) logger.info("   "+file);
+			for (File file: files) logger.debug("   "+file);
 		}
 		int n = 0;
 		for (File file : files) {

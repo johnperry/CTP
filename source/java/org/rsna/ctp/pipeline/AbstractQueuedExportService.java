@@ -65,11 +65,6 @@ public abstract class AbstractQueuedExportService
 			queueManager.enqueueDir(active); //requeue any files that are left from an ungraceful shutdown.
 
 			cacheManager = queueManager;
-			int cacheSize = StringUtil.getInt(element.getAttribute("cacheSize").trim());
-			if (cacheSize > 0) {
-				File cache = new File(root, "cache");
-				cacheManager = new QueueManager(cache, 0, 0);
-			}
 		}
 	}
 
