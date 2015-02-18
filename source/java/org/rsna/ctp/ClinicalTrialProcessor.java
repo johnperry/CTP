@@ -122,9 +122,6 @@ public class ClinicalTrialProcessor {
 		PropertyConfigurator.configure(logProps.getAbsolutePath());
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
 
-		//Force the http.keepAlive property
-		System.setProperty("http.keepAlive", "false");
-
 		//Instantiate the singleton Cache, clear it, and preload
 		//files from the jars. Other files will be loaded as required..
 		Cache cache = Cache.getInstance(new File("CACHE"));

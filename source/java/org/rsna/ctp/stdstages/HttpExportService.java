@@ -102,7 +102,6 @@ public class HttpExportService extends AbstractExportService {
 			logger.error(name+": No port specified: "+element.getAttribute("url"));
 			throw new Exception();
 		}
-		System.setProperty("http.keepAlive", "false");
 		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 		
 	}
@@ -214,6 +213,7 @@ public class HttpExportService extends AbstractExportService {
 					logger.warn(name + ": Credentials for "+username+" were not accepted by "+url);
 					logUnauthorizedResponses = false;
 				}
+				conn.disconnect();
 				return Status.RETRY;
 			}
 			else if (responseCode == HttpResponse.forbidden) {
@@ -221,6 +221,7 @@ public class HttpExportService extends AbstractExportService {
 					logger.warn(name + ": User "+username+" does not have the \"import\" privilege on "+url);
 					logUnauthorizedResponses = false;
 				}
+				conn.disconnect();
 				return Status.RETRY;
 			}
 			else if (!logUnauthorizedResponses) {
@@ -231,7 +232,10 @@ public class HttpExportService extends AbstractExportService {
 			//Get the response.
 			//Note: this rather odd way of acquiring a success
 			//result is for backward compatibility with MIRC.
-			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8 );
+			//We leave the input stream open in order to make
+			//the disconnect actually close the connection.
+			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8, false );
+			conn.disconnect();
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
