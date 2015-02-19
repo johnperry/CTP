@@ -74,8 +74,7 @@ public class QueueManager {
 	 * @return a File pointing to the object in the queue.
 	 */
 	public synchronized File enqueue(File file) {
-		String filename = getEmbeddedFilename(file.getName(), true);
-		lastFileIn = getNextFileIn(filename);
+		lastFileIn = getNextFileIn();
 		lastFileIn = copyFile(file, lastFileIn);
 		if (lastFileIn != null) size++;
 		return lastFileIn;
@@ -104,30 +103,6 @@ public class QueueManager {
 			}
 		}
 		return count;
-	}
-
-	/**
-	 * Get a filename which is either the string embedded most deeply
-	 * in square brackets in a filename, the full filename itself, or the
-	 * empty string. For example, the filename
-	 * "XXX-1234[yyy-5678[abc-9876.dcm].dcm].dcm" will return "abc-9876.dcm".
-	 * @param filename the starting filename to be searched for the most
-	 * deeply embedded bracketed string.
-	 * @param returnName true if the original filename is to be returned if
-	 * no embedded name is found; false if the empty string is to be returned
-	 * if no embedded name is found.
-	 * @return the contents of the most deeply bracketed string (without the brackets),
-	 * or if there are no brackets, then either the full filename or the empty string,
-	 * depending on the value of returnName.
-	 */
-	public static String getEmbeddedFilename(String filename, boolean returnName) {
-		String returnString = returnName ? filename : "";
-		int k1 = filename.indexOf("[");
-		if (k1 == -1) return returnString;
-		int k2 = filename.lastIndexOf("]");
-		if (k2 == -1) return returnString;
-		if (k2 < k1) return returnString;
-		return getEmbeddedFilename(filename.substring(k1+1, k2).trim(), true);
 	}
 
 	/**
@@ -288,10 +263,7 @@ public class QueueManager {
 	private File moveFile(File file, File dir) {
 		try {
 			dir.mkdirs();
-			//Preserve the embedded filename, if present.
-			String suffix = getEmbeddedFilename(file.getName(), false);
-			if (!suffix.equals("")) suffix = "[" + suffix + "]";
-			File dest = File.createTempFile("QF-", suffix, dir);
+			File dest = File.createTempFile("QF-", "", dir);
 
 			//First try a rename
 			boolean ok = file.renameTo(dest);
@@ -308,7 +280,7 @@ public class QueueManager {
 	}
 
 	//Get the next File into which to enqueue a file.
-	private File getNextFileIn(String filename) {
+	private File getNextFileIn() {
 		if (lastFileIn == null) lastFileIn = findLastFile(root, 0);
 		int[] levels = new int[nLevels];
 		if (lastFileIn == null) {
@@ -339,21 +311,18 @@ public class QueueManager {
 				if (i > 0) levels[i] = 0;
 			}
 		}
-		return makeFileForLevels(levels, filename);
+		return makeFileForLevels(levels);
 	}
 
 	//Make a file out of a set of levels, starting at the root directory.
-	private File makeFileForLevels(int[] levels, String filename) {
+	private File makeFileForLevels(int[] levels) {
 		//First make the directories
 		File file = root;
 		for (int i=0; i<nLevels-1; i++) {
 			file = new File(file, makeName(levels[i], i));
 		}
 		//Now make the actual file
-		String suffix = "";
-		filename = filename.trim();
-		if (!filename.equals("")) suffix = "["+filename+"]";
-		return new File(file, makeName(levels[nLevels-1], nLevels-1) + suffix);
+		return new File(file, makeName(levels[nLevels-1], nLevels-1));
 	}
 
 	//Make a filename at a specific level, choosing a length

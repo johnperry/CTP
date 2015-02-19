@@ -209,24 +209,11 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 			if ((ps != null) && (ps instanceof StorageService)) referencedStorageService = (StorageService)ps;
 			File file = null;
 			String url = null;
-			if (referencedStorageService != null) {
-				if (referencedStorageService instanceof FileStorageService) {
-					String embeddedFilename = QueueManager.getEmbeddedFilename(fileObject.getFile().getName(), false);
-					if (!embeddedFilename.equals("")) {
-						FileStorageService fss = (FileStorageService)referencedStorageService;
-						StoredObject so = fss.getStoredObject(fileObject, embeddedFilename);
-						if (so != null) {
-							file = so.file;
-							url = so.url;
-						}
-					}
-				}
-				else if (referencedStorageService instanceof BasicFileStorageService) {
-					String sopInstanceUID = fileObject.getSOPInstanceUID();
-					if (sopInstanceUID != null) {
-						BasicFileStorageService bfss = (BasicFileStorageService)referencedStorageService;
-						file = bfss.getFileForUID(sopInstanceUID);
-					}
+			if ((referencedStorageService != null) && (referencedStorageService instanceof BasicFileStorageService)) {
+				String sopInstanceUID = fileObject.getSOPInstanceUID();
+				if (sopInstanceUID != null) {
+					BasicFileStorageService bfss = (BasicFileStorageService)referencedStorageService;
+					file = bfss.getFileForUID(sopInstanceUID);
 				}
 			}
 			try {

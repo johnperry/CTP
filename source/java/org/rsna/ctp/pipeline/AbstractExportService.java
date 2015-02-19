@@ -131,7 +131,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * changes to external databases or other systems should override this method.
 	 * @return indication whether the disconnect processing was successful.
 	 * This method always returns Status.OK, but methods that override it should
-	 * return the correct result.
+	 * return the appropriate result.
 	 */
 	public synchronized Status disconnect() {
 		return Status.OK;
