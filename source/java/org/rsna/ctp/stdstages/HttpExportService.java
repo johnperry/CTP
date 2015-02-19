@@ -208,6 +208,11 @@ public class HttpExportService extends AbstractExportService {
 			//Get the response code and log Unauthorized responses
 			int responseCode = conn.getResponseCode();
 			
+			if (responseCode == HttpResponse.notfound) {
+				conn.disconnect();
+				return Status.FAIL;
+			}
+			
 			if (responseCode == HttpResponse.unauthorized) {
 				if (logUnauthorizedResponses) {
 					logger.warn(name + ": Credentials for "+username+" were not accepted by "+url);
