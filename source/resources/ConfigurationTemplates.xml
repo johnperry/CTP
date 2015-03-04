@@ -730,6 +730,21 @@
 				</attr>
 			</child>
 
+			<child name="xnat" required="no" allowMultiples="no">
+				<attr name="url" required="yes" default="https://host:port/data/JSESSION">
+					<helptext>The URL of the XNAT session servlet (https://host:port/data/JSESSION).</helptext>
+				</attr>
+				<attr name="cookieName" required="yes" default="JSESSIONID">
+					<helptext>The name of the XNAT server session cookie.</helptext>
+				</attr>
+				<attr name="username" required="yes" default="">
+					<helptext>The username for authentication on the XNAT server.</helptext>
+				</attr>
+				<attr name="password" required="yes" default="">
+					<helptext>The password for authentication on the XNAT server.</helptext>
+				</attr>
+			</child>
+
 		</ExportService>
 
 		<ExportService>

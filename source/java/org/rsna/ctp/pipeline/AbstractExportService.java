@@ -43,7 +43,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	int throttle = 0;
 	int interval = defaultInterval;
 	Exporter exporter = null;
-	boolean enableExport = true;
+	public boolean enableExport = true;
 
 	AuditLog auditLog = null;
 	String auditLogID = null;
@@ -99,10 +99,8 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * Determine whether the pipeline stage has shut down.
 	 */
 	public synchronized boolean isDown() {
-		if (enableExport
-				&& (exporter != null)
-						&& !exporter.getState().equals(Thread.State.TERMINATED))
-								return false;
+		if ((exporter != null) && !exporter.getState().equals(Thread.State.TERMINATED))
+			return false;
 		return stop;
 	}
 
@@ -152,7 +150,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 		public void run() {
 			logger.info(name+": Exporter Thread: Started");
 			File file = null;
-			while (!stop && !interrupted()) {
+			while (enableExport && !stop && !interrupted()) {
 				try {
 					if ((getQueueSize()>0) && connect().equals(Status.OK)) {
 						while (!stop && ((file = getNextFile()) != null)) {
@@ -271,16 +269,21 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * @return HTML text displaying the active status of the stage.
 	 */
 	public synchronized String getStatusHTML(String childUniqueStatus) {
-		String stageUniqueStatus = "";
+		StringBuffer sb = new StringBuffer(childUniqueStatus);
+		sb.append(
+				  "<tr><td width=\"20%\">Export enabled:</td>"
+				+ "<td>"
+				+ (enableExport ? "yes" : "no")
+				+ "</td></tr>");
 		if (lastElapsedTime >= 0) {
 			long et = lastElapsedTime / 1000000;
-			stageUniqueStatus =
+			sb.append(
 				  "<tr><td width=\"20%\">Last export elapsed time:</td>"
 				+ "<td>"
 				+ String.format("%d msec", et)
-				+ "</td></tr>";
+				+ "</td></tr>");
 		}
-		return super.getStatusHTML(childUniqueStatus + stageUniqueStatus);
+		return super.getStatusHTML(sb.toString());
 	}
 
 }

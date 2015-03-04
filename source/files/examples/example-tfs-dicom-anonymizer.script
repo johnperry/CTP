@@ -39,7 +39,7 @@
  <e en="T" t="00080070" n="Manufacturer">@empty()</e>
  <e en="T" t="00080080" n="InstitutionName">@remove()</e>
  <e en="T" t="00080081" n="InstitutionAddress">@remove()</e>
- <e en="F" t="00080082" n="InstitutionCodeSeq"></e>
+ <e en="T" t="00080082" n="InstitutionCodeSeq">@remove()</e>
  <e en="T" t="00080090" n="ReferringPhysicianName">@empty()</e>
  <e en="T" t="00080092" n="ReferringPhysicianAddress">@remove()</e>
  <e en="T" t="00080094" n="ReferringPhysicianPhoneNumbers">@remove()</e>
@@ -175,7 +175,7 @@
  <e en="F" t="00120050" n="ClinicalTrialTimePointID"></e>
  <e en="F" t="00120051" n="ClinicalTrialTimePointDescription"></e>
  <e en="F" t="00120060" n="CoordinatingCenterName"></e>
- <e en="T" t="00120062" n="PatientIdentityRemoved">YES</e>
+ <e en="T" t="00120062" n="PatientIdentityRemoved">@always()YES</e>
  <e en="T" t="00120063" n="DeIdentificationMethod">@append(){CTP: @param(@PROFILENAME): @date():@time()}</e>
  <e en="F" t="00120064" n="DeIdentificationMethodCodeSeq"></e>
  <e en="T" t="00130010" n="BlockOwner">CTP</e>
@@ -281,6 +281,8 @@
  <e en="F" t="00181075" n="RadionuclideHalfLife"></e>
  <e en="F" t="00181076" n="RadionuclidePositronFraction"></e>
  <e en="F" t="00181077" n="RadiopharmaceuticalSpecificActivity"></e>
+ <e en="T" t="00181078" n="Radiopharmaceutical Start DateTime">@hashdate(this,PatientID)</e>
+ <e en="T" t="00181079" n="Radiopharmaceutical Stop DateTime">@hashdate(this,PatientID)</e>
  <e en="F" t="00181080" n="BeatRejectionFlag"></e>
  <e en="F" t="00181081" n="LowRRValue"></e>
  <e en="F" t="00181082" n="HighRRValue"></e>

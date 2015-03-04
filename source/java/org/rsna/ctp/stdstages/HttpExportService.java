@@ -13,6 +13,8 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +40,9 @@ public class HttpExportService extends AbstractExportService {
 
 	static final Logger logger = Logger.getLogger(HttpExportService.class);
 
-	final int timeout = 5000;
+	static final int oneSecond = 1000;
+	final int connectionTimeout = 20 * oneSecond;
+	final int readTimeout = 120 * oneSecond;
 
 	URL url;
 	String protocol;
@@ -57,6 +61,7 @@ public class HttpExportService extends AbstractExportService {
 	String whitespaceReplacement = "_";
 	String filter = "[^a-zA-Z0-9\\[\\]\\(\\)\\^\\.\\-_,;]+";
 	Compressor compressor = null;
+	ExportSession session = null;
 
 /**/LinkedList<String> recentUIDs = new LinkedList<String>();
 /**/LinkedList<Long> recentTimes = new LinkedList<Long>();
@@ -74,8 +79,11 @@ public class HttpExportService extends AbstractExportService {
 		zip = element.getAttribute("zip").trim().equals("yes");
 		
 		//Get the compressor parameters, if any
-		getCompressorParaameters(element);
+		getCompressorParameters(element);
 
+		//Get the Session object, if any
+		session = new ExportSession(element);
+		
 		//See if we are to log duplicate transmissions
 		logDuplicates = element.getAttribute("logDuplicates").equals("yes");
 
@@ -104,9 +112,10 @@ public class HttpExportService extends AbstractExportService {
 		}
 		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
 		
+		
 	}
 	
-	private void getCompressorParaameters(Element element) {
+	private void getCompressorParameters(Element element) {
 		//Get the compression child element, if present
 		Element compressor = XmlUtil.getFirstNamedChild(element, "compressor");
 		if (compressor != null) {
@@ -155,7 +164,6 @@ public class HttpExportService extends AbstractExportService {
 	 * @return the status of the attempt to export the file.
 	 */
 	public Status export(File fileToExport) {
-		logger.debug("Entering export");
 		HttpURLConnection conn = null;
 		OutputStream svros = null;
 		try {
@@ -163,8 +171,8 @@ public class HttpExportService extends AbstractExportService {
 
 			//Establish the connection
 			conn = HttpUtil.getConnection(url);
-			conn.setReadTimeout(timeout);
-			conn.setConnectTimeout(timeout);
+			conn.setReadTimeout(connectionTimeout);
+			conn.setConnectTimeout(readTimeout);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility
@@ -172,8 +180,9 @@ public class HttpExportService extends AbstractExportService {
 			if (sendDigestHeader && !zip) {
 				conn.setRequestProperty("Digest", fileObject.getDigest());
 			}
+			session.setCookie(conn);
+			if (logger.isDebugEnabled()) logConnection(conn);
 			conn.connect();
-			logger.debug("...back from conn.connect()");
 
 			if (logDuplicates) {
 				//*********************************************************************************************
@@ -207,10 +216,11 @@ public class HttpExportService extends AbstractExportService {
 
 			//Get the response code and log Unauthorized responses
 			int responseCode = conn.getResponseCode();
+			logger.debug(name+": Transmission response code = "+responseCode);
 			
 			if (responseCode == HttpResponse.notfound) {
 				conn.disconnect();
-				return Status.FAIL;
+				return Status.RETRY;
 			}
 			
 			if (responseCode == HttpResponse.unauthorized) {
@@ -219,7 +229,8 @@ public class HttpExportService extends AbstractExportService {
 					logUnauthorizedResponses = false;
 				}
 				conn.disconnect();
-				return Status.RETRY;
+				enableExport = false;
+				return failOrRetry();
 			}
 			else if (responseCode == HttpResponse.forbidden) {
 				if (logUnauthorizedResponses) {
@@ -227,7 +238,8 @@ public class HttpExportService extends AbstractExportService {
 					logUnauthorizedResponses = false;
 				}
 				conn.disconnect();
-				return Status.RETRY;
+				enableExport = false;
+				return failOrRetry();
 			}
 			else if (!logUnauthorizedResponses) {
 				logger.warn(name + ": Credentials for "+username+" have been accepted by "+url);
@@ -239,20 +251,42 @@ public class HttpExportService extends AbstractExportService {
 			//result is for backward compatibility with MIRC.
 			//We leave the input stream open in order to make
 			//the disconnect actually close the connection.
-			String result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8, false );
+			String result = "";
+			try { result = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8, false ); }
+			catch (Exception ex) { logger.warn("Unable to read response: "+ex.getMessage()); }
+			logger.debug(name+": Response: "+result);
 			conn.disconnect();
 			if (result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
 			}
-			else if (result.equals("")) return Status.RETRY;
 			else return Status.FAIL;
 		}
 		catch (Exception e) {
-			logger.warn(name+": export failed: " + e.getMessage());
-			logger.debug(e);
-			return Status.RETRY;
+			if (logger.isDebugEnabled()) logger.debug(name+": export failed: " + e.getMessage(), e);
+			else logger.warn(name+": export failed: " + e.getMessage());
+			return failOrRetry();
 		}
+	}
+	
+	private Status failOrRetry() {
+		return logger.isDebugEnabled() ? Status.FAIL : Status.RETRY;
+	}
+	
+	private void logConnection(HttpURLConnection conn) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(name+": Connection parameters:\n");
+		sb.append("Request method: "+conn.getRequestMethod()+"\n");
+		sb.append("URL: "+conn.getURL()+"\n");
+		sb.append("Request properties:\n");
+		Map<String,List<String>> props = conn.getRequestProperties();
+		for (String prop : props.keySet()) {
+			List<String> list = props.get(prop);
+			for (String value : list) {
+				sb.append(prop + " : " + value + "\n");
+			}
+		}
+		logger.debug(sb.toString());
 	}
 
 	/**
@@ -317,6 +351,7 @@ public class HttpExportService extends AbstractExportService {
 					catch (Exception notDICOM) { }
 				}
 				if (nFiles > 0) {
+					logger.debug("Compressing "+nFiles+" files for transmission.");
 					if (FileUtil.zipDirectory(cacheTemp, zip, true)) {
 						getQueueManager().enqueue(zip);
 						zip.delete();
@@ -395,6 +430,75 @@ public class HttpExportService extends AbstractExportService {
 					return name + "["+n+"]" + (hasExtension ? ext : "");
 				}
 			}
-		}			
+		}	
+	}
+	
+	class ExportSession {
+		URL url = null;
+		String cookieName = null;
+		String cookieValue = null;
+		String credentials = null;
+		long lastTime = 0;
+		long timeout = 10 * 60 * 1000; //10 minutes
+		
+		public ExportSession(Element element) {
+			Element xnat = XmlUtil.getFirstNamedChild(element, "xnat");
+			if (xnat != null) {
+				String urlString = xnat.getAttribute("url").trim();
+				cookieName = xnat.getAttribute("oookieName").trim();
+				if (cookieName.equals("")) cookieName = "JSESSIONID";
+				String username = xnat.getAttribute("username").trim();
+				String password = xnat.getAttribute("password").trim();
+				credentials = "Basic " + Base64.encodeToString((username + ":" + password).getBytes());
+				try { url = new URL(urlString); }
+				catch (Exception ex) {
+					logger.warn("Unable to construct XNAT URL: \""+urlString+"\"");
+				}
+			}
+		}
+		
+		public boolean isConfigured() {
+			return cookieName != null;
+		}
+		
+		public void invalidate() {
+			lastTime = 0;
+		}
+		
+		public void setCookie(HttpURLConnection conn) {
+			if (url != null) {
+				long time = System.currentTimeMillis();
+				if ((time - lastTime) > timeout) cookieValue = getCookie();
+				if (cookieValue != null) {
+					conn.setRequestProperty("Cookie", cookieName+"="+cookieValue);
+					lastTime = time;
+				}
+			}
+		}
+		
+		private String getCookie() {
+			try {
+				HttpURLConnection conn = HttpUtil.getConnection(url);
+				conn.setRequestMethod("GET");
+				conn.setReadTimeout(connectionTimeout);
+				conn.setConnectTimeout(readTimeout);
+				conn.setRequestProperty("Authorization", credentials);
+				conn.connect();
+				int responseCode = conn.getResponseCode();
+				logger.debug(name+": XNAT Session request response code = "+responseCode);
+				String response = null;
+				if (responseCode == HttpResponse.ok) {
+					response = FileUtil.getTextOrException( conn.getInputStream(), FileUtil.utf8, false ).trim();
+				}
+				conn.disconnect();
+				logger.debug("XNAT Session response: "+response);
+				if ((response != null) && !response.contains("<")) return response;
+			}
+			catch (Exception unable) { 
+				if (logger.isDebugEnabled()) logger.debug(name+": Unable to establish the XNAT session ("+url.toString()+")", unable);
+				else logger.warn(name+": Unable to establish the XNAT session ("+url.toString()+")");
+			}
+			return null;
+		}
 	}
 }
