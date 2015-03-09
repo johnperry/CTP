@@ -68,12 +68,14 @@ public class QueueManager {
 
 	/**
 	 * Insert a file into the queue directory tree,
-	 * preserving the embedded filename, if present,
-	 * and leaving the file in its original directory.
+	 * leaving the file in its original directory.
+	 * Note: this method does not enqueue a zero-length file.
 	 * @param file the file to be inserted.
-	 * @return a File pointing to the object in the queue.
+	 * @return a File pointing to the object in the queue
+	 * or null if the file had zero length.
 	 */
 	public synchronized File enqueue(File file) {
+		if ((file == null) || (file.length() == 0)) return null;
 		lastFileIn = getNextFileIn();
 		lastFileIn = copyFile(file, lastFileIn);
 		if (lastFileIn != null) size++;

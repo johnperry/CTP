@@ -14,6 +14,7 @@
 	<property name="documentation" value="${basedir}/documentation"/>
 	<property name="title" value="CTP"/>
 	<property name="copyright" value="Copyright 2013 Radiological Society of North America"/>
+	<property name="target" value="1.6"/>
 
 	<path id="classpath">
 		<pathelement location="${libraries}/util.jar"/>
@@ -41,12 +42,15 @@
 		</tstamp>
 		<echo message="Time now ${now}"/>
 		<echo message="ant.java.version = ${ant.java.version}" />
+		<echo message="Target Java.version = ${target}" />
 		<mkdir dir="${build}"/>
 		<mkdir dir="${products}"/>
 	</target>
 
 	<target name="compile" depends="init">
 		<javac destdir="${build}" optimize="on"
+				source="1.6"
+				target="${target}"
 				classpathref="classpath"
 				includeantruntime="false"
 				debug="true" debuglevel="lines,vars,source">
@@ -62,7 +66,7 @@
 			<manifest>
 				<attribute name="Main-Class" value="org.rsna.launcher.Launcher"/>
 	            <attribute name="Date" value="${today} at ${now}"/>
-	            <attribute name="Java-Version" value="${ant.java.version}"/>
+	            <attribute name="Java-Version" value="${ant.java.version} (target:${target})"/>
 				<attribute name="Class-Path" value="libraries/util.jar libraries/log4j.jar"/>
 			</manifest>
 			<fileset dir="${build}"

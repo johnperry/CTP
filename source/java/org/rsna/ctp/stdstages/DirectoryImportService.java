@@ -39,6 +39,8 @@ public class DirectoryImportService extends AbstractImportService {
 	long defInterval = 20000;
 	File importDirectory = null;
 	FileTracker tracker = null;
+	boolean doFileSystemName = false;
+	boolean doFilename = false;
 
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
@@ -51,13 +53,10 @@ public class DirectoryImportService extends AbstractImportService {
 		//This action is to trap configurations that haven't been
 		//updated to the new version of this import service.
 		String directoryName = element.getAttribute("import").trim();
-		if (!directoryName.equals("")) {
-			importDirectory = new File(directoryName);
-			importDirectory.mkdirs();
-		}
+		importDirectory = getDirectory(directoryName);
 		if ((importDirectory == null) || !importDirectory.exists()) {
-			logger.error(name+": The import attribute was not specified.");
-			throw new Exception(name+": The import attribute was not specified.");
+			logger.error(name+": The import directory was not specified.");
+			throw new Exception(name+": The import directory was not specified.");
 		}
 
 		//Get the interval
@@ -72,6 +71,10 @@ public class DirectoryImportService extends AbstractImportService {
 		//See if there is a filenameTag
 		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
 
+		//Set the flags for storing names in objects
+		doFileSystemName = (fsName != null) && (fsNameTag != 0);
+		doFilename = (filenameTag != 0);
+		
 		//Initialize the FileTracker
 		tracker = new FileTracker();
 	}
@@ -111,6 +114,7 @@ public class DirectoryImportService extends AbstractImportService {
 				//This ensures that they are at least 'interval' old.
 				if (fileList != null) {
 					for (File file : fileList) {
+						setNames(file);
 						fileReceived(file);
 						tracker.add(file);
 					}
@@ -160,7 +164,6 @@ public class DirectoryImportService extends AbstractImportService {
 
 				//Make sure we accept objects of this type.
 				if (acceptable(fileObject)) {
-					fileObject = setNames(fileObject);
 					fileObject.setStandardExtension();
 					lastFileOut = fileObject.getFile();
 					lastTimeOut = System.currentTimeMillis();
@@ -177,13 +180,12 @@ public class DirectoryImportService extends AbstractImportService {
 		return null;
 	}
 
-	//Store the FileSystem name and/or the filename in the object if required.
-	private FileObject setNames(FileObject fo) {
-		try {
-			if (fo instanceof DicomObject) {
-				boolean doFileSystemName = (fsName != null) && (fsNameTag != 0);
-				boolean doFilename = (filenameTag != 0);
-				if ( doFileSystemName || doFilename ) {
+	//Store the FileSystem name and/or the filename in the file if required.
+	private void setNames(File file) {
+		if ( doFileSystemName || doFilename ) {
+			try {
+				FileObject fo = FileObject.getInstance(file);
+				if (fo instanceof DicomObject) {
 					//Unfortunately, we have to parse the object again
 					//in order to be able to save it once we modify it.
 					DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
@@ -215,17 +217,12 @@ public class DirectoryImportService extends AbstractImportService {
 					//and deleted the original file; now rename the temp file
 					//to the original name so nobody is the wiser.
 					tFile.renameTo(dobFile);
-
-					//And finally parse it again so we have a real object to process;
-					return new DicomObject(dobFile);
 				}
 			}
+			catch (Exception unableToSetName) {
+				logger.warn("Unable to set the name(s) in "+file.getName());
+			}
 		}
-		catch (Exception unableToSetFSName) {
-			logger.warn("Unable to set the FileSystem name: \""+fsName+"\"");
-			logger.warn("                               in: "+fo.getFile());
-		}
-		return fo;
 	}
 
 	//This class tracks files that have been processed.

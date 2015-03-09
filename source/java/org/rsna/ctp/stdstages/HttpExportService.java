@@ -164,6 +164,10 @@ public class HttpExportService extends AbstractExportService {
 	 * @return the status of the attempt to export the file.
 	 */
 	public Status export(File fileToExport) {
+		
+		//Do not export zero-length files
+		if (fileToExport.length() == 0) return Status.FAIL;
+		
 		HttpURLConnection conn = null;
 		OutputStream svros = null;
 		try {

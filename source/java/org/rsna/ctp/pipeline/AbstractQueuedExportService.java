@@ -139,7 +139,8 @@ public abstract class AbstractQueuedExportService
 
 	//Queue a fileObject.
 	//Note: if caching is enabled, this puts the object in the cache;
-	//if caching is not enabled, it puts the object directly in the export queue.
+	//if caching is not enabled, it puts the object directly in the export queue
+	//because in that case cacheManager and queueManger point to the same queue.
 	private void enqueue(FileObject fileObject) {
 		if (cacheManager.enqueue(lastFileIn) == null) {
 			if (quarantine != null) quarantine.insertCopy(fileObject);

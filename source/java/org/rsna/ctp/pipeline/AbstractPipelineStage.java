@@ -42,9 +42,11 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	protected volatile File lastFileOut = null;
 	protected volatile long lastTimeOut = 0;
 	protected volatile boolean stop = false;
-	protected volatile Pipeline pipeline = null;
-	protected volatile PipelineStage nextStage = null;
-	protected volatile PipelineStage previousStage = null;
+	protected Pipeline pipeline = null;
+	protected String pipelinePath = "";
+	protected File pipelineRoot = null;
+	protected PipelineStage nextStage = null;
+	protected PipelineStage previousStage = null;
 	public int stageIndex = -1;
 
 	/**
@@ -60,25 +62,32 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		acceptXmlObjects	= !element.getAttribute("acceptXmlObjects").trim().equals("no");
 		acceptZipObjects	= !element.getAttribute("acceptZipObjects").trim().equals("no");
 		acceptFileObjects	= !element.getAttribute("acceptFileObjects").trim().equals("no");
-		String pipelinePath = ((Element)element.getParentNode()).getAttribute("root").trim();
+		pipelinePath = ((Element)element.getParentNode()).getAttribute("root").trim();
+		pipelineRoot = new File(pipelinePath);
 		String stagePath = element.getAttribute("root").trim();
-		File pipelineRoot = new File(pipelinePath);
-		if (!stagePath.equals("")) {
-			root = new File(stagePath);
-			if (!root.isAbsolute() && !pipelinePath.equals("")) {
-				root = new File(pipelineRoot, stagePath);
-			}
-			root.mkdirs();
-		}
-		String quarantinePath = element.getAttribute("quarantine");
+		root = getDirectory(stagePath);
+		String getDirectory = element.getAttribute("quarantine");
 		long quarantineTimeDepth = StringUtil.getLong(element.getAttribute("quarantineTimeDepth"));
-		if (!quarantinePath.equals("")) {
-			File qFile = new File(quarantinePath);
-			if (!qFile.isAbsolute() && !pipelinePath.equals("")) {
-				qFile = new File(pipelineRoot, quarantinePath);
+		File qdir = getDirectory(getDirectory);
+		if (qdir != null) quarantine = Quarantine.getInstance(qdir, quarantineTimeDepth);
+	}
+	
+	/**
+	 * Create a directory from a path. The path can be absolute or relative. If it is
+	 * relative and the pipeline within which this stage is located has a root directory,
+	 * the path is relative to the pipeline's root; otherwise, it is relative to the CTP
+	 * directory.
+	 */
+	public File getDirectory(String path) {
+		File file = null;
+		if (!path.equals("")) {
+			file = new File(path);
+			if (!file.isAbsolute() && !pipelinePath.equals("")) {
+				file = new File(pipelineRoot, path);
 			}
-			quarantine = Quarantine.getInstance(qFile, quarantineTimeDepth);
+			file.mkdirs();
 		}
+		return file;
 	}
 
 	/**
