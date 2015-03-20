@@ -139,7 +139,7 @@ public class DICOMDecompressor {
             //********************************************************************************
             //This is a kludge to avoid the green image problem. For color
             //images, we will convert to RGB with PlanarConfiguration 0 and
-            //force SamplesPerPixel to 3..
+            //force SamplesPerPixel to 3.
             if (!isMonochrome) {
 				dataset.putXX(Tags.PhotometricInterpretation, "RGB");
 				dataset.putUS(Tags.BitsAllocated, 8);

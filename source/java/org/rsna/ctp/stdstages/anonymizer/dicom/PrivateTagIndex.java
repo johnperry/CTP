@@ -29,30 +29,6 @@ public class PrivateTagIndex {
 	static PrivateTagIndex privateTagIndex = null;
 	Hashtable<PrivateTagKey,PrivateTag> index = null;
 
-	/**
-	 * Get the singleton instance of the PrivateTagIndex.
-	 * @return the PrivateTagIndex.
-	 */
-	public static synchronized PrivateTagIndex getInstance() {
-		if (privateTagIndex == null) {
-			privateTagIndex = new PrivateTagIndex();
-		}
-		return privateTagIndex;
-	}
-
-	/**
-	 * Get the VR of a private attribute data element.
-	 * @param owner the string declaring the owner of the block.
-	 * @param group the group number.
-	 * @param element the element number within the block.
-	 * @return the VR, or the empty string if the element is unknown..
-	 */
-	public String getVR(String owner, int group, int element) {
-		PrivateTag tag = index.get( new PrivateTagKey(owner, group, element) );
-		if (tag != null) return tag.getVR();
-		return "";
-	}
-
 	//The protected constructor of the singleton.
 	protected PrivateTagIndex() {
 		index = new Hashtable<PrivateTagKey,PrivateTag>();
@@ -77,9 +53,10 @@ public class PrivateTagIndex {
 							int element = StringUtil.getHexInt(el.getAttribute("n"));
 							String code = el.getAttribute("code");
 							String vr = el.getAttribute("vr");
+							String vm = el.getAttribute("vm");
 							index.put(
 									new PrivateTagKey(block, group, element),
-									new PrivateTag(vr, code)
+									new PrivateTag(vr, vm, code)
 							);
 						}
 						eNode = eNode.getNextSibling();
@@ -91,6 +68,43 @@ public class PrivateTagIndex {
 		catch (Exception unable) {
 			logger.warn("Unable to load the private tag index");
 		}
+	}
+
+	/**
+	 * Get the singleton instance of the PrivateTagIndex.
+	 * @return the PrivateTagIndex.
+	 */
+	public static synchronized PrivateTagIndex getInstance() {
+		if (privateTagIndex == null) {
+			privateTagIndex = new PrivateTagIndex();
+		}
+		return privateTagIndex;
+	}
+
+	/**
+	 * Get the VR of a private attribute data element.
+	 * @param owner the string declaring the owner of the block.
+	 * @param group the group number.
+	 * @param element the element number within the block.
+	 * @return the VR, or the empty string if the element is unknown.
+	 */
+	public String getVR(String owner, int group, int element) {
+		PrivateTag tag = index.get( new PrivateTagKey(owner, group, element) );
+		if (tag != null) return tag.getVR();
+		return "";
+	}
+
+	/**
+	 * Get the VM of a private attribute data element.
+	 * @param owner the string declaring the owner of the block.
+	 * @param group the group number.
+	 * @param element the element number within the block.
+	 * @return the VM, or the empty string if the element is unknown.
+	 */
+	public String getVM(String owner, int group, int element) {
+		PrivateTag tag = index.get( new PrivateTagKey(owner, group, element) );
+		if (tag != null) return tag.getVM();
+		return "";
 	}
 
 	class PrivateTagKey {
@@ -115,15 +129,21 @@ public class PrivateTagIndex {
 
 	class PrivateTag {
 		String vr;
+		String vm;
 		String code;
 
-		public PrivateTag(String vr, String code) {
+		public PrivateTag(String vr, String vm, String code) {
 			this.vr = vr;
+			this.vm = vm;
 			this.code = code;
 		}
 
 		public String getVR() {
 			return vr;
+		}
+
+		public String getVM() {
+			return vm;
 		}
 
 		public String getcode() {

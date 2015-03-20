@@ -256,7 +256,7 @@ public class ZipObject extends FileObject {
 			Enumeration<? extends ZipEntry> e = zipFile.entries();
 			//Get the ZipEntries corresponding to files (not directories).
 			ArrayList<ZipEntry> list = new ArrayList<ZipEntry>();
-			for (int i=0; e.hasMoreElements(); i++) {
+			while ( e.hasMoreElements() ) {
 				ze = e.nextElement();
 				if (!ze.isDirectory()) list.add(ze);
 			}
