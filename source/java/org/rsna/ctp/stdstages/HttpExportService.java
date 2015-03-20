@@ -91,10 +91,25 @@ public class HttpExportService extends AbstractExportService {
 		//Note: digest headers are not supplied if zip file transmission is enabled.
 		sendDigestHeader = element.getAttribute("sendDigestHeader").equals("yes");
 
-		//Get the credentials, if they are present.
+		//Get the destination url
+		url = new URL(element.getAttribute("url").trim());
+
+		//Get the credentials attributes, if they are present.
+		//Note: the credentials might be included in the username and password
+		//attributes or embedded in the URL's userinfo. The username and password
+		//attributes take precedence.
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
+		String userinfo = url.getUserInfo();
+		if (username.equals("") && (userinfo != null)) {
+			String[] creds = userinfo.split(":");
+			if (creds.length == 2) {
+				username = creds[0];
+				password = creds[1];
+			}
+		}
 		authenticate = !username.equals("");
+		
 		if (authenticate) {
 			authHeader = "Basic " + Base64.encodeToString((username + ":" + password).getBytes());
 		}
@@ -111,8 +126,6 @@ public class HttpExportService extends AbstractExportService {
 			throw new Exception();
 		}
 		logger.info(name+": "+url.getProtocol()+" protocol; port "+url.getPort());
-		
-		
 	}
 	
 	private void getCompressorParameters(Element element) {
