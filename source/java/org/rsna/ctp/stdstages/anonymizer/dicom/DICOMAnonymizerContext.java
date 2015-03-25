@@ -46,7 +46,8 @@ public class DICOMAnonymizerContext {
 	public boolean rpg; //remove private groups
 	public boolean rue; //remove unscripted elements
 	public boolean rol;	//remove overlays
-	public boolean rc;	//remover curves
+	public boolean rc;	//remove curves
+	public boolean kspe; //keep safe private elements
 
 	public int[] keepGroups;
 	public Hashtable<Integer,String> scriptTable;
@@ -88,6 +89,7 @@ public class DICOMAnonymizerContext {
 		rue = (cmds.getProperty("remove.unspecifiedelements") != null);
 		rol = (cmds.getProperty("remove.overlays") != null);
 		rc  = (cmds.getProperty("remove.curves") != null);
+		kspe = (cmds.getProperty("keep.safeprivateelements") != null);
 
 		//Set up the keepGroups and the script Hashtable
 		LinkedList<String> list = new LinkedList<String>();
@@ -430,6 +432,21 @@ public class DICOMAnonymizerContext {
 			}
 		}
 		return 0;
+	}
+	
+	/**
+	 * Get the name of the creator block associated with a private element.
+	 * @param tag the element.
+	 * @return the value of the creator element claiming the block in which
+	 * the tag resides, or the empty string if the tag is not a private element
+	 * or the creator element does not exist.
+	 */
+	public String getCreator(int tag) {
+		if ((tag & 0x10000) == 0) return "";
+		int group = tag & 0xffff0000;
+		int block = (tag >> 8) & 0xff;
+		int creatorTag = group | block;
+		return ds.getString(creatorTag, "");
 	}
 
 	class PrivateGroupsIndex {
