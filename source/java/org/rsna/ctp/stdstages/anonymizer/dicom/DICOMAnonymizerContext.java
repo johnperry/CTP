@@ -446,7 +446,7 @@ public class DICOMAnonymizerContext {
 		int group = tag & 0xffff0000;
 		int block = (tag >> 8) & 0xff;
 		int creatorTag = group | block;
-		return ds.getString(creatorTag, "");
+		return inDS.getString(creatorTag, "");
 	}
 
 	class PrivateGroupsIndex {

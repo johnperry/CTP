@@ -85,6 +85,7 @@
 
 				<xsl:for-each select="DicomObject[not(@type) or (@type!='image')]">
 					<tr>
+						<td/>
 						<td>
 							<a href="{$context}/{$studyName}/{file}">
 								<xsl:value-of select="file"/>
@@ -103,6 +104,7 @@
 
 				<xsl:for-each select="XmlObject">
 					<tr>
+						<td/>
 						<td>
 							<a href="{$context}/{$studyName}/{file}">
 								<xsl:value-of select="file"/>
@@ -113,6 +115,7 @@
 
 				<xsl:for-each select="ZipObject">
 					<tr>
+						<td/>
 						<td>
 							<a href="{$context}/{$studyName}/{file}">
 								<xsl:value-of select="file"/>
@@ -123,6 +126,7 @@
 
 				<xsl:for-each select="FileObject">
 					<tr>
+						<td/>
 						<td>
 							<a href="{$context}/{$studyName}/{file}">
 								<xsl:value-of select="file"/>
