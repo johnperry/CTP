@@ -25,7 +25,7 @@ import org.w3c.dom.Node;
 public class PrivateTagIndex {
 
 	static final Logger logger = Logger.getLogger(PrivateTagIndex.class);
-	static final String xmlResource = "/PrivateTagIndex.xml";
+	static final String xmlResource = "PrivateTagIndex.xml";
 	static PrivateTagIndex privateTagIndex = null;
 	Hashtable<String,PrivateTag> index = null;
 
