@@ -378,6 +378,7 @@ public class DICOMAnonymizer {
 
 	//Walk the tree in the context dataset and modify the output dataset as required,
 	private static String processElements(DICOMAnonymizerContext context) throws Exception {
+		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 		String exceptions = "";
 		String value;
 
@@ -394,12 +395,18 @@ public class DICOMAnonymizer {
 			boolean isCurve = ((group & 0xFF000000) == 0x50000000);
 			boolean isPrivate = ((tag & 0x10000) != 0);
 			boolean isCreatorBlock = isPrivate && ((tag & 0xFF00) == 0);
+			boolean isSafe = false;
+			if (isPrivate && !isCreatorBlock) {
+				String block = context.getCreator(tag);
+				isSafe = ptIndex.getCode(block, tag).equals("K");
+			}
 
 			String script = context.getScriptFor(tag);
 			boolean hasScript = (script != null);
 
 			boolean keep  = context.containsKeepGroup(group) ||
 							isCreatorBlock ||
+							(isSafe && context.kspe) ||
 							(tag == 0x00080016)   		|| 	//SopClassUID
 							(tag == 0x00080018)   		|| 	//SopInstanceUID
 							(tag == 0x0020000D)   		||	//StudyInstanceUID
@@ -409,7 +416,7 @@ public class DICOMAnonymizer {
 							(isOverlay && !context.rol && !(isPrivate & context.rpg)) || //overlays
 							(isCurve && !context.rc && !(isPrivate & context.rpg));      //curves
 
-			logger.debug("Processing "+Tags.toString(tag) + ": "+context.rpg+" / "+isPrivate+" / "+hasScript+" / "+keep);
+			logger.debug("Processing "+Tags.toString(tag) + ": "+context.rpg+" / "+isPrivate+" / "+isSafe+" / "+hasScript+" / "+keep);
 
 			if (context.rpg && isPrivate && !hasScript && !keep) {
 				try { ds.remove(tag); }

@@ -35,6 +35,7 @@ var editItems = new Array (
 		new Item("", null),
 		new Item("New Keep Group...",newKeepGroup),
 		new Item("Remove Keep Group...",removeKeepGroup),
+		new Item("New Keep Safe Private Elements",createKeepSafePrivateElements),
 		new Item("", null),
 		new Item("Deselect all", deselectHandler) );
 
@@ -177,8 +178,15 @@ function createTable() {
 		x.sort(sortByT);
 		for (var i=0; i<x.length; i++) {
 			var en = (x[i].getAttribute("en") == "T");
-			var t = fixGroup(x[i].getAttribute("t"));
-			var n = "Keep group "+t;
+			var t = x[i].getAttribute("t");
+			var n;
+			if (t.indexOf("safe") == -1) {
+				t = fixGroup(x[i].getAttribute("t"));
+				n = "Keep group "+t;
+			}
+			else {
+				n = "Keep safe private elements";
+			}
 			tr = tbody.appendChild(createGlobalRow("k", n, t));
 			if (en) setCheckboxState(tr, en);
 		}
@@ -937,7 +945,7 @@ function createNewKeepGroup(event) {
 				//skip params and elements
 			}
 			else if ((row.row_type == "k") && (row.row_t == group)) return;
-			else if ((row.row_type != "k") || (row.row_t > group)) {
+			else if ((row.row_type != "k") || (row.row_t == "safeprivateelements") || (row.row_t > group)) {
 				var newrow = createGlobalRow("k", name, group) ;
 				row.parentNode.insertBefore(newrow, row);
 				return;
@@ -978,6 +986,24 @@ function deleteKeepGroup(event) {
 				row.parentNode.removeChild(row);
 				return;
 			}
+		}
+	}
+}
+
+function createKeepSafePrivateElements(event, item) {
+	var group = "safeprivateelements";
+	var name = "Keep safe private elements";
+	var rows = tbody.getElementsByTagName("TR");
+	for (var i=1; i<rows.length; i++) {
+		var row = rows[i];
+		if ((row.row_type == "p") || (row.row_type == "e")) {
+			//skip params and elements
+		}
+		else if ((row.row_type == "k") && (row.row_t == group)) return;
+		else if ((row.row_type != "k") || (row.row_t > group)) {
+			var newrow = createGlobalRow("k", name, group) ;
+			row.parentNode.insertBefore(newrow, row);
+			return;
 		}
 	}
 }

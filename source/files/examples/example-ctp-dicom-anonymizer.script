@@ -1057,6 +1057,7 @@
  <k en="F" t="0018">Keep group 0018</k>
  <k en="F" t="0020">Keep group 0020</k>
  <k en="F" t="0028">Keep group 0028</k>
+ <k en="F" t="safeprivateelements">Keep safe private elements</k>
  <r en="T" t="curves">Remove curves</r>
  <r en="T" t="overlays">Remove overlays</r>
  <r en="T" t="privategroups">Remove private groups</r>

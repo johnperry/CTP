@@ -162,8 +162,14 @@ public class DAScript {
 	private void addKeep(Properties props, Element x) {
 		String sel = (x.getAttribute("en").equals("T") ? "" : "#");
 		String t = x.getAttribute("t");
-		String group = "group" + t.substring(2,4);
-		String key = sel + "keep." + group;
+		String key;
+		if (t.startsWith("safe")) {
+			key = sel + "keep.safeprivateelements";
+		}
+		else {
+			String group = "group" + t.substring(2,4);
+			key = sel + "keep." + group;
+		}
 		props.setProperty(key, "");
 	}
 
@@ -260,8 +266,15 @@ public class DAScript {
 		}
 		else en = "T";
 		k.setAttribute("en", en);
-		String t = left.substring(10).trim();
-		while (t.length() < 4) t = "0" + t;
+		String t;
+		if (left.contains("safe")) {
+			t = "safeprivateelements";
+			right = "Safe private elements";
+		}
+		else {			
+			t = left.substring(10).trim();
+			while (t.length() < 4) t = "0" + t;
+		}
 		k.setAttribute("t", t);
 		k.setAttribute("n", right.trim());
 		return k;
