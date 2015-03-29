@@ -25,19 +25,15 @@ import org.w3c.dom.Node;
 public class PrivateTagIndex {
 
 	static final Logger logger = Logger.getLogger(PrivateTagIndex.class);
-	static final String xmlResource = "PrivateTagIndex.xml";
+	static final String xmlResource = "/PrivateTagIndex.xml";
 	static PrivateTagIndex privateTagIndex = null;
 	Hashtable<String,PrivateTag> index = null;
 
 	//The protected constructor of the singleton.
 	protected PrivateTagIndex() {
 		index = new Hashtable<String,PrivateTag>();
-		File xmlFile = Cache.getInstance().getFile(xmlResource);
-		InputStream is = FileUtil.getStream( xmlFile, xmlResource );
-		if (is == null) {
-			logger.warn("Unable to get InputStream for "+xmlResource);
-		}
 		try {
+			InputStream is = FileUtil.getStream( xmlResource );
 			Document doc = XmlUtil.getDocument( is );
 			Element root = doc.getDocumentElement();
 			Node groupNode = root.getFirstChild();
@@ -79,6 +75,14 @@ public class PrivateTagIndex {
 			privateTagIndex = new PrivateTagIndex();
 		}
 		return privateTagIndex;
+	}
+	
+	/**
+	 * Get the size of the index.
+	 * @return the size of the index.
+	 */
+	public int size() {
+		return index.size();
 	}
 
 	/**

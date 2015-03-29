@@ -276,7 +276,8 @@ public class DICOMAnonymizer {
 			String msg = e.getMessage();
 			if (msg == null) {
 				msg = "!error! - no message";
-				logger.info("Error call from "+inFile);
+				if (logger.isDebugEnabled()) logger.debug("Error call from "+inFile, e);
+				else logger.info("Error call from "+inFile);
 				return AnonymizerStatus.QUARANTINE(inFile,msg);
 			}
 			if (msg.contains("!skip!")) {
@@ -287,9 +288,7 @@ public class DICOMAnonymizer {
 				logger.info("...Message: "+msg);
 				return AnonymizerStatus.QUARANTINE(inFile,msg);
 			}
-			logger.info("Unknown exception from "+inFile);
-			logger.info("...Message: "+msg);
-			logger.info("...Stack trace: ",e);
+			logger.info("Unknown exception from "+inFile, e);
 			return AnonymizerStatus.QUARANTINE(inFile,msg);
 		}
 		return AnonymizerStatus.OK(outFile, exceptions);
