@@ -91,7 +91,8 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").trim().toLowerCase().equals("no");
 		port = StringUtil.getInt(element.getAttribute("port").trim());
 		ssl = element.getAttribute("ssl").equals("yes");
-		if (root == null) logger.error(name+": No root directory was specified.");
+		if (root != null) logger.info(name+" root: "+root.getAbsolutePath());
+		else logger.error(name+": No root directory was specified.");
 		fsm = FileSystemManager
 				.getInstance(
 					root,
@@ -163,7 +164,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 */
 	public StoredObject getStoredObject(FileObject fileObject, String filename) {
 		try {
-			//Now get the FileSystem. Note: the second argument in the getFileSystem
+			//Get the FileSystem. Note: the second argument in the getFileSystem
 			//call is false to prevent creating a FileSystem if the FileSystem for
 			//this object doesn't exist.
 			String fsName = getFSName(fileObject);

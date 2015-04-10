@@ -8,12 +8,18 @@
 package org.rsna.ctp.stdstages.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Iterator;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.zip.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
+import org.rsna.ctp.objects.XmlObject;
+import org.rsna.ctp.objects.ZipObject;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
 import org.rsna.server.Path;
@@ -21,6 +27,7 @@ import org.rsna.server.User;
 import org.rsna.servlets.Servlet;
 import org.rsna.servlets.Servlet;
 import org.rsna.util.FileUtil;
+import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
 
 /**
@@ -190,9 +197,11 @@ public class StorageServlet extends Servlet {
 				else if (format.equals("zip")) {
 					File zipFile = null;
 					try {
-						zipFile = File.createTempFile("ZIP-",".zip",root);
+						String ptName = study.getPatientName().replaceAll("[^0-9a-zA-Z\\-.]+","_");
+						String studyName = study.getPatientID()+"-"+ptName+"-"+study.getStudyDate();
+						zipFile = new File(root, studyName+".zip");
 						File studyDir = study.getDirectory();
-						if (FileUtil.zipDirectory(studyDir, zipFile)) {
+						if (zipDirectory(studyDir, zipFile, studyName)) {
 							res.write(zipFile);
 							res.setContentType("zip");
 							res.setContentDisposition(zipFile);
@@ -259,6 +268,73 @@ public class StorageServlet extends Servlet {
 		}
 		res.write(page);
 		res.send();
+	}
+	
+	//Zip a study directory
+	private boolean zipDirectory(File studyDir, File zipFile, String studyName) {
+		try {
+			//Get the streams
+			FileOutputStream fout = new FileOutputStream(zipFile);
+			ZipOutputStream zout = new ZipOutputStream(fout);
+			
+			//Put the directory entry in the zip file
+			ZipEntry ze = new ZipEntry(studyName);
+			zout.putNextEntry(ze);
+			
+			//Make a table to track entries
+			Hashtable<String,Integer> entryNames = new Hashtable<String,Integer>();
+
+			//Put in the files, skipping .db, .lg, and __index.xml files
+			File[] files = studyDir.listFiles();
+			for (File file : files) {
+				String fn = file.getName();
+				if (file.exists() && file.isFile() && !fn.endsWith(".db") && !fn.endsWith(".lg") && !fn.equals("__index.xml")) {
+					
+					//Figure out what kind of object the file is and make an entry name for it.
+					FileObject fob = FileObject.getInstance(file);
+					String entryName = studyName;
+					if (fob instanceof DicomObject) {
+						DicomObject dob = (DicomObject)fob;
+						int sNumber = StringUtil.getInt(dob.getSeriesNumber());
+						int aNumber = StringUtil.getInt(dob.getAcquisitionNumber());
+						int iNumber = StringUtil.getInt(dob.getInstanceNumber());
+						if (dob.isImage()) {
+							entryName += String.format("-S%d-A%d-%04d", sNumber, aNumber, iNumber);
+						}
+						else if (dob.isKIN()) entryName += "-KOS";
+						else if (dob.isSR()) entryName += "-SR";
+					}
+					else if (fob instanceof XmlObject) entryName += "-XML";
+					else if (fob instanceof ZipObject) entryName += "-ZIP";
+					else entryName += "-FOB";
+					
+					//Add an index if this entry already exists
+					Integer n = entryNames.get(entryName);
+					if (n == null) entryNames.put(entryName, new Integer(0));
+					else {
+						int nint = n.intValue() + 1;
+						entryName += "["+nint+"]";
+						entryNames.put(entryName, new Integer(nint));
+					}
+					
+					//Add the extension
+					entryName += fob.getStandardExtension();
+					
+					//Now add it to the zip file
+					byte[] buffer = new byte[10000];
+					int bytesread;
+					FileInputStream fin = new FileInputStream(file);
+					ze = new ZipEntry(studyName + "/" + entryName);
+					zout.putNextEntry(ze);
+					while ((bytesread = fin.read(buffer)) > 0) zout.write(buffer,0,bytesread);
+					zout.closeEntry();
+					fin.close();
+				}
+			}
+			zout.close();
+			return true;
+		}
+		catch (Exception ex) { return false; }
 	}
 
 	//Get an object.
