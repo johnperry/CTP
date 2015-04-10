@@ -57,6 +57,7 @@ public class Study implements Comparable {
 			patientName = getStringDefault(root.getAttribute("patientName"), "");
 			patientID = getStringDefault(root.getAttribute("patientID"), "");
 			studyDate = getStringDefault(root.getAttribute("studyDate"), "");
+			accessionNumber = getStringDefault(root.getAttribute("accessionNumber"), "");
 		}
 		catch (Exception ex) {
 			logger.warn("Unable to load the index for "+studyName);
