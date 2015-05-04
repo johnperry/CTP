@@ -280,10 +280,9 @@ public class DICOMAnonymizerContext {
 	/*
 	 * Get the contents of an input dataset element by tag,
 	 * handling CTP elements specially.
-	 * @param tagName the dcm4che name of the element
-	 * @param defaultTag the tag to be used for the "this" keyword
+	 * @param tag the element tag
 	 * @return the value of the specified element in the current dataset,
-	 * or null if the element is missing.
+	 * @throws Exception if the element is missing.
 	 */
 	public String contents(int tag) throws Exception {
 		SpecificCharacterSet cs = inDS.getSpecificCharacterSet();

@@ -8,9 +8,14 @@
 	<html>
 		<head>
 			<title>Object List for <xsl:value-of select="@studyName"/></title>
+			<link rel="Stylesheet" type="text/css" media="all" href="/JSPopup.css"></link>
+			<script language="JavaScript" type="text/javascript" src="/JSUtil.js">;</script>
+			<script language="JavaScript" type="text/javascript" src="/JSPopup.js">;</script>
+			<script language="JavaScript" type="text/javascript" src="/list-objects.js">;</script>
 			<style>
 				th,td {padding-left:10px; padding-right:10px;}
 				body {background-color:#b9d0ed;}
+				td.filename {width:90%;}
 				td {background-color:white;}
 				td a {color:black;}
 				td a:visited {color: black;}
@@ -48,7 +53,7 @@
 				<thead>
 					<tr>
 						<th/>
-						<th>File</th>
+						<th style="text-align:left">File</th>
 						<th>Series</th>
 						<th>Acquisition</th>
 						<th>Instance</th>
@@ -62,8 +67,9 @@
 
 					<tr>
 						<td style="text-align:right"><xsl:value-of select="position()"/></td>
-						<td>
-							<a href="{$context}/{$studyName}/{file}">
+						<td class="filename">
+							<a href="{$context}/{$studyName}/{file}" 
+							   onmouseenter="showImagePopup('{$context}/{$studyName}/{file}?format=jpeg', '{file}');">
 								<xsl:value-of select="file"/>
 							</a>
 						</td>

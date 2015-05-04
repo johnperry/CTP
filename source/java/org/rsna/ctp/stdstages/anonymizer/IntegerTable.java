@@ -59,7 +59,7 @@ public class IntegerTable {
 	 * @return the replacement string, with leading zeroes if necessary to pad the
 	 * replacement string to the required width.
 	 */
-	public String getInteger(String type, String text, int width) {
+	public synchronized String getInteger(String type, String text, int width) {
 		try {
 			text = text.trim();
 			type = type.trim();

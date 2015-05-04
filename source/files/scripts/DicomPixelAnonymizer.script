@@ -128,6 +128,17 @@ Philips
     [0028,0010].containsIgnoreCase("600") }
   (0,0,800,59)
 
+ EPIQ 7G
+  { [0008,1090].containsIgnoreCase("EPIQ") *
+    [0028,0010].containsIgnoreCase("600") }
+  (0,0,800,59)
+
+ EPIQ 7G
+  { [0008,1090].containsIgnoreCase("EPIQ") *
+    [0028,0010].containsIgnoreCase("768") }
+  (0,0,800,59)
+
+
 Zonare
   { [0008,1090].containsIgnoreCase("Z_ONE") }
   (0,0,800,65)
