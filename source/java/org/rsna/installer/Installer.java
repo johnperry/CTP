@@ -954,6 +954,7 @@ public class Installer extends JFrame {
 				moveAttributes(server, proxyAttrs, "ProxyServer");
 				moveAttributes(server, ldapAttrs, "LDAP");
 				if (programName.equals("ISN")) fixRSNAROOT(server);
+				if (isMIRC(root)) fixFileServiceAnonymizerID(root);
 				setFileText(configFile, toString(doc));
 			}
 			catch (Exception ex) {
@@ -965,6 +966,29 @@ public class Installer extends JFrame {
 			cp.appendln(Color.red, "\nUnable to find the config file to check the schema.");
 			cp.appendln(Color.black, "");
 		}
+	}
+	private boolean isMIRC(Element root) {
+		NodeList nl = root.getElementsByTagName("Plugin");
+		for (int i=0; i<nl.getLength(); i++) {
+			Element e = (Element)nl.item(i);
+			if (e.getAttribute("class").equals("mirc.MIRC")) return true;
+		}
+		return false;
+	}
+	private void fixFileServiceAnonymizerID(Element root) {
+		Node child = root.getFirstChild();
+		while (child != null) {
+			if (child instanceof Element) {
+				Element e = (Element)child;
+				if (e.getAttribute("class").equals("org.rsna.ctp.stdstages.DicomAnonymizer")) {
+					if (e.getAttribute("root").contains("FileService")) {
+						e.setAttribute("id", "FileServiceAnonymizer");
+					}
+				}
+				else fixFileServiceAnonymizerID(e);
+			}
+			child = child.getNextSibling();
+		}		
 	}
 
 	private static DocumentBuilder getDocumentBuilder() throws Exception {

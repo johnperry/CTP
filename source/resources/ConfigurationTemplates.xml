@@ -377,6 +377,7 @@
 		<Processor>
 			<attr name="name" required="yes" default="DicomAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomAnonymizer" editable="no"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/DicomAnonymizer"/>
 			<attr name="lookupTable" required="yes" default="scripts/LookupTable.properties"/>
 			<attr name="dicomScript" required="no"  default=""/>
@@ -393,6 +394,9 @@
 			<attr name="root" required="yes" default="roots/DicomCorrector"/>
 			<attr name="dicomScript" required="no" default="">
 				<helptext>The filter script file determining whether DicomObjects are to be processed</helptext>
+			</attr>
+			<attr name="fixPrivateElements" required="no" options="yes|no" default="no">
+				<helptext>Fix the VRs of private elements that appear in the Private Tag Dictionary.</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomCorrector"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
@@ -466,7 +470,7 @@
 			<attr name="name" required="yes" default="EmailService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.EmailService" editable="no"/>
 			<attr name="root" required="yes" default="roots/EmailService"/>
-			<attr name="script" required="yes" default="scripts/EmailService.script">
+			<attr name="dicomScript" required="yes" default="scripts/EmailService.script">
 				<helptext>The script file determining whether to send an email for a study</helptext>
 			</attr>
 			<attr name="smtpServer" required="yes"/>

@@ -338,25 +338,66 @@ public class DICOMAnonymizerContext {
 	 * @param vr the value representation.
 	 * @param value the value to store.
 	 */
-	public void putXX(int tag, int vr, String value) throws Exception {
+	public void putXX(int tag, int vrInt, String value) throws Exception {
 		if (outDS == null) return;
-		if ((value == null) || value.equals("")) {
-			if (vr == VRs.PN) outDS.putXX(tag,vr," ");
-			else outDS.putXX(tag,vr);
+		if (value == null) value = "";
+		if ((tag & 0x10000) != 0) {
+			if ((tag & 0xffff) < 0x100) outDS.putLO(tag, value);
+			else {
+				String creator = getPrivateCreator(tag);
+				if (!creator.equals("")) {
+					PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
+					String vr = ptIndex.getVR(creator, tag);
+					if (!vr.equals("")) {
+						try { 
+							outDS.putXX(tag, VRs.valueOf(vr), value);
+							return;
+						}
+						catch (Exception useDefault) { }
+					}
+				}				
+				if (value.length() <= 64) outDS.putLO(tag, value);
+				else outDS.putLT(tag, value);
+			}
 		}
-		else if ((tag & 0x10000) != 0) {
-			if ((tag & 0xffff) < 0x100) outDS.putLO(tag,value);
-			else outDS.putLO(tag,value);
-			//*******************************************
-			//Replaced by the line above
-			//else outDS.put(tag,value.getBytes("UTF-8"));
-			//*******************************************
+		else if (value.equals("")) {
+			if (vrInt == VRs.PN) outDS.putXX(tag, vrInt, " ");
+			else outDS.putXX(tag, vrInt);
 		}
 		else {
 			//Do this in such a way that we handle multivalued elements.
 			String[] s = value.split("\\\\");
-			outDS.putXX(tag,vr,s);
+			outDS.putXX(tag, vrInt, s);
 		}
+	}
+	
+	/*
+	 * Get the private creator string for a private data element.
+	 * @param tag the tag.
+	 * @return the the block owner or the tag, or the empoty string if the element
+	 * is not a private data element.
+	 */
+	public String getPrivateCreator(int tag) {
+		if ((tag & 0x10000) != 0) {
+			int block = (tag & 0xFF00) >> 8;
+			if (block != 0) {
+				String owner;
+				int pce = (tag & 0xFFFF0000) | block;
+				//First see if the element is in outDS.
+				try { 
+					owner = outDS.getString(pce);
+					if (owner != null) return owner;
+				}
+				catch (Exception notThere) { }
+				//See if it is in inDS;
+				try { 
+					owner = inDS.getString(pce);
+					if (owner != null) return owner;
+				}
+				catch (Exception notThere) { }
+			}
+		}
+		return "";
 	}
 
 	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}\\[(.*)\\]([0-9a-fA-F]{2})");
@@ -517,7 +558,4 @@ public class DICOMAnonymizerContext {
 			}
 		}
 	}
-
-
-
 }

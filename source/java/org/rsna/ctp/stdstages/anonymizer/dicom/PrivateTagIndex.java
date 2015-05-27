@@ -18,6 +18,7 @@ import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Encapsulates an index of private DICOM elements.
@@ -25,7 +26,7 @@ import org.w3c.dom.Node;
 public class PrivateTagIndex {
 
 	static final Logger logger = Logger.getLogger(PrivateTagIndex.class);
-	static final String xmlResource = "PrivateTagIndex.xml";
+	static final String xmlResource = "PrivateTagDictionary.xml";
 	static PrivateTagIndex privateTagIndex = null;
 	Hashtable<String,PrivateTag> index = null;
 
@@ -35,35 +36,40 @@ public class PrivateTagIndex {
 		try {
 			InputStream is = FileUtil.getStream( xmlResource );
 			Document doc = XmlUtil.getDocument( is );
-			Element root = doc.getDocumentElement();
-			Node groupNode = root.getFirstChild();
-			while (groupNode != null) {
-				if ((groupNode instanceof Element) && groupNode.getNodeName().equals("group")) {
-					Element groupEl = (Element)groupNode;
-					int group = StringUtil.getHexInt(groupEl.getAttribute("n"));
-					String block = groupEl.getAttribute("block");
-					Node eNode = groupEl.getFirstChild();
-					while (eNode != null)  {
-						if ((eNode instanceof Element) && eNode.getNodeName().equals("e")) {
-							Element el = (Element)eNode;
-							int element = StringUtil.getHexInt(el.getAttribute("n"));
-							String code = el.getAttribute("code");
-							String vr = el.getAttribute("vr");
-							String vm = el.getAttribute("vm");
-							PrivateTagKey key = new PrivateTagKey(block, group, element);
-							PrivateTag tag = new PrivateTag(vr, vm, code);
-							index.put(key.toString(), tag);
-						}
-						eNode = eNode.getNextSibling();
-					}
-				}
-				groupNode = groupNode.getNextSibling();
-			}
+			indexElements(doc);
 		}
 		catch (Exception unable) {
-			logger.warn("Unable to load the private tag index");
+			logger.warn("Unable to load the standard private tag index");
+		}
+		//See if there is a local dictionary in the base directory
+		File localDictionary = new File(xmlResource);
+		if (localDictionary.exists()) {
+			try {
+				Document doc = XmlUtil.getDocument( localDictionary );
+				indexElements(doc);
+			}
+			catch (Exception unable) {
+				logger.warn("Unable to load the local private tag index");
+			}
 		}
 		logger.debug("Size = "+index.size());
+	}
+	
+	private void indexElements(Document doc) {
+		Element root = doc.getDocumentElement();
+		NodeList nl = root.getElementsByTagName("element");
+		for (int i=0; i<nl.getLength(); i++) {
+			Element el = (Element)nl.item(i);
+			int group = StringUtil.getHexInt(el.getAttribute("gp"));
+			String creator = el.getAttribute("cr");
+			int element = StringUtil.getHexInt(el.getAttribute("el"));
+			String code = el.getAttribute("code");
+			String vr = el.getAttribute("vr");
+			String vm = el.getAttribute("vm");
+			PrivateTagKey key = new PrivateTagKey(group, creator, element);
+			PrivateTag tag = new PrivateTag(vr, vm, code);
+			index.put(key.toString(), tag);
+		}
 	}
 
 	/**
@@ -92,8 +98,8 @@ public class PrivateTagIndex {
 	 * @param element the element number within the block.
 	 * @return the VR, or the empty string if the element is unknown.
 	 */
-	public String getVR(String owner, int group, int element) {
-		return getVR(new PrivateTagKey(owner, group, element));
+	public String getVR(int group, String owner, int element) {
+		return getVR(new PrivateTagKey(group, owner, element));
 	}
 
 	/**
@@ -119,8 +125,8 @@ public class PrivateTagIndex {
 	 * @param element the element number within the block.
 	 * @return the VM, or the empty string if the element is unknown.
 	 */
-	public String getVM(String owner, int group, int element) {
-		return getVM(new PrivateTagKey(owner, group, element));
+	public String getVM(int group, String owner, int element) {
+		return getVM(new PrivateTagKey(group, owner, element));
 	}
 
 	/**
@@ -146,8 +152,8 @@ public class PrivateTagIndex {
 	 * @param element the element number within the block.
 	 * @return the code, or the empty string if the element is unknown.
 	 */
-	public String getCode(String owner, int group, int element) {
-		return getCode(new PrivateTagKey(owner, group, element));
+	public String getCode(int group, String owner, int element) {
+		return getCode(new PrivateTagKey(group, owner, element));
 	}
 
 	/**
@@ -171,7 +177,7 @@ public class PrivateTagIndex {
 		int group;
 		int element;
 
-		public PrivateTagKey(String owner, int group, int element) {
+		public PrivateTagKey(int group, String owner, int element) {
 			this.owner = owner.toUpperCase();
 			this.group = group;
 			this.element = element & 0xFF;
@@ -184,7 +190,7 @@ public class PrivateTagIndex {
 		}
 
 		public String toString() {
-			return String.format("(%04x,[%s]%02x)", group, owner, element);
+			return String.format("(%04x[%s]%02x)", group, owner, element);
 		}
 	}
 

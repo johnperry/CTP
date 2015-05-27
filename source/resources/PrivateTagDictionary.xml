@@ -312,6 +312,46 @@
             vm="1"
             vr="OB"/>
         <element
+            code="K"
+            cr="CTP"
+            el="10"
+            file="CTP.xlsx [sheet1.xml]"
+            gp="0013"
+            key="ProjectName"
+            src="RSNA"
+            vm="1"
+            vr="LO"/>
+        <element
+            code="K"
+            cr="CTP"
+            el="11"
+            file="CTP.xlsx [sheet1.xml]"
+            gp="0013"
+            key="TrialName"
+            src="RSNA"
+            vm="1"
+            vr="LO"/>
+        <element
+            code="K"
+            cr="CTP"
+            el="12"
+            file="CTP.xlsx [sheet1.xml]"
+            gp="0013"
+            key="SiteName"
+            src="RSNA"
+            vm="1"
+            vr="LO"/>
+        <element
+            code="K"
+            cr="CTP"
+            el="13"
+            file="CTP.xlsx [sheet1.xml]"
+            gp="0013"
+            key="SiteID"
+            src="RSNA"
+            vm="1"
+            vr="LO"/>
+        <element
             code="X"
             cr="EMAGEON STUDY HOME"
             el="01"

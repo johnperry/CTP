@@ -10,12 +10,15 @@ package org.rsna.ctp.stdstages;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.email.EmailSender;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -104,6 +107,22 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	 */
 	public File[] getScriptFiles() {
 		return new File[] { dicomScriptFile, null, null };
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if (allowsAdminBy(user)) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			if (dicomScriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs+"&f=0", null, "Edit the Stage Filter Script", false) );
+			}
+		}
+		return links;
 	}
 
 	/**
@@ -230,7 +249,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			if (ok && logSentEmails) {
 				logger.info(name+": Study email sent to "+to+" ("+subject+")");
 			}
-			else logger.info(name+": Unable to send email to "+to+" ("+subject+")");
+			else if (!ok) logger.info(name+": Unable to send email to "+to+" ("+subject+")");
 		}
 		private String getPlainText(Study study) {
 			StringBuffer sb = new StringBuffer();

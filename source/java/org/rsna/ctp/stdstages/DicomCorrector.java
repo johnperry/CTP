@@ -28,6 +28,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 	File dicomScriptFile = null; //the DicomFilter script that determines whether to correct the object
 	boolean quarantineUncorrectedMismatches = false;
 	boolean logUncorrectedMismatches = false;
+	boolean fixPrivateElements = false;
 
 	/**
 	 * Construct the DicomCorrector PipelineStage.
@@ -42,6 +43,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
 		}
 
+		fixPrivateElements = element.getAttribute("fixPrivateElements").trim().toLowerCase().equals("yes");
 		quarantineUncorrectedMismatches = element.getAttribute("quarantineUncorrectedMismatches").trim().toLowerCase().equals("yes");
 		logUncorrectedMismatches = element.getAttribute("logUncorrectedMismatches").trim().toLowerCase().equals("yes");
 	}
@@ -74,7 +76,10 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 				//Okay, correct the object
 				File file = fileObject.getFile();
 				AnonymizerStatus status =
-							DICOMCorrector.correct(file, file, quarantineUncorrectedMismatches, logUncorrectedMismatches);
+							DICOMCorrector.correct(file, file, 
+												   fixPrivateElements,
+												   quarantineUncorrectedMismatches, 
+												   logUncorrectedMismatches);
 				if (status.isOK()) {
 					fileObject = FileObject.getInstance(file);
 				}

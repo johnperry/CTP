@@ -47,6 +47,7 @@ public class DICOMCorrector {
     public static AnonymizerStatus correct(
 			File inFile,
 			File outFile,
+			boolean fixPrivateElements,
 			boolean quarantineUncorrectedMismatches,
 			boolean logUncorrectedMismatches) {
 
@@ -56,7 +57,10 @@ public class DICOMCorrector {
 			Dataset ds = dob.getDataset();
 			SpecificCharacterSet scs = ds.getSpecificCharacterSet();
 
-			boolean changed = correctDataset(inFile, ds, scs, quarantineUncorrectedMismatches, logUncorrectedMismatches);
+			boolean changed = correctDataset(inFile, ds, scs, 
+											 fixPrivateElements,
+											 quarantineUncorrectedMismatches,
+											 logUncorrectedMismatches);
 
 			if (!changed) {
 				dob.close();
@@ -83,9 +87,11 @@ public class DICOMCorrector {
 	}
 
 	private static boolean correctDataset(File inFile, Dataset ds, SpecificCharacterSet scs,
+										  boolean fixPrivateElements,
 										  boolean quarantineUncorrectedMismatches,
 										  boolean logUncorrectedMismatches) throws Exception {
 		boolean changed = false;
+		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 		for (Iterator it=ds.iterator(); it.hasNext(); ) {
 			DcmElement el = (DcmElement)it.next();
 			int tag = el.tag();
@@ -96,7 +102,10 @@ public class DICOMCorrector {
 					int i = 0;
 					Dataset sq;
 					while ((sq=el.getItem(i++)) != null) {
-						changed |= correctDataset(inFile, sq, scs, quarantineUncorrectedMismatches, logUncorrectedMismatches);
+						changed |= correctDataset(inFile, sq, scs, 
+												  fixPrivateElements,
+												  quarantineUncorrectedMismatches,
+												  logUncorrectedMismatches);
 					}
 				}
 				else if (!entry.vr.equals(VRs.toString(el.vr()))) {
@@ -137,6 +146,9 @@ public class DICOMCorrector {
 					}
 					catch (Exception skip) { logger.warn("Unable to convert "+Tags.toString(tag), skip); }
 				}
+			}
+			else if (isPrivate && fixPrivateElements && VRs.toString(el.vr()).equals("UN")) {
+				
 			}
 		}
 		return changed;

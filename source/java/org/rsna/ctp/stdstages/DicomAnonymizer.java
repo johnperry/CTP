@@ -74,7 +74,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	public synchronized void start() {
 		String defaultScript = "examples/example-ctp-dicom-anonymizer.script";
 		if (Configuration.getInstance().isMIRC()) {
-			defaultScript = "examples/example-mirc-dicom-anonymizer.script";
+			defaultScript = "examples/example-tfs-dicom-anonymizer.script";
 		}
 		String script = element.getAttribute("script").trim();
 		scriptFile = FileUtil.getFile(script, defaultScript);
