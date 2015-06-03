@@ -223,7 +223,8 @@ public class DICOMAnonymizer {
                         Tags.SeqDelimitationItem,
                         VRs.NONE,
                         0);
-                } else {
+                } 
+                else {
                     writeValueTo(parser, buffer, out, swap && (parser.getReadVR() == VRs.OW));
                 }
 				parser.parseHeader(); //get ready for the next element

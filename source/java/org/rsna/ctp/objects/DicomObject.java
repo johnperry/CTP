@@ -264,6 +264,7 @@ public class DicomObject extends FileObject {
                 }
 				parser.parseHeader(); //get ready for the next element
 			}
+			
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
@@ -328,6 +329,8 @@ public class DicomObject extends FileObject {
 			while (remain > 0) {
 				c = in.read(buffer, 0, Math.min(buffer.length, remain));
 				if (c == -1) {
+					logger.warn("Unable to read element "+Integer.toHexString(parser.getReadTag()));
+					logger.warn("...remain = "+remain);
 					throw new EOFException("EOF while reading element value");
 				}
 				if (swap) {

@@ -44,7 +44,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	static final int defaultAge = 5000;
 	static final int minAge = 1000;
 	long age;
-	String fsName = null;
+	String fsName = "";
 	int fsNameTag = 0;
 	File treeRoot = null;
 	boolean expandTARs;
@@ -71,9 +71,8 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 
 		//See if there is a FileSystem name
 		fsName = element.getAttribute("fsName").trim();
-		if (fsName.equals("")) fsName = null;
-		fsNameTag = StringUtil.getHexInt(element.getAttribute("fsNameTag").trim(), fsNameTag);
-		setFileSystemName = (fsName != null) && (fsNameTag != 0);
+		fsNameTag = DicomObject.getElementTag(element.getAttribute("fsNameTag"));
+		setFileSystemName = (!fsName.equals("")) && (fsNameTag > 0);
 
 		if ((root != null) && (treeRoot != null)) {
 			active = new File(root, "active");
@@ -129,8 +128,8 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 				//Unfortunately, we have to parse the object again
 				//in order to be able to save it once we modify it.
 				DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
-				dob.setElementValue(fsNameTag, fsName);
 				File dobFile = dob.getFile();
+				dob.setElementValue(fsNameTag, fsName);
 				File tFile = File.createTempFile("TMP-",".dcm",dobFile.getParentFile());
 				dob.saveAs(tFile, false);
 				dob.close();

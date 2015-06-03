@@ -30,7 +30,7 @@ public class DirectoryImportService extends AbstractImportService {
 
 	static final Logger logger = Logger.getLogger(DirectoryImportService.class);
 
-	String fsName = null;
+	String fsName = "";
 	int fsNameTag = 0;
 	int filenameTag = 0;
 	Poller poller = null;
@@ -64,16 +64,14 @@ public class DirectoryImportService extends AbstractImportService {
 
 		//See if there is a FileSystem name
 		fsName = element.getAttribute("fsName").trim();
-		if (fsName == null) fsName = fsName.trim();
-		if (fsName.equals("")) fsName = null;
 		fsNameTag = DicomObject.getElementTag(element.getAttribute("fsNameTag"));
 
 		//See if there is a filenameTag
 		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
 
 		//Set the flags for storing names in objects
-		doFileSystemName = (fsName != null) && (fsNameTag != 0);
-		doFilename = (filenameTag != 0);
+		doFileSystemName = (!fsName.equals("")) && (fsNameTag != 0);
+		doFilename = (filenameTag > 0);
 		
 		//Initialize the FileTracker
 		tracker = new FileTracker();
