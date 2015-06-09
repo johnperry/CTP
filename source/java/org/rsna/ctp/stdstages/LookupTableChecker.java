@@ -268,14 +268,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	}
 
 	/**
-	 * Get the pipeline.
-	 */
-	public Pipeline getPipeline() {
-		return pipe;
-	}
-
-	/**
-	 * Get the pipeline.
+	 * Get the DicomAnonymizer stage that is being checked.
 	 */
 	public DicomAnonymizer getAnonymizer() {
 		return anonymizer;

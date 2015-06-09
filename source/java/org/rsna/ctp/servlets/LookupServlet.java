@@ -7,11 +7,7 @@
 
 package org.rsna.ctp.servlets;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -458,27 +454,30 @@ public class LookupServlet extends CTPServlet {
 	//Load a Properties file.
 	private Properties getProperties(File file) {
 		Properties props = new Properties();
-		FileInputStream stream = null;
+		BufferedReader br = null;
 		try {
-			stream = new FileInputStream(file);
-			props.load(stream);
+			br = new BufferedReader(
+					new InputStreamReader(
+						new FileInputStream(file), "UTF-8") );
+			props.load(br);
 		}
-		catch (Exception ignore) { }
-		FileUtil.close(stream);
+		catch (Exception returnWhatWeHaveSoFar) { }
+		finally { FileUtil.close(br); }
 		return props;
 	}
 
 	// Save a Properties object in a file.
 	public void saveProperties(Properties props, File file) {
-		FileOutputStream stream = null;
+		BufferedWriter bw = null;
 		try {
-			stream = new FileOutputStream(file);
-			props.store(stream, file.getName());
+			bw = new BufferedWriter(
+					new OutputStreamWriter(
+						new FileOutputStream(file), "UTF-8") );
+			props.store( bw, file.getName() );
+			bw.flush();
 		}
-		catch (Exception e) {
-			logger.warn("Unable to save the properties file "+file);
-		}
-		FileUtil.close(stream);
+		catch (Exception e) { }
+		finally { FileUtil.close(bw); }
 	}
 
 }

@@ -218,7 +218,9 @@ public class FileSystem {
 			append(s, "storageDate", StringUtil.getDate(System.currentTimeMillis(),""));
 			append(s, "studyDate", fileObject.getStudyDate());
 			append(s, "studyName", studyName);
-			append(s, "studyUID", fileObject.getStudyUID());
+			String stuid = fileObject.getStudyUID().trim();
+			if (stuid.equals("") && studyName.equals("__bullpen")) stuid = studyName;
+			append(s, "studyUID", stuid);
 			indexDoc.getDocumentElement().appendChild(s);
 			FileUtil.setText(indexFile, XmlUtil.toString(indexDoc));
 		}
@@ -250,7 +252,9 @@ public class FileSystem {
 			Study study = uidTable.get(studyUID);
 			if (study != null) {
 				File studyDir = study.getDirectory();
+				logger.debug("......study directory: "+studyDir);
 				Element root = indexDoc.getDocumentElement();
+				logger.debug("index:\n"+XmlUtil.toPrettyString(root));
 				Node child = root.getFirstChild();
 				while (child != null) {
 					if ((child.getNodeType()==Node.ELEMENT_NODE)
@@ -289,7 +293,9 @@ public class FileSystem {
 	 */
 	public synchronized void deleteAll() {
 		String[] uids = uidTable.keySet().toArray( new String[uidTable.size()] );
+		logger.debug("Number of studies to delete: "+uids.length);
 		for (String uid : uids) {
+			logger.debug("...deleting: "+uid);
 			deleteStudyByUID(uid);
 		}
 	}

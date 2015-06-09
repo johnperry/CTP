@@ -80,7 +80,7 @@ public class CTPServlet extends Servlet {
 				stage = stages.get(s);
 			}
 		}
-
+		
 		userIsAdmin = req.userHasRole("admin");
 		userIsStageAdmin = (stage != null) && stage.allowsAdminBy(user);
 		userIsAuthorized = userIsAdmin || userIsStageAdmin;

@@ -8,10 +8,7 @@
 package org.rsna.ctp.stdstages.anonymizer;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -140,22 +137,19 @@ public class LookupTable {
 	//loading it as either a properties file or a CSV file.
 	private Properties getProps() {
 		Properties props = new Properties();
-		if (!isCSV) {
-			FileInputStream fis = null;
-			try {
-				fis = new FileInputStream(file);
-				props.load(fis);
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(
+					new InputStreamReader(
+						new FileInputStream(file), "UTF-8") );
+			if (!isCSV) {
+				try { props.load(br); }
+				catch (Exception returnEmptyProps) { }
 			}
-			catch (Exception returnEmptyProps) { }
-			FileUtil.close(fis);
-		}
-		else {
-			String defKeyType = "";
-			boolean hasDefaultKeyType = (defaultKeyType != null);
-			if (hasDefaultKeyType) defKeyType = defaultKeyType.trim() + "/";
-			BufferedReader br = null;
-			try {
-				br = new BufferedReader( new InputStreamReader(new FileInputStream(file), "UTF-8") );
+			else {
+				String defKeyType = "";
+				boolean hasDefaultKeyType = (defaultKeyType != null);
+				if (hasDefaultKeyType) defKeyType = defaultKeyType.trim() + "/";
 				String line;
 				while ( (line=br.readLine()) != null ) {
 					String[] s = line.split(",");
@@ -173,9 +167,9 @@ public class LookupTable {
 					}
 				}
 			}
-			catch (Exception returnWhatWeHaveSoFar) { }
-			FileUtil.close(br);
 		}
+		catch (Exception returnWhatWeHaveSoFar) { }
+		finally { FileUtil.close(br); }
 		return props;
 	}
 
@@ -185,14 +179,16 @@ public class LookupTable {
 	 */
 	public void save() {
 		if (!isCSV) {
-			FileOutputStream fos = null;
+			BufferedWriter bw = null;
 			try {
-				fos = new FileOutputStream(file);
-				properties.store( fos, file.getName() );
-				fos.flush();
+				bw = new BufferedWriter(
+						new OutputStreamWriter(
+							new FileOutputStream(file), "UTF-8") );
+				properties.store( bw, file.getName() );
+				bw.flush();
 			}
 			catch (Exception e) { }
-			FileUtil.close(fos);
+			finally { FileUtil.close(bw); }
 		}
 		else {
 			StringBuffer sb = new StringBuffer();

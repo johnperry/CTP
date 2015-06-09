@@ -12,6 +12,7 @@ please send them to johnperry@dls.net.
 For information on the DicomPixelAnonymizer and the format of this file,see:
 	http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Pixel_Anonymizer
 
+
 **************
      CT
 **************
@@ -70,8 +71,9 @@ VITREA
 
 SIEMENS
 
- CT Dose Series - This removes PHI from Top of Dose image but rest of image is all white. Window Width and Center need to be set correctly.
+  CT Dose Series - This removes PHI from Top of Dose image but rest of image is all white. Window Width and Center need to be set correctly.
   { [0008,0008].containsIgnoreCase("SECONDARY") * 
+    [0008,0060].containsIgnoreCase("CT") * 
     [0008,0070].containsIgnoreCase("SIEMENS") * 
     [0028,0010].containsIgnoreCase("860") }
   (0,0,1132,60)
@@ -212,6 +214,17 @@ Canon
     [0008,1090].containsIgnoreCase("CXDI") * 
     [0028,0010].containsIgnoreCase("2592") }
   (0,0,2208,80) (0,2512,2208,80)
+
+**************
+     NM
+**************
+
+SIEMENS
+  { [0008,0008].containsIgnoreCase("SECONDARY") * 
+    [0008,0060].containsIgnoreCase("NM") * 
+    [0008,0070].containsIgnoreCase("SIEMENS") * 
+    [0028,0010].containsIgnoreCase("860") }
+  (0,0,1132,82) (0,780,1132,80)
 
 **************
     OTHER
