@@ -89,8 +89,8 @@ public class LookupTable {
 	}
 
 	/**
-	 * Determine whether the script file has changed since it was last loaded.
-	 * If the script file has changed in the last 5 seconds, it is ignored
+	 * Determine whether the file has changed since it was last loaded.
+	 * If the file has changed in the last 5 seconds, it is ignored
 	 * to ensure that we don't jump on a file that is still being modified.
 	 * @return true if this LookupTable instance is up-to-date; false if the file has changed.
 	 */

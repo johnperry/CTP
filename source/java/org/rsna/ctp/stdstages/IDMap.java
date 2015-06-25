@@ -10,6 +10,7 @@ package org.rsna.ctp.stdstages;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.HttpURLConnection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import jdbm.RecordManager;
@@ -22,6 +23,7 @@ import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.XmlAnonymizer;
 import org.rsna.ctp.stdstages.ZipAnonymizer;
@@ -30,6 +32,7 @@ import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizer;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMAnonymizerContext;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.JdbmUtil;
@@ -270,6 +273,21 @@ public class IDMap extends AbstractPipelineStage implements Processor {
 		}
 		recman.commit();
 		return index;
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		boolean admin = allowsAdminBy(user);
+		if (admin) {
+			int p = getPipeline().getPipelineIndex();
+			links.addFirst( new SummaryLink("/idmap?p="+p+"&s="+stageIndex, null, "Search the ID Database", false) );
+		}
+		return links;
 	}
 
 }

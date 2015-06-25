@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.pipeline.Pipeline;
 import org.rsna.ctp.pipeline.PipelineStage;
+import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.ScriptableDicom;
@@ -99,6 +100,58 @@ public class LookupServlet extends CTPServlet {
 
 		//Return the page
 		res.disableCaching();
+		res.send();
+	}
+	
+	/**
+	 * The servlet method that responds to an HTTP PUT.
+	 * This method updates a single key in the lookup table.
+	 * @param req The HttpServletRequest provided by the servlet container.
+	 * @param res The HttpServletResponse provided by the servlet container.
+	 */
+	public void doPut(HttpRequest req, HttpResponse res) {
+		super.loadParameters(req);
+		res.disableCaching();
+		res.setContentType("txt");
+		
+		//Make sure the user is authorized to do this.
+		if (!userIsAuthorized) {
+			res.setResponseCode(res.forbidden);
+			res.send();
+			return;
+		}
+		
+		String id = req.getParameter("id");
+		String key = req.getParameter("key");
+		String value = req.getParameter("value");
+		
+		if ((id == null) || (key == null) || (value == null)) {
+			res.setResponseCode(res.notmodified);
+			res.send();
+			return;
+		}
+		
+		PipelineStage stage = Configuration.getInstance().getRegisteredStage(id);
+		if ((stage == null) || !(stage instanceof DicomAnonymizer)) {
+			res.setResponseCode(res.notmodified);
+			res.send();
+			return;
+		}
+
+		DicomAnonymizer da = (DicomAnonymizer)stage;
+		File lutFile = da.getLookupTableFile();
+		LookupTable lut = LookupTable.getInstance(lutFile);
+		if (lut == null) {
+			res.setResponseCode(res.notmodified);
+			res.send();
+			return;
+		}
+		
+		Properties props = lut.getProperties();
+		props.put(key, value);
+		lut.save();
+
+		res.write("OK");
 		res.send();
 	}
 

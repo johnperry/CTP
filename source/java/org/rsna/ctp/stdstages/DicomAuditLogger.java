@@ -176,7 +176,13 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 			}
 			String entry = XmlUtil.toPrettyString(root);
 			logger.debug("AuditLog entry:\n"+entry);
-			try { auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); }
+			try { 
+				Integer id = auditLog.addEntry(entry, "xml", patientID, studyInstanceUID, sopInstanceUID); 
+				auditLog.addEntryReference(id, 
+										   dicomObject.getPatientID(), 
+										   dicomObject.getStudyInstanceUID(), 
+										   dicomObject.getSOPInstanceUID());
+			}
 			catch (Exception ex) { logger.warn("Unable to insert the AuditLog entry"); }
 		}
 		catch (Exception ex) {

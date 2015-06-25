@@ -19,6 +19,9 @@ public class SopClass {
 		"1.2.840.10008.5.1.4.1.1.88.22",		//enhanced
 		"1.2.840.10008.5.1.4.1.1.88.33"			//comprehensive
 	};
+	
+	/** The start of all PresentationState SOP Class UIDs. */
+	static final String psSopClassPrefix = "1.2.840.10008.5.1.4.1.1.11";
 
 	/** The KIN SOP Class UID. */
 	static final String kosSopClass = "1.2.840.10008.5.1.4.1.1.88.59";
@@ -62,5 +65,13 @@ public class SopClass {
 		return sop.equals(dicomdirClass);
 	}
 
+	/**
+	 * Tests whether a SOP Class corresponds to a Presentation State object
+	 * @param sop the SOPClassUID
+	 * @return true if sop corresponds to a DICOMDIR; false otherwise.
+	 */
+	public static boolean isPS(String sop) {
+		return sop.startsWith(psSopClassPrefix);
+	}
 }
 

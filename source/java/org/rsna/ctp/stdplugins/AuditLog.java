@@ -159,6 +159,29 @@ public class AuditLog extends AbstractPlugin {
 		return id;
 	}
 
+	/**
+	 * Add index entries for an object already stored.
+	 * @param entryID the ID of the existing entry to be referenced in the audit log.
+	 * @param patientID the key in the patientID index under which the entry is to listed,
+	 * or null if no entry is to be made in the patientID index.
+	 * @param studyUID the key in the studyUID index under which the entry is to listed,
+	 * or null if no entry is to be made in the studyUID index.
+	 * @param objectUID the key in the objectUID index under which the entry is to listed,
+	 * or null if no entry is to be made in the objectUID index.
+	 * @return the entry ID of the audit log entry.
+	 * @throws Exception if the entry could not be made in the audit log.
+	 */
+	public synchronized Integer addEntryReference(Integer entryID,
+												 String patientID,
+												 String studyUID,
+												 String objectUID) throws Exception {
+		if (patientID != null) appendID(patientIDIndex, patientID, entryID);
+		if (studyUID != null) appendID(studyUIDIndex, studyUID, entryID);
+		if (objectUID != null) appendID(objectUIDIndex, objectUID, entryID);
+		recman.commit();
+		return entryID;
+	}
+
 	//Get the next available ID for an entry
 	private Integer getNextID() throws Exception {
 		try {

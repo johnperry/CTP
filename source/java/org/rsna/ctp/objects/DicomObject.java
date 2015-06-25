@@ -127,7 +127,7 @@ public class DicomObject extends FileObject {
 
 			//See if this is a TCE Additional Teaching File Info document
 			isAdditionalTFInfo = checkAdditionalTFInfo();
-
+			
 			if (!leaveOpen) close();
 		}
 		catch (Exception ex) {
@@ -1491,6 +1491,14 @@ public class DicomObject extends FileObject {
 	 */
 	public boolean isSR() {
 		return SopClass.isSR(getSOPClassUID());
+	}
+
+	/**
+	 * Tests whether the DicomObject corresponds to any of the Presentation State classes.
+	 * @return true if the object corresponds to a Presentation State class; false otherwise.
+	 */
+	public boolean isPS() {
+		return SopClass.isPS(getSOPClassUID());
 	}
 
 	/**

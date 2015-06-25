@@ -307,12 +307,14 @@ public class StorageServlet extends Servlet {
 							entryName += "Series-"+sNumber+"/Acquisition-"+aNumber+"/"
 										+ studyName + String.format("-S%d-A%d-%04d", sNumber, aNumber, iNumber);
 						}
-						else if (dob.isKIN()) entryName += studyName + "-KOS";
-						else if (dob.isSR()) entryName += studyName + "-SR";
+						else if (dob.isKIN()) entryName += "KOS";
+						else if (dob.isSR()) entryName += "SR";
+						else if (dob.isPS()) entryName += "PS";
+						else entryName += "OTHER";
 					}
-					else if (fob instanceof XmlObject) entryName += studyName + "-XML";
-					else if (fob instanceof ZipObject) entryName += studyName + "-ZIP";
-					else entryName += studyName + "-FOB";
+					else if (fob instanceof XmlObject) entryName += "XML";
+					else if (fob instanceof ZipObject) entryName += "ZIP";
+					else entryName += "FILE";
 					
 					//Add an index if this entry already exists
 					Integer n = entryNames.get(entryName);
