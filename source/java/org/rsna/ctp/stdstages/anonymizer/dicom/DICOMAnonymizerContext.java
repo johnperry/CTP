@@ -281,6 +281,21 @@ public class DICOMAnonymizerContext {
 	 * Get the contents of an input dataset element by tag,
 	 * handling CTP elements specially.
 	 * @param tag the element tag
+	 * @param defaultValue the value to return if unable to obtain the 
+	 * element specified by the tag argument
+	 * @return the value of the specified element in the current dataset,
+	 * or the defaultValue if unable to obtain the value from the dataset.
+	 */
+	public String contents(int tag, String defaultValue) {
+		try { return contents(tag); }
+		catch (Exception ex) { }
+		return defaultValue;
+	}
+	
+	/*
+	 * Get the contents of an input dataset element by tag,
+	 * handling CTP elements specially.
+	 * @param tag the element tag
 	 * @return the value of the specified element in the current dataset,
 	 * @throws Exception if the element is missing.
 	 */

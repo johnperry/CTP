@@ -19,6 +19,10 @@ function setSizes() {
 window.onload = setSizes;
 window.onresize = setSizes;
 
+function exportAuditLog() {
+	window.open("?export", "_self");
+}
+
 function search() {
 	var type = "";
 	var text = "";
@@ -63,6 +67,8 @@ function displayQueryResults(req) {
 			}
 		}
 		else seldiv.appendChild( document.createTextNode( "No results" ) );
+		var disdiv = document.getElementById("entrydisplay");
+		while (disdiv.firstChild) disdiv.removeChild(disdiv.firstChild);
 	}
 }
 

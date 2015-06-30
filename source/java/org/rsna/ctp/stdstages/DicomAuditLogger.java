@@ -147,15 +147,13 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		String sopClassName = cachedObject.getSOPClassName();
 
 		try {
+			String cacheName = getNameFor(objectCache);
+			String thisName = getNameFor(this);
+
 			Document doc = XmlUtil.getDocument();
 			Element root = doc.createElement("DicomObject");
+			root.setAttribute("StageName", this.getName());
 			root.setAttribute("SOPClassName", sopClassName);
-			Element sources = doc.createElement("Sources");
-			sources.setAttribute("a", objectCache.getName());
-			sources.setAttribute("b", this.getName());
-			root.appendChild(sources);
-			Element els = doc.createElement("Elements");
-			root.appendChild(els);
 
 			for (Integer tag : auditLogTags) {
 				int tagint = tag.intValue();
@@ -169,10 +167,9 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 					elementName = String.format("g%04Xe%04X", g, e);
 				}
 				Element el = doc.createElement(elementName);
-				el.setAttribute("a", cachedObject.getElementValue(tagint, ""));
-				el.setAttribute("b", dicomObject.getElementValue(tagint, ""));
-				el.setAttribute("tag", DicomObject.getElementNumber(tagint));
-				els.appendChild(el);
+				el.setAttribute(cacheName, cachedObject.getElementValue(tagint, ""));
+				el.setAttribute(thisName, dicomObject.getElementValue(tagint, ""));
+				root.appendChild(el);
 			}
 			String entry = XmlUtil.toPrettyString(root);
 			logger.debug("AuditLog entry:\n"+entry);
@@ -188,7 +185,14 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 		catch (Exception ex) {
 			logger.warn("Unable to construct the AuditLog entry", ex);
 		}
-
+	}
+	
+	private String getNameFor(PipelineStage stage) {
+		String name = stage.getID();
+		if ((name == null) || name.trim().equals("")) name = stage.getName();
+		name = name.replaceAll("\\s","");
+		if (name.equals("")) name = stage.getClass().getName();
+		return name;
 	}
 
 	private void makeAuditLogEntry( DicomObject dicomObject ) {

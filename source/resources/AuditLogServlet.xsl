@@ -27,6 +27,11 @@
 				<img src="/icons/refresh.png"
 					 onclick="search();"
 					 title="Search"/>
+				<br/>
+				<img src="icons/arrow-down.png"
+						onclick="exportAuditLog();"
+						style="margin-right:2px"
+						title="Export the AuditLog"/>
 			</div>
 
 			<h1>Audit Log Service</h1>
@@ -61,7 +66,15 @@
 				</tr>
 				<tr>
 					<td class="text-label">
-						<input id="object" type="radio" name="searchfield" value="entry" checked="true">Entry ID:</input>
+						<input id="object" type="radio" name="searchfield" value="scan" checked="true">Text search:</input>
+					</td>
+					<td class="text-field">
+						<input type="text" class="fullwidth"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="text-label">
+						<input id="object" type="radio" name="searchfield" value="entry">Entry ID:</input>
 					</td>
 					<td class="text-field">
 						<input type="text" class="fullwidth"/>

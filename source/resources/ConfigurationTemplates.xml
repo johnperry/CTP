@@ -227,6 +227,7 @@
 			<attr name="name" required="yes" default="DicomAuditLogger"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomAuditLogger" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomAuditLogger"/>
+			<attr name="id" required="yes" default="DicomAuditLogger"/>
 			<attr name="cacheID" required="no" default="">
 				<helptext>
 					The ID of an ObjectCache stage from which to obtain a DicomObject for

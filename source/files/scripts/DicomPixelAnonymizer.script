@@ -199,7 +199,7 @@ Supersonic Imagine 5A
     ManufacturerModelName.containsIgnoreCase("Aixplorer") *
     Rows.equals("1050") *
     Columns.equals("1400") }
-  (0,0,1000,89)
+  (0,0,1400,89)
 
 ************** 
      MRI

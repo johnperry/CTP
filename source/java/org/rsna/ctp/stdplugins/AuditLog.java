@@ -24,6 +24,8 @@ import org.rsna.server.ServletSelector;
 import org.rsna.server.User;
 import org.rsna.util.JdbmUtil;
 import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
@@ -77,7 +79,7 @@ public class AuditLog extends AbstractPlugin {
 		}
 		catch (Exception unable) { logger.warn("Unable to open the AuditLog database."); }
 
-		logger.info("AuditLog Plugin instantiated");
+		logger.info(getID() + " Plugin instantiated");
 	}
 
 	/**
@@ -232,6 +234,26 @@ public class AuditLog extends AbstractPlugin {
 	}
 
 	/**
+	 * Get a list of entries containing a text string.
+	 * @param text the text to find anywhere in the entry.
+	 * @return the list of audit log entry IDs corresponding entries that contain the text.
+	 */
+	public synchronized LinkedList<Integer> getEntriesContainingText(String text) {
+		LinkedList<Integer> ids = new LinkedList<Integer>();
+		text = text.toLowerCase();
+		try {
+			FastIterator fit = entryTable.keys();
+			Integer id;
+			while ((id = (Integer)fit.next()) != null) {
+				String entry = (String)entryTable.get(id);
+				if (entry.toLowerCase().contains(text)) ids.add(id);
+			}
+		}
+		catch (Exception ex) { }
+		return ids;
+	}
+
+	/**
 	 * Get a list of entries with IDs around a specified ID.
 	 * @param id the id of the entry.
 	 * @return the list of audit log entry IDs around a specified ID,
@@ -277,12 +299,12 @@ public class AuditLog extends AbstractPlugin {
 	 * Get the content type of a specified entry in the audit log.
 	 * @param id the ID of the entry.
 	 * @return the content Type of the entry corresponding to the ID,
-	 * or null if no content type is available for the ID.
+	 * or the empty string if no content type is available for the ID.
 	 * @throws Exception if an error occurs while reading the audit log.
 	 */
 	public synchronized String getContentType(Integer id) {
 		try { return (String)contentTypeTable.get(id); }
-		catch (Exception ex) { return null; }
+		catch (Exception ex) { return ""; }
 	}
 
 	/**
@@ -300,4 +322,29 @@ public class AuditLog extends AbstractPlugin {
 		catch (Exception ex) { return null; }
 	}
 
+	public synchronized Document getXML() {
+		Document doc = null;
+		try {
+			doc = XmlUtil.getDocument();
+			Element root = doc.createElement("AuditLog");
+			root.setAttribute("date", StringUtil.getDate("."));
+			doc.appendChild(root);
+			
+			FastIterator fit = entryTable.keys();
+			Integer id;
+			while ((id = (Integer)fit.next()) != null) {
+				if (getContentType(id).toLowerCase().equals("xml")) {
+					String entry = (String)entryTable.get(id);
+					try {
+						Document entryDoc = XmlUtil.getDocument(entry);
+						Element entryRoot = entryDoc.getDocumentElement();
+						root.appendChild(doc.importNode(entryRoot, true));
+					}
+					catch (Exception skip) { logger.warn("Skip", skip); }
+				}
+			}
+		}
+		catch (Exception unable) { logger.warn("Unable", unable); }
+		return doc;
+	}
 }
