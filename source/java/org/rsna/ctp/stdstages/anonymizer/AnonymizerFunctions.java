@@ -95,7 +95,7 @@ public class AnonymizerFunctions {
 	 */
 	public static String initials(String name) {
 		if (name == null) return "X";
-		String s = name.replace('^',' ');
+		String s = name.replace('^',' ').replace(',',' ');
 		s = s.replaceAll("\\s+"," ").trim();
 		if (s.equals("")) return "X";
 		String ss = "";
@@ -180,7 +180,7 @@ public class AnonymizerFunctions {
 	 * @param ptid the ID of the patient.
 	 * @param maxlen the maximum number of characters to return.
 	 * @return the MD5 hash of the combination of the siteid and ptid
-	 * as a numeric string with the .
+	 * as a numeric string.
 	 * @throws Exception if the hash fails.
 	 */
 	public static String hashPtID(
@@ -222,7 +222,7 @@ public class AnonymizerFunctions {
 	}
 
 	/**
-	 * Encrypt a string using a specified key..
+	 * Encrypt a string using a specified key.
 	 * @param string the string to encrypt.
 	 * @param keyText the text of the key.
 	 * @return the base64 string containing the encrypted text.
@@ -278,6 +278,37 @@ public class AnonymizerFunctions {
 		//And return the string padded to a full group.
 		keyText = (keyText + pad).substring(0,requiredGroupChars);
 		return Base64.decode(keyText);
+	}
+	
+	/**
+	 * Encrypt a string using a Caesar cipher with a specified offset.
+	 * This method offsets characters within their group (lower case,
+	 * upper case, numeric). All other characters are not modified.
+	 * @param string the string to encrypt.
+	 * @param offset the offset (positive for alphabetic order, negative
+	 * for reverse alphabetic order.
+	 */
+	public static String encrypt(String string, int offset) {
+		char[] chars = string.toCharArray();
+		for (int i=0; i<chars.length; i++) {
+			char c = chars[i];
+			if ((c >= 'a') && (c <= 'z')) {
+				int k = ((c - 'a') + offset) % 26;
+				if (k < 0) k += 26;
+				chars[i] = (char)('a' + k);
+			}
+			else if ((c >= 'A') && (c <= 'Z')) {
+				int k = ((c - 'A') + offset) % 26;
+				if (k < 0) k += 26;
+				chars[i] = (char)('A' + k);
+			}
+			else if ((c >= '0') && (c <= '9')) {
+				int k = ((c - '0') + offset) % 10;
+				if (k < 0) k += 10;
+				chars[i] = (char)('0' + k);
+			}
+		}
+		return new String(chars);
 	}
 
 	/**

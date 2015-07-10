@@ -67,7 +67,9 @@ public class ShutdownServlet extends Servlet {
 			if (!serviceManager || !serviceCommand.equals("stayalive")) System.exit(0);
 		}
 		else {
-			logger.warn("Rejected shutdown request from "+ra);
+			logger.warn("Rejected shutdown request from "+ra+" ("+(localHost?"":"not ")+"local host)");
+			logger.warn("Request:\n"+req.toString());
+			logger.warn("Headers:\n"+req.listHeaders("  "));
 			res.write("Request rejected.");
 			res.send();
 		}

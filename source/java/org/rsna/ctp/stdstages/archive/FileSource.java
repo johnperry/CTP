@@ -91,13 +91,15 @@ public class FileSource implements Serializable {
 				try { currentFrame = stack.pop(); }
 				catch (Exception empty) { currentFrame = null; }
 			}
-			else if (file.isDirectory()) {
-				stack.push(currentFrame);
-				currentFrame = new Frame(file);
-			}
-			else {
-				fileCount++;
-				return file;
+			else if (!file.isHidden()) {
+				if (file.isDirectory()) {
+					stack.push(currentFrame);
+					currentFrame = new Frame(file);
+				}
+				else {
+					fileCount++;
+					return file;
+				}
 			}
 		}
 		return null;

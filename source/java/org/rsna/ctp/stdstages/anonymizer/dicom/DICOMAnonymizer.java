@@ -919,10 +919,16 @@ public class DICOMAnonymizer {
 
 	//Execute the initials function. This function is typically used
 	//to generate the initials of a patient from the contents of the
-	//PatientName element.
+	//PatientName element. The second argument, if present, offsets
+	//the characters using a Caesar cipher.
 	private static String initials(FnCall fn) {
 		String s = fn.context.contents(fn.args[0], fn.thisTag);
-		return AnonymizerFunctions.initials(s);
+		s = AnonymizerFunctions.initials(s);
+		if (fn.args.length > 1) {
+			int offset = StringUtil.getInt(fn.args[1]);
+			s = AnonymizerFunctions.encrypt(s, offset);
+		}
+		return s;
 	}
 
 	//Execute the hashname function. This function is typically used

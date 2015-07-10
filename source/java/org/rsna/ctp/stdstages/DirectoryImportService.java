@@ -202,7 +202,7 @@ public class DirectoryImportService extends AbstractImportService {
 					}
 
 					if (doFilename) {
-						dob.setElementValue(filenameTag, fo.getFile().getName());
+						dob.setElementValue(filenameTag, dobFile.getName());
 					}
 
 					//Save the modified object
@@ -218,7 +218,7 @@ public class DirectoryImportService extends AbstractImportService {
 				}
 			}
 			catch (Exception unableToSetName) {
-				logger.warn("Unable to set the name(s) in "+file.getName());
+				logger.warn("Unable to set the name(s) in "+file.getName(), unableToSetName);
 			}
 		}
 	}

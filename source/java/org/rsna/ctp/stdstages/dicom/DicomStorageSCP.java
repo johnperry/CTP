@@ -315,7 +315,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 
 		public void run() {
 			file = setAET();
-            dicomImportService.fileReceived(file);
+            if (file != null) dicomImportService.fileReceived(file);
 		}
 
 		private File setAET() {
@@ -347,7 +347,8 @@ public class DicomStorageSCP extends DcmServiceBase {
 			}
 			catch (Exception ex) {
 				if (dob != null) dob.close();
-				return file;
+				file.delete();
+				return null;
 			}
 		}
 	}

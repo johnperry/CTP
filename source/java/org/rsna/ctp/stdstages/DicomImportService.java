@@ -83,6 +83,12 @@ public class DicomImportService extends AbstractImportService {
 		calledAETBlackList = new BlackList(element, "calledAET");
 		callingAETWhiteList = new WhiteList(element, "callingAET");
 		callingAETBlackList = new BlackList(element, "callingAET");
+		
+		//Only accept DicomObjects
+		acceptDicomObjects = true;
+		acceptXmlObjects = false;
+		acceptZipObjects = false;
+		acceptFileObjects = false;
 
 		//Get the PCTable
 		LinkedList<String> sopClasses = new LinkedList<String>();
