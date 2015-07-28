@@ -124,7 +124,7 @@ public class DICOMAnonymizerContext {
 		Iterator<String> iter = list.iterator();
 		keepGroups = new int[list.size()];
 		for (int i=0; i<keepGroups.length; i++) {
-			try { keepGroups[i] = Integer.parseInt(iter.next(),16) << 16; }
+			try { keepGroups[i] = Integer.parseInt(iter.next(),16); }
 			catch (Exception ex) { keepGroups[i] = 0; }
 		}
 		Arrays.sort(keepGroups);
@@ -216,8 +216,8 @@ public class DICOMAnonymizerContext {
 
 	/*
 	 * See if a group is included in the keep group global commands.
-	 * @param group the group number, specified as 0xGGGG0000
-	 * @return the true if the group is included in the keep group commands; false otherwise.
+	 * @param group the group number, specified as 0xGGGG
+	 * @return true if the group is included in the keep group commands; false otherwise.
 	 */
 	public boolean containsKeepGroup(int group) {
 		return (Arrays.binarySearch(keepGroups, group) >= 0);
@@ -301,6 +301,7 @@ public class DICOMAnonymizerContext {
 	 */
 	public String contents(int tag) throws Exception {
 		SpecificCharacterSet cs = inDS.getSpecificCharacterSet();
+		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 
 		//Handle FileMetaInfo references
 		if ((inFMI != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
@@ -310,16 +311,23 @@ public class DICOMAnonymizerContext {
 		}
 
 		//Not FMI, handle DataSet references
-		boolean ctp = false;
+		boolean privateText = false;
 		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
 			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
-			try { ctp = inDS.getString(blk).equals("CTP"); }
-			catch (Exception notCTP) { ctp = false; }
+			try { 
+				String owner = inDS.getString(blk);
+				String vr = ptIndex.getVR(owner, tag);
+				privateText = (owner.equals("CTP") || vr.equals("LO") || vr.equals("LT")
+					|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
+					|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
+					|| vr.equals("PN") || vr.equals("UI"));
+			}
+			catch (Exception notPrivateText) { privateText = false; }
 		}
 		DcmElement el = inDS.get(tag);
 		if (el == null) throw new Exception(Tags.toString(tag) + " missing");
 
-		if (ctp) return new String(inDS.getByteBuffer(tag).array());
+		if (privateText) return cs.decode(inDS.getByteBuffer(tag).array());
 
 		String[] s = el.getStrings(cs);
 		if (s.length == 1) return s[0];
@@ -415,8 +423,8 @@ public class DICOMAnonymizerContext {
 		return "";
 	}
 
-	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}\\[(.*)\\]([0-9a-fA-F]{2})");
-	static final Pattern pcPattern = Pattern.compile("([0-9a-fA-F]{0,4})[,]{0,1}00\\[(.*)\\]");
+	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4}),?\\[(.*)\\],?([0-9a-fA-F]{2})");
+	static final Pattern pcPattern = Pattern.compile("([0-9a-fA-F]{0,4}),?00\\[(.*)\\]");
 	/**
 	 * Get the tag for a DICOM element. This
 	 * method supports dcm4che names as well as hex strings,
@@ -445,48 +453,17 @@ public class DICOMAnonymizerContext {
 		int k = name.length() - 1;
 		if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
 		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
-
+		
 		//Try it as a standard element specification
 		int tag = DicomObject.getElementTag(name);
 		if (tag != 0) return tag;
-
+		
 		//Try it as a private element name
 		Integer tagInteger = privateElementNames.get(name);
 		if (tagInteger != null) return tagInteger.intValue();
 
 		//Try to match it as a private group element with a block specification
-		Matcher matcher = pgPattern.matcher(name);
-		if (matcher.matches()) {
-			int group = StringUtil.getHexInt(matcher.group(1));
-			if ((group & 1) == 1) {
-
-				//It's a private group; get the block ID and the element offset
-				String blockID = matcher.group(2).toUpperCase();
-				int elem = StringUtil.getHexInt(matcher.group(3));
-
-				//Now get the tag of the private group creator
-				int creatorTag = pgIndex.getTagForID(group, blockID);
-				if (creatorTag != 0) {
-					return (group << 16) | ((creatorTag & 0xFF) << 8) | (elem & 0xFF);
-				}
-			}
-		}
-
-		//Try to match it as a private creator element with a block specification
-		matcher = pcPattern.matcher(name);
-		if (matcher.matches()) {
-			int group = StringUtil.getHexInt(matcher.group(1));
-			if ((group & 1) == 1) {
-
-				//It's a private group; get the block ID
-				String blockID = matcher.group(2).toUpperCase();
-
-				//Now get the tag of the private group creator
-				int creatorTag = pgIndex.getTagForID(group, blockID);
-				if (creatorTag != 0) return creatorTag;
-			}
-		}
-		return 0;
+		return DicomObject.getPrivateElementTag(inDS, name);
 	}
 	
 	/**

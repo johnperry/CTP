@@ -49,7 +49,7 @@ public class ShutdownServlet extends Servlet {
 		User user = req.getUser();
 		String serviceCommand = req.getHeader("servicemanager");
 		boolean serviceManager = (serviceCommand != null);
-		boolean localHost = req.isFromLocalHost();
+		boolean localHost = req.isFromLocalHost() || ra.equals("127.0.0.1");
 
 		if ((serviceManager && localHost) ||
 			((user != null) && (req.userHasRole("shutdown") || localHost)) ) {

@@ -32,6 +32,7 @@ public class DicomImportService extends AbstractImportService {
 	int callingAETTag = 0;
 	int connectionIPTag = 0;
 	int timeTag = 0;
+	long throttle = 0L;
 	boolean suppressDuplicates = false;
 	boolean logAllConnections = false;
 	boolean logRejectedConnections = false;
@@ -67,6 +68,9 @@ public class DicomImportService extends AbstractImportService {
 
 		//Get the timeTag, if any
 		timeTag = StringUtil.getHexInt(element.getAttribute("timeTag").trim(), timeTag);
+		
+		//Get the throttle (the response delay for the SCP)
+		throttle = StringUtil.getLong(element.getAttribute("throttle").trim(), throttle);
 
 		//Get the flag indicating whether we are to suppress recent duplicates
 		suppressDuplicates = element.getAttribute("suppressDuplicates").trim().equals("yes");
@@ -197,6 +201,14 @@ public class DicomImportService extends AbstractImportService {
 	 */
 	public boolean getLogRejectedConnections() {
 		return logRejectedConnections;
+	}
+
+	/**
+	 * Get the throttle
+	 * @return the throttle
+	 */
+	public long getThrottle() {
+		return throttle;
 	}
 
 	/**

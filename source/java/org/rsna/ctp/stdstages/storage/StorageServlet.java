@@ -10,7 +10,8 @@ package org.rsna.ctp.stdstages.storage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.zip.*;
@@ -165,8 +166,8 @@ public class StorageServlet extends Servlet {
 	}
 
 	//List all the objects in one study.
-	File xslFile;
 	private void listObjects(HttpRequest req, HttpResponse res, Path path, FileSystemManager fsm) {
+		File xslFile;
 		User user = req.getUser();
 		String fsName = path.element(1);
 		String studyUID = path.element(2);
@@ -176,8 +177,7 @@ public class StorageServlet extends Servlet {
 		if ((fs != null) && fs.allowsAccessBy(user)) {
 			study = fs.getStudyByUID(studyUID);
 			if (study != null) {
-				String format = req.getParameter("format");
-				format = (format==null) ? "list" : format;
+				String format = req.getParameter("format", "list");
 				if (!format.equals("zip") && !format.equals("delete") & !format.equals("dir")) {
 					if (format.equals("list"))
 						xslFile = new File("pages/list-objects.xsl");
@@ -197,13 +197,13 @@ public class StorageServlet extends Servlet {
 				else if (format.equals("zip")) {
 					File zipFile = null;
 					try {
-						String accNumber = study.getAccessionNumber();
+						String accNumber = lastN(study.getAccessionNumber(), 4);
 						if (!accNumber.equals("")) accNumber = "-" + accNumber;
 						String ptName = study.getPatientName().replaceAll("[^0-9a-zA-Z\\-.]+","_");
-						String ptID = study.getPatientID();
+						String ptID = lastN(study.getPatientID(), 8);
 						String studyDate = study.getStudyDate();
-						String studyName = ptID+"-"+ptName+"-"+studyDate+accNumber;
-						String folderPath = studyName+"/"+ptID+"-"+ptName+"/"+studyDate+accNumber+"/";
+						String studyName = ptID+"-"+studyDate+accNumber;
+						String folderPath = studyName+"/";
 						zipFile = new File(root, studyName+".zip");
 						File studyDir = study.getDirectory();
 						if (zipDirectory(studyDir, zipFile, studyName, folderPath)) {
@@ -221,8 +221,9 @@ public class StorageServlet extends Servlet {
 							zipFile.delete();
 							return;
 						}
+						else logger.warn("Unable to create the zip file for export ("+zipFile+")");
 					}
-					catch (Exception ex) { logger.debug("Internal server error in zip export.", ex); }
+					catch (Exception ex) { logger.warn("Internal server error in zip export.", ex); }
 					res.setResponseCode( res.servererror );
 					res.send();
 					return;
@@ -275,59 +276,84 @@ public class StorageServlet extends Servlet {
 		res.send();
 	}
 	
+	private String lastN(String s, int n) {
+		if (s.length() > n) s = s.substring(s.length() - n);
+		return s;
+	}
+	
 	//Zip a study directory
 	private boolean zipDirectory(File studyDir, File zipFile, String studyName, String folderPath) {
+		int k;
 		try {
 			//Get the streams
 			FileOutputStream fout = new FileOutputStream(zipFile);
 			ZipOutputStream zout = new ZipOutputStream(fout);
 			
-			//Put the directory entry in the zip file
-			//ZipEntry ze = new ZipEntry(studyName);
-			//zout.putNextEntry(ze);
-			
-			//Make a table to track entries
+			//Make tables to track entries
 			Hashtable<String,Integer> entryNames = new Hashtable<String,Integer>();
+			Hashtable<String,String> dcmEntryNames = new Hashtable<String,String>();
 
 			//Put in the files, skipping .db, .lg, and __index.xml files
 			File[] files = studyDir.listFiles();
+			Arrays.sort(files, new FileComparator());
 			for (File file : files) {
 				String fn = file.getName();
 				if (file.exists() && file.isFile() && !fn.endsWith(".db") && !fn.endsWith(".lg") && !fn.equals("__index.xml")) {
 					
+					//Get the file name without the extension
+					String origName = file.getName();
+					k = origName.lastIndexOf(".");
+					if (k >= 0) origName = origName.substring(0, k);
+					
 					//Figure out what kind of object the file is and make an entry name for it.
 					FileObject fob = FileObject.getInstance(file);
-					String entryName = folderPath;
+					String entryName = "";
+					boolean isJPEG = false;
 					if (fob instanceof DicomObject) {
 						DicomObject dob = (DicomObject)fob;
 						int sNumber = StringUtil.getInt(dob.getSeriesNumber());
 						int aNumber = StringUtil.getInt(dob.getAcquisitionNumber());
 						int iNumber = StringUtil.getInt(dob.getInstanceNumber());
 						if (dob.isImage()) {
-							entryName += "Series-"+sNumber+"/Acquisition-"+aNumber+"/"
-										+ studyName + String.format("-S%d-A%d-%04d", sNumber, aNumber, iNumber);
+							entryName = String.format("S%d-A%d-%04d", sNumber, aNumber, iNumber);
+							dcmEntryNames.put(origName, entryName);
 						}
-						else if (dob.isKIN()) entryName += "KOS";
-						else if (dob.isSR()) entryName += "SR";
-						else if (dob.isPS()) entryName += "PS";
-						else entryName += "OTHER";
+						else if (dob.isKIN()) entryName = "KOS";
+						else if (dob.isSR()) entryName = "SR";
+						else if (dob.isPS()) entryName = "PS";
+						else entryName = "OTHER";
 					}
-					else if (fob instanceof XmlObject) entryName += "XML";
-					else if (fob instanceof ZipObject) entryName += "ZIP";
-					else entryName += "FILE";
+					else if (fob instanceof XmlObject) entryName = "XML";
+					else if (fob instanceof ZipObject) entryName = "ZIP";
+					else if (fob.getFile().getName().endsWith(".jpeg")) {
+						if (origName.endsWith(".dcm")) {
+							origName = origName.substring(0, origName.length()-4);
+							entryName = dcmEntryNames.get(origName);
+							if (entryName == null) entryName = "JPEG";
+						}
+						else entryName = "JPEG";
+						isJPEG = true;
+					}
+					else entryName = "FILE";
+					
+					//Add the extension
+					if (!isJPEG) entryName += fob.getStandardExtension();
+					else entryName += ".jpeg";
+
+					//Put in the folder path
+					entryName = folderPath + entryName;
 					
 					//Add an index if this entry already exists
 					Integer n = entryNames.get(entryName);
 					if (n == null) entryNames.put(entryName, new Integer(0));
 					else {
 						int nint = n.intValue() + 1;
-						entryName += "["+nint+"]";
 						entryNames.put(entryName, new Integer(nint));
+						k = entryName.lastIndexOf(".");
+						if (k != -1) entryName = entryName.substring(0,k)+"["+nint+"]"+entryName.substring(k);
+						else entryName += "["+nint+"]";
 					}
-					
-					//Add the extension
-					entryName += fob.getStandardExtension();
-					
+						
 					//Now add it to the zip file
 					byte[] buffer = new byte[10000];
 					int bytesread;
@@ -342,7 +368,22 @@ public class StorageServlet extends Servlet {
 			zout.close();
 			return true;
 		}
-		catch (Exception ex) { return false; }
+		catch (Exception ex) { 
+			logger.warn("Unable to zip directory "+studyDir, ex);
+			return false;
+		}
+	}
+	
+	class FileComparator implements Comparator<File> {
+		public FileComparator() { }
+		public int compare(File f1, File f2) {
+			return ext(f1.getName()).compareTo(ext(f2.getName()));
+		}
+		private String ext(String name) {
+			int k = name.lastIndexOf(".") + 1;
+			if (k > 0) return name.substring(k);
+			return "";
+		}
 	}
 
 	//Get an object.
@@ -356,7 +397,7 @@ public class StorageServlet extends Servlet {
 		if ( (fs != null)
 				&& fs.allowsAccessBy(req.getUser())
 					&& ((study=fs.getStudyByUID(studyUID)) != null)
-						&& ((fo = study.getObject(path.element(3))) != null) ) {
+						&& ((fo=study.getObject(path.element(3))) != null) ) {
 
 			if (fo instanceof DicomObject) {
 				//This is a DicomObject; see how we are to return it.

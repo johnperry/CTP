@@ -180,6 +180,7 @@
 			<attr name="calledAETTag" required="no" default=""/>
 			<attr name="connectionIPTag" required="no" default=""/>
 			<attr name="timeTag" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="suppressDuplicates" required="no" default="no" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomImportService"/>

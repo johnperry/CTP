@@ -390,10 +390,10 @@ public class DICOMAnonymizer {
 			DcmElement el = (DcmElement)it.next();
 			int tag = el.tag();
 
-			int group = tag & 0xFFFF0000;
-			boolean isOverlay = ((group & 0xFF000000) == 0x60000000);
-			boolean isCurve = ((group & 0xFF000000) == 0x50000000);
-			boolean isPrivate = ((tag & 0x10000) != 0);
+			int group = (tag >> 16) & 0xFFFF;
+			boolean isOverlay = ((group & 0xFF00) == 0x6000);
+			boolean isCurve = ((group & 0xFF00) == 0x5000);
+			boolean isPrivate = ((group & 0x1) != 0);
 			boolean isCreatorBlock = isPrivate && ((tag & 0xFF00) == 0);
 			boolean isSafe = false;
 			if (isPrivate && !isCreatorBlock) {
@@ -407,17 +407,22 @@ public class DICOMAnonymizer {
 			boolean keep  = context.containsKeepGroup(group) ||
 							isCreatorBlock ||
 							(isSafe && context.kspe) ||
-							(tag == 0x00080016)   		|| 	//SopClassUID
-							(tag == 0x00080018)   		|| 	//SopInstanceUID
-							(tag == 0x0020000D)   		||	//StudyInstanceUID
-							(group == 0x00020000) 		||	//FMI group
-							(group == 0x00280000) 		||	//the image description
-							(group == 0x7FE00000) 		||	//the image
+							(tag == 0x00080016)   	 || 	//SopClassUID
+							(tag == 0x00080018)   	 || 	//SopInstanceUID
+							(tag == 0x0020000D)   	 ||		//StudyInstanceUID
+							(group == 0x0002) 		 ||		//FMI group
+							(group == 0x0028) 		 ||		//the image description
+							(group == 0x7FE0) 		 ||		//the image
 							(isOverlay && !context.rol && !(isPrivate & context.rpg)) || //overlays
-							(isCurve && !context.rc && !(isPrivate & context.rpg));      //curves
+							(isCurve && !context.rc && !(isPrivate && context.rpg));      //curves
 
-			logger.debug("Processing "+Tags.toString(tag) + ": "+context.rpg+" / "+isPrivate+" / "+isSafe+" / "+hasScript+" / "+keep);
-
+			/*
+			if (isPrivate) logger.info(Tags.toString(tag)
+										+": keep.group"+String.format("%04x",group)+"="+context.containsKeepGroup(group)
+										+" / rpg="+context.rpg
+										+" / isSafe="+isSafe+" / hasScript="+hasScript+" / keep="+keep);
+			*/
+			
 			if (context.rpg && isPrivate && !hasScript && !keep) {
 				try { ds.remove(tag); }
 				catch (Exception ignore) { logger.debug("Unable to remove "+tag+" from dataset."); }

@@ -147,6 +147,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("ImageOverlayBox","$ts-native"),
 		new PC("KeyObjectSelectionDocument","$ts-native"),
 		new PC("MammographyCADSR","$ts-native"),
+		new PC("MediaStorageDirectoryStorage","$ts-native"),
 		new PC("MRImageStorage","$ts-epd,$ts-native"),
 		new PC("MRSpectroscopyStorage","$ts-epd,$ts-native"),
 		new PC("MultiframeColorSecondaryCaptureImageStorage","$ts-jpeglossless,JPEGBaseline,$ts-native"),

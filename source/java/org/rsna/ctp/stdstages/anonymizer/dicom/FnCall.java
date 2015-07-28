@@ -126,12 +126,6 @@ public class FnCall {
 
    /**
 	 * Get the tag corresponding to a tag name, allowing for the "this" keyword.
-	 * Allowed formats are:
-	 * <ul>
-	 * <li>this</li>
-	 * <li>ggggeeee</li>
-	 * <li>[ggggeeee]</li>
-	 * </ul>
 	 * Note: the underlying translation also supports wrapping in parentheses and
 	 * separating the group and element numbers with a comma, but the parser in
 	 * the FnCall constructor does not allow these formats. Maybe someday...
@@ -141,7 +135,7 @@ public class FnCall {
 	public int getTag(String tagName) {
 		tagName = (tagName != null) ? tagName.trim() : "";
 		if (tagName.equals("") || tagName.equals("this")) return thisTag;
-		else return DicomObject.getElementTag(tagName);
+		else return context.getElementTag(tagName);
 	}
 
    /**
@@ -196,7 +190,8 @@ public class FnCall {
 	 * @return the index of the delimiter.
 	 */
 	public int getDelimiter(String s, int k, String delims, char open) {
-		int count = 1;
+		int openCount = 1;
+		int bracketCount = 0;
 		boolean inQuote = false;
 		boolean inEscape = false;
 		while (k < s.length()) {
@@ -207,10 +202,12 @@ public class FnCall {
 				if (c == '"') inQuote = false;
 			}
 			else if (c == '"') inQuote = true;
-			else if (c == open) count++;
-			else if (delims.indexOf(c) != -1) {
-				count--;
-				if (count == 0) return k;
+			else if (c == '[') bracketCount++;
+			else if (c == ']') bracketCount--;
+			else if (c == open) openCount++;
+			else if ((delims.indexOf(c) != -1) && (bracketCount == 0)) {
+				openCount--;
+				if (openCount == 0) return k;
 			}
 			k++;
 		}

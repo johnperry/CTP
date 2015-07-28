@@ -167,7 +167,7 @@ public class DAScript {
 			key = sel + "keep.safeprivateelements";
 		}
 		else {
-			String group = "group" + t.substring(2,4);
+			String group = "group" + t;
 			key = sel + "keep." + group;
 		}
 		props.setProperty(key, "");

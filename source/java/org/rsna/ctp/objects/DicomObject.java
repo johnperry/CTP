@@ -141,16 +141,13 @@ public class DicomObject extends FileObject {
 	 * Close the input stream.
 	 */
 	public void close() {
-		if (in != null) {
-			try { in.close(); }
-			catch (Exception unable) { logger.warn("Unable to close the input stream"); }
-			in = null;
-		}
+		FileUtil.close(in);
+		in = null;
 	}
 
 	/**
 	 * Get the standard extension for this DicomObject (".dcm" of ".DICOMDIR").
-	 * @return ".dcm" or ">DICOMDIR" as appropriate for this object.
+	 * @return ".dcm" or ".DICOMDIR" as appropriate for this object.
 	 */
 	public String getStandardExtension() {
 		return isDICOMDIR ? ".DICOMDIR" : ".dcm";
@@ -753,7 +750,7 @@ public class DicomObject extends FileObject {
 	static final Pattern hexCommaPattern = Pattern.compile("([0-9a-fA-F]{0,4}),([0-9a-fA-F]{1,4})");
 	/**
 	 * Get the tag for a DICOM element. This
-	 * method supports dcm4che names as well as hex strings,
+	 * method supports keywords as well as hex strings,
 	 * with or without enclosing parentheses or square brackets
 	 * and with or without a comma separating the group and the
 	 * element numbers. Examples of element specifications are:
@@ -796,8 +793,50 @@ public class DicomObject extends FileObject {
 			int elem = StringUtil.getHexInt(matcher.group(2));
 			return (group << 16) | (elem & 0xFFFF);
 		}
-
+		
 		//Not a valid specification
+		return 0;
+	}
+	
+	static final Pattern privatePattern = Pattern.compile("([0-9a-fA-F]{1,4}),?\\[([^\\]]*)\\],?([0-9a-fA-F]{1,2})?");
+	/**
+	 * Get the tag for a private DICOM element specified as either of:
+	 * <ul>
+	 * <li>group[block]element eg. 0009[CTP]01 
+	 * <li>group[block] eg. 0009[CTP]
+	 * </ul>
+	 * @param name the dcm4che element name or the coded hex value.
+	 * @return the tag, or zero if the name is not a parsable element specification or if the group number is not odd.
+	 */
+	public static int getPrivateElementTag(Dataset ds, String name) {
+		//Remove the wrapper, if present
+		int k = name.length() - 1;
+		if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
+		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
+		
+		//See if it matches a private data element
+		Matcher matcher = privatePattern.matcher(name);
+		if (matcher.matches()) {
+			int group = StringUtil.getHexInt(matcher.group(1));
+			if ((group & 1) == 0) return 0; //Only private groups allowed
+			
+			String block = matcher.group(2).trim();
+			//Find the block owner
+			int groupTag = group << 16;
+			for (int i=1; i<256; i++) {
+				try {
+					String owner = ds.getString(groupTag | i);
+					if ((owner != null) && owner.equals(block)) {
+						if (matcher.groupCount() == 3) {
+							int element = StringUtil.getHexInt(matcher.group(3));
+							return groupTag | (i << 8) | element;
+						}
+						else return (groupTag | i);
+					}
+				}
+				catch (Exception missing) { }
+			}
+		}
 		return 0;
 	}
 
@@ -909,11 +948,11 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(int tag, String defaultString) {
-		return getElementValue(dataset, tag, defaultString);
+		return getElementValue(fileMetaInfo, dataset, tag, defaultString);
 	}
 
 	//Do the actual work of getting an element value from a dataset
-	private String getElementValue(Dataset dataset, int tag, String defaultString) {
+	private String getElementValue(FileMetaInfo fileMetaInfo, Dataset dataset, int tag, String defaultString) {
 
 		//Handle FileMetaInfo references
 		if ((fileMetaInfo != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
@@ -937,12 +976,13 @@ public class DicomObject extends FileObject {
 		}
 		String value = null;
 		try {
+			SpecificCharacterSet cs = dataset.getSpecificCharacterSet();
 			if (ctp) {
-				value = new String(dataset.getByteBuffer(tag).array());
+				value = cs.decode(dataset.getByteBuffer(tag).array());
 			}
 			else {
 				DcmElement el = dataset.get(tag);
-				String[] s = el.getStrings(charset);
+				String[] s = el.getStrings(cs);
 				if (s.length == 1) return s[0];
 				if (s.length == 0) return "";
 				StringBuffer sb = new StringBuffer( s[0] );
@@ -996,7 +1036,7 @@ public class DicomObject extends FileObject {
 				if (ds == null) return defaultString;
 			}
 			//Now get the element specified by the last tag
-			return getElementValue(ds, tags[tags.length -1], defaultString);
+			return getElementValue(fileMetaInfo, ds, tags[tags.length -1], defaultString);
 		}
 		catch (Exception e) { return defaultString; }
 	}
@@ -1432,7 +1472,7 @@ public class DicomObject extends FileObject {
 	/**
 	 * Convenience method to get the value of the PhotometricInterpretation element.
 	 * @return the value of the PhotometricInterpretation element or the empty string
-	 * if the element does not exist..
+	 * if the element does not exist.
 	 */
 	public String getPhotometricInterpretation() {
 		return getElementValue(Tags.PhotometricInterpretation);
@@ -1816,7 +1856,7 @@ public class DicomObject extends FileObject {
 			if (((tag & 0x10000) != 0) && ((tag & 0x0000ff00) != 0)) {
 				int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
 				if (ctp = getElementValue(blk).equals("CTP")) {
-					String v = new String(dataset.getByteBuffer(tag).array());
+					String v = cs.decode(dataset.getByteBuffer(tag).array());
 					if ((v.length() % 4) == 0) decipher = decipherLinks;
 				}
 			}
@@ -1872,6 +1912,12 @@ public class DicomObject extends FileObject {
 		StringBuffer sb = new StringBuffer();
 		int tag = el.tag();
 		if ((tag & 0xffff0000) >= 0x60000000) return "...";
+		/*
+		if ((tag &10000) != 0) {
+			String vString = String.format("%08x: %s: \"%s\"",tag,VRs.toString(el.vr()),cs.decode(el.getByteBuffer().array()));
+			System.out.println(vString);
+		}
+		*/
 		String[] s;
 		try { s = el.getStrings(cs); }
 		catch (Exception e) { s = null; }
@@ -2388,6 +2434,5 @@ public class DicomObject extends FileObject {
 	//**********************************
 	// End of the code for the matcher
 	//**********************************
-
 
 }

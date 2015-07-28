@@ -72,7 +72,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 	private final int dimseTimeout = 0;
 	private final int rqTimeout = 20000; //changed from 10000
 	private final int maxClients = 50; //changed from 10
-    private final long rspDelay = 0L;
+    private final long rspDelay;
 
 	private File temp = null;
 	private String localAddress = null; //the IP on which to open the server
@@ -108,6 +108,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 		logAllConnections = dicomImportService.getLogAllConnections();
 		logRejectedConnections = dicomImportService.getLogRejectedConnections();
 		timeTag = dicomImportService.getTimeTag();
+		rspDelay = dicomImportService.getThrottle();
 		suppressDuplicates = dicomImportService.getSuppressDuplicates();
 		ipWhiteList = dicomImportService.getIPWhiteList();
 		ipBlackList = dicomImportService.getIPBlackList();
