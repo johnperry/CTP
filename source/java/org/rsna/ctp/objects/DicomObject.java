@@ -1443,7 +1443,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the integer value of the BitsAllocated element.
-	 * @return the integer value of the Columns element or 12 if the element does not exist.
+	 * @return the integer value of the BitsAllocated element or 12 if the element does not exist.
 	 */
 	public int getBitsAllocated() {
 		try { return dataset.getInteger(Tags.BitsAllocated).intValue(); }
@@ -1452,11 +1452,20 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Convenience method to get the integer value of the BitsStored element.
-	 * @return the integer value of the Columns element or 12 if the element does not exist.
+	 * @return the integer value of the BitsStored element or 12 if the element does not exist.
 	 */
 	public int getBitsStored() {
 		try { return dataset.getInteger(Tags.BitsStored).intValue(); }
 		catch (Exception e) { return 12; }
+	}
+
+	/**
+	 * Convenience method to get the integer value of the HighBit element.
+	 * @return the integer value of the HighBit element or 0 if the element does not exist.
+	 */
+	public int getHighBit() {
+		try { return dataset.getInteger(Tags.HighBit).intValue(); }
+		catch (Exception e) { return 0; }
 	}
 
 	/**
