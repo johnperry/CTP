@@ -129,7 +129,7 @@ public class DICOMAnonymizer {
 			origp.parseDcmFile(origff, Tags.PixelData);
 			origin.close();
 
-			//Get the dataset (excluding pixels) and leave the input stream open.
+			//Get the dataset (up to the pixels) and leave the input stream open.
 			//This one needs to be left open so we can read the pixels and any
 			//data that comes afterward.
 			in = new BufferedInputStream(new FileInputStream(inFile));
@@ -139,6 +139,13 @@ public class DICOMAnonymizer {
 			Dataset dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
+			
+			//Set a default for the SpecificCharacterSet, if necessary, in both datasets
+			SpecificCharacterSet cs = origds.getSpecificCharacterSet();
+			if (cs == null) {
+				origds.putCS(Tags.SpecificCharacterSet, "ISO_IR 100");
+				dataset.putCS(Tags.SpecificCharacterSet, "ISO_IR 100");
+			}
 
 			//Encapsulate everything in a context
 			DICOMAnonymizerContext context = new DICOMAnonymizerContext(cmds, lkup, intTable, origds, dataset);

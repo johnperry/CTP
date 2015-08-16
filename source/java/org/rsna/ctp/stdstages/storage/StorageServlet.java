@@ -174,6 +174,7 @@ public class StorageServlet extends Servlet {
 		FileSystem fs = fsm.getFileSystem(fsName, false);
 		Study study = null;
 		String page = "Access to the requested Study is not allowed.";
+		res.disableCaching();
 		if ((fs != null) && fs.allowsAccessBy(user)) {
 			study = fs.getStudyByUID(studyUID);
 			if (study != null) {
@@ -190,7 +191,6 @@ public class StorageServlet extends Servlet {
 					catch (Exception e) { logger.debug("Unable to get the object listing page."); }
 					res.write(page);
 					res.setContentType("html");
-					res.disableCaching();
 					res.send();
 					return;
 				}
@@ -248,7 +248,7 @@ public class StorageServlet extends Servlet {
 							return;
 						}
 						catch (Exception ex) {
-							logger.debug("Internal server error in directory export.", ex);
+							logger.warn("Internal server error in directory export.", ex);
 							res.setResponseCode( res.servererror );
 							res.send();
 						}
@@ -260,6 +260,9 @@ public class StorageServlet extends Servlet {
 				else if (format.equals("delete")) {
 					if ((user != null) &&
 						(user.getUsername().equals(fs.getName()) || user.hasRole("delete"))) {
+						logger.debug("Delete request received from "+user.getUsername());
+						logger.debug("...FileSystem: "+fs.getName());
+						logger.debug("...StudyUID:   "+studyUID);
 						fs.deleteStudyByUID(studyUID);
 						//Redirect to the level above.
 						String subpath = path.subpath(0, path.length()-2);

@@ -102,8 +102,12 @@ public class DicomObject extends FileObject {
 			//Parse the file, but don't get the pixels in order to save heap space.
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
 
-			//Get the charset in case we need it for manifest processing.
+			//Get the charset
 			charset = dataset.getSpecificCharacterSet();
+			if (charset == null) { //If it is missing, force it to ISO-8859-1
+				dataset.putCS(Tags.SpecificCharacterSet, "ISO_IR 100");
+				charset = dataset.getSpecificCharacterSet();
+			}
 
 			//Get the file meta info
 			fileMetaInfo = dataset.getFileMetaInfo();
@@ -1305,6 +1309,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the RepresentativeFrameNumber element.
+	 * @return the text of the element or the empty String if the
+	 * element does not exist.
+	 */
+	public String getRepresentativeFrameNumber() {
+		return getElementValue(Tags.RepresentativeFrameNumber);
+	}
+
+	/**
 	 * Convenience method to get the contents of the SOPClassUID element.
 	 * If the DicomObject is a DICOMDIR, the contents of the
 	 * MediaStorageSOPClassUID are used as the SOPClassUID.
@@ -1530,7 +1543,7 @@ public class DicomObject extends FileObject {
 	 */
 	public boolean hasTransferSyntaxUID(String transferSyntaxUID) {
 		String tsuid = getTransferSyntaxUID();
-		return (tsuid != null) && (transferSyntaxUID != null) && tsuid.equals(transferSyntaxUID);
+		return (tsuid != null) && (transferSyntaxUID != null) && tsuid.trim().equals(transferSyntaxUID.trim());
 	}
 
 	/**
@@ -1619,7 +1632,7 @@ public class DicomObject extends FileObject {
 	 */
 	public Hashtable getAdditionalTFInfo() {
 		if (!isAdditionalTFInfo()) return null;
-		return new ATFI(dataset,charset);
+		return new ATFI(dataset);
 	}
 
 	/**
@@ -1801,7 +1814,6 @@ public class DicomObject extends FileObject {
 	 * @throws Exception if the process fails.
 	 */
 	public String getElementTable(boolean decipherLinks) {
-		SpecificCharacterSet cs = dataset.getSpecificCharacterSet();
 		StringBuffer table = new StringBuffer();
 		table.append("<h3>"+file.getName());
 		table.append("<br>"+getTransferSyntaxName());
@@ -1816,15 +1828,14 @@ public class DicomObject extends FileObject {
 						"<th>Length</th>" +
 						"<th style=\"text-align:left;\">Data</th>" +
 					"</tr>\n");
-		walkDataset(dataset.getFileMetaInfo(), cs, table, "", false);
-		walkDataset(dataset, cs, table, "", decipherLinks);
+		walkDataset(dataset.getFileMetaInfo(), table, "", false);
+		walkDataset(dataset, table, "", decipherLinks);
 		table.append("</table>\n");
 		return table.toString();
 	}
 
 	private void walkDataset(
 						DcmObject dataset,
-						SpecificCharacterSet cs,
 						StringBuffer table,
 						String prefix,
 						boolean decipherLinks) {
@@ -1854,7 +1865,7 @@ public class DicomObject extends FileObject {
 			vrString = VRs.toString(vr);
 			if (vrString.equals("")) vrString = "["+Integer.toHexString(vr)+"]";
 
-			vm = el.vm(cs);
+			vm = el.vm(charset);
 
 			//Set up the call if this is an encrypted element.
 			//The requirements are that the element be in a private group
@@ -1865,7 +1876,7 @@ public class DicomObject extends FileObject {
 			if (((tag & 0x10000) != 0) && ((tag & 0x0000ff00) != 0)) {
 				int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
 				if (ctp = getElementValue(blk).equals("CTP")) {
-					String v = cs.decode(dataset.getByteBuffer(tag).array());
+					String v = charset.decode(dataset.getByteBuffer(tag).array());
 					if ((v.length() % 4) == 0) decipher = decipherLinks;
 				}
 			}
@@ -1898,7 +1909,7 @@ public class DicomObject extends FileObject {
 					}
 				}
 				else {
-					valueString = getElementValueString(cs, el, maxLength);
+					valueString = getElementValueString(el, maxLength);
 					table.append("<td>" + valueString + "</td>");
 				}
 				table.append("</tr>\n");
@@ -1908,7 +1919,7 @@ public class DicomObject extends FileObject {
 				int i = 0;
 				Dataset sq;
 				while ((sq=el.getItem(i++)) != null) {
-					walkDataset(sq,cs,table,prefix+i+">",false);
+					walkDataset(sq,table,prefix+i+">",false);
 				}
 			}
 		}
@@ -1917,7 +1928,7 @@ public class DicomObject extends FileObject {
 	//Make a displayable text value for an element, handling
 	//cases where the element is multivalued and where the element value
 	//is too long to be reasonably displayed.
-	private String getElementValueString(SpecificCharacterSet cs, DcmElement el, int maxLength) {
+	private String getElementValueString(DcmElement el, int maxLength) {
 		StringBuffer sb = new StringBuffer();
 		int tag = el.tag();
 		if ((tag & 0xffff0000) >= 0x60000000) return "...";
@@ -1928,7 +1939,7 @@ public class DicomObject extends FileObject {
 		}
 		*/
 		String[] s;
-		try { s = el.getStrings(cs); }
+		try { s = el.getStrings(charset); }
 		catch (Exception e) { s = null; }
 		if (s == null) return nullValue;
 		else {
@@ -1958,7 +1969,7 @@ public class DicomObject extends FileObject {
 	//A class to encapsulate the information in a
 	//TCE Additional Teaching File Info object.
 	class ATFI extends Hashtable<String,String> {
-		public ATFI(Dataset dataset, SpecificCharacterSet charset) {
+		public ATFI(Dataset dataset) {
 			super();
 			Hashtable<String,String> codes = getCodes();
 			try {

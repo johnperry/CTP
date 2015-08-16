@@ -56,6 +56,8 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 			String verboseString = "";
 			if (verbose) {
 				verboseString =
+					( (dob == null) ? ""
+									: margin + "TransferSyntax   = " + dob.getTransferSyntaxName() + " (" + dob.getTransferSyntaxUID() + ")" ) +
 					margin + "PatientID        = " + fileObject.getPatientID() +
 					margin + "StudyInstanceUID = " + fileObject.getStudyInstanceUID() +
 					margin + "SOPInstanceUID   = " + fileObject.getSOPInstanceUID() +

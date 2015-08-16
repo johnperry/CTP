@@ -312,6 +312,7 @@ public class DICOMAnonymizerContext {
 
 		//Not FMI, handle DataSet references
 		boolean privateText = false;
+		boolean privateUN = false;
 		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
 			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
 			try { 
@@ -321,14 +322,29 @@ public class DICOMAnonymizerContext {
 					|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
 					|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
 					|| vr.equals("PN") || vr.equals("UI"));
+				privateUN = vr.equals("UN");
 			}
 			catch (Exception notPrivateText) { privateText = false; }
 		}
 		DcmElement el = inDS.get(tag);
 		if (el == null) throw new Exception(Tags.toString(tag) + " missing");
 
-		if (privateText) return cs.decode(inDS.getByteBuffer(tag).array());
-
+		if (privateText || privateUN) {
+			byte[] bytes = inDS.getByteBuffer(tag).array();
+			if (privateText) {
+				return cs.decode(bytes);
+			}
+			else if (privateUN) {
+				//This is a kludge to deal with a VR=UN element whose value is requested.
+				//In practice, nobody would rationally get a string for a non-text element
+				//in a private group, so we will decode it and hope for the best.
+				//We keep this path in the code separate so we can more easily change it
+				//if things go south in the field.
+				return cs.decode(bytes);
+			}
+		}
+		
+		//Not private or can't make it out to be text, just return the strings.		
 		String[] s = el.getStrings(cs);
 		if (s.length == 1) return s[0];
 		if (s.length == 0) return "";

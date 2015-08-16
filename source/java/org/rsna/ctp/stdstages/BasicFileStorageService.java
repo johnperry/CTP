@@ -85,7 +85,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		if (indexPath.equals(""))
 			logger.error(name+": No index directory was specified.");
 		else {
-			File indexDir = new File(indexPath);
+			File indexDir = getDirectory(indexPath);
 			indexDir.mkdirs();
 			File indexFile = new File(indexDir, "__index");
 			getIndex(indexFile.getPath());

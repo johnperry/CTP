@@ -66,9 +66,8 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		pipelineRoot = new File(pipelinePath);
 		String stagePath = element.getAttribute("root").trim();
 		root = getDirectory(stagePath);
-		String getDirectory = element.getAttribute("quarantine");
+		File qdir = getDirectory(element.getAttribute("quarantine"));
 		long quarantineTimeDepth = StringUtil.getLong(element.getAttribute("quarantineTimeDepth"));
-		File qdir = getDirectory(getDirectory);
 		if (qdir != null) quarantine = Quarantine.getInstance(qdir, quarantineTimeDepth);
 	}
 	

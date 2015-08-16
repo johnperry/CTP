@@ -252,9 +252,9 @@ public class FileSystem {
 			Study study = uidTable.get(studyUID);
 			if (study != null) {
 				File studyDir = study.getDirectory();
-				logger.debug("......study directory: "+studyDir);
+				logger.debug("...Study directory: "+studyDir);
 				Element root = indexDoc.getDocumentElement();
-				logger.debug("index:\n"+XmlUtil.toPrettyString(root));
+				logger.debug("...Index:\n"+XmlUtil.toPrettyString(root));
 				Node child = root.getFirstChild();
 				while (child != null) {
 					if ((child.getNodeType()==Node.ELEMENT_NODE)
@@ -268,6 +268,7 @@ public class FileSystem {
 								&& stChild.getTextContent().equals(studyUID)) {
 
 								//This is the one. Remove it from the index.
+								logger.debug("...Found the study to delete");
 								child.getParentNode().removeChild(child);
 								//Save the index.
 								FileUtil.setText(indexFile, XmlUtil.toString(indexDoc));
@@ -276,7 +277,6 @@ public class FileSystem {
 								//Delete the study directory.
 								FileUtil.deleteAll(studyDir);
 								return;
-
 							}
 							stChild = stChild.getNextSibling();
 						}
@@ -284,6 +284,7 @@ public class FileSystem {
 					child = child.getNextSibling();
 				}
 			}
+			logger.debug("...Unable to find the study");
 		}
 		catch (Exception notThere) { logger.debug(notThere); }
 	}

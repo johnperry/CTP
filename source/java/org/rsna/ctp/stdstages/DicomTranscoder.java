@@ -62,10 +62,10 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
-			String transferSyntaxUID = dob.getTransferSyntaxUID();
+			String transferSyntaxUID = dob.getTransferSyntaxUID().trim();
 			boolean isJPEGBaseline = transferSyntaxUID.equals(JPEGBaseline);
-			boolean skip = (isJPEGBaseline && skipJPEGBaseline);
-			if (dob.isImage() && !skip && !transferSyntaxUID.equals(tsuid)) {
+			boolean skip = (isJPEGBaseline && skipJPEGBaseline) || transferSyntaxUID.equals(tsuid);
+			if (dob.isImage() && !skip) {
 				if ((scriptFile == null) || dob.matches(FileUtil.getText(scriptFile))) {
 					File file = dob.getFile();
 					AnonymizerStatus status = transcoder.transcode(file, file);
