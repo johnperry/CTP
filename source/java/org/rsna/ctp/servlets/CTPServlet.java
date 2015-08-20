@@ -41,7 +41,8 @@ public class CTPServlet extends Servlet {
 	static final Logger logger = Logger.getLogger(CTPServlet.class);
 	String home = "/";
 	String suppress = "";
-	User user = null;;
+	User user = null;
+	String protocol = "";
 	String host = "";
 	int p = -1;
 	int s = -1;
@@ -64,6 +65,7 @@ public class CTPServlet extends Servlet {
 	public void loadParameters(HttpRequest req) {
 		config = Configuration.getInstance();
 		user = req.getUser();
+		protocol = req.getProtocol();
 		host = req.getHeader("Host");
 		if (req.hasParameter("suppress")) {
 			home = "";

@@ -207,7 +207,7 @@ public class SummaryServlet extends CTPServlet {
 		for (SummaryLink link : links) {
 			String url = link.getURL();
 			url += (url.contains("?") ? "&" : "?") + "suppress";
-			String windowURL = "http://";
+			String windowURL = "//";
 			windowURL += (url.startsWith(":") ? getHostWithoutPort() : host) + url;
 			if (link.needsNewWindow()) {
 				sb.append("<p class=\"link\">\n");

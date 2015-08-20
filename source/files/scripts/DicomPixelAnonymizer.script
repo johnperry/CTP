@@ -113,6 +113,10 @@ GE
   { [0008,1090].containsIgnoreCase("LOGIQE9") }
   (0,0,960,70)
 
+  { [0008,1090].containsIgnoreCase("V830") }
+  (0,0,960,70)
+
+
 Philips 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
@@ -140,6 +144,10 @@ Philips
     [0028,0010].containsIgnoreCase("768") }
   (0,0,800,59)
 
+  CX50
+   { [0008,1090].containsIgnoreCase("CX50") *
+    [0028,0010].containsIgnoreCase("600") }
+  (0,0,800,59)
 
 Zonare
   { [0008,1090].containsIgnoreCase("Z_ONE") }

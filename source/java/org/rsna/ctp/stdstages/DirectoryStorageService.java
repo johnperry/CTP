@@ -117,13 +117,13 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * if the object could not be stored.
 	 */
 	public FileObject store(FileObject fileObject) {
-
 		logger.debug("File received for storage: "+fileObject.getFile());
 
 		//Count all the files
 		totalCount++;
 
 		if (acceptable(fileObject) && checkFilter(fileObject)) {
+			logger.debug("Object received for storage: "+fileObject.getClass().getName());
 
 			//Get a place to store the object.
 			File destDir = root;
@@ -178,6 +178,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//always stored in the root, so we are now ready to store.
 			}
 
+			if (name.equals("")) name = fileObject.getClassName();
 			name = name.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 			name = name.replaceAll(filter, "");
 			logger.debug("...filtered filename: "+name);

@@ -702,7 +702,10 @@
 			<attr name="xmlScript" required="no" default=""/>
 			<attr name="zipScript" required="no" default=""/>
 			<attr name="logDuplicates" required="no" default="no" options="yes|no">
-				<helptext>Make a log entry when an object is transmitted with a SOPInstanceUID that has occurred in the last 10 objects</helptext>
+				<helptext>
+					Make a log entry when an object is transmitted with a SOPInstanceUID
+					that has occurred in the last 10 objects.
+				</helptext>
 			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
@@ -721,8 +724,8 @@
 				</attr>
 				<attr name="structure" required="yes" default="">
 					<helptext>
-						Sequence of text and DICOM tags specifying the elements that define the directory hierarchy and the filename in the zip file. 
-						Path segments are separated by / characters. The last segment defines the name of the file. 
+						Sequence of text and DICOM tags specifying the directory hierarchy and the filename in the zip file. 
+						Path segments are separated by / characters. The last segment defines the name of the file.
 						Do not include an extension in the name.
 					</helptext>
 				</attr>
@@ -742,7 +745,7 @@
 					<helptext>The URL of the XNAT session servlet (https://host:port/data/JSESSION).</helptext>
 				</attr>
 				<attr name="cookieName" required="yes" default="JSESSIONID">
-					<helptext>The name of the XNAT server session cookie.</helptext>
+					<helptext>The name of the XNAT server session cookie (JSESSIONID).</helptext>
 				</attr>
 				<attr name="username" required="yes" default="">
 					<helptext>The username for authentication on the XNAT server.</helptext>

@@ -169,6 +169,47 @@ public class QueueManager {
 	}
 
 	/**
+	 * Find the next file in the queue directory tree without removing
+	 * it from the queue.
+	 * @return a File pointing to the file in the supplied directory. If
+	 * no file is available in the queue, null is returned. If the supplied
+	 * directory file is null or not a directory, null is returned.
+	 */
+	public synchronized File peek() {
+		//If there is an active directory, try to get a file from it.
+		File qFile = null;
+		if (outDir != null) {
+			qFile = outDir.peek();
+			//If we didn't get a file, then there must be none left
+			//in the active directory. Set the outDir to null so the
+			//next code will find a new directory containing files.
+			if (qFile == null) outDir = null;
+		}
+		if (outDir == null) {
+			//If we get here, then either there was not an active directory
+			//or the current active directory contained no remaining files.
+			//Walk the tree starting at the root and find one containing a
+			//file. Note that this method will find a file even if it
+			//is not at the lowest level. The reason for this approach is that
+			//somebody might copy files into a directory in the tree by hand
+			//(even though they aren't supposed to do that), and we need to
+			//be sure we catch those files.
+			File file = findFirstFile(root);
+			//If we didn't get a file, then there must be none anywhere
+			//in the queue, so we have to return null.
+			if (file == null) return null;
+			//Okay, there is a file, so we can create an active directory
+			//for its parent.
+			outDir = new ActiveDirectory(file.getParentFile());
+			//Get a file from the directory. This file will be the same
+			//one that we got from findFirstFile, but we need to get it
+			//from the outDir object so its index is properly updated.
+			return outDir.peek();
+		}
+		return null;
+	}
+
+	/**
 	 * Re-count all the files in the queue.
 	 * @return the number of files in the queue.
 	 */
@@ -348,6 +389,13 @@ public class QueueManager {
 			Arrays.sort(files);
 			index = 0;
 		}
+		public File peek() {
+			while (index < files.length) {
+				if (files[index].isDirectory() || !files[index].exists()) index++;
+				else return files[index]; //leave the index pointing to the file
+			}
+			return null;
+		}			
 		public File getNextFile() {
 			while (index < files.length) {
 				if (files[index].isDirectory() || !files[index].exists()) index++;
