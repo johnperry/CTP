@@ -40,6 +40,7 @@ public class HttpExportService extends AbstractExportService {
 
 	static final Logger logger = Logger.getLogger(HttpExportService.class);
 
+	static final long defaultMaxUnchunked = 20;
 	static final int oneSecond = 1000;
 	final int connectionTimeout = 20 * oneSecond;
 	final int readTimeout = 120 * oneSecond;
@@ -54,6 +55,7 @@ public class HttpExportService extends AbstractExportService {
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
 	boolean sendDigestHeader = false;
+	long maxUnchunked = defaultMaxUnchunked;
 
 	int cacheSize = 0;
     String[] dirs = null;
@@ -80,6 +82,9 @@ public class HttpExportService extends AbstractExportService {
 		
 		//Get the compressor parameters, if any
 		getCompressorParameters(element);
+		
+		//Get the maxUnchunked parameter
+		maxUnchunked = StringUtil.getLong(element.getAttribute("maxUnchunked"), defaultMaxUnchunked) * 1024 * 1024;
 
 		//Get the Session object, if any
 		session = new ExportSession(element);
@@ -179,7 +184,8 @@ public class HttpExportService extends AbstractExportService {
 	public Status export(File fileToExport) {
 		
 		//Do not export zero-length files
-		if (fileToExport.length() == 0) return Status.FAIL;
+		long fileLength = fileToExport.length();
+		if (fileLength == 0) return Status.FAIL;
 		
 		HttpURLConnection conn = null;
 		OutputStream svros = null;
@@ -198,6 +204,7 @@ public class HttpExportService extends AbstractExportService {
 				conn.setRequestProperty("Digest", fileObject.getDigest());
 			}
 			session.setCookie(conn);
+			if (fileLength > maxUnchunked) conn.setChunkedStreamingMode(0);
 			if (logger.isDebugEnabled()) logConnection(conn);
 			conn.connect();
 

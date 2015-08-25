@@ -691,6 +691,7 @@
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
 			</attr>
+			<attr name="maxUnchunked" required="no" default=""/>
 			<attr name="sendDigestHeader" required="yes" default="no" options="yes|no"/>
 			<attr name="username" required="no" default=""/>
 			<attr name="password" required="no" default=""/>
@@ -890,6 +891,7 @@
 		<logConnections>Log IP addresses of received connections</logConnections>
 		<logSentEmails>Log all emails sent</logSentEmails>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
+		<maxUnchunked>The maximum file size (in MB) to be transmitted without setting Transfer-Encoding to chunked</maxUnchunked>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
 		<openAMURL>The URL of the OpenAM server, including the protocol and the port (http://openam.university.edu:80)</openAMURL>

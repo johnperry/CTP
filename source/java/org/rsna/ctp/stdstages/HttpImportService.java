@@ -26,6 +26,7 @@ import org.rsna.server.User;
 import org.rsna.server.Users;
 import org.rsna.service.HttpService;
 import org.rsna.service.Service;
+import org.rsna.util.ChunkedInputStream;
 import org.w3c.dom.Element;
 
 /**
@@ -119,6 +120,7 @@ public class HttpImportService extends AbstractImportService {
 
 		public void process(HttpRequest req, HttpResponse res) {
 			logger.debug("Entering process");
+			logger.debug("Request Content-Type: "+req.getContentType()+"\n"+req.toString()+"\nHeaders:\n"+req.listHeaders("  "));
 
 			String connectionIP = req.getRemoteAddress();
 			boolean accept = ipWhiteList.contains(connectionIP) && !ipBlackList.contains(connectionIP);
@@ -165,7 +167,7 @@ public class HttpImportService extends AbstractImportService {
 						discardPostedFile(req);
 						res.setResponseCode(res.notfound); //error - wrong method or content type
 						if (logAllConnections || logRejectedConnections) {
-							logger.info("Unacceptable method or Content-Type");
+							logger.info("Unacceptable method ("+req.method+") or Content-Type ("+req.getContentType()+")");
 						}
 					}
 				}
@@ -199,24 +201,32 @@ public class HttpImportService extends AbstractImportService {
 		//Write the file with a temporary name in the temp
 		//directory and then rename it to the queue directory.
 		private boolean getPostedFile(HttpRequest req) {
-			int contentLength = req.getContentLength();
+			String transferEncoding = req.getHeader("Transfer-Encoding");
+			boolean isChunked = (transferEncoding != null) && transferEncoding.equals("chunked");
+			long contentLength = req.getContentLength();
 			if (contentLength <= 0) {
-				logger.warn("File posted with Content-Length = "+contentLength);
-				return false;
+				if (!isChunked) {
+					logger.warn("Non-chunked file posted with Content-Length = "+contentLength);
+					return false;
+				}
+				else contentLength = Long.MAX_VALUE;
 			}
 			InputStream in = req.getInputStream();
 			FileOutputStream out = null;
 			boolean result = true;
 			try {
+				if (isChunked) in = new ChunkedInputStream(in);
 				String prefix = "HTTP-";
-				File tempFile = File.createTempFile(prefix,".md", getTempDirectory());
+				File tempFile = File.createTempFile(prefix, ".md", getTempDirectory());
 				out = new FileOutputStream(tempFile);
 				byte[] b = new byte[10000];
 				int len;
-				while ((contentLength > 0) && ((len=in.read(b,0,b.length)) > 0)) {
+				int bytesRead = 0;
+				while ((bytesRead < contentLength) && ((len=in.read(b,0,b.length)) > 0)) {
 					out.write(b,0,len);
-					contentLength -= len;
+					bytesRead += len;
 				}
+				logger.debug("bytesRead = "+bytesRead);
 				out.flush(); out.close(); out = null;
 
 				//If there is a digest header, check the file

@@ -93,8 +93,8 @@ public class Installer extends JFrame {
 		File extDir = new File(javaHome);
 		extDir = new File(extDir, "lib");
 		extDir = new File(extDir, "ext");
-		File clib = new File(extDir, "clibwrapper_jiio.jar");
-		File jai = new File(extDir, "jai_imageio.jar");
+		File clib = getFile(extDir, "clibwrapper_jiio", ".jar");
+		File jai = getFile(extDir, "jai_imageio", ".jar");
 		imageIOTools = clib.exists() && jai.exists();
 		if (imageIOTools) {
 			Hashtable<String,String> jaiManifest = getManifestAttributes(jai);
@@ -244,6 +244,25 @@ public class Installer extends JFrame {
 			exit();
 		}
 		return programFile;
+	}
+	
+	private File getFile(File dir, String nameStart, String nameEnd) {
+		File[] files = dir.listFiles( new NameFilter(nameStart, nameEnd) );
+		if (files.length == 0) return null;
+		return files[0];
+	}
+	
+	class NameFilter implements FileFilter {
+		String nameStart;
+		String nameEnd;
+		public NameFilter(String nameStart, String nameEnd) {
+			this.nameStart = nameStart;
+			this.nameEnd = nameEnd;
+		}
+		public boolean accept(File file) {
+			String name = file.getName();
+			return name.startsWith(nameStart) && name.endsWith(nameEnd);
+		}
 	}
 
 	//Take a tree of files starting in a directory in a zip file

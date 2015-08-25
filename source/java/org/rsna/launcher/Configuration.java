@@ -87,8 +87,8 @@ public class Configuration {
 		File extDir = new File(javaHome);
 		extDir = new File(extDir, "lib");
 		extDir = new File(extDir, "ext");
-		File clib = new File(extDir, "clibwrapper_jiio.jar");
-		File jai = new File(extDir, "jai_imageio.jar");
+		File clib = getFile(extDir, "clibwrapper_jiio", ".jar");
+		File jai = getFile(extDir, "jai_imageio", ".jar");
 		imageIOTools = clib.exists() && jai.exists();
 		if (imageIOTools) {
 			Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);
@@ -146,6 +146,25 @@ public class Configuration {
 		if ((mx == null) || mx.trim().equals("")) props.setProperty("mx", "256");
 		String ms = props.getProperty("ms");
 		if ((ms == null) || ms.trim().equals("")) props.setProperty("ms", "128");
+	}
+
+	private File getFile(File dir, String nameStart, String nameEnd) {
+		File[] files = dir.listFiles( new NameFilter(nameStart, nameEnd) );
+		if (files.length == 0) return null;
+		return files[0];
+	}
+	
+	class NameFilter implements FileFilter {
+		String nameStart;
+		String nameEnd;
+		public NameFilter(String nameStart, String nameEnd) {
+			this.nameStart = nameStart;
+			this.nameEnd = nameEnd;
+		}
+		public boolean accept(File file) {
+			String name = file.getName();
+			return name.startsWith(nameStart) && name.endsWith(nameEnd);
+		}
 	}
 
 	public boolean hasPipelines() {

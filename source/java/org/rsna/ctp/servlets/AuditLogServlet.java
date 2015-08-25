@@ -52,7 +52,7 @@ public class AuditLogServlet extends Servlet {
 	public void doGet(HttpRequest req, HttpResponse res) throws Exception {
 
 		//Make sure the user is authorized to do this.
-		if (!req.userHasRole("admin")) {
+		if (!req.userHasRole("admin") && !req.userHasRole("audit")) {
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
@@ -84,7 +84,6 @@ public class AuditLogServlet extends Servlet {
 			else {
 				//Export the contents of the AuditLog
 				Document doc = auditLog.getXML();
-				logger.info("doc:\n"+XmlUtil.toPrettyString(doc));
 				res.write(getCSV(doc));
 				res.setContentType("csv");
 				res.setContentDisposition( new File("AuditLog-"+StringUtil.getDate("")+".csv") );
@@ -118,7 +117,7 @@ public class AuditLogServlet extends Servlet {
 		//Get the AuditLog plugin.
 		Plugin plugin = Configuration.getInstance().getRegisteredPlugin(context);
 
-		if (req.userHasRole("admin")
+		if ((req.userHasRole("admin") || req.userHasRole("audit"))
 				&& (plugin != null)
 					&& (plugin instanceof AuditLog)
 						&& req.isReferredFrom(context)) {

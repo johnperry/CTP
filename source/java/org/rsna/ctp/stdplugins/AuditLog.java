@@ -22,6 +22,7 @@ import org.rsna.ctp.servlets.AuditLogServlet;
 import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.server.ServletSelector;
 import org.rsna.server.User;
+import org.rsna.server.Users;
 import org.rsna.util.JdbmUtil;
 import org.rsna.util.StringUtil;
 import org.rsna.util.XmlUtil;
@@ -90,6 +91,7 @@ public class AuditLog extends AbstractPlugin {
 		Configuration config = Configuration.getInstance();
 		ServletSelector selector = config.getServer().getServletSelector();
 		selector.addServlet(id, AuditLogServlet.class);
+		Users.getInstance().addRole("audit");
 		logger.info("AuditLog Plugin started with context \""+id+"\"");
 	}
 
@@ -124,7 +126,7 @@ public class AuditLog extends AbstractPlugin {
 	 */
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
-		if ((user != null) && user.hasRole("admin")) {
+		if ((user != null) && (user.hasRole("admin") || user.hasRole("audit"))) {
 			links.addFirst( new SummaryLink("/"+id, null, "Search the AuditLog", false) );
 		}
 		return links;
