@@ -95,7 +95,7 @@ public class Installer extends JFrame {
 		extDir = new File(extDir, "ext");
 		File clib = getFile(extDir, "clibwrapper_jiio", ".jar");
 		File jai = getFile(extDir, "jai_imageio", ".jar");
-		imageIOTools = clib.exists() && jai.exists();
+		imageIOTools = (clib != null) && clib.exists() && (jai != null) && jai.exists();
 		if (imageIOTools) {
 			Hashtable<String,String> jaiManifest = getManifestAttributes(jai);
 			imageIOVersion  = jaiManifest.get("Implementation-Version");
