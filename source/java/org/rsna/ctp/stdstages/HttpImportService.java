@@ -154,7 +154,10 @@ public class HttpImportService extends AbstractImportService {
 							req.getContentType().contains("application/x-mirc") ) {
 						if (getPostedFile(req)) {
 							res.write("OK");
-							if (logAllConnections) logger.info("Posted file received successfully");
+							String transferEncoding = req.getHeader("Transfer-Encoding");
+							boolean isChunked = (transferEncoding != null) && transferEncoding.equals("chunked");
+							if (logAllConnections) logger.info("Posted file received successfully"
+																+ (isChunked ? " (chunked streaming mode)" : ""));
 						}
 						else {
 							res.setResponseCode(res.notfound); //error during transmission

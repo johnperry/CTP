@@ -891,7 +891,7 @@
 		<logConnections>Log IP addresses of received connections</logConnections>
 		<logSentEmails>Log all emails sent</logSentEmails>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
-		<maxUnchunked>The maximum file size (in MB) to be transmitted without setting Transfer-Encoding to chunked</maxUnchunked>
+		<maxUnchunked>The maximum file size (in MB) to be transmitted without setting Transfer-Encoding to chunked</maxUnchunked (default = 20)>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
 		<openAMURL>The URL of the OpenAM server, including the protocol and the port (http://openam.university.edu:80)</openAMURL>
