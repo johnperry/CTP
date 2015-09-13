@@ -27,6 +27,10 @@
 		<pathelement location="${libraries}/pixelmed_codec.jar"/>
 		<pathelement location="${libraries}/email/activation.jar"/>
 		<pathelement location="${libraries}/email/javax.mail.jar"/>
+		<pathelement location="${libraries}/ftp/commons-logging-1.2.jar"/>
+		<pathelement location="${libraries}/ftp/commons-net-3.3.jar"/>
+		<pathelement location="${libraries}/ftp/commons-vfs2-2.0.jar"/>
+		<pathelement location="${libraries}/ftp/jsch-0.1.53.jar"/>
 	</path>
 
 	<target name="clean">
@@ -110,6 +114,9 @@
 		</copy>
 		<copy overwrite="true" todir="${build}/CTP/libraries/email">
 			<fileset dir="${libraries}/email" includes="*.*"/>
+		</copy>
+		<copy overwrite="true" todir="${build}/CTP/libraries/ftp">
+			<fileset dir="${libraries}/ftp" includes="*.*"/>
 		</copy>
 		<copy overwrite="true" todir="${build}/config">
 			<fileset dir="${config}" includes="*.*"/>

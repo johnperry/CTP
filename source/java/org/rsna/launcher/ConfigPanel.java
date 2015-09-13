@@ -959,8 +959,8 @@ public class ConfigPanel extends BasePanel {
 		public boolean getScrollableTracksViewportHeight() { return false; }
 		public boolean getScrollableTracksViewportWidth() { return trackWidth; }
 		public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
-		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
-		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) { return 10; }
+		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) { return 30; }
+		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) { return 30; }
 	}
 
 	//******** The right pane ********

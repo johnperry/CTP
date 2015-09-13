@@ -49,8 +49,14 @@ public class FnCall {
 
 	/** the length of the script text occupied by this function call. */
 	public int length = -1;
+	
+	/** the parsed function call. */
+	public String fnCall = "";
+	
+	LinkedList<String> arglist;
+	int currentIndex = 0;
 
-   /**
+	/**
 	 * Constructor; decodes one function call.
 	 * @param call the script of the function call.
 	 * @param context the context of the call.
@@ -58,77 +64,169 @@ public class FnCall {
 	public FnCall(String call, DICOMAnonymizerContext context, int thisTag) {
 		this.context = context;
 		this.thisTag = thisTag;
+		this.arglist = new LinkedList<String>();
 
 		logger.debug("FnCall: \""+call+"\"");
 
 		//find the function name
-		int k = call.indexOf("(");
-		if (k == -1) length = -1;
-		name = call.substring(0,k).replaceAll("\\s","");
-
-		//now get the arguments
-		int kk = k;
-		LinkedList<String> arglist = new LinkedList<String>();
-		while ((kk = getDelimiter(call, kk+1, ",)", '(')) != -1) {
-			arglist.add(call.substring(k+1,kk).trim());
-			k = kk;
-			if (call.charAt(kk) == ')') break;
+		currentIndex = call.indexOf("(");
+		if (currentIndex == -1) length = -1;
+		name = call.substring(0, currentIndex).replaceAll("\\s", "");
+		
+		//skip the initial '('
+		currentIndex++;
+		
+		//get the arguments
+		String arg;
+		while ( (arg=getArg(call)) != null) {
+			arglist.add(arg);
 		}
-		//if there was no clean end to the arguments, bail out
-		if (kk == -1) { length = -1; return; }
+		
+		//see if there was no closure
+		if (currentIndex >= call.length()) { 
+			length = -1; 
+			return;
+		}
 
-		//okay, we have arguments; save them
+		//okay, we have the arguments; save them
 		args = new String[arglist.size()];
 		arglist.toArray(args);
-		length = kk + 1;
+		
+		//skip the, closing paren
+		currentIndex++;
+		length = currentIndex;
+		fnCall = call.substring(0, currentIndex);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("...function: "+fnCall);
+			for (int i=0; i<args.length; i++) {
+				logger.debug("...arg["+i+"]: "+args[i]);
+			}
+		}
 
 		//if this is an ifFn or selectFn call, get the conditional code
 		if (name.equals(ifFn) || name.equals(selectFn)) {
 			//get the true code
-			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call, k+1, "}", '{'))  == -1) ) {
-				//this call is not coded correctly; return with
-				//a length set to ignore the rest of the line
+			trueCode = getClause(call);
+			if (trueCode == null) {
 				length = call.length();
 				return;
 			}
-			//the true code was present, save it
-			trueCode = call.substring(k+1,kk);
-
-			//now get the false code
-			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call, k+1, "}", '{')) == -1) ) {
-				//either this call is not coded correctly or there
-				//is no false code; return with a length set to
-				//ignore the rest of the line
+			//skip the closing brace
+			currentIndex++;
+			
+			//get the false code
+			falseCode = getClause(call);
+			if (falseCode == null) {
 				length = call.length();
 				return;
 			}
-			//the false code was present, save it
-			falseCode = call.substring(k+1,kk);
-			length = kk + 1;
+			//skip the closing brace
+			currentIndex++;
+			length = currentIndex;
 		}
+
 		//if not an if, maybe an appendFn
 		else if (name.equals(appendFn)) {
 			//get the clause and store it in the trueCode
-			if ( ((k = call.indexOf("{",kk+1)) == -1) ||
-				 ((kk = getDelimiter(call, k+1, "}", '{'))  == -1) ) {
-				//this call is not coded correctly; return with
-				//a length set to ignore the rest of the line
+			trueCode = getClause(call);
+			if (trueCode == null) {
 				length = call.length();
 				return;
 			}
-			//the clause was present, save it
-			trueCode = call.substring(k+1,kk);
-			length = kk + 1;
+			//skip the closing brace
+			currentIndex++;
+			length = currentIndex;
 		}
 	}
-
-   /**
+	
+	//Get and argument, returning with currentIndex pointing to the closing ')'
+	private String getArg(String call) {
+		//skip initial whitespace
+		while ((currentIndex < call.length()) && Character.isWhitespace(call.charAt(currentIndex))) {
+			currentIndex++;
+		}
+		
+		//see if there are arguments
+		if (currentIndex >= call.length()) return null;
+		char c = call.charAt(currentIndex);
+		if (c == ')') return null;
+		
+		//we have an argument, get it, checking for opening quotes, brackets, or parens
+		boolean inEscape = false;
+		boolean inQuot = (c == '"');
+		boolean inBracket = (c == '[');
+		boolean inParen = (c == '(');
+		boolean skip = false;
+		
+		StringBuffer arg = new StringBuffer();
+		while (currentIndex < call.length()) {
+			c = call.charAt(currentIndex);
+			if (inEscape) inEscape = false;
+			else if (!inQuot && !inBracket && !inParen ) {
+				if ( (c == ',') || (c == ')') ) break;
+			}
+			if (c == escapeChar) inEscape = true;
+			else {
+				if (!skip) arg.append(c);
+				if (inQuot && (c == '"')) {
+					inQuot = false;
+					skip = true;
+				}
+				else if (inBracket && (c == ']')) {
+					inBracket = false;
+					skip = true;
+				}
+				else if (inParen && (c == ')')) {
+					inParen = false;
+					skip = true;
+				}
+			}
+			currentIndex++;
+		}
+		
+		//abort if we fell off the end
+		if (currentIndex >= call.length()) return null;
+		
+		//skip the comma delimiter
+		if (c == ',') currentIndex++;
+		
+		return arg.toString().trim();
+	}
+	
+	//Get a clause, if present, returning with currentIndex pointing to the closing '}'
+	private String getClause(String call) {
+		//skip initial whitespace
+		while ((currentIndex < call.length()) && Character.isWhitespace(call.charAt(currentIndex))) {
+			currentIndex++;
+		}
+		
+		//see if there is actually a clause
+		if (currentIndex >= call.length()) return null;
+		char c = call.charAt(currentIndex);
+		if (c != '{') return null;
+		currentIndex++;
+		
+		//we have a clause, get it, checking for nested clauses
+		int count = 1;
+		StringBuffer clause = new StringBuffer();
+		while (currentIndex < call.length()) {
+			c = call.charAt(currentIndex);
+			if (c == '{') count++;
+			if (c == '}') count--;
+			if (count == 0) break;
+			clause.append(c);
+			currentIndex++;
+		}
+		
+		//abort if we fell off the end
+		if (currentIndex >= call.length()) return null;
+		
+		return clause.toString().trim();
+	}
+	
+	/**
 	 * Get the tag corresponding to a tag name, allowing for the "this" keyword.
-	 * Note: the underlying translation also supports wrapping in parentheses and
-	 * separating the group and element numbers with a comma, but the parser in
-	 * the FnCall constructor does not allow these formats. Maybe someday...
 	 * @param tagName the name of the tag.
 	 * @return the tag.
 	 */
@@ -138,7 +236,7 @@ public class FnCall {
 		else return context.getElementTag(tagName);
 	}
 
-   /**
+	/**
 	 * Get a specific argument.
 	 * @param arg the argument to get, counting from zero.
 	 * @return the String value of the argument, or ""
@@ -154,7 +252,7 @@ public class FnCall {
 		return argString;
 	}
 
-   /**
+	/**
 	 * Regenerate the script of this function call, not including
 	 * any conditional clauses.
 	 * @return the function name and arguments.
@@ -163,7 +261,7 @@ public class FnCall {
 		return name + getArgs();
 	}
 
-   /**
+	/**
 	 * Regenerate the list of arguments in this function call.
 	 * @return the function arguments.
 	 */
@@ -176,41 +274,5 @@ public class FnCall {
 			}
 		}
 		return "(" + s + ")";
-	}
-
-   /**
-	 * Search a string for a delimiter, handling escape characters
-	 * and double-quoted substrings.
-	 * Note: this method only works for function parameter lists
-	 * and un-nested if clauses. if statements within conditional
-	 * clauses are not supported.
-	 * @param s the string to search.
-	 * @param k the index of the starting point in the string.
-	 * @param delims the list of delimiter characters.
-	 * @return the index of the delimiter.
-	 */
-	public int getDelimiter(String s, int k, String delims, char open) {
-		int openCount = 1;
-		int bracketCount = 0;
-		boolean inQuote = false;
-		boolean inEscape = false;
-		while (k < s.length()) {
-			char c = s.charAt(k);
-			if (inEscape) inEscape = false;
-			else if (c == escapeChar) inEscape = true;
-			else if (inQuote) {
-				if (c == '"') inQuote = false;
-			}
-			else if (c == '"') inQuote = true;
-			else if (c == '[') bracketCount++;
-			else if (c == ']') bracketCount--;
-			else if (c == open) openCount++;
-			else if ((delims.indexOf(c) != -1) && (bracketCount == 0)) {
-				openCount--;
-				if (openCount == 0) return k;
-			}
-			k++;
-		}
-		return -1;
 	}
 }

@@ -222,6 +222,25 @@ public class AnonymizerFunctions {
 	}
 
 	/**
+	 * Decrypt a string using a specified key.
+	 * @param string the base64 string to decrypt.
+	 * @param keyText the text of the key.
+	 * @return the decrypted string.
+	 * @throws Exception if the encryption fails.
+	 */
+	public static String decrypt(String string, String keyText) throws Exception {
+		if (string == null) string = "null";
+		Cipher cipher = getCipher(keyText, Cipher.DECRYPT_MODE);
+		byte[] encrypted = Base64.decode(string);
+		//System.out.println("decrypt: string: \""+string+"\"");
+		//System.out.println("decrypt: encrypted.length = "+encrypted.length);
+		//printBytes("decrypt: encrypted bytes", encrypted);
+		//System.out.println("----------------");
+		byte[] decrypted = cipher.doFinal(encrypted);
+		return new String(decrypted, "UTF-8");
+	}
+
+	/**
 	 * Encrypt a string using a specified key.
 	 * @param string the string to encrypt.
 	 * @param keyText the text of the key.
@@ -230,13 +249,27 @@ public class AnonymizerFunctions {
 	 */
 	public static String encrypt(String string, String keyText) throws Exception {
 		if (string == null) string = "null";
-		Cipher enCipher = getCipher(keyText);
+		Cipher enCipher = getCipher(keyText, Cipher.ENCRYPT_MODE);
 		byte[] encrypted = enCipher.doFinal(string.getBytes("UTF-8"));
-		return Base64.encodeToString(encrypted);
+		String result = Base64.encodeToString(encrypted);
+		//System.out.println("encrypt: encrypted.length = "+encrypted.length);
+		//printBytes("encrypt: encrypted bytes", encrypted);
+		//System.out.println("encrypt: string: \""+result+"\"");
+		//System.out.println("----------------");
+		return result;
+	}
+	
+	private static void printBytes(String s, byte[] bytes) {
+		System.out.println(s);
+		try { System.out.println(new String(bytes, "UTF-8")); }
+		catch (Exception skip) { }
+		for (int i=0; i<bytes.length; i++) {
+			System.out.println(String.format("%6d: %02x", i, bytes[i]));
+		}
 	}
 
 	//Get a Cipher initialized with the specified key.
-	private static Cipher getCipher(String keyText) {
+	private static Cipher getCipher(String keyText, int mode) {
 		try {
 			Provider sunJce = new com.sun.crypto.provider.SunJCE();
 			Security.addProvider(sunJce);
@@ -247,9 +280,9 @@ public class AnonymizerFunctions {
 			byte[] seed = random.generateSeed(8);
 			random.setSeed(seed);
 
-			Cipher enCipher = Cipher.getInstance("Blowfish");
-			enCipher.init(Cipher.ENCRYPT_MODE, skeySpec, random);
-			return enCipher;
+			Cipher cipher = Cipher.getInstance("Blowfish");
+			cipher.init(mode, skeySpec, random);
+			return cipher;
 		}
 		catch (Exception ex) { return null; }
 	}

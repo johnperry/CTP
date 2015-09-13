@@ -577,6 +577,7 @@ public class DICOMAnonymizer {
 	static final String valueFn 		= "value";
 	static final String truncateFn 		= "truncate";
 	static final String dateFn 			= "date";
+	static final String decryptFn 		= "decrypt";
 	static final String encryptFn 		= "encrypt";
 	static final String hashFn 			= "hash";
 	static final String hashnameFn 		= "hashname";
@@ -627,6 +628,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(valueFn))		out += value(fnCall);
 				else if (fnCall.name.equals(truncateFn))	out += truncate(fnCall);
 				else if (fnCall.name.equals(dateFn)) 		out += date(fnCall);
+				else if (fnCall.name.equals(decryptFn))		out += decrypt(fnCall);
 				else if (fnCall.name.equals(encryptFn))		out += encrypt(fnCall);
 				else if (fnCall.name.equals(hashFn))		out += hash(fnCall);
 				else if (fnCall.name.equals(hashnameFn))	out += hashname(fnCall);
@@ -1148,6 +1150,23 @@ public class DICOMAnonymizer {
 		}
 		catch (Exception e) {
 			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hashuid"+fn.getArgs()+": "+e.getMessage());
+			logger.debug(e.getMessage(), e);
+			return fn.getArgs();
+		}
+	}
+
+	//Execute the decrypt function call. This function is used
+	//to decrypt an encrypted string from an element text value.
+	private static String decrypt(FnCall fn) {
+		logger.debug("decrypt"+fn.getArgs()+" called");
+		if (fn.args.length < 2) return fn.getArgs();
+		try {
+			String value = fn.context.contents(fn.args[0], fn.thisTag);
+			String key = fn.context.getParam(fn.args[1]);
+			return AnonymizerFunctions.decrypt(value, key);
+		}
+		catch (Exception e) {
+			logger.debug(Tags.toString(fn.thisTag)+": Exception caught in decrypt"+fn.getArgs()+": "+e.getMessage());
 			logger.debug(e.getMessage(), e);
 			return fn.getArgs();
 		}

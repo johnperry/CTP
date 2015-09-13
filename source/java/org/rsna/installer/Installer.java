@@ -401,6 +401,17 @@ public class Installer extends JFrame {
 			//remove the xml subdirectory
 			File xml = new File(libraries, "xml");
 			deleteAll(xml);
+			//remove the sftp subdirectory
+			File sftp = new File(libraries, "sftp");
+			deleteAll(xml);
+			//move edtftpj.jar to the ftp directory
+			File edtftpj = new File(libraries, "edtftpj.jar");
+			if (edtftpj.exists()) {
+				File ftp = new File(libraries, "ftp");
+				ftp.mkdirs();
+				File ftpedtftpj = new File(ftp, "edtftpj.jar");
+				edtftpj.renameTo(ftpedtftpj );
+			}
 		}
 
 		//remove the obsolete xml library under dir

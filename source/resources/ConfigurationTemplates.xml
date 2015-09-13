@@ -30,11 +30,13 @@
 			</child>
 
 			<child name="LDAP" required="no" allowMultiples="no">
-				<attr name="initialContextFactory" required="no" default=""/>
-				<attr name="providerURL" required="no" default=""/>
-				<attr name="securityAuthentication" required="no" default=""/>
-				<attr name="securityPrincipal" required="no" default=""/>
-				<attr name="ldapAdmin" required="no" default=""/>
+				<attr name="initialContextFactory" required="yes" default="com.sun.jndi.ldap.LdapCtxFactory"/>
+				<attr name="providerURL" required="yes" default=""/>
+				<attr name="securityAuthentication" required="yes" default="simple"/>
+				<attr name="securityPrincipal" required="yes" default=""/>
+				<attr name="ldapAdmin" required="yes" default=""/>
+				<attr name="referral" required="yes" default="ignore" options="ignore|follow"/>
+				<attr name="derefAliases" required="yes" default="never" options="never|always"/>
 			</child>
 
 			<child name="OpenAM" required="no" allowMultiples="no">
@@ -815,6 +817,58 @@
 		</ExportService>
 
 		<ExportService>
+			<attr name="name" required="yes" default="SftpExportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.SftpExportService" editable="no"/>
+			<attr name="root" required="yes" default="roots/SftpExportService"/>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="url" required="yes" default="">
+				<helptext>URL of the destination SFTP site (sftp://ip:port/path)</helptext>
+			</attr>
+			<attr name="structure" required="yes" default="/"/>
+			<attr name="username" required="yes" default="username"/>
+			<attr name="password" required="yes" default="password"/>
+			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="dicomScript" required="no" default=""/>
+			<attr name="xmlScript" required="no" default=""/>
+			<attr name="zipScript" required="no" default=""/>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="yes" default="quarantines/SftpExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ExportService>
+
+		<ExportService>
+			<attr name="name" required="yes" default="FtpsExportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.FtpsExportService" editable="no"/>
+			<attr name="root" required="yes" default="roots/FtpsExportService"/>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="url" required="yes" default="">
+				<helptext>URL of the destination SFTP site (ftps://ip:port/path)</helptext>
+			</attr>
+			<attr name="structure" required="yes" default="/"/>
+			<attr name="username" required="yes" default="username"/>
+			<attr name="password" required="yes" default="password"/>
+			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="dicomScript" required="no" default=""/>
+			<attr name="xmlScript" required="no" default=""/>
+			<attr name="zipScript" required="no" default=""/>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="yes" default="quarantines/FtpsExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ExportService>
+
+		<ExportService>
 			<attr name="name" required="yes" default="AimExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.AimExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/AimExportService"/>
@@ -873,6 +927,7 @@
 		<callingAETTag>DICOM tag in which to store the Calling AE Title (ggggeeee, optional)</callingAETTag>
 		<cc>The email addresses of the copied recipients, separated by commas.</cc>
 		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
+		<derefAliases>Whether to dereference LDAP aliases (default = never).</derefAliases>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for processing</dicomScript>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
@@ -891,7 +946,7 @@
 		<logConnections>Log IP addresses of received connections</logConnections>
 		<logSentEmails>Log all emails sent</logSentEmails>
 		<lookupTable>The lookup table file for special de-identification (optional)</lookupTable>
-		<maxUnchunked>The maximum file size (in MB) to be transmitted without setting Transfer-Encoding to chunked</maxUnchunked (default = 20)>
+		<maxUnchunked>The maximum file size (in MB) to be transmitted without setting Transfer-Encoding to chunked (default = 20)</maxUnchunked>
 		<minAge>The minimum age of objects in milliseconds before import</minAge>
 		<name>Name for display on web pages (not required to be unique)</name>
 		<openAMURL>The URL of the OpenAM server, including the protocol and the port (http://openam.university.edu:80)</openAMURL>
@@ -906,6 +961,7 @@
 		<quality>The quality parameter to use for lossy compression (1-100), ignored for lossless compression</quality>
 		<quarantine>Storage directory for quarantined objects</quarantine>
 		<quarantineTimeDepth>Length of time in days before objects are automatically purged from the quarantine (0 = forever)</quarantineTimeDepth>
+		<referral>How to respond to LDAP referrals (default = ignore).</referral>
 		<regex>A regular expression for matching an IP address. This is an alternative to the ip field for matching ranges.</regex>
 		<requireAuthentication>Require authentication for connections</requireAuthentication>
 		<returnStoredFile>Yes: return the stored object; no: return the original object</returnStoredFile>
