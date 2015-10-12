@@ -378,7 +378,7 @@ public class DICOMAnonymizer {
 						catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
 					}
 				}
-				else if (tag == 0x00120064) updateDeIdentificationMethodCodeSeq(ds, script);
+				else if (tag == 0x00120064) updateDeIdentificationMethodCodeSeq(script, context);
 			}
 		}
 	}
@@ -496,14 +496,15 @@ public class DICOMAnonymizer {
 				}
 				else {
 					//Handle the DeIdentificationMethodCodeSeq element specially
-					updateDeIdentificationMethodCodeSeq(ds, script);
+					updateDeIdentificationMethodCodeSeq(script, context);
 				}
 			}
 		}
 		return exceptions;
 	}
 
-	private static void updateDeIdentificationMethodCodeSeq(Dataset ds, String script) {
+	private static void updateDeIdentificationMethodCodeSeq(String script, DICOMAnonymizerContext context) throws Exception {
+		Dataset ds = context.outDS;
 		int tag = Tags.DeIdentificationMethodCodeSeq;
 		if (!script.trim().equals("")) {
 			if (script.equals("@remove()")) {
@@ -513,19 +514,20 @@ public class DICOMAnonymizer {
 				return;
 			}
 			else {
+				String value = makeReplacement(script, context, tag);
+				value = (value != null) ? value.trim() : "";
 				DcmElement e = null;
 				try {
-					String[] codes = script.split("/");
-					if ((codes.length > 0)
-							&& codes[0].trim().toLowerCase().equals("reset")
-								&& ds.contains(tag)) {
-						ds.remove(tag);
-					}
 					if (!ds.contains(tag)) e = ds.putSQ(tag);
 					else e = ds.get(tag);
+					String[] codes = value.split("/");
 					for (String code : codes) {
 						code = code.trim();
-						if (!code.toLowerCase().equals("reset")) {
+						if (code.toLowerCase().equals("reset")) {
+							ds.remove(tag);
+							e = ds.putSQ(tag);
+						}
+						else {
 							String scheme = "DCM";
 							String meaning = deIdentificationCodeMeanings.getProperty(code);
 							if (meaning == null) {

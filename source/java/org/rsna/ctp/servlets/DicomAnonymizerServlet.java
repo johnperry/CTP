@@ -60,6 +60,7 @@ public class DicomAnonymizerServlet extends CTPServlet {
 	 */
 	public void doGet(HttpRequest req, HttpResponse res) {
 		super.loadParameters(req);
+		res.setContentEncoding(req);
 
 		//Make sure the user is authorized to do this.
 		if (!userIsAuthorized) {
@@ -128,6 +129,7 @@ public class DicomAnonymizerServlet extends CTPServlet {
 	 */
 	public void doPost(HttpRequest req, HttpResponse res) {
 		super.loadParameters(req);
+		res.setContentEncoding(req);
 
 		//Make sure the user is authorized to do this.
 		if (!userIsAuthorized || !req.isReferredFrom(context)) {

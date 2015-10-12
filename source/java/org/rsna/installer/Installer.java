@@ -11,6 +11,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.*;
+import java.nio.file.*;
+import java.nio.file.attribute.*;
 import java.util.*;
 import java.util.jar.*;
 import java.util.regex.Matcher;
@@ -28,7 +30,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-
 
 /**
  * The ClinicalTrialProcessor program installer.
@@ -611,16 +612,9 @@ public class Installer extends JFrame {
 		try {
 			File dir = new File(directory, "CTP");
 			if (suppressFirstPathElement) dir = dir.getParentFile();
-			File linux = new File(dir, "linux");
-			File install = new File(linux, "ctpService-ubuntu.sh");
-			cp.appendln(Color.black, "Linux service installer:");
-			cp.appendln(Color.black, "...file: "+install.getAbsolutePath());
-			String bat = getFileText(install);
 			Properties props = new Properties();
 			String ctpHome = dir.getAbsolutePath();
 			cp.appendln(Color.black, "...CTP_HOME: "+ctpHome);
-
-			//do the parameter substitutions
 			ctpHome = ctpHome.replaceAll("\\\\", "\\\\\\\\");
 			props.put("CTP_HOME", ctpHome);
 			File javaHome = new File(System.getProperty("java.home"));
@@ -628,24 +622,34 @@ public class Installer extends JFrame {
 			cp.appendln(Color.black, "...JAVA_BIN: "+javaBin);
 			javaBin = javaBin.replaceAll("\\\\", "\\\\\\\\");
 			props.put("JAVA_BIN", javaBin);
+			
+			File linux = new File(dir, "linux");
+			File install = new File(linux, "ctpService-ubuntu.sh");
+			cp.appendln(Color.black, "Linux service installer:");
+			cp.appendln(Color.black, "...file: "+install.getAbsolutePath());
+			String bat = getFileText(install);
 			bat = replace(bat, props); //do the substitutions
-
-			//Remove \r characters for Linux
 			bat = bat.replace("\r", "");
-
-			//Store the modified script in the linux directory
 			setFileText(install, bat);
 
 			//If this is an ISN installation, put the script in the correct place.
 			String osName = System.getProperty("os.name").toLowerCase();
 			if (programName.equals("ISN") && !osName.contains("windows")) {
+				install = new File(linux, "ctpService-red.sh");
+				cp.appendln(Color.black, "ISN service installer:");
+				cp.appendln(Color.black, "...file: "+install.getAbsolutePath());
+				bat = getFileText(install);
+				bat = replace(bat, props); //do the substitutions
+				bat = bat.replace("\r", "");
 				File initDir = new File("/etc/init.d");
 				File initFile = new File(initDir, "ctpService");
 				if (initDir.exists()) {
+					setOwnership(initDir, "edge", "edge");
 					setFileText(initFile, bat);
 					initFile.setReadable(true, false); //everybody can read //Java 1.6
 					initFile.setWritable(true); //only the owner can write //Java 1.6
 					initFile.setExecutable(true, false); //everybody can execute //Java 1.6
+					
 				}
 			}
 		}
@@ -655,6 +659,25 @@ public class Installer extends JFrame {
 					"Unable to update the Linux service ctpService.sh file.",
 					"Linux Service Installer",
 					JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+	
+	private void setOwnership(File dir, String group, String owner) {
+		try {
+			Path path = dir.toPath();
+			UserPrincipalLookupService lookupService = FileSystems.getDefault()
+						.getUserPrincipalLookupService();
+			GroupPrincipal groupPrincipal = lookupService.lookupPrincipalByGroupName(group);
+			UserPrincipal userPrincipal = lookupService.lookupPrincipalByName(owner);
+			PosixFileAttributeView pfav = Files.getFileAttributeView(
+													path, 
+													PosixFileAttributeView.class,
+													LinkOption.NOFOLLOW_LINKS);
+			pfav.setGroup(groupPrincipal);
+			pfav.setOwner(userPrincipal);
+		}
+		catch (Exception ex) {
+			cp.appendln("Unable to set the file group and owner for\n   "+dir);
 		}
 	}
 

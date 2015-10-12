@@ -154,32 +154,34 @@ public class FnCall {
 		
 		//we have an argument, get it, checking for opening quotes, brackets, or parens
 		boolean inEscape = false;
-		boolean inQuot = (c == '"');
-		boolean inBracket = (c == '[');
-		boolean inParen = (c == '(');
-		boolean skip = false;
+		boolean inQuote = false;
+		boolean inBracket = false;
+		boolean inParen = false;
 		
 		StringBuffer arg = new StringBuffer();
 		while (currentIndex < call.length()) {
 			c = call.charAt(currentIndex);
 			if (inEscape) inEscape = false;
-			else if (!inQuot && !inBracket && !inParen ) {
+			else if (!inQuote && !inBracket && !inParen ) {
 				if ( (c == ',') || (c == ')') ) break;
 			}
 			if (c == escapeChar) inEscape = true;
 			else {
-				if (!skip) arg.append(c);
-				if (inQuot && (c == '"')) {
-					inQuot = false;
-					skip = true;
+				arg.append(c);
+				if (c == '"') {
+					inQuote = !inQuote;
+				}
+				else if (c == '[') {
+					inBracket = true;
 				}
 				else if (inBracket && (c == ']')) {
 					inBracket = false;
-					skip = true;
+				}
+				else if (c == '(') {
+					inParen = true;
 				}
 				else if (inParen && (c == ')')) {
 					inParen = false;
-					skip = true;
 				}
 			}
 			currentIndex++;
