@@ -557,8 +557,8 @@ public class DICOMAnonymizer {
 			setProperty("113103", "Clean Graphics Option");
 			setProperty("113104", "Clean Structured Content Option");
 			setProperty("113105", "Clean Descriptors Option");
-			setProperty("113106", "Retain Longitudinal With Full Dates Option");
-			setProperty("113107", "Retain Longitudinal With Modified Dates Option");
+			setProperty("113106", "Retain Longitudinal Temporal Information Full Dates Option");
+			setProperty("113107", "Retain Longitudinal Temporal Information Modified Dates Option");
 			setProperty("113108", "Retain Patient Characteristics Option");
 			setProperty("113109", "Retain Device Identity Option");
 			setProperty("113110", "Retain UIDs");
