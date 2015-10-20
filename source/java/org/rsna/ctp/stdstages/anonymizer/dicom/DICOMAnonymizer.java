@@ -364,7 +364,8 @@ public class DICOMAnonymizer {
 			int tag = intTag.intValue();
 			if (!ds.contains(tag)) {
 				String script = context.getScriptFor(tag).trim();
-				if (script.startsWith("@always()") && ((vr=getVR(tag)) != VRs.SQ)) {
+				vr = getVR(tag);
+				if (script.startsWith("@always()") && (vr != VRs.SQ)) {
 					String value = makeReplacement(script, context, tag);
 					if (value.equals("@keep()") || value.equals("@remove()")) {
 						//do nothing
@@ -377,6 +378,9 @@ public class DICOMAnonymizer {
 						try { context.putXX(tag, vr, value); }
 						catch (Exception unable) { logger.warn("Unable to create "+Tags.toString(tag)+": "+script); }
 					}
+				}
+				else if (script.startsWith("@always()@require()") && (vr == VRs.SQ)) {
+					context.putXX(tag, vr, "");
 				}
 				else if (tag == 0x00120064) updateDeIdentificationMethodCodeSeq(script, context);
 			}

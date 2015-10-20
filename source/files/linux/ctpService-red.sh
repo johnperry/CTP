@@ -13,6 +13,7 @@
 ################################################
 # Author: SG Langer 12/11/2012
 #	   Xiaojiang Yang 09/25/2015
+#	   Xiaojiang Yang changed 10/16/2015
 #
 # Purpose: used to start/stop CTP on SysV family *NIX
 #	For Ubuntu UpStart equivalent see
@@ -63,9 +64,10 @@ start() {
 ################################
 # Purpose: start CTP and record PID
 #
+# 10-16-2015: Xiaojiang replaced grep libraries with grep "[l]ibraries" to filter out the grep line itself.
 #################################
 	echo "in start"
-	ret=$(ps aux |grep libraries)
+	ret=$(ps aux |grep "[l]ibraries")
 	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP already running, stop first"
 		return 0
@@ -91,9 +93,10 @@ stop() {
 # 8-14: JP told SGL that Runner can be called with
 #	command line args (stop, start, toggle). 
 #	This simplifies things
+# 10-16-2015: Xiaojiang replaced grep libraries with grep "[l]ibraries" to filter out the grep line itself.
 ##################################
 	echo "in stop"
-	ret=$(ps aux |grep libraries)
+	ret=$(ps aux |grep "[l]ibraries")
 	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP is running"
 		array=($ret)
@@ -111,10 +114,11 @@ status() {
 ######################################
 # Purpose: Print the JobID from the ps cmd
 #
+# 10-16-2015: Xiaojiang replaced grep libraries with grep "[l]ibraries" to filter out the grep line itself.
 ####################################
 	echo "in status"
-	ret=$(ps aux |grep libraries)
-	if [[ "$ret" =~ "java" ]]; then
+	ret=$(ps aux | grep "[l]ibraries")
+	if [[ "$ret" =~ "CTP" ]]; then
 		echo "CTP is running"
 		echo $ret
 	else

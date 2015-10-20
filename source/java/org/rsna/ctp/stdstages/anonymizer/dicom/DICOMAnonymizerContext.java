@@ -401,6 +401,9 @@ public class DICOMAnonymizerContext {
 		}
 		else if (value.equals("")) {
 			if (vrInt == VRs.PN) outDS.putXX(tag, vrInt, " ");
+			else if (vrInt == VRs.SQ) {
+				if (!outDS.contains(tag)) outDS.putSQ(tag);
+			}
 			else outDS.putXX(tag, vrInt);
 		}
 		else {
