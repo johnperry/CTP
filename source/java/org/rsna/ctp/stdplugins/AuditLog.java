@@ -127,6 +127,8 @@ public class AuditLog extends AbstractPlugin {
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if ((user != null) && (user.hasRole("admin") || user.hasRole("audit"))) {
+			links.addFirst( new SummaryLink("/"+id+"?export&xml", null, "Export the AuditLog as XML", false) );
+			links.addFirst( new SummaryLink("/"+id+"?export&csv", null, "Export the AuditLog as CSV", false) );
 			links.addFirst( new SummaryLink("/"+id, null, "Search the AuditLog", false) );
 		}
 		return links;

@@ -170,9 +170,7 @@ public class DICOMAnonymizerContext {
 	}
 
 	/*
-	 * Pop the dataset stacks, replacing the current datasets
-	 * with the values from the stacks. If the stacks are empty,
-	 * do nothing.
+	 * Test whether the context is at the root dataset.
 	 */
 	public boolean isRootDataset() {
 		return (inStack.size() == 0);

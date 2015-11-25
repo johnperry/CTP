@@ -166,6 +166,7 @@
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="expandTARs" required="yes" default="no"/>
 			<attr name="quarantine" required="yes" default="quarantines/ArchiveImportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ImportService>
@@ -683,6 +684,31 @@
 		</ExportService>
 
 		<ExportService>
+			<attr name="name" required="yes" default="DicomSTOWRSExportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomSTOWRSExportService" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomSTOWRSExportService"/>
+			<attr name="url" required="yes" default="">
+				<helptext>URL of the destination DICOM STOW-RS SCP (starting with http:// or https://)</helptext>
+			</attr>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="username" required="no" default=""/>
+			<attr name="password" required="no" default=""/>
+			<attr name="dicomScript" required="no" default=""/>
+			<attr name="logDuplicates" required="no" default="no" options="yes|no">
+				<helptext>
+					Make a log entry when an object is transmitted with a SOPInstanceUID
+					that has occurred in the last 10 objects.
+				</helptext>
+			</attr>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomSTOWRSExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ExportService>
+
+		<ExportService>
 			<attr name="name" required="yes" default="HttpExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.HttpExportService" editable="no"/>
 			<attr name="root" required="yes" default="roots/HttpExportService"/>
@@ -929,6 +955,7 @@
 		<connectionIPTag>DICOM tag in which to store the IP Address of the sender (ggggeeee, optional)</connectionIPTag>
 		<derefAliases>Whether to dereference LDAP aliases (default = never).</derefAliases>
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for processing</dicomScript>
+		<expandTARs>Whether to unpack TAR files found in the archive</expandTARs>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<filenameTag>DICOM tag in which to store the name of the file (ggggeeee or DICOM PS 3.6 keyword)</filenameTag>

@@ -7,13 +7,16 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.dicom.Transcoder;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
@@ -26,7 +29,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	static final Logger logger = Logger.getLogger(DicomTranscoder.class);
 	static final String JPEGBaseline = "1.2.840.10008.1.2.4.50";
 
-	public File scriptFile = null;
+	File dicomScriptFile = null;
 	Transcoder transcoder = null;
 	String tsuid = "";
 	boolean skipJPEGBaseline = false;
@@ -38,7 +41,12 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	 */
 	public DicomTranscoder(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		
+		String dicomScript = element.getAttribute("script").trim();
+		if (!dicomScript.equals("")) {
+			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
+		}
+
 		transcoder = new Transcoder();
 		tsuid = element.getAttribute("tsuid").trim();
 		if (!tsuid.equals("")) transcoder.setTransferSyntax(tsuid);
@@ -66,7 +74,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 			boolean isJPEGBaseline = transferSyntaxUID.equals(JPEGBaseline);
 			boolean skip = (isJPEGBaseline && skipJPEGBaseline) || transferSyntaxUID.equals(tsuid);
 			if (dob.isImage() && !skip) {
-				if ((scriptFile == null) || dob.matches(FileUtil.getText(scriptFile))) {
+				if ((dicomScriptFile == null) || dob.matches(dicomScriptFile)) {
 					File file = dob.getFile();
 					AnonymizerStatus status = transcoder.transcode(file, file);
 					if (status.isOK()) {
@@ -91,6 +99,23 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	 * @return the script file used by this stage.
 	 */
 	public File[] getScriptFiles() {
-		return new File[] {scriptFile};
+		return new File[] { dicomScriptFile };
 	}
+	
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if (allowsAdminBy(user)) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex+"&f=0";
+			if (dicomScriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs, null, "Edit the Script File", false) );
+			}
+		}
+		return links;
+	}
+
 }

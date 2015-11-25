@@ -84,9 +84,16 @@ public class AuditLogServlet extends Servlet {
 			else {
 				//Export the contents of the AuditLog
 				Document doc = auditLog.getXML();
-				res.write(getCSV(doc));
-				res.setContentType("csv");
-				res.setContentDisposition( new File("AuditLog-"+StringUtil.getDate("")+".csv") );
+				if (req.hasParameter("xml")) {
+					res.write(XmlUtil.toPrettyString(doc));
+					res.setContentType("xml");
+					res.setContentDisposition( new File("AuditLog-"+StringUtil.getDate("")+".xml") );
+				}
+				else {
+					res.write(getCSV(doc));
+					res.setContentType("csv");
+					res.setContentDisposition( new File("AuditLog-"+StringUtil.getDate("")+".csv") );
+				}
 			}
 		}
 		else {

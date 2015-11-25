@@ -150,6 +150,46 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Get the DcmParser.
+	 * @return the parser used to parse the object.
+	 */
+	public DcmParser getDcmParser() {
+		return parser;
+	}
+
+	/**
+	 * Get the FileFormat.
+	 * @return the FileFormat acquired when the object was parsed.
+	 */
+	public FileFormat getFileFormat() {
+		return fileFormat;
+	}
+
+	/**
+	 * Get the DcmDecodeParam.
+	 * @return the DcmDecodeParam acquired when the object was parsed.
+	 */
+	public DcmDecodeParam getDcmDecodeParam() {
+		return fileParam;
+	}
+
+	/**
+	 * Get the FileMetaInfo.
+	 * @return the FileMetaInfo acquired when the object was parsed.
+	 */
+	public FileMetaInfo getFileMetaInfo() {
+		return fileMetaInfo;
+	}
+
+	/**
+	 * Get the Dataset.
+	 * @return the Dataset containing all the elements up to the pixel data.
+	 */
+	public Dataset getDataset() {
+		return dataset;
+	}
+
+	/**
 	 * Get the standard extension for this DicomObject (".dcm" of ".DICOMDIR").
 	 * @return ".dcm" or ".DICOMDIR" as appropriate for this object.
 	 */
@@ -630,7 +670,7 @@ public class DicomObject extends FileObject {
 			writer = ImageIO.getImageWritersByFormatName("jpeg").next();
 			ImageWriteParam iwp = writer.getDefaultWriteParam();
 			if (quality >= 0) {
-				quality = Math.min(quality,100);
+				quality = Math.min(quality, 100);
 				float fQuality = ((float)quality) / 100.0F;
 				iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				iwp.setCompressionQuality(fQuality);
@@ -651,87 +691,7 @@ public class DicomObject extends FileObject {
 		return result;
 	}
 
-	/**
-	 * Get the Transfer Syntax UID.
-	 * @return the TransferSyntaxUID from the file metadata,
-	 * or null if the metadata does not exist (e.g., the file
-	 * is not a Part 10 file).
-	 */
-	public String getTransferSyntaxUID() {
-		try { return fileMetaInfo.getTransferSyntaxUID(); }
-		catch (Exception noMetadata) { return null; }
-	}
-
-	/**
-	 * Get the transfer syntax name.
-	 * @return the name of the transfer syntax.
-	 */
-	public String getTransferSyntaxName() {
-		String transferSyntaxUID = getTransferSyntaxUID();
-		try { return uidDictionary.lookup(transferSyntaxUID).name; }
-		catch (Exception e) {
-			return "Unknown transfer syntax: " + transferSyntaxUID;
-		}
-	}
-
-	/**
-	 * Get the DcmParser.
-	 * @return the parser used to parse the object.
-	 */
-	public DcmParser getDcmParser() {
-		return parser;
-	}
-
-	/**
-	 * Get the FileFormat.
-	 * @return the FileFormat acquired when the object was parsed.
-	 */
-	public FileFormat getFileFormat() {
-		return fileFormat;
-	}
-
-	/**
-	 * Get the DcmDecodeParam.
-	 * @return the DcmDecodeParam acquired when the object was parsed.
-	 */
-	public DcmDecodeParam getDcmDecodeParam() {
-		return fileParam;
-	}
-
-	/**
-	 * Get the FileMetaInfo.
-	 * @return the FileMetaInfo acquired when the object was parsed.
-	 */
-	public FileMetaInfo getFileMetaInfo() {
-		return fileMetaInfo;
-	}
-
-	/**
-	 * Get the Dataset.
-	 * @return the Dataset containing all the elements up to the pixel data.
-	 */
-	public Dataset getDataset() {
-		return dataset;
-	}
-
-	/**
-	 * Get the SOP Class name. See getSOPClassUID for the rules
-	 * used to obtain the SOP Class UID that is used as the key
-	 * in the UID dictionary for obtaining the name.
-	 * @return the name of the SOP Class, or "Unknown SOP Class"
-	 * if the UID or the name cannot be found.
-	 */
-	public String getSOPClassName() {
-		String sopClassUID = null;
-		try {
-			sopClassUID = getSOPClassUID();
-			return uidDictionary.lookup(sopClassUID).name;
-		}
-		catch (Exception noSOPClass) {
-			return "Unknown SOP Class: " + sopClassUID;
-		}
-	}
-
+/*=================================================================================*/
 	/**
 	 * Get the array of ints identifying an element.
 	 * To specify an element in an SQ item dataset,
@@ -955,15 +915,26 @@ public class DicomObject extends FileObject {
 		return getElementValue(fileMetaInfo, dataset, tag, defaultString);
 	}
 
-	//Do the actual work of getting an element value from a dataset
-	private String getElementValue(FileMetaInfo fileMetaInfo, Dataset dataset, int tag, String defaultString) {
+	/**
+	 * Get the contents of a DICOM element.
+	 * If the element is part of a private group owned by CTP, it returns the
+	 * value as text. This method returns the defaultString argument if the
+	 * element does not exist.
+	 * @param fileMetaInfo the FileMetaInfo associated with the dataset.
+	 * @param dataset the Dataset
+	 * @param tag the tag specifying the element (in the form 0xggggeeee).
+	 * @param defaultString the String to return if the element does not exist.
+	 * @return the text of the element, or defaultString if the element does not exist.
+	 */
+	public static String getElementValue(FileMetaInfo fileMetaInfo, Dataset dataset, int tag, String defaultString) {
+		SpecificCharacterSet cs = dataset.getSpecificCharacterSet();
 
 		//Handle FileMetaInfo references
 		if ((fileMetaInfo != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
 			DcmElement el = fileMetaInfo.get(tag);
 			if (el == null) return defaultString;
 			try {
-				String value = el.getString(charset);
+				String value = el.getString(cs);
 				if (value == null) return defaultString;
 				return value;
 			}
@@ -980,7 +951,6 @@ public class DicomObject extends FileObject {
 		}
 		String value = null;
 		try {
-			SpecificCharacterSet cs = dataset.getSpecificCharacterSet();
 			if (ctp) {
 				value = cs.decode(dataset.getByteBuffer(tag).array());
 			}
@@ -1003,7 +973,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get the contents of a DICOM element in the DicomObject's dataset as a
-	 * byte array. This method supports accessing the item datasets of SQ elements,
+	 * String. This method supports accessing the item datasets of SQ elements,
 	 * but it only searches the first item dataset at each level.
 	 * It returns null if the element cannot be obtained.
 	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
@@ -1017,7 +987,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get the contents of a DICOM element in the DicomObject's dataset as a
-	 * byte array. This method supports accessing the item datasets of SQ elements,
+	 * String. This method supports accessing the item datasets of SQ elements,
 	 * but it only searches the first item dataset at each level.
 	 * It returns null if the element cannot be obtained.
 	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
@@ -1150,7 +1120,7 @@ public class DicomObject extends FileObject {
 	 * Get the contents of a DICOM element in the DicomObject's dataset as a
 	 * String. This method supports accessing the item datasets of SQ elements,
 	 * but it only searches the first item dataset at each level.
-	 * It returns null if the element cannot be obtained.
+	 * It returns the empty String if the element cannot be obtained.
 	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
 	 * where all the tags but the last must refer to an SQ element.
 	 * @return the String value of the element, or the empty string
@@ -1208,6 +1178,39 @@ public class DicomObject extends FileObject {
 				else dataset.putXX(tag,vr);
 			}
 			else dataset.putXX(tag,vr,value);
+		}
+	}
+/*=================================================================================*/
+
+	/**
+	 * Convenience method to get the Transfer Syntax UID.
+	 * @return the TransferSyntaxUID from the file metadata,
+	 * or null if the metadata does not exist (e.g., the file
+	 * is not a Part 10 file).
+	 */
+	public String getTransferSyntaxUID() {
+		try { return fileMetaInfo.getTransferSyntaxUID(); }
+		catch (Exception noMetadata) { return null; }
+	}
+
+	/**
+	 * Tests whether the DicomObject has the specified TransferSyntaxUID.
+	 * @return true if the object has the specified TransferSyntaxUID; false otherwise.
+	 */
+	public boolean hasTransferSyntaxUID(String transferSyntaxUID) {
+		String tsuid = getTransferSyntaxUID();
+		return (tsuid != null) && (transferSyntaxUID != null) && tsuid.trim().equals(transferSyntaxUID.trim());
+	}
+
+	/**
+	 * Get the transfer syntax name.
+	 * @return the name of the transfer syntax.
+	 */
+	public String getTransferSyntaxName() {
+		String transferSyntaxUID = getTransferSyntaxUID();
+		try { return uidDictionary.lookup(transferSyntaxUID).name; }
+		catch (Exception e) {
+			return "Unknown transfer syntax: " + transferSyntaxUID;
 		}
 	}
 
@@ -1318,6 +1321,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the SOPInstanceUID element.
+	 * Included for compatibility with other FileObjects.
+	 * @return the text of the element or null if the element does not exist.
+	 */
+	public String getUID() {
+		return getSOPInstanceUID();
+	}
+
+	/**
 	 * Convenience method to get the contents of the SOPClassUID element.
 	 * If the DicomObject is a DICOMDIR, the contents of the
 	 * MediaStorageSOPClassUID are used as the SOPClassUID.
@@ -1327,6 +1339,24 @@ public class DicomObject extends FileObject {
 		return isDICOMDIR ?
 					getMediaStorageSOPClassUID()
 							: getElementValue(Tags.SOPClassUID, null);
+	}
+
+	/**
+	 * Get the SOP Class name. See getSOPClassUID for the rules
+	 * used to obtain the SOP Class UID that is used as the key
+	 * in the UID dictionary for obtaining the name.
+	 * @return the name of the SOP Class, or "Unknown SOP Class"
+	 * if the UID or the name cannot be found.
+	 */
+	public String getSOPClassName() {
+		String sopClassUID = null;
+		try {
+			sopClassUID = getSOPClassUID();
+			return uidDictionary.lookup(sopClassUID).name;
+		}
+		catch (Exception noSOPClass) {
+			return "Unknown SOP Class: " + sopClassUID;
+		}
 	}
 
 	/**
@@ -1355,15 +1385,6 @@ public class DicomObject extends FileObject {
 	 */
 	public String getMediaStorageSOPInstanceUID() {
 		return fileMetaInfo.getMediaStorageSOPInstanceUID();
-	}
-
-	/**
-	 * Convenience method to get the contents of the SOPInstanceUID element.
-	 * Included for compatibility with other FileObjects.
-	 * @return the text of the element or null if the element does not exist.
-	 */
-	public String getUID() {
-		return getSOPInstanceUID();
 	}
 
 	/**
@@ -1538,15 +1559,6 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
-	 * Tests whether the DicomObject has the specified TransferSyntaxUID.
-	 * @return true if the object has the specified TransferSyntaxUID; false otherwise.
-	 */
-	public boolean hasTransferSyntaxUID(String transferSyntaxUID) {
-		String tsuid = getTransferSyntaxUID();
-		return (tsuid != null) && (transferSyntaxUID != null) && tsuid.trim().equals(transferSyntaxUID.trim());
-	}
-
-	/**
 	 * Tests whether the DicomObject corresponds to an SR.
 	 * The test is done by comparing the SOPClassUID to known SR SOPClassUIDs.
 	 * @return true if the object corresponds to an SR; false otherwise.
@@ -1646,7 +1658,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get an array of SOPInstanceUIDs for all the instances listed in the
-	 * Current Requested Procedure Evidence Sequence element in an IHR TCE manifest.
+	 * Current Requested Procedure Evidence Sequence element in an IHE TCE manifest.
 	 * @return the array if this object is a manifest; null otherwise.
 	 */
 	public String[] getInstanceList() {
@@ -2454,5 +2466,4 @@ public class DicomObject extends FileObject {
 	//**********************************
 	// End of the code for the matcher
 	//**********************************
-
 }
