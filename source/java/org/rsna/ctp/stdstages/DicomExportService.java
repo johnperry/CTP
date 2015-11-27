@@ -76,7 +76,9 @@ public class DicomExportService extends AbstractExportService {
 		//Get a DicomObject for the file.
 		//Leave the file open so it can be used by the sender.
 		try { dicomObject = new DicomObject(fileToExport, true); }
-		catch (Exception ex) { return Status.FAIL; }
+		catch (Exception ex) { 
+			logger.debug("Unable to parse "+fileToExport+" as a DicomObject");
+			return Status.FAIL; }
 
 		//Got the object; send it.
 		Status status = dicomSender.send(dicomObject);
