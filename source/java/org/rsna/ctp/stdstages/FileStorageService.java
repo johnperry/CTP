@@ -91,8 +91,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").trim().toLowerCase().equals("no");
 		port = StringUtil.getInt(element.getAttribute("port").trim());
 		ssl = element.getAttribute("ssl").equals("yes");
-		if (root != null) logger.info(name+" root: "+root.getAbsolutePath());
-		else logger.error(name+": No root directory was specified.");
+		if (root == null) logger.error(name+": No root directory was specified.");
 		fsm = FileSystemManager
 				.getInstance(
 					root,
@@ -124,6 +123,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 * Pipeline after all the stages have been constructed.
 	 */
 	public synchronized void start() {
+		logger.info(name+" root: "+root.getAbsolutePath());
 		startServer();
 		startStorageMonitor();
 	}

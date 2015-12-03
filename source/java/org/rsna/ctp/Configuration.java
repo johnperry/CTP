@@ -111,9 +111,9 @@ public class Configuration {
 			File extDir = new File(javaHome);
 			extDir = new File(extDir, "lib");
 			extDir = new File(extDir, "ext");
-			File clib = new File(extDir, "clibwrapper_jiio.jar");
-			File jai = new File(extDir, "jai_imageio.jar");
-			boolean imageIOTools = clib.exists() && jai.exists();
+			File clib = FileUtil.getFile(extDir, "clibwrapper_jiio", ".jar");
+			File jai = FileUtil.getFile(extDir, "jai_imageio", ".jar");
+			boolean imageIOTools = (clib != null) && (jai != null);
 			String thisImageIOVersion = "not installed";
 			if (imageIOTools) {
 				Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);

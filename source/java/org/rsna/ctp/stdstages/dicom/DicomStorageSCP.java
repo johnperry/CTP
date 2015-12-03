@@ -129,7 +129,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 
     public void start() throws IOException {
         server.start();
-        logger.info("SCP open on port "+dicomImportService.getPort()+" ("+dicomImportService.getName()+")");
+        logger.info(dicomImportService.getName()+": SCP open on port "+dicomImportService.getPort());
     }
 
     public void stop() {

@@ -32,6 +32,7 @@ import org.rsna.util.Cache;
 import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
+import org.rsna.util.ImageIOTools;
 import org.rsna.util.ProxyServer;
 
 import org.w3c.dom.Document;
@@ -126,7 +127,7 @@ public class ClinicalTrialProcessor {
 		}
 		PropertyConfigurator.configure(propsPath);
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
-
+		
 		//Instantiate the singleton Cache, clear it, and preload
 		//files from the jars. Other files will be loaded as required..
 		Cache cache = Cache.getInstance(new File("CACHE"));
@@ -191,6 +192,9 @@ public class ClinicalTrialProcessor {
 			logger.error("Unable to instantiate the HTTP Server on port "+port, ex);
 			System.exit(0);
 		}
+
+		//Load the ImageIOTools if necessary
+		ImageIOTools.load(new File(libraries, "imageio"));
 
 		//Start the system
 		config.start(httpServer);

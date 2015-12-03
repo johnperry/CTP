@@ -118,6 +118,9 @@
 		<copy overwrite="true" todir="${build}/CTP/libraries/ftp">
 			<fileset dir="${libraries}/ftp" includes="*.*"/>
 		</copy>
+		<copy overwrite="true" todir="${build}/CTP/libraries/imageio">
+			<fileset dir="${libraries}/imageio" includes="*.*"/>
+		</copy>
 		<copy overwrite="true" todir="${build}/config">
 			<fileset dir="${config}" includes="*.*"/>
 		</copy>

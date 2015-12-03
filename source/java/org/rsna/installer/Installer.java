@@ -59,8 +59,11 @@ public class Installer extends JFrame {
 	String thisJava = "";
 	String thisJavaBits = "";
 	boolean imageIOTools = false;
+	
+	static boolean test;
 
 	public static void main(String args[]) {
+		test = (args.length > 0) && args[0].trim().equals("test");
 		new Installer();
 	}
 
@@ -91,12 +94,12 @@ public class Installer extends JFrame {
 
 		//Find the ImageIO Tools and get the version
 		String javaHome = System.getProperty("java.home");
-		File extDir = new File(javaHome);
-		extDir = new File(extDir, "lib");
+		File javaDir = new File(javaHome);
+		File extDir = new File(javaDir, "lib");
 		extDir = new File(extDir, "ext");
 		File clib = getFile(extDir, "clibwrapper_jiio", ".jar");
 		File jai = getFile(extDir, "jai_imageio", ".jar");
-		imageIOTools = (clib != null) && clib.exists() && (jai != null) && jai.exists();
+		imageIOTools = (clib != null) && (jai != null);
 		if (imageIOTools) {
 			Hashtable<String,String> jaiManifest = getManifestAttributes(jai);
 			imageIOVersion  = jaiManifest.get("Implementation-Version");
@@ -205,6 +208,9 @@ public class Installer extends JFrame {
 
 			//Make any necessary changes in the config file to reflect schema evolution
 			fixConfigSchema();
+			
+			//Set up the ImageIO Tools if they weren't already installed
+			installImageIOTools(directory);
 
 			cp.append("Installation complete.");
 
@@ -222,7 +228,7 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if (!programName.equals("ISN") && startLauncher(new File(directory, "CTP"))) System.exit(0);
+		if (!test && !programName.equals("ISN") && startLauncher(new File(directory, "CTP"))) System.exit(0);
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
@@ -320,7 +326,45 @@ public class Installer extends JFrame {
 		cp.appendln(Color.black, count + " files were installed.");
 		return count;
 	}
+	
+	private void installImageIOTools(File directory) {
+		String javaHome = System.getProperty("java.home");
+		File javaDir = new File(javaHome);
+		File extDir = new File(javaHome, "lib");
+		extDir = new File(extDir, "ext");
 
+		File clib = getFile(extDir, "clibwrapper_jiio", ".jar");
+		File jai = getFile(extDir, "jai_imageio", ".jar");
+		boolean imageIOTools = (clib != null) && (jai != null);
+		
+		File ctpDir = new File(directory, "CTP");
+		File libDir = new File(ctpDir, "libraries");
+		File toolsDir = new File(libDir, "imageio");
+		
+		if (imageIOTools) deleteAll(toolsDir);
+		else cp.appendln("ImageIO Tools copied to "+toolsDir);
+	}
+	
+	private boolean moveFile(File inFile, File outDir) {
+		try {
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(new File(outDir, inFile.getName())));
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(inFile));
+			int size = 1024;
+			int n = 0;
+			byte[] b = new byte[size];
+			while ((n = in.read(b,0,size)) != -1) out.write(b,0,n);
+			in.close();
+			out.flush();
+			out.close();
+			inFile.delete();
+			return true;
+		}
+		catch (Exception ex) {
+			cp.appendln("Unable to move "+inFile.getName());
+			return false;
+		}
+	}
+	
 	private void cleanup(File directory) {
 		//Clean up from old installations, removing or renaming files.
 		//Note that directory is the parent of the CTP directory
@@ -396,6 +440,9 @@ public class Installer extends JFrame {
 					}
 				}
 			}
+			//remove the imageio subdirectory
+			File imageio = new File(libraries, "imageio");
+			deleteAll(imageio);
 			//remove the email subdirectory
 			File email = new File(libraries, "email");
 			deleteAll(email);
@@ -720,7 +767,7 @@ public class Installer extends JFrame {
 		bw.close();
 	}
 
-	public static boolean deleteAll(File file) {
+	public boolean deleteAll(File file) {
 		boolean b = true;
 		if ((file != null) && file.exists()) {
 			if (file.isDirectory()) {
