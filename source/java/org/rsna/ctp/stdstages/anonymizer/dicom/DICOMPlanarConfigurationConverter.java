@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------
-*  Copyright 2013 by the Radiological Society of North America
+*  Copyright 2015 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
-*  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense)
+*  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense.pdf)
 *----------------------------------------------------------------*/
 
 package org.rsna.ctp.stdstages.anonymizer.dicom;
@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
 
 /**
  * The CTP DICOM PlanarConfiguration Converter. This class has one
- * static method that converts images to PlanarConfiguraton 0.
+ * static method that converts images to PlanarConfiguration 0.
  */
 public class DICOMPlanarConfigurationConverter {
 
@@ -57,9 +57,8 @@ public class DICOMPlanarConfigurationConverter {
 
    /**
      * Convert an image to PlanarConfiguration 0.
-     * @param inFile the file to anonymize.
-     * @param outFile the output file, which may be same as inFile you if want
-     * to anonymize in place.
+     * @param inFile the file to convert.
+     * @param outFile the output file, which may be same as inFile.
      * @return the static status result
      */
     public static AnonymizerStatus convert(File inFile, File outFile) {
