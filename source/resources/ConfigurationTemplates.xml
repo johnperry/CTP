@@ -450,6 +450,14 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomPaletteImageConverter"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPaletteImageConverter" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomPaletteImageConverter"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomPaletteImageConverter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="XmlAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.XmlAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/XmlAnonymizer"/>
