@@ -68,6 +68,7 @@ public class StatusServlet extends Servlet {
 		res.disableCaching();
 		res.write(sb.toString());
 		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.send();
 	}
 

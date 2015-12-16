@@ -63,6 +63,7 @@ public class SummaryServlet extends CTPServlet {
 		//Return the page
 		res.write(getPage(p, s, x));
 		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.disableCaching();
 		res.send();
 	}

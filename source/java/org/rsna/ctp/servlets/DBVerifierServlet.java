@@ -96,6 +96,7 @@ public class DBVerifierServlet extends CTPServlet {
 		//Return the page
 		res.disableCaching();
 		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.send();
 	}
 

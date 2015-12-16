@@ -78,6 +78,7 @@ public class ObjectTrackerServlet extends CTPServlet {
 		//Return the page
 		res.disableCaching();
 		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.send();
 	}
 
@@ -151,6 +152,7 @@ public class ObjectTrackerServlet extends CTPServlet {
 							+ responseTail());
 			}
 			res.disableCaching();
+			res.setContentEncoding(req);
 			res.send();
 		}
 		catch (Exception ex) { logger.warn("uh oh", ex); }

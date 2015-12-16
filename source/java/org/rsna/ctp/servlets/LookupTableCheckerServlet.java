@@ -65,6 +65,7 @@ public class LookupTableCheckerServlet extends CTPServlet {
 		//Make a page containing a form for updating the lookup table.
 		res.write(getEditorPage());
 		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.disableCaching();
 		res.send();
 	}
@@ -148,6 +149,8 @@ public class LookupTableCheckerServlet extends CTPServlet {
 		}
 		catch (Exception ex) { }
 		res.write(getEditorPage());
+		res.setContentType("html");
+		res.setContentEncoding(req);
 		res.send();
 	}
 

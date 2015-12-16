@@ -104,6 +104,7 @@ public class AuditLogServlet extends Servlet {
 
 		//Return the page
 		res.disableCaching();
+		res.setContentEncoding(req);
 		res.send();
 	}
 

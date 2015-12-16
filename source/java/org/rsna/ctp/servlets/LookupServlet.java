@@ -100,6 +100,7 @@ public class LookupServlet extends CTPServlet {
 
 		//Return the page
 		res.disableCaching();
+		res.setContentEncoding(req);
 		res.send();
 	}
 	
@@ -203,6 +204,7 @@ public class LookupServlet extends CTPServlet {
 				res.disableCaching();
 				res.setContentType("html");
 				res.write(getEditorPage(p, s, file));
+				res.setContentEncoding(req);
 				res.send();
 				return;
 			}
