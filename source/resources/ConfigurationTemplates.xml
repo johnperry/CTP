@@ -220,6 +220,32 @@
 
 		</ImportService>
 
+		<ImportService>
+			<attr name="name" required="yes" default="DicomSTOWRSImportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomSTOWRSImportService" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomSTOWRSImportService"/>
+			<attr name="port" required="yes" default="8104"/>
+			<attr name="ssl" required="no" default="no" options="yes|no"/>
+			<attr name="requireAuthentication" required="no" default="no" options="yes|no"/>
+			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomSTOWRSImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+
+			<child name="accept" required="no" allowMultiples="yes">
+				<attr name="ip" required="no" default="">
+					<helptext>IP address from which to allow connections</helptext>
+				</attr>
+				<attr name="regex" required="no" default=""/>
+			</child>
+
+			<child name="reject" required="no" allowMultiples="yes">
+				<attr name="ip" required="no" default="">
+					<helptext>IP address from which to reject connections</helptext>
+				</attr>
+				<attr name="regex" required="no" default=""/>
+			</child>
+		</ImportService>
+
 		<Processor>
 			<attr name="name" required="yes" default="ObjectCache"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
@@ -699,6 +725,10 @@
 				<helptext>URL of the destination DICOM STOW-RS SCP (starting with http:// or https://)</helptext>
 			</attr>
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="includeContentDispositionHeader" required="no" default="no" options="yes|no">
+				<helptext>Include a Content-Disposition header in file export connections 
+				(not required by DICOM STOW-RS, but may be useful in some situations).</helptext>
+			</attr>
 			<attr name="username" required="no" default=""/>
 			<attr name="password" required="no" default=""/>
 			<attr name="dicomScript" required="no" default=""/>

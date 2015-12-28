@@ -52,6 +52,7 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 	String password = null;
 	boolean authenticate = false;
 	String authHeader = null;
+	boolean includeContentDispositionHeader = false;
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
 
@@ -71,6 +72,11 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 
 		//Get the destination url
 		url = new URL(element.getAttribute("url").trim());
+		
+		//Get the flag for including the Content-Disposition header in requests
+		includeContentDispositionHeader = 
+				element.getAttribute("includeContentDispositionHeader")
+					.trim().toLowerCase().equals("yes");
 
 		//Get the credentials attributes, if they are present.
 		//Note: the credentials might be included in the username and password
@@ -154,7 +160,13 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 
 			//Send the file to the server
 			ClientHttpRequest req = new ClientHttpRequest(conn, "multipart/related; type=application/dicom;");
-			req.addPart(fileToExport, "application/dicom");
+			if (!includeContentDispositionHeader) req.addFilePart(fileToExport, "application/dicom");
+			else {
+				String ctHeader = "Content-Type: application/dicom";
+				String cdHeader = "Content-Disposition: form-data; name=\"stowrs\"; filename=\""+fileToExport.getName()+"\";";
+				String[] headers = { cdHeader, ctHeader };
+				req.addFilePart(fileToExport, headers);
+			}
 			InputStream is = req.post();
 			String response = FileUtil.getText(is, "UTF-8");
 			conn.disconnect();
