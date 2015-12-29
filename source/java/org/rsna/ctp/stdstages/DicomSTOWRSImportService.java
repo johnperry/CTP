@@ -158,6 +158,7 @@ public class DicomSTOWRSImportService extends AbstractImportService {
 							Document doc = XmlUtil.getDocument();
 							Element rootEl = doc.createElement("NativeDicomModel");
 							doc.appendChild(rootEl);
+							rootEl.appendChild(dicomAttribute("00081190", "UI", "RetrieveURL", null, doc));
 							Element refSOPSeqEl = doc.createElement("DicomAttribute");
 							refSOPSeqEl.setAttribute("tag", "00081150");
 							refSOPSeqEl.setAttribute("vr", "SQ");
@@ -179,7 +180,7 @@ public class DicomSTOWRSImportService extends AbstractImportService {
 									itemEl.setAttribute("number", Integer.toString(currentItem++));
 									itemEl.appendChild(dicomAttribute("00081150", "UI", "ReferencedSOPClassUID", dob.getSOPClassUID(), doc));
 									itemEl.appendChild(dicomAttribute("00081155", "UI", "ReferencedSOPInstanceUID", dob.getSOPInstanceUID(), doc));
-									itemEl.appendChild(dicomAttribute("00081190", "UI", "RetrieveURL", "", doc));
+									itemEl.appendChild(dicomAttribute("00081190", "UI", "RetrieveURL", null, doc));
 									refSOPSeqEl.appendChild(itemEl);
 									fileReceived(file);
 								}
@@ -218,10 +219,12 @@ public class DicomSTOWRSImportService extends AbstractImportService {
 			el.setAttribute("tag", tag);
 			el.setAttribute("vr", vr);
 			el.setAttribute("keyword", keyword);
-			Element valueEl = doc.createElement("Value");
-			valueEl.setAttribute("number", "1");
-			valueEl.setTextContent(value);
-			el.appendChild(valueEl);
+			if (value != null) {
+				Element valueEl = doc.createElement("Value");
+				valueEl.setAttribute("number", "1");
+				valueEl.setTextContent(value);
+				el.appendChild(valueEl);
+			}
 			return el;
 		}
 	}

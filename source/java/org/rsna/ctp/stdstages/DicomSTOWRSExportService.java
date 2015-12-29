@@ -157,7 +157,7 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 				if (recentUIDs.size() > maxQueueSize) { recentUIDs.remove(); recentTimes.remove(); }
 				//*********************************************************************************************
 			}
-
+			
 			//Send the file to the server
 			ClientHttpRequest req = new ClientHttpRequest(conn, "multipart/related; type=application/dicom;");
 			if (!includeContentDispositionHeader) req.addFilePart(fileToExport, "application/dicom");
@@ -179,7 +179,8 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 					response = XmlUtil.toPrettyString(doc);
 				}
 				catch (Exception ex) { }
-				logger.debug(name+": Response code: "+responseCode+"\nXML Response Message:\n"+response);
+				logger.debug(name+": Response code: "+responseCode);
+				logger.debug(name+": XML Response Message:\n"+response);
 			}
 			
 			if (responseCode == HttpResponse.unauthorized) {
