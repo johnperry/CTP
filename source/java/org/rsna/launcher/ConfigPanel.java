@@ -49,6 +49,7 @@ public class ConfigPanel extends BasePanel {
 	LinkedList<Template> processors = new LinkedList<Template>();
 	LinkedList<Template> storageServices = new LinkedList<Template>();
 	LinkedList<Template> exportServices = new LinkedList<Template>();
+	LinkedList<Element> attachedChildren = new LinkedList<Element>();
 	Hashtable<String,Element> standardPipelines = new Hashtable<String,Element>();
 	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
@@ -146,6 +147,9 @@ public class ConfigPanel extends BasePanel {
 				n = n.getNextSibling();
 			}
 		}
+		public void attachChild(Element child) {
+			children.put(child.getAttribute("name"), new Template(child));
+		}
 		public String getName() {
 			return template.getTagName();
 		}
@@ -218,6 +222,20 @@ public class ConfigPanel extends BasePanel {
 	private void loadTemplates() {
 		File libraries = new File("libraries");
 		loadTemplates(libraries);
+
+		//Attach any children to their parents
+		for (Element e : attachedChildren) {
+			NodeList parentNodes = e.getElementsByTagName("parent");
+			NodeList childNodes = e.getElementsByTagName("child");
+			for (int p=0; p<parentNodes.getLength(); p++) {
+				Element parent = (Element)parentNodes.item(p);
+				for (int c=0; c<childNodes.getLength(); c++) {
+					Element child = (Element)childNodes.item(c);
+					Template t = templateTable.get(parent.getAttribute("class"));
+					t.attachChild(child);
+				}
+			}
+		}
 	}
 
 	private void loadTemplates(File file) {
@@ -245,7 +263,7 @@ public class ConfigPanel extends BasePanel {
 			}
 		}
 	}
-
+	
 	private void loadTemplates(Document templateXML) throws Exception {
 		if (templateXML != null) {
 			Element root = templateXML.getDocumentElement();
@@ -268,20 +286,29 @@ public class ConfigPanel extends BasePanel {
 		while (child != null) {
 			if (child instanceof Element) {
 				Element e = (Element)child;
-				Template template = new Template(e);
-				String name = template.getName();
-				if (name.equals("Server")) server = template;
-				else if (name.equals("Pipeline")) pipeline = template;
-				else if (name.equals("Plugin")) plugins.add(template);
-				else if (name.equals("ImportService")) importServices.add(template);
-				else if (name.equals("Processor")) processors.add(template);
-				else if (name.equals("StorageService")) storageServices.add(template);
-				else if (name.equals("ExportService")) exportServices.add(template);
+				if (e.getTagName().equals("AttachedChild")) {
+					//Attached children have to be attached to
+					//their parents after all parents have been
+					//loaded, so just save the element for now.
+					attachedChildren.add(e);
+				}
+				else {
+					Template template = new Template(e);
+					String name = template.getName();
 
-				//Store the element in the templateTable, indexed by the class name
-				String className = template.getAttrValue("class", "default");
-				if (!className.equals("")) {
-					templateTable.put(className, template);
+					if (name.equals("Server")) server = template;
+					else if (name.equals("Pipeline")) pipeline = template;
+					else if (name.equals("Plugin")) plugins.add(template);
+					else if (name.equals("ImportService")) importServices.add(template);
+					else if (name.equals("Processor")) processors.add(template);
+					else if (name.equals("StorageService")) storageServices.add(template);
+					else if (name.equals("ExportService")) exportServices.add(template);
+
+					//Store the element in the templateTable, indexed by the class name
+					String className = template.getAttrValue("class", "default");
+					if (!className.equals("")) {
+						templateTable.put(className, template);
+					}
 				}
 			}
 			child = child.getNextSibling();

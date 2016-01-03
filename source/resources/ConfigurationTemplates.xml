@@ -975,6 +975,32 @@
 			</attr>
 		</ExportService>
 
+		<ExportService>
+			<attr name="name" required="yes" default="DicomDifferenceLogger"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomDifferenceLogger" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomDifferenceLogger"/>
+			<attr name="adapterClass" required="yes" default="">
+				<helptext>
+					The fully qualified name of the DatabaseAdapter class that provides 
+					the interface to the external database
+				</helptext>
+			</attr>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="cacheID" required="no" default="">
+				<helptext>
+					The ID of an ObjectCache stage from which to obtain a DicomObject for
+					comparison with the current DicomObject.
+				</helptext>
+			</attr>
+			<attr name="tags" required="yes" default="">
+				<helptext>List of DICOM tags to log, separated by semicolons (tag1; tag2; etc.)</helptext>
+			</attr>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomDifferenceLogger"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ExportService>
+
 	</Components>
 
 	<DefaultHelpText>

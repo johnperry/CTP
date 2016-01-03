@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-*  Copyright 2015 by the Radiological Society of North America
+*  Copyright 2016 by the Radiological Society of North America
 *
 *  This source software is released under the terms of the
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense.pdf)
@@ -41,7 +41,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 	LinkedList<Integer> auditLogTags = null;
 
 	/**
-	 * Construct the DicomDifferenceLogger PipelineStage.
+	 * Construct the DicomAuditLogger PipelineStage.
 	 * @param element the XML element from the configuration file
 	 * specifying the configuration of the stage.
 	 */
@@ -101,7 +101,7 @@ public class DicomAuditLogger extends AbstractPipelineStage implements Processor
 
 		if ((auditLog != null) && (fileObject instanceof DicomObject)) {
 
-			//Make a DicomObject for the current objecy
+			//Make a DicomObject for the current object
 			DicomObject currentObject = (DicomObject)fileObject;
 
 			//Get the cached object, if possible
