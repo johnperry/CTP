@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
- *  Copyright 2015 by the Radiological Society of North America
+ *  Copyright 2016 by the Radiological Society of North America
  *
  *  This source software is released under the terms of the
  *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense.pdf)
@@ -22,6 +22,8 @@ import org.dcm4che.data.SpecificCharacterSet;
 import org.dcm4che.dict.Tags;
 import org.dcm4che.dict.VRs;
 import org.rsna.ctp.objects.DicomObject;
+import org.rsna.ctp.objects.PrivateNameIndex;
+import org.rsna.ctp.objects.PrivateTagIndex;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
 import org.rsna.util.StringUtil;
 
@@ -55,7 +57,7 @@ public class DICOMAnonymizerContext {
 	LinkedList<Dataset> inStack;
 	LinkedList<Dataset> outStack;
 	PrivateGroupsIndex pgIndex;
-	Hashtable<String,Integer> privateElementNames;
+	PrivateNameIndex privateElementNames;
 
    /**
 	 * Organize all the data required for anonymization.
@@ -82,7 +84,7 @@ public class DICOMAnonymizerContext {
 		pgIndex = new PrivateGroupsIndex(inDS);
 
 		//Make a table to hold locally defined names for private elements
-		privateElementNames = new Hashtable<String,Integer>();
+		privateElementNames = new PrivateNameIndex();
 
 		//Set up the booleans to handle the global cases
 		rpg = (cmds.getProperty("remove.privategroups") != null);
@@ -110,7 +112,7 @@ public class DICOMAnonymizerContext {
 						//If this is a private group element with a name, index the name.
 						if ((tag & 0x10000) != 0) {
 							String name = key.substring(k+1).trim();
-							if (!name.equals("")) privateElementNames.put( name, tagInteger);
+							if (!name.equals("")) privateElementNames.putTag(name, tag);
 						}
 					}
 				}
@@ -241,18 +243,12 @@ public class DICOMAnonymizerContext {
 	/*
 	 * Get the contents of an input dataset element by tagName.
 	 * @param tagName the dcm4che name of the element
-	 * @param defaultTag the tag to be used for the "this" keyword
+	 * @param thisTag the tag to be used for the "this" keyword
 	 * @return the value of the specified element in the current dataset,
 	 * or the empty string if the element is missing.
 	 */
-	public String contents(String tagName, int defaultTag) {
-		String value = "";
-		tagName = (tagName != null) ? tagName.trim() : "";
-		if (!tagName.equals("")) {
-			int tag = tagName.equals("this") ? defaultTag : getElementTag(tagName);
-			try { value = contents(tag); }
-			catch (Exception e) { value = null; };
-		}
+	public String contents(String tagName, int thisTag) {
+		String value = contentsNull(tagName, thisTag);
 		if (value == null) value = "";
 		return value;
 	}
@@ -260,34 +256,13 @@ public class DICOMAnonymizerContext {
 	/*
 	 * Get the contents of an input dataset element by tagName.
 	 * @param tagName the dcm4che name of the element
-	 * @param defaultTag the tag to be used for the "this" keyword
+	 * @param thisTag the tag to be used for the "this" keyword
 	 * @return the value of the specified element in the current dataset,
 	 * or null if the element is missing.
 	 */
-	public String contentsNull(String tagName, int defaultTag) {
-		if (tagName == null) return null;
-		tagName = tagName.trim();
-		if (tagName.equals("")) return null;
-		String value = "";
-		int tag = tagName.equals("this") ? defaultTag : getElementTag(tagName);
-		try { value = contents(tag); }
-		catch (Exception e) { return null; };
-		return value;
-	}
-
-	/*
-	 * Get the contents of an input dataset element by tag,
-	 * handling CTP elements specially.
-	 * @param tag the element tag
-	 * @param defaultValue the value to return if unable to obtain the 
-	 * element specified by the tag argument
-	 * @return the value of the specified element in the current dataset,
-	 * or the defaultValue if unable to obtain the value from the dataset.
-	 */
-	public String contents(int tag, String defaultValue) {
-		try { return contents(tag); }
-		catch (Exception ex) { }
-		return defaultValue;
+	public String contentsNull(String tagName, int thisTag) {
+		if (tagName.equals("this")) return contents(thisTag);
+		return DicomObject.getElementValue(inFMI, inDS, tagName, privateElementNames);
 	}
 	
 	/*
@@ -295,64 +270,17 @@ public class DICOMAnonymizerContext {
 	 * handling CTP elements specially.
 	 * @param tag the element tag
 	 * @return the value of the specified element in the current dataset,
-	 * @throws Exception if the element is missing.
+	 * or null if the element is missing.
 	 */
-	public String contents(int tag) throws Exception {
-		SpecificCharacterSet cs = inDS.getSpecificCharacterSet();
-		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
-
-		//Handle FileMetaInfo references
-		if ((inFMI != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
-			DcmElement el = inFMI.get(tag);
-			if (el == null) throw new Exception(Tags.toString(tag) + " missing");
-			return el.getString(cs);
+	public String contents(int tag) {
+		DcmElement de = null;
+		if ((tag & 0x7FFFFFFF) < 0x80000) {
+			de = inFMI.get(tag);
 		}
-
-		//Not FMI, handle DataSet references
-		boolean privateText = false;
-		boolean privateUN = false;
-		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
-			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
-			try { 
-				String owner = inDS.getString(blk);
-				String vr = ptIndex.getVR(owner, tag);
-				privateText = (owner.equals("CTP") || vr.equals("LO") || vr.equals("LT")
-					|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
-					|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
-					|| vr.equals("PN") || vr.equals("UI"));
-				privateUN = vr.equals("UN");
-			}
-			catch (Exception notPrivateText) { privateText = false; }
-		}
-		DcmElement el = inDS.get(tag);
-		if (el == null) throw new Exception(Tags.toString(tag) + " missing");
-
-		if (privateText || privateUN) {
-			byte[] bytes = inDS.getByteBuffer(tag).array();
-			if (privateText) {
-				return cs.decode(bytes);
-			}
-			else if (privateUN) {
-				//This is a kludge to deal with a VR=UN element whose value is requested.
-				//In practice, nobody would rationally get a string for a non-text element
-				//in a private group, so we will decode it and hope for the best.
-				//We keep this path in the code separate so we can more easily change it
-				//if things go south in the field.
-				return cs.decode(bytes);
-			}
-		}
-		
-		//Not private or can't make it out to be text, just return the strings.		
-		String[] s = el.getStrings(cs);
-		if (s.length == 1) return s[0];
-		if (s.length == 0) return "";
-		StringBuffer sb = new StringBuffer( s[0] );
-		for (int i=1; i<s.length; i++) {
-			sb.append( "\\" + s[i] );
-		}
-		return sb.toString();
+		else de = inDS.get(tag);
+		return DicomObject.getElementValue(de, inDS);
 	}
-
+	
 	/*
 	 * See if the input dataset contains a specific element.
 	 * @param tag the tag to test for in the input dataset.
@@ -439,9 +367,18 @@ public class DICOMAnonymizerContext {
 		}
 		return "";
 	}
-
-	static final Pattern pgPattern = Pattern.compile("([0-9a-fA-F]{0,4}),?\\[(.*)\\],?([0-9a-fA-F]{2})");
-	static final Pattern pcPattern = Pattern.compile("([0-9a-fA-F]{0,4}),?00\\[(.*)\\]");
+	
+	/**
+	 * Get the tag for an element name, using the current dataset
+	 * (inDS) if the name specifies a private element.
+	 * @param name the dcm4che element name or coded hex value.
+	 * @return the tag, or zero if the name cannot be parsed as
+	 * an element specification
+	 */
+	public int getElementTag(String name) {
+		return getElementTag(name, inDS);
+	}
+	
 	/**
 	 * Get the tag for a DICOM element. This
 	 * method supports dcm4che names as well as hex strings,
@@ -459,12 +396,12 @@ public class DICOMAnonymizerContext {
 	 *<li>[9,[blockID]02]
 	 *<li>0009[blockID]02
 	 *</ul>
-	 *
 	 * @param name the dcm4che element name or coded hex value.
+	 * @param ds the dataset to use for finding a private element.
 	 * @return the tag, or zero if the name cannot be parsed as
 	 * an element specification
 	 */
-	public int getElementTag(String name) {
+	public int getElementTag(String name, Dataset ds) {
 		if (name == null) return 0;
 		name = name.trim();
 		int k = name.length() - 1;
@@ -476,11 +413,11 @@ public class DICOMAnonymizerContext {
 		if (tag != 0) return tag;
 		
 		//Try it as a private element name
-		Integer tagInteger = privateElementNames.get(name);
-		if (tagInteger != null) return tagInteger.intValue();
+		tag = privateElementNames.getTag(name);
+		if (tag != 0) return tag;
 
 		//Try to match it as a private group element with a block specification
-		return DicomObject.getPrivateElementTag(inDS, name);
+		return DicomObject.getPrivateElementTag(ds, name);
 	}
 	
 	/**

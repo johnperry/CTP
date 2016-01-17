@@ -22,6 +22,7 @@ import org.dcm4che.dict.UIDs;
 import org.dcm4che.dict.VRs;
 
 import org.rsna.ctp.objects.DicomObject;
+import org.rsna.ctp.objects.PrivateTagIndex;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 
 import org.apache.log4j.Logger;

@@ -693,23 +693,130 @@ public class DicomObject extends FileObject {
 
 /*=================================================================================*/
 	/**
-	 * Get the array of ints identifying an element.
-	 * To specify an element in an SQ item dataset,
-	 * tags must be separated by "::".
-	 * If no tagString is specified, return an empty int array.
-	 * @param tagString the list of tags identifying an element
+	 * Get the value of an element corresponding to an element specifier.
+	 * An element specifier consists of a sequence of element IDs, separated by
+	 * double-colons. All but the last ID must identify an SQ element. The last
+	 * can identify any element. The ID for an element can have be the DICOM keyword
+	 * (as modified by dcm4che), a standard hexadecimal group-element pair, with or 
+	 * without the comma and enclosed eithe by parentheses or square brackets.
+	 * Private elements can be identified by a keyword from the PrivateTagIndex or by
+	 * the group[creator]element syntax, where group is the full hexadecimal group
+	 * number, creator is the value stored in the Private Creator Element for the
+	 * block, and element is the two-hexadecimal-digit offset in the block. Private
+	 * elements may be encapsulated in parentheses or square brackets.
+	 * @param fmi the FileMetaInfo to be used to obtain group 2 elements
+	 * @param ds the Dataset in which to begin the search for non-FileMetaInfo elements
+	 * @param specifier the element specifier
+	 * @param privateNameIndex the index of private element keywords. This index is intended
+	 * to be used by the anonymizer, which builds the index from private elements found
+	 * in the anonymizer script. It is separate from the PrivateTagIndex, which is global.
+	 * @return the value of the specified element or null if the element cannot be found
 	 */
-	public static int[] getTagArray(String tagString) {
-		tagString = tagString.trim();
-		if (tagString.equals("")) return new int[0];
-		String[] tagNames = tagString.split("::");
-		int[] tagInts = new int[tagNames.length];
-		for (int i=0; i<tagNames.length; i++) {
-			tagInts[i] = getElementTag(tagNames[i]);
+	public static String getElementValue(FileMetaInfo fmi, Dataset ds, String specifier, PrivateNameIndex privateNameIndex ) {
+		if (specifier == null) return null;
+		specifier = specifier.trim();
+		if (specifier.equals("")) return null;
+		String[] specs = specifier.split("::");
+		DcmElement de = null;
+		for (int k=0; k<specs.length; k++) {
+			String spec = specs[k];
+			
+			//Try it as a standard element specifier
+			int tag = getElementTag(spec);
+			
+			//If that fails, try it as a private name
+			if ((tag == 0) && (privateNameIndex != null)) tag = privateNameIndex.getTag(spec);
+			
+			//If that fails, try it as a Private Creator or Private Data Element with a block specifier
+			if (tag == 0) tag = getPrivateElementTag(ds, spec);
+			
+			//If that fails, bail out
+			if (tag == 0) return null;
+			
+			//We have a tag, now get the DcmElement
+			if ((fmi != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
+				de = fmi.get(tag);
+			}
+			else de = ds.get(tag);
+			if (de == null) return null;
+			
+			//If this is not the last element in the sequence, it must be
+			//an SQ element. If it is, get its first item dataset
+			if (k < specs.length-1) {
+				if (!VRs.toString(de.vr()).equals("SQ")) return null;
+				ds = de.getItem(0);
+				if (ds == null) return null;
+			}
 		}
-		return tagInts;
+		//Okay, now return the value.
+		return getElementValue(de, ds);
 	}
+	
+	/*
+	 * Get the contents of an element in a specified dataset,
+	 * handling CTP elements specially.
+	 * @param tag the element tag
+	 * @dataset the dataset to search when processing private elements
+	 * @return the value of the specified element in the specified dataset,
+	 * or null of the value cannot be obtained.
+	 */
+	public static String getElementValue(DcmElement de, Dataset ds) {	
+		SpecificCharacterSet cs = ds.getSpecificCharacterSet();
+		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
+		
+		try {
+			int tag = de.getTag();
 
+			//Handle FileMetaInfo references
+			if ((tag & 0x7FFFFFFF) < 0x80000) {
+				return de.getString(cs);
+			}
+
+			//Not FMI, handle dataset references
+			boolean privateText = false;
+			boolean privateUN = false;
+			if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
+				int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
+				try { 
+					String owner = ds.getString(blk);
+					String vr = ptIndex.getVR(owner, tag);
+					privateText = (owner.equals("CTP") || vr.equals("LO") || vr.equals("LT")
+						|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
+						|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
+						|| vr.equals("PN") || vr.equals("UI"));
+					privateUN = vr.equals("UN");
+				}
+				catch (Exception notPrivateText) { privateText = false; }
+			}
+
+			if (privateText || privateUN) {
+				byte[] bytes = de.getByteBuffer().array();
+				if (privateText) {
+					return cs.decode(bytes);
+				}
+				else if (privateUN) {
+					//This is a kludge to deal with a VR=UN element whose value is requested.
+					//In practice, nobody would rationally get a string for a non-text element
+					//in a private group, so we will decode it and hope for the best.
+					//We keep this path in the code separate so we can more easily change it
+					//if things go south in the field.
+					return cs.decode(bytes);
+				}
+			}
+
+			//Not private or can't make it out to be text, just return the strings.		
+			String[] s = de.getStrings(cs);
+			if (s.length == 1) return s[0];
+			if (s.length == 0) return "";
+			StringBuffer sb = new StringBuffer( s[0] );
+			for (int i=1; i<s.length; i++) {
+				sb.append( "\\" + s[i] );
+			}
+			return sb.toString();
+		}
+		catch (Exception ex) { return null; }
+	}
+	
 	static final Pattern hexPattern = Pattern.compile("([0-9a-fA-F]{1,8})");
 	static final Pattern hexCommaPattern = Pattern.compile("([0-9a-fA-F]{0,4}),([0-9a-fA-F]{1,4})");
 	/**
@@ -717,17 +824,7 @@ public class DicomObject extends FileObject {
 	 * method supports keywords as well as hex strings,
 	 * with or without enclosing parentheses or square brackets
 	 * and with or without a comma separating the group and the
-	 * element numbers. Examples of element specifications are:
-	 *<ul>
-	 *<li>100020
-	 *<li>00100020
-	 *<li>[00100020]
-	 *<li>(00100020)
-	 *<li>0010,0020
-	 *<li>10,20
-	 *<li>(10,20)
-	 *<li>[10,20]
-	 *</ul>
+	 * element numbers.
 	 * @param name the dcm4che element name or the coded hex value.
 	 * @return the tag, or zero if the name is not a parsable element specification.
 	 */
@@ -874,7 +971,7 @@ public class DicomObject extends FileObject {
 	 * element does not exist.
 	 */
 	public String getElementValue(String tagName) {
-		return getElementValue(getTagArray(tagName), "");
+		return getElementValue(tagName, "");
 	}
 
 	/**
@@ -888,7 +985,9 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(String tagName, String defaultString) {
-		return getElementValue(getTagArray(tagName), defaultString);
+		String value = getElementValue(fileMetaInfo, dataset, tagName, null);
+		if (value == null) value = defaultString;
+		return value;
 	}
 
 	/**
@@ -912,7 +1011,30 @@ public class DicomObject extends FileObject {
 	 * @return the text of the element, or defaultString if the element does not exist.
 	 */
 	public String getElementValue(int tag, String defaultString) {
-		return getElementValue(fileMetaInfo, dataset, tag, defaultString);
+		DcmElement de = null;
+		if ((tag & 0x7FFFFFFF) < 0x80000) {
+			de = fileMetaInfo.get(tag);
+		}
+		else de = dataset.get(tag);
+		return getElementValue(de, dataset);
+	}
+
+	/**
+	 * Get the array of ints identifying an element.
+	 * To specify an element in an SQ item dataset,
+	 * tags must be separated by "::".
+	 * If no tagString is specified, return an empty int array.
+	 * @param tagString the list of tags identifying an element
+	 */
+	public static int[] xgetTagArray(String tagString) {
+		tagString = tagString.trim();
+		if (tagString.equals("")) return new int[0];
+		String[] tagNames = tagString.split("::");
+		int[] tagInts = new int[tagNames.length];
+		for (int i=0; i<tagNames.length; i++) {
+			tagInts[i] = getElementTag(tagNames[i]);
+		}
+		return tagInts;
 	}
 
 	/**
@@ -969,50 +1091,6 @@ public class DicomObject extends FileObject {
 		catch (Exception notAvailable) { value = null; }
 		if (value == null) value = defaultString;
 		return value;
-	}
-
-	/**
-	 * Get the contents of a DICOM element in the DicomObject's dataset as a
-	 * String. This method supports accessing the item datasets of SQ elements,
-	 * but it only searches the first item dataset at each level.
-	 * It returns null if the element cannot be obtained.
-	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
-	 * where all the tags but the last must refer to an SQ element.
-	 * @return the text of the element, or the empty string
-	 * if the element does not exist.
-	 */
-	public String getElementValue(int[] tags) {
-		return getElementValue(tags, "");
-	}
-
-	/**
-	 * Get the contents of a DICOM element in the DicomObject's dataset as a
-	 * String. This method supports accessing the item datasets of SQ elements,
-	 * but it only searches the first item dataset at each level.
-	 * It returns null if the element cannot be obtained.
-	 * @param tags the sequence of tags specifying the element (in the form 0xggggeeee),
-	 * where all the tags but the last must refer to an SQ element.
-	 * @return the text of the element, or the empty string
-	 * if the element does not exist.
-	 */
-	public String getElementValue(int[] tags, String defaultString) {
-		try {
-			if (tags.length == 0) return defaultString;
-
-			DcmElement de = null;
-			Dataset ds = dataset;
-			//Walk the SQ datasets to get to the last one
-			for (int k=0; k<tags.length-1; k++) {
-				de = ds.get(tags[k]);
-				if (de == null) return defaultString;
-				if (!VRs.toString(de.vr()).equals("SQ")) return defaultString;
-				ds = de.getItem(0);
-				if (ds == null) return defaultString;
-			}
-			//Now get the element specified by the last tag
-			return getElementValue(fileMetaInfo, ds, tags[tags.length -1], defaultString);
-		}
-		catch (Exception e) { return defaultString; }
 	}
 
 	/**

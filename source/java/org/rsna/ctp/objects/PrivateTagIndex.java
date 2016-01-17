@@ -5,7 +5,7 @@
 *  RSNA Public License (http://mirc.rsna.org/rsnapubliclicense.pdf)
 *----------------------------------------------------------------*/
 
-package org.rsna.ctp.stdstages.anonymizer.dicom;
+package org.rsna.ctp.objects;
 
 import java.io.File;
 import java.io.InputStream;

@@ -52,6 +52,7 @@ import org.dcm4che.dict.VRs;
 
 import org.rsna.ctp.Configuration;
 import org.rsna.ctp.plugin.Plugin;
+import org.rsna.ctp.objects.PrivateTagIndex;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.IntegerTable;
