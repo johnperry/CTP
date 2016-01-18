@@ -220,6 +220,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 			if (autoCreateUser) createUserForFileSystem(fs);
 		}
 		catch (Exception ex) {
+			logger.debug("Unable to store "+fileObject.getFile().getName(), ex);
 			if (quarantine != null) quarantine.insert(fileObject);
 			return null;
 		}

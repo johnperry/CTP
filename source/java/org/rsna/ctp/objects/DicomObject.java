@@ -764,9 +764,8 @@ public class DicomObject extends FileObject {
 		SpecificCharacterSet cs = ds.getSpecificCharacterSet();
 		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 		
+		int tag = de.tag();
 		try {
-			int tag = de.getTag();
-
 			//Handle FileMetaInfo references
 			if ((tag & 0x7FFFFFFF) < 0x80000) {
 				return de.getString(cs);
@@ -814,7 +813,10 @@ public class DicomObject extends FileObject {
 			}
 			return sb.toString();
 		}
-		catch (Exception ex) { return null; }
+		catch (Exception ex) {
+			logger.warn("Unable to obtain value for "+Integer.toHexString(tag), ex);
+			return null;
+		}
 	}
 	
 	static final Pattern hexPattern = Pattern.compile("([0-9a-fA-F]{1,8})");
