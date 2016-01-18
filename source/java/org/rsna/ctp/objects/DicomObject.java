@@ -1016,7 +1016,9 @@ public class DicomObject extends FileObject {
 			de = fileMetaInfo.get(tag);
 		}
 		else de = dataset.get(tag);
-		return getElementValue(de, dataset);
+		String value = getElementValue(de, dataset);
+		if (value == null) value = defaultString;
+		return value;
 	}
 
 	/**
@@ -1026,7 +1028,7 @@ public class DicomObject extends FileObject {
 	 * If no tagString is specified, return an empty int array.
 	 * @param tagString the list of tags identifying an element
 	 */
-	public static int[] xgetTagArray(String tagString) {
+	public static int[] getTagArray(String tagString) {
 		tagString = tagString.trim();
 		if (tagString.equals("")) return new int[0];
 		String[] tagNames = tagString.split("::");
@@ -1035,62 +1037,6 @@ public class DicomObject extends FileObject {
 			tagInts[i] = getElementTag(tagNames[i]);
 		}
 		return tagInts;
-	}
-
-	/**
-	 * Get the contents of a DICOM element.
-	 * If the element is part of a private group owned by CTP, it returns the
-	 * value as text. This method returns the defaultString argument if the
-	 * element does not exist.
-	 * @param fileMetaInfo the FileMetaInfo associated with the dataset.
-	 * @param dataset the Dataset
-	 * @param tag the tag specifying the element (in the form 0xggggeeee).
-	 * @param defaultString the String to return if the element does not exist.
-	 * @return the text of the element, or defaultString if the element does not exist.
-	 */
-	public static String getElementValue(FileMetaInfo fileMetaInfo, Dataset dataset, int tag, String defaultString) {
-		SpecificCharacterSet cs = dataset.getSpecificCharacterSet();
-
-		//Handle FileMetaInfo references
-		if ((fileMetaInfo != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
-			DcmElement el = fileMetaInfo.get(tag);
-			if (el == null) return defaultString;
-			try {
-				String value = el.getString(cs);
-				if (value == null) return defaultString;
-				return value;
-			}
-			catch (Exception returnDefault) { }
-			return defaultString;
-		}
-
-		//Not FMI, handle DataSet references
-		boolean ctp = false;
-		if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
-			int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
-			try { ctp = dataset.getString(blk).equals("CTP"); }
-			catch (Exception notCTP) { ctp = false; }
-		}
-		String value = null;
-		try {
-			if (ctp) {
-				value = cs.decode(dataset.getByteBuffer(tag).array());
-			}
-			else {
-				DcmElement el = dataset.get(tag);
-				String[] s = el.getStrings(cs);
-				if (s.length == 1) return s[0];
-				if (s.length == 0) return "";
-				StringBuffer sb = new StringBuffer( s[0] );
-				for (int i=1; i<s.length; i++) {
-					sb.append( "\\" + s[i] );
-				}
-				return sb.toString();
-			}
-		}
-		catch (Exception notAvailable) { value = null; }
-		if (value == null) value = defaultString;
-		return value;
 	}
 
 	/**
