@@ -512,6 +512,106 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Get a BufferedImage for the specified frame, scaling it to a specified size
+	 * and setting the window level and width.
+	 * This method only operates on images with bitsStored values from 12 through 16.
+	 * This method only operates on images with ColorModel pixel sizes of 16 bits or less.
+	 * All other sizes are returned without window level and width processing.
+	 * @param frame the frame to save (the first frame is zero).
+	 * @param imageScale the magnification
+	 * @param windowLevel the window level in display values (e.g. Hounsfield values).
+	 * @param windowWidth the window width in display values.
+	 * @return the scaled and window leveled buffered image, or null if an error occurred.
+	 */
+	public BufferedImage getScaledAndWindowLeveledBufferedImage(int frame, double imageScale, int windowLevel, int windowWidth) {
+		int maxCubic = 1100; //The maximum dimension for which bicubic interpolation is done.
+		try {
+			BufferedImage originalImage = getBufferedImage(frame, false);
+			if (originalImage == null) return null;
+
+			// Set the scale for the output image.
+			int origW = originalImage.getWidth();
+			int origH = originalImage.getHeight();
+			int scaledW = (int)Math.rint(origW * imageScale);
+			int scaledH = (int)Math.rint(origH * imageScale);
+
+			//See whether the LUT is inverted
+			String lutShape = getElementValue("PresentationLUTShape").toLowerCase().trim();
+			boolean inverse = lutShape.equals("inverse");
+
+			//Get the pixel representation
+			boolean isUnsigned = !getElementValue("PixelRepresentation").trim().equals("1");
+
+			//Convert from display units to pixel units.
+			//windowLevel and windowWidth are in display units.
+			//The conversion is: (DisplayUnit) = (RescaleSlope) * (PixelUnit) + (RescaleIntercept)
+			//so we have to invert this relationship to get the pixel units.
+			//To make clear in what domain the arithmetic is being done, we explicitly cast the values:
+			float slope = getFloat("RescaleSlope", 1.0f);
+			float intercept = getFloat("RescaleIntercept", 0.0f);
+			windowLevel = (int)( ( (float)windowLevel - intercept ) / slope );
+			windowWidth = (int)( (float)windowWidth / slope );
+
+			//Do the window level/width operation, if possible.
+			int bitsStored = getBitsStored();
+			int cmPixelSize = originalImage.getColorModel().getPixelSize();
+			if ((bitsStored >= 8) && (bitsStored <= 16) && (cmPixelSize <= 16)) {
+				int size = 1 << bitsStored;
+				byte[] rgb = new byte[size];
+
+				if (windowWidth < 2) windowWidth = 2;
+				int bottom = windowLevel - windowWidth/2;
+				int top = bottom + windowWidth;
+				bottom = Math.min( Math.max(0, bottom), size-1 );
+				top = Math.max( Math.min(size-1, top), 0 );
+				if (!inverse) {
+					if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)0);
+					if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)255);
+					double scale = 255.0 / ((double)(top - bottom));
+					for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
+						rgb[i] = (byte)(scale * (i - bottom));
+					}
+				}
+				else {
+					if (bottom > 0) Arrays.fill(rgb, 0, bottom-1, (byte)255);
+					if (top < size-1) Arrays.fill(rgb, top, size-1, (byte)0);
+					double scale = 255.0 / ((double)(top - bottom));
+					for (int i=Math.max(bottom, 0); i<Math.min(top, size); i++) {
+						rgb[i] = (byte)(255 - (int)(scale * (i - bottom)));
+					}
+				}
+				if (!isUnsigned) { //blank out the negative pixel values
+					Arrays.fill(rgb, size/2 + 1, size-1, (byte)0);
+				}
+				ColorModel cm = new IndexColorModel(cmPixelSize, size, rgb, rgb, rgb);
+				originalImage = new BufferedImage( cm, originalImage.getRaster(), false, null);
+			}
+
+			// Make a destination image with the original resolution,
+			// but with 8-bit pixels so we can convert the result to JPEG.
+			BufferedImage rgbImage = new BufferedImage(scaledW, scaledH, BufferedImage.TYPE_INT_RGB);
+
+			// Set up the transform
+			AffineTransform at;
+			if (imageScale == 1.0d) at = new AffineTransform(); //identity transform
+			else at = AffineTransform.getScaleInstance(imageScale, imageScale);
+			int pixelSize = originalImage.getColorModel().getPixelSize();
+			AffineTransformOp atop;
+			if ((pixelSize == 8) || (origW > maxCubic) || (origH > maxCubic) )
+				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+			else
+				atop = new AffineTransformOp(at,AffineTransformOp.TYPE_BICUBIC);
+
+			// Paint the original (possibly window leveled) image onto the RGB image.
+			Graphics2D g2d = rgbImage.createGraphics();
+			g2d.drawImage(originalImage, atop, 0, 0);
+			g2d.dispose();
+			return rgbImage;
+		}
+		catch (Exception ex) { return null; }
+	}
+
+	/**
 	 * Save the specified frame as a JPEG, scaling it to a specified size
 	 * and using the specified quality setting.
 	 * @param file the file into which to write the encoded image.
@@ -554,6 +654,52 @@ public class DicomObject extends FileObject {
 			if (writer != null) writer.dispose();
 		}
 		return result;
+	}
+	
+	public void SaveAsJPEG(File file, BufferedImage rgbImage, int quality) {
+		FileImageOutputStream out = null;
+		ImageWriter writer = null;
+		try {
+			// JPEG-encode the image and write it in the specified file.
+			writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+			ImageWriteParam iwp = writer.getDefaultWriteParam();
+			if (quality >= 0) {
+				quality = Math.min(quality, 100);
+				float fQuality = ((float)quality) / 100.0F;
+				iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+				iwp.setCompressionQuality(fQuality);
+			}
+			out = new FileImageOutputStream(file);
+			writer.setOutput(out);
+			IIOImage image = new IIOImage(rgbImage, null, null);
+			writer.write(null, image, iwp);
+		}
+		catch (Exception ex) { logger.warn("Unable to save the image as a JPEG", ex); }
+		finally {
+			if (out != null) {
+				try { out.flush(); out.close(); }
+				catch (Exception ignore) { }
+			}
+			if (writer != null) writer.dispose();
+		}
+	}
+
+	/**
+	 * Save the specified frame as a JPEG, scaling it to a specified size,
+	 * using the specified quality setting, and setting the window level and width.
+	 * This method only operates on images with bitsStored values from 12 through 16.
+	 * This method only operates on images with ColorModel pixel sizes of 16 bits or less.
+	 * All other sizes are returned without window level and width processing.
+	 * @param file the file in which to save the JPEG.
+	 * @param frame the frame to save (the first frame is zero).
+	 * @param imageScale the magnification
+	 * @param windowLevel the window level in display values (e.g. Hounsfield values).
+	 * @param windowWidth the window width in display values.
+	 * @param jpegQuality 0-100, or -1 for the system default.
+	 */
+	public void saveAsWindowLeveledJPEG(File file, int frame, double imageScale, int windowLevel, int windowWidth, int jpegQuality) {
+		BufferedImage image = getScaledAndWindowLeveledBufferedImage(frame, imageScale, windowLevel, windowWidth);
+		SaveAsJPEG(file, image, jpegQuality);
 	}
 
 	/**
@@ -1565,6 +1711,34 @@ public class DicomObject extends FileObject {
 	public int getPlanarConfiguration() {
 		try { return dataset.getInteger(Tags.PlanarConfiguration).intValue(); }
 		catch (Exception e) { return 1; }
+	}
+
+	/**
+	 * Convenience method to get the integer value of the WindowCenter element.
+	 * @return the integer value of the WindowCenter element or 0 if the
+	 * value is not available.
+	 */
+	public int getWindowCenter() {
+		try {
+			DcmElement de = dataset.get(Tags.WindowCenter);
+			if (de == null) return 0;
+			return StringUtil.getInt(de.getString(charset), 0);
+		}
+		catch (Exception ex) { return 0; }
+	}
+
+	/**
+	 * Convenience method to get the integer value of the WindowWidth element.
+	 * @return the integer value of the WindowWidth element or 0 if the
+	 * value is not available.
+	 */
+	public int getWindowWidth() {
+		try {
+			DcmElement de = dataset.get(Tags.WindowWidth);
+			if (de == null) return 0;
+			return StringUtil.getInt(de.getString(charset), 0);
+		}
+		catch (Exception ex) { return 0; }
 	}
 
 	/**
