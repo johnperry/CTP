@@ -7,16 +7,19 @@
 
 package org.rsna.ctp.stdstages.logger;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.LinkedList;
 
 public class QueueEntry implements Serializable {
 	
 	public final String cohortName;
+	public final File file;
 	public final LinkedList<LoggedElement> list;
 	
-	public QueueEntry(String cohortName, LinkedList<LoggedElement> list) {
+	public QueueEntry(String cohortName, File file, LinkedList<LoggedElement> list) {
 		this.cohortName = cohortName;
+		this.file = file;
 		this.list = list;
 	}
 }

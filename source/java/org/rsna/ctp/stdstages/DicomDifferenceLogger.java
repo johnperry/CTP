@@ -178,7 +178,7 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 				}
 				
 				//Finally, enqueue the data
-				QueueEntry entry = new QueueEntry(cohortName, list);
+				QueueEntry entry = new QueueEntry(cohortName, fileObject.getFile(), list);
 				try {
 					File entryFile = File.createTempFile("QF-", ".bin", temp);
 					SerializerUtil.serialize(entryFile, entry);
