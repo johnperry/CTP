@@ -161,11 +161,10 @@ public class FnCall {
 		StringBuffer arg = new StringBuffer();
 		while (currentIndex < call.length()) {
 			c = call.charAt(currentIndex);
-			if (inEscape) inEscape = false;
-			else if (!inQuote && !inBracket && !inParen ) {
+			if (!inEscape && !inQuote && !inBracket && !inParen) {
 				if ( (c == ',') || (c == ')') ) break;
 			}
-			if (c == escapeChar) inEscape = true;
+			if (!inEscape && (c == escapeChar)) inEscape = true;
 			else {
 				arg.append(c);
 				if (c == '"') {
@@ -183,6 +182,7 @@ public class FnCall {
 				else if (inParen && (c == ')')) {
 					inParen = false;
 				}
+				inEscape = false;
 			}
 			currentIndex++;
 		}
