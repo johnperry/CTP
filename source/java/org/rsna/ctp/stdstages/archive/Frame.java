@@ -41,4 +41,12 @@ public class Frame implements Serializable {
 		return (next < files.length) ? files[next++] : null;
 	}
 
+	/**
+	 * Get the current directory.
+	 * @return the current directory.
+	 */
+	public File getCurrentDirectory() {
+		return dir;
+	}
+
 }

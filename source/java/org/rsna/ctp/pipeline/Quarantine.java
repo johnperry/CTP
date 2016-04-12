@@ -82,6 +82,9 @@ public class Quarantine {
 	/**
 	 * Create a Quarantine object for a directory, creating
 	 * the directory and the index if necessary.
+	 * @param directory the base directory of the quarantine.
+	 * @param timeDepth the maximum time depth of the quarantine in days.
+	 * @throws Exception on any error.
 	 */
 	protected Quarantine(File directory, long timeDepth) throws Exception {
 		this.directory = directory;
@@ -104,6 +107,7 @@ public class Quarantine {
 
 	/**
 	 * Rebuild the index of the directory from scratch.
+	 * @throws Exception on any error.
 	 */
 	public synchronized void rebuildIndex() throws Exception {
 		closeIndex();
@@ -143,6 +147,7 @@ public class Quarantine {
 
 	/**
 	 * See if the quarantine is open.
+	 * @return true if the quarantine is open (has an index).
 	 */
 	public synchronized boolean isOpen() {
 		return (recman != null);
@@ -490,7 +495,8 @@ public class Quarantine {
 	}
 
 	/**
-	 * Get the array of QStudy objects, sorted in natural order..
+	 * Get the array of QStudy objects, sorted in natural order.
+	 * @return the sorted array of studies
 	 */
 	public synchronized QStudy[] getStudies() {
 		LinkedList<QStudy> studyList = new LinkedList<QStudy>();
@@ -579,6 +585,7 @@ public class Quarantine {
 	/**
 	 * Get an array of all the files in the quarantine index,
 	 * sorted in natural order.
+	 * @return the sorted array of files 
 	 */
 	public File[] getFiles() {
 		LinkedList<File> fileList = new LinkedList<File>();
@@ -598,6 +605,7 @@ public class Quarantine {
 	 * Get the file in the quarantine corresponding to a filename.
 	 * This method only finds files in the quarantine directory.
 	 * @param filename the name of the file.
+	 * @return the specified file 
 	 */
 	public File getFile(String filename) {
 		if (filename == null) return null;
@@ -608,6 +616,8 @@ public class Quarantine {
 
 	/**
 	 * Get an XML document listing the studies in the quarantine.
+	 * @return the XML Document containing all the studies.
+	 * @throws Exception on any error
 	 */
 	public Document getStudiesXML() throws Exception {
 		Document doc = XmlUtil.getDocument();
@@ -628,6 +638,8 @@ public class Quarantine {
 	/**
 	 * Get an XML document listing the series in a study.
 	 * @param studyUID the studyUID of the QStudy
+	 * @return the XML Document containing all the series for the specified study.
+	 * @throws Exception on any error
 	 */
 	public Document getSeriesXML(String studyUID) throws Exception {
 		QStudy study = getStudy(studyUID);
@@ -648,6 +660,8 @@ public class Quarantine {
 	/**
 	 * Get an XML document listing the files in a series.
 	 * @param seriesUID the seriesUID of the QSeries
+	 * @return the XML Document containing all the files for the specified series.
+	 * @throws Exception on any error
 	 */
 	public Document getFilesXML(String seriesUID) throws Exception {
 		QSeries series = getSeries(seriesUID);

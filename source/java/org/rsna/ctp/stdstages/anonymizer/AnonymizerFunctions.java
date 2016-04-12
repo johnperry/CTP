@@ -91,7 +91,6 @@ public class AnonymizerFunctions {
 	 * @param name the name in the format of a DICOM PatientName element.
 	 * @return the patient's initials in upper case (e.g., FML), or "X" if
 	 * the name is null or empty.
-	 * @throws Exception if the requested value cannot be found in the table.
 	 */
 	public static String initials(String name) {
 		if (name == null) return "X";
@@ -119,6 +118,7 @@ public class AnonymizerFunctions {
 	 * can be used to exclude, for example, the middle name or initial.
 	 * @return a numeric string consisting of length characters, the
 	 * result of hashing the first wordCount words of the string.
+	 * @throws Exception if the string cannot be hashed.
 	 */
 	public static String hashName(
 							String string,
@@ -320,6 +320,7 @@ public class AnonymizerFunctions {
 	 * @param string the string to encrypt.
 	 * @param offset the offset (positive for alphabetic order, negative
 	 * for reverse alphabetic order.
+	 * @return the encrypted string
 	 */
 	public static String encrypt(String string, int offset) {
 		char[] chars = string.toCharArray();

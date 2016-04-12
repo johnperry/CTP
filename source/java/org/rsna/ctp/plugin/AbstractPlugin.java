@@ -189,6 +189,8 @@ public abstract class AbstractPlugin implements Plugin {
 
 	/**
 	 * Get HTML text displaying the current status of the plugin.
+	 * @param pluginUniqueStatus the status string to insert into
+	 * the HTML status table for this plugin
 	 * @return HTML text displaying the current status of the stage.
 	 */
 	public String getStatusHTML(String pluginUniqueStatus) {

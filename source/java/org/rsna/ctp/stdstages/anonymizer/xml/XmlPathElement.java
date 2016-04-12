@@ -26,7 +26,7 @@ import org.w3c.dom.NodeList;
  * <li>node: the parent node from which the path proceeds</li>
  * <li>path: the full path from the parent node to the end</li>
  * <li>segment: the first step along the path after the parent node</li>
- * </l>remainingPath: the rest of the path after the segment.</li>
+ * <li>remainingPath: the rest of the path after the segment.</li>
  * </ul>
  */
 public class XmlPathElement {
@@ -131,6 +131,7 @@ public class XmlPathElement {
 
 	/**
 	 * See if the attribute identified by the current segment exists.
+	 * @return true if the attribute exists
 	 */
 	public boolean attributeExists() {
 		if (segmentIsAttribute() && (node instanceof Element)) {

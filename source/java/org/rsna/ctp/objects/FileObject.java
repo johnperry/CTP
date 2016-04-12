@@ -52,6 +52,8 @@ public class FileObject {
 	/**
 	 * Replace all occurrences of a target regex with
 	 * a replacement string and rename the file.
+	 * @param target the regex
+	 * @param replacement the replacement string to be substituted for target matches.
 	 */
 	public void filterFilename(String target, String replacement) {
 		String name = file.getName();
@@ -115,8 +117,9 @@ public class FileObject {
 	 * it in the file name). If the current extension is ".md", it is replaced
 	 * the supplied extension. If the current extension is already equal to
 	 * the supplied extension, the file is not renamed. If the current
-	 * extension is anything else, the supplied extension is appended  to
+	 * extension is anything else, the supplied extension is appended to
 	 * the filename.
+	 * @param extension the extension to append to the file.
 	 * @return the file after any modification.
 	 */
 	public File setExtension(String extension) {

@@ -149,7 +149,7 @@ public abstract class AbstractQueuedExportService
 
 	/**
 	 * Get the size of the export queue.
-	 * return the size of the export queue, or 0 if no QueueManager exists.
+	 * @return the size of the export queue, or 0 if no QueueManager exists.
 	 */
 	public synchronized int getQueueSize() {
 		if (queueManager != null) return queueManager.size();
@@ -158,7 +158,7 @@ public abstract class AbstractQueuedExportService
 
 	/**
 	 * Force a recount of the export queue.
-	 * return the size of the export queue, or 0 if no QueueManager exists.
+	 * @return the size of the export queue, or 0 if no QueueManager exists.
 	 */
 	protected synchronized int recount() {
 		if (queueManager != null) return queueManager.recount();
@@ -169,6 +169,7 @@ public abstract class AbstractQueuedExportService
 	 * Get the next file in the queue for exporting. This method moves the file to
 	 * the active directory. Note that this means that if the export fails in such
 	 * a way that a retry is appropriate, the file must be requeued.
+	 * @return the next file in the queue or null ifi the queue is empty
 	 */
 	protected synchronized File getNextFile() {
 		if (queueManager != null) {
@@ -189,6 +190,7 @@ public abstract class AbstractQueuedExportService
 	 * is still in the active directory.
 	 * @param file the file to be released, which must be the original file
 	 * supplied by the ExportService.
+	 * @return true if the file was released; false otherwise.
 	 */
 	protected synchronized boolean release(File file) {
 		boolean ok = false;

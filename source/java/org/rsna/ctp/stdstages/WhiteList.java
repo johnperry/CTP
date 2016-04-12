@@ -25,6 +25,10 @@ public class WhiteList {
 
 	/**
 	 * Construct a WhiteList object from a configuration element.
+	 * @param element the configuration element of the stage that is
+	 * specifying this white list.
+	 * @param attributeName the name of the attribute specifying the name
+	 * of the client to accept.
 	 */
 	public WhiteList(Element element, String attributeName) {
 		values = new HashSet<String>();
@@ -44,6 +48,7 @@ public class WhiteList {
 
 	/**
 	 * Test whether a string is contained in the white list.
+	 * @param value the string to test against the white list.
 	 * @return the true if the white list is empty or
 	 * if the string is contained in the white list.
 	 */

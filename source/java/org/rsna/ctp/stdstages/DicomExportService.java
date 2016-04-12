@@ -32,6 +32,7 @@ public class DicomExportService extends AbstractExportService {
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
 	 * @param element the configuration element.
+	 * @throws Exception if the URL does not parse
 	 */
 	public DicomExportService(Element element) throws Exception {
 		super(element);

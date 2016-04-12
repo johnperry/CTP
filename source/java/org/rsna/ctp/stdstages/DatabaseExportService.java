@@ -61,6 +61,8 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 
 	/**
 	 * Class constructor; creates a new instance of the DatabaseExportService.
+	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public DatabaseExportService(Element element) throws Exception {
 		super(element);

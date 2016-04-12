@@ -76,6 +76,8 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * relative and the pipeline within which this stage is located has a root directory,
 	 * the path is relative to the pipeline's root; otherwise, it is relative to the CTP
 	 * directory.
+	 * @param path the path to the directory to create.
+	 * @return the File pointing to the directory
 	 */
 	public File getDirectory(String path) {
 		File file = null;

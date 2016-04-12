@@ -69,6 +69,8 @@ public class ImageQualifiers {
 	/**
 	 * Get a String in the form "[maxWidth; minWidth; quality]"
 	 * with no frame field.
+	 * @return the text specifying the parameters of the image,
+	 * with no frame identification.
 	 */
 	public String toString() {
 		if ((maxWidthString == null) &&
@@ -79,6 +81,8 @@ public class ImageQualifiers {
 
 	/**
 	 * Same as toString(frame, 0).
+	 * @param frame the frame number
+	 * @return the text specifying the parameters of the specified frame.
 	 */
 	public String toString(int frame) {
 		return toString( frame, 0 );
@@ -88,6 +92,9 @@ public class ImageQualifiers {
 	 * Get a String in the form "[maxWidth; minWidth; quality][frame]
 	 * where the width of the frame field is set by the length of the
 	 * nFrames parameter, with leading zeroes as necessary.
+	 * @param frame the frame number
+	 * @param nFrames the number of frames
+	 * @return the text specifying the parameters of the specified frame.
 	 */
 	public String toString(int frame, int nFrames) {
 		int len = Integer.toString(nFrames).length();

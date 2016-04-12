@@ -34,6 +34,7 @@ public class Regions {
 
 	/**
 	 * Get the number of regions.
+	 * @return the number of regions
 	 */
 	public int size() {
 		return regions.size();
@@ -63,6 +64,7 @@ public class Regions {
 
 	/**
 	 * Get a Vector containing all the region Rectangles.
+	 * @return all the region Rectangles
 	 */
 	public Vector<Shape> getRegionsVector() {
 		return new Vector(regions);

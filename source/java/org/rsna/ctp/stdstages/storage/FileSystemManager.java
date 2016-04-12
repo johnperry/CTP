@@ -45,12 +45,15 @@ public class FileSystemManager {
 	 * @param type the directory structure to be imposed on FileSystems in this root.
 	 * @param requireAuthentication true if accesses to FileSystems associated with this
 	 * root require authentication; false otherwise.
+	 * @param acceptDuplicateUIDs true if duplicate UIDs are to be accepted and stored; false if 
+	 * objects with duplicate UIDs are to overwrite previously stored objects with the same UID.
 	 * @param setReadable true if files and directories in this root are to be world readable.
 	 * @param setWritable true if files and directories in this root are to be world writable.
 	 * @param exportDirectory the directory into which to copy files during an export copy operation
 	 * or null if export copying is not configured.
 	 * @param qualifiers the list of qualifiers for the creation of JPEG images when a
 	 * DICOM image is stored.
+	 * @return the singleton instance for this root
 	 */
 	public static synchronized FileSystemManager getInstance(
 											File root,
@@ -83,6 +86,7 @@ public class FileSystemManager {
 	 * specified root directory. This method should be used by servlets which are only
 	 * interested in files which actually exist.
 	 * @param root the directory managed by the FileSystemManager.
+	 * @return the singleton instance for this root
 	 */
 	public static FileSystemManager getInstance(File root) {
 		return fileSystemManagers.get(root);
@@ -96,6 +100,8 @@ public class FileSystemManager {
 	 * FileSystem constructor.
 	 * @param requireAuthentication true if accesses to FileSystems associated with this
 	 * root require authentication; false otherwise.
+	 * @param acceptDuplicateUIDs true if duplicate UIDs are to be accepted and stored; false if 
+	 * objects with duplicate UIDs are to overwrite previously stored objects with the same UID.
 	 * @param setReadable true if files and directories in this root are to be world readable.
 	 * @param setWritable true if files and directories in this root are to be world writable.
 	 * @param exportDirectory the directory into which to copy files during an export copy operation

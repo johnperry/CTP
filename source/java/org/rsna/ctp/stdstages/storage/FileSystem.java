@@ -63,6 +63,8 @@ public class FileSystem {
 	 * </ul>
 	 * @param requireAuthentication true if accesses to this FileSystem require authentication;
 	 * false otherwise.
+	 * @param acceptDuplicateUIDs true if duplicate UIDs are to be accepted and stored; false if 
+	 * objects with duplicate UIDs are to overwrite previously stored objects with the same UID.
 	 * @param setReadable true if files and directories in this FileSystem are to be world readable.
 	 * @param setWritable true if files and directories in this FileSystem are to be world writable.
 	 * @param qualifiers the list of qualifiers for the creation of JPEG images when a
@@ -201,6 +203,7 @@ public class FileSystem {
 	 * not exist, create it and add it to the index of the FileSystem.
 	 * @param fileObject the object to store.
 	 * @return the file that was stored.
+	 * @throws Exception on any error
 	 */
 	public synchronized File store(FileObject fileObject) throws Exception {
 		getIndex();

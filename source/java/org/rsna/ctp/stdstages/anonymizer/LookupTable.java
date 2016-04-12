@@ -38,6 +38,7 @@ public class LookupTable {
 	/**
 	 * Protected constructor; create a LookupTable from a properties file.
 	 * @param file the file containing the lookup table.
+	 * @param defaultKeyType the KeyType to be used for loading a CSV file.
 	 */
 	protected LookupTable(File file, String defaultKeyType) {
 		this.file = file;
@@ -51,6 +52,7 @@ public class LookupTable {
 	 * Get the singleton instance of a LookupTable, loading a new instance
 	 * only if the properties file has changed.
 	 * @param file the file containing the lookup table properties.
+	 * @return the singleton instance of the lookup table for the specified file.
 	 */
 	public static LookupTable getInstance(File file) {
 		return getInstance(file, null);
@@ -61,6 +63,7 @@ public class LookupTable {
 	 * only if the properties file has changed.
 	 * @param file the file containing the lookup table properties.
 	 * @param defaultKeyType the KeyType to be used for loading a CSV file.
+	 * @return the singleton instance of the lookup table for the specified file.
 	 */
 	public static synchronized LookupTable getInstance(File file, String defaultKeyType) {
 		//If there is no file, then return null.

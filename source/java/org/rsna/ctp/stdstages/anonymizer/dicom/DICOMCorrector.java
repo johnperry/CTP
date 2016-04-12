@@ -43,6 +43,11 @@ public class DICOMCorrector {
      * @param inFile the file to correct.
      * @param outFile the output file.  It may be same as inFile if you want
      * to anonymize in place.
+     * @param fixPrivateElements true if private elements are to be corrected.
+     * @param quarantineUncorrectedMismatches true if objects are to be
+     * quarantined if any mismatches cannot be corrected.
+     * @param logUncorrectedMismatches true if log entyries are to be
+     * quarantined if any mismatch cannot be corrected.
      * @return the static status result
      */
     public static AnonymizerStatus correct(

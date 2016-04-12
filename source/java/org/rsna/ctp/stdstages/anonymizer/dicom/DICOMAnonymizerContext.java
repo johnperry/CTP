@@ -63,6 +63,7 @@ public class DICOMAnonymizerContext {
 	 * Organize all the data required for anonymization.
 	 * @param cmds the complete set of scripts.
 	 * @param lkup the local lookup table.
+     * @param intTable the integer table containing integer remappings for elements.
 	 * @param inDS the input dataset.
 	 * @param outDS the dataset to be modified
 	 */

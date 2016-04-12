@@ -97,6 +97,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 
 	/**
 	 * Get the integer table object.
+	 * @return the integer table
 	 */
 	public IntegerTable getIntegerTable() {
 		return intTable;

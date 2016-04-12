@@ -13,11 +13,13 @@ public interface ScriptableDicom {
 
 	/**
 	 * Get the script file.
+	 * @return the script file
 	 */
 	public File getScriptFile();
 
 	/**
 	 * Get the lookup table file.
+	 * @return the lookup table file
 	 */
 	public File getLookupTableFile();
 

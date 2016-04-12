@@ -44,6 +44,7 @@ public class DAScript {
 	 * Get the singleton instance of a DAScript, loading a new instance
 	 * if the script file has changed.
 	 * @param file the file containing the script.
+	 * @return the static instance of the DAScript for the specified file
 	 */
 	public static synchronized DAScript getInstance(File file) {
 		//First see if we already have an instance in the table
@@ -302,6 +303,7 @@ public class DAScript {
 
 	/**
 	 * Get a set containing all the LookupTable KeyTypes in use in the script.
+	 * @return the set of key types
 	 */
 	public HashSet<String> getKeyTypes() {
 		HashSet<String> keyTypeSet = new HashSet<String>();
@@ -321,6 +323,7 @@ public class DAScript {
 	/**
 	 * Get the default KeyType in use in the script. If more than
 	 * one KeyType is in use in the script, return null.
+	 * @return the default key type
 	 */
 	public String getDefaultKeyType() {
 		HashSet<String> keyTypeSet = getKeyTypes();

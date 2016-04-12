@@ -219,6 +219,7 @@ public class DicomObject extends FileObject {
 	 * Determine whether a filename is a typical DICOM filename.
 	 * Typical DICOM filenames either end in ".dcm" or are a UID.
 	 * The test for the extension is case insensitive.
+	 * @param name the filename
 	 * @return true if the filename is a typical DICOM filename; false otherwise.
 	 */
 	public static boolean hasTypicalDicomFilename(String name) {
@@ -393,7 +394,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get a BufferedImage from the DicomObject. This method filters all the pixels for images
-	 * with BitsStored < 16, forcing any pixels with overlay bits to the maximum allowed pixel
+	 * with BitsStored &le; 16, forcing any pixels with overlay bits to the maximum allowed pixel
 	 * value (2^BitsStored - 1). This is done to protect the JPEG converter, which throws an
 	 * array out of bounds exception on such pixels.
 	 * @param frame the frame to load (the first frame is zero).
@@ -453,9 +454,10 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get a BufferedImage scaled in accordance with the size rules for saveAsJPEG.
-	 * @param maxSize the maximum width of the created JPEG;
-	 * @param minSize the minimum width of the created JPEG;
-	 * @return a Buffered Image scaled to the required size, or null if the image
+	 * @param frame the frame number (zero-based)
+	 * @param maxSize the maximum width of the created JPEG
+	 * @param minSize the minimum width of the created JPEG
+	 * @return a BufferedImage scaled to the required size, or null if the image
 	 * could not be created.
 	 */
 	public synchronized BufferedImage getScaledBufferedImage(int frame, int maxSize, int minSize) {
@@ -712,6 +714,7 @@ public class DicomObject extends FileObject {
 	 * @param w the width of the saved image, or -1 to use the original image width.
 	 * @param h the height of the saved image, or -1 to use the original image height.
 	 * @param frame the frame to save (the first frame is zero).
+	 * @param quality the compression quality (0-100).
 	 * @param windowLevel the window level in display values (e.g. Hounsfield values).
 	 * @param windowWidth the window width in display values.
 	 * @return the dimensions of the JPEG that was created, or null if an error occurred.
@@ -1014,6 +1017,7 @@ public class DicomObject extends FileObject {
 	 * <li>group[block]element eg. 0009[CTP]01 
 	 * <li>group[block] eg. 0009[CTP]
 	 * </ul>
+	 * @param ds the dcm4che dataset.
 	 * @param name the dcm4che element name or the coded hex value.
 	 * @return the tag, or zero if the name is not a parsable element specification or if the group number is not odd.
 	 */
@@ -1051,7 +1055,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get the dcm4che name of a DICOM element.
-	 * @param tag
+	 * @param tag the numeric tag
 	 * @return the dcm4che tag name.
 	 */
 	public static String getElementName(int tag) {
@@ -1062,7 +1066,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Get the (group,element) number of a DICOM element.
-	 * @param tag
+	 * @param tag the numeric tag
 	 * @return the tag dictionary string for the tag.
 	 */
 	public static String getElementNumber(int tag) {
@@ -1175,6 +1179,7 @@ public class DicomObject extends FileObject {
 	 * tags must be separated by "::".
 	 * If no tagString is specified, return an empty int array.
 	 * @param tagString the list of tags identifying an element
+	 * @return the array of ints identifying the element.
 	 */
 	public static int[] getTagArray(String tagString) {
 		tagString = tagString.trim();
@@ -1323,6 +1328,7 @@ public class DicomObject extends FileObject {
 	 * elements to UT.
 	 * @param tagName the dcm4che tag name of the element.
 	 * @param value the text value to set in the element.
+	 * @throws Exception on any error
 	 */
 	public void setElementValue(String tagName, String value) throws Exception {
 		setElementValue(Tags.forName(tagName),value);
@@ -1337,6 +1343,7 @@ public class DicomObject extends FileObject {
 	 * elements to UT.
 	 * @param tag the tag specifying the element (in the form 0xggggeeee).
 	 * @param value the text value to set in the element.
+	 * @throws Exception on any error
 	 */
 	public void setElementValue(int tag, String value) throws Exception {
 		if ((tag&0x10000) != 0) dataset.putUT(tag,value);
@@ -1367,6 +1374,7 @@ public class DicomObject extends FileObject {
 
 	/**
 	 * Tests whether the DicomObject has the specified TransferSyntaxUID.
+	 * @param transferSyntaxUID the UID to check for
 	 * @return true if the object has the specified TransferSyntaxUID; false otherwise.
 	 */
 	public boolean hasTransferSyntaxUID(String transferSyntaxUID) {
@@ -1978,8 +1986,8 @@ public class DicomObject extends FileObject {
 	/**
 	 * Get an HTML page listing all the elements in the DICOM object and
 	 * their values.
+	 * @param decipherLinks true to include links to decipher encoded elements; false otherwise.
 	 * @return the HTML page.
-	 * @throws Exception if the process fails.
 	 */
 	public String getElementTablePage(boolean decipherLinks) {
 		StringBuffer sb = new StringBuffer();
@@ -2012,7 +2020,6 @@ public class DicomObject extends FileObject {
 	 * for backward compatibility; it does NOT include links to decipher
 	 * private elements.
 	 * @return the HTML text listing all the elements in the DICOM object.
-	 * @throws Exception if the process fails.
 	 */
 	public String getElementTable() {
 		return getElementTable(false);
@@ -2023,7 +2030,6 @@ public class DicomObject extends FileObject {
 	 * elements in the DICOM object and their values.
 	 * @param decipherLinks include links to decipher encrypted private elements.
 	 * @return the HTML text listing all the elements in the DICOM object.
-	 * @throws Exception if the process fails.
 	 */
 	public String getElementTable(boolean decipherLinks) {
 		StringBuffer table = new StringBuffer();

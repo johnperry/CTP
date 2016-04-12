@@ -239,6 +239,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
 	/**
 	 * Get an XML object containing all the terms in the database.
+	 * @return the XML document containing all the terms in the database.
 	 */
 	public Document getIndexDocument() {
 		try {
@@ -262,6 +263,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
 	/**
 	 * Get the lookup table file.
+	 * @return the lookup table file.
 	 */
 	public File getLookupTableFile() {
 		return lutFile;
@@ -269,6 +271,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
 	/**
 	 * Get the DicomAnonymizer stage that is being checked.
+	 * @return the DicomAnonymizer stage that is being checked.
 	 */
 	public DicomAnonymizer getAnonymizer() {
 		return anonymizer;
@@ -276,6 +279,8 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
 	/**
 	 * Update the lookup table and the database.
+	 * @param doc the Document containing the values to be
+	 * added to the lookup table
 	 */
 	public synchronized void update(Document doc) {
 		LookupTable lut = LookupTable.getInstance(lutFile);

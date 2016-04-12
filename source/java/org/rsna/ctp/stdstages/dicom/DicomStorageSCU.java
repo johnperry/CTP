@@ -195,6 +195,8 @@ public class DicomStorageSCU {
 	 * open so the sender can get at the whole dataset. Thus, the object
 	 * should be opened with the full constructor:
 	 *<br><br><tt>dicomObject = new DicomObject(fileToExport, true);</tt>
+	 * @param dicomObject the object to be sent to the SCP
+	 * @return the status result from the transmission
 	 */
 	public synchronized Status send(DicomObject dicomObject) {
 		logger.debug("Exporting "+dicomObject.getFile().getName()+" to "+url.toString());

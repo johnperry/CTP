@@ -33,7 +33,6 @@ import org.w3c.dom.NodeList;
  * documents (depending on the method).
  * <p>
  * The schema of the manifest is:
- * <code>
  * <pre>
  * &lt;manifest
  *        uid="UID of the ZipObject instance"
@@ -47,7 +46,6 @@ import org.w3c.dom.NodeList;
  *    ...child elements as required for the usage of the ZipObject...
  * &lt;/manifest&gt;
  * </pre>
- * </code>
  */
 public class ZipObject extends FileObject {
 

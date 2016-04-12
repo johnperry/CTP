@@ -39,6 +39,7 @@ public class UIDResult {
 
 	/**
 	 * See if the UID was missing from the database.
+	 * @param digest the digested UID
 	 * @return true if the UID was missing; false otherwise.
 	 */
 	public boolean matches(String digest) {
@@ -75,6 +76,7 @@ public class UIDResult {
 	 * stored in the database (in milliseconds since 1970).
 	 * @param digest the MD5 digest of the object that is
 	 * stored in the database.
+	 * @return the PRESENT UIDResult
 	 */
 	public static UIDResult PRESENT(long datetime, String digest) {
 		return new UIDResult(true, datetime, digest);
@@ -82,6 +84,7 @@ public class UIDResult {
 
 	/**
 	 * UIDResult value indicating that the object was not n the database.
+	 * @return the MISSING UIDResult
 	 */
 	public static UIDResult MISSING() {
 		return new UIDResult(false, 0L, "");

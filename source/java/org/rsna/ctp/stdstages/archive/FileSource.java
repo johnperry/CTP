@@ -49,6 +49,8 @@ public class FileSource implements Serializable {
 	 * @param treeRoot the root of the tree to be walked.
 	 * @param checkpointDir the directory in which to write checkpoints,
 	 * or null if a deserialized instance is not to be obtained.
+	 * @return the singleton instance for this checkpoint, or a new one if no
+	 * checkpoint exists
 	 */
 	public static synchronized FileSource getInstance(File treeRoot, File checkpointDir) {
 		Object fileSource = null;
@@ -103,5 +105,13 @@ public class FileSource implements Serializable {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get the directory of the current frame.
+	 * @return the current directory.
+	 */
+	public File getCurrentDirectory() {
+		return currentFrame.getCurrentDirectory();
 	}
 }

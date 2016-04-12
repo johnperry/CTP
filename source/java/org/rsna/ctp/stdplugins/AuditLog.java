@@ -304,7 +304,6 @@ public class AuditLog extends AbstractPlugin {
 	 * @param id the ID of the entry.
 	 * @return the content Type of the entry corresponding to the ID,
 	 * or the empty string if no content type is available for the ID.
-	 * @throws Exception if an error occurs while reading the audit log.
 	 */
 	public synchronized String getContentType(Integer id) {
 		try { return (String)contentTypeTable.get(id); }

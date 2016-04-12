@@ -51,6 +51,7 @@ public class ClinicalTrialProcessor {
 
 	/**
 	 * The main method of the ClinicalTrialProcessor program.
+	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) {
 		//Set the context classloader to allow dcm4che to load its classes
@@ -65,6 +66,7 @@ public class ClinicalTrialProcessor {
 	 * This method is used when running CTP as a Windows service.
 	 * It does not return until the stopService method is called
 	 * independently by the service manager.
+	 * @param args the command line arguments
 	 */
 	public static void startService(String[] args) {
 		System.out.println("Start [ServiceManager]");
@@ -81,6 +83,7 @@ public class ClinicalTrialProcessor {
 	 * This method is used when running CTP as a Windows service.
 	 * This method makes an HTTP connection to the ShutdownServlet
 	 * to trigger the plugins and pipelines to close down gracefully.
+	 * @param args the command line arguments
 	 */
 	public static void stopService(String[] args) {
 		try {

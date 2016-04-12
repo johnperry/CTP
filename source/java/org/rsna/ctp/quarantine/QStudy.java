@@ -48,6 +48,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 	 * Get the studyUID for a FileObject, or "unknown" if
 	 * no studyUID is available.
 	 * @param fileObject the object.
+	 * @return the studyUID
 	 */
 	public static String getStudyUID(FileObject fileObject) {
 		String studyUID = fileObject.getStudyUID();
@@ -57,6 +58,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Get the studyUID for this study.
+	 * @return the studyUID of this study
 	 */
 	public String getStudyUID() {
 		return studyUID;
@@ -64,6 +66,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Get whether this study has no series.
+	 * @return true if this study contains no series; false otherwise.
 	 */
 	public boolean isEmpty() {
 		return seriesUIDs.isEmpty();
@@ -71,6 +74,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Get the number of series for this study.
+	 * @return the number of series for this study.
 	 */
 	public int getNumberOfSeries() {
 		return seriesUIDs.size();
@@ -78,6 +82,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Get the seriesUIDs for this study.
+	 * @return the array of seriesUIDs for this study.
 	 */
 	public String[] getSeriesUIDs() {
 		String[] uids = new String[seriesUIDs.size()];
@@ -86,6 +91,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Add a QSeries to this study.
+	 * @param series the series to be added to this study.
 	 */
 	public void add(QSeries series) {
 		seriesUIDs.add(series.getSeriesUID());
@@ -93,6 +99,7 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Remove a series from this study.
+	 * @param seriesUID the seriesUID to be removed from this study.
 	 */
 	public void removeSeries(String seriesUID) {
 		seriesUIDs.remove(seriesUID);
@@ -100,13 +107,6 @@ public class QStudy implements Serializable, Comparable<QStudy> {
 
 	/**
 	 * Implement the Comparable interface.
-	 * <br>
-	 * Sort order:
-	 * <ol>
-	 * <li>PatientID
-	 * <li>StudyDate
-	 * <li>StudyUID
-	 * </ol>
 	 */
 	public int compareTo(QStudy study) {
 		int c;

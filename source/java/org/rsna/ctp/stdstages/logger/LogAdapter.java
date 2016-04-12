@@ -42,6 +42,7 @@ public interface LogAdapter {
 	/**
 	 * Export one QueueEntry to the external logging database.
 	 * This method is called from the exporter thread.
+	 * @param queueEntry the entry to export
 	 * @return Status.OK, Status.RETRY, or Status.FAIL
 	 */
 	public Status export(QueueEntry queueEntry);

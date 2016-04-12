@@ -53,6 +53,7 @@ public class TciaXnatDatabaseAdapter extends DatabaseAdapter {
 	 * configuration information from the DatabaseExportsService's
 	 * config file element.
 	 * @param element the configuration element
+	 * @throws Exception on any error
 	 */
 	public TciaXnatDatabaseAdapter(Element element) throws Exception {
 		super(element);

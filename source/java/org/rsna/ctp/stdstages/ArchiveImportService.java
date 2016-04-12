@@ -44,18 +44,24 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	static final int defaultAge = 5000;
 	static final int minAge = 1000;
 	long age;
-	String fsName = "";
-	int fsNameTag = 0;
 	File treeRoot = null;
 	boolean expandTARs;
 	FileSource fileSource = null;
 	File active = null;
+	
+	String fsName = "";
+	int fsNameTag = 0;
 	boolean setFileSystemName;
+	
+	int filePathTag = 0;
+	boolean setFilePath;
+	
 	File lastArchiveFileFound = null;
 
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
 	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public ArchiveImportService(Element element) throws Exception {
 		super(element);
@@ -73,6 +79,10 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 		fsName = element.getAttribute("fsName").trim();
 		fsNameTag = DicomObject.getElementTag(element.getAttribute("fsNameTag"));
 		setFileSystemName = (!fsName.equals("")) && (fsNameTag > 0);
+
+		//See if there is a filePathTag
+		filePathTag = DicomObject.getElementTag(element.getAttribute("filePathTag"));
+		setFilePath = (filePathTag > 0);
 
 		if ((root != null) && (treeRoot != null)) {
 			active = new File(root, "active");
@@ -106,7 +116,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 					//Only change the extension if it isn't a TAR file.
 					fileObject.setStandardExtension();
 				}
-				if (setFileSystemName) fileObject = setFSName(fileObject);
+				if (setFileSystemName || setFilePath) fileObject = setNames(fileObject);
 				lastFileOut = fileObject.getFile();
 				lastTimeOut = System.currentTimeMillis();
 				return fileObject;
@@ -121,24 +131,38 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 		return null;
 	}
 
-	//Set the FileSystem name in the object if we can.
-	private FileObject setFSName(FileObject fo) {
+	//Set the FileSystem name and/or file plath in the object if we can.
+	private FileObject setNames(FileObject fo) {
 		try {
-			if ((fo instanceof DicomObject) && setFileSystemName) {
+			if ((fo instanceof DicomObject) && (setFileSystemName || setFilePath)) {
 				//Unfortunately, we have to parse the object again
 				//in order to be able to save it once we modify it.
 				DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
 				File dobFile = dob.getFile();
-				dob.setElementValue(fsNameTag, fsName);
+				
+				//Set the names
+				if (setFileSystemName) dob.setElementValue(fsNameTag, fsName);
+				if (setFilePath) {
+					String path = fileSource.getCurrentDirectory().getAbsolutePath();
+					File treeRootParent = treeRoot.getAbsoluteFile().getParentFile();
+					if (treeRootParent == null) treeRootParent = treeRoot;
+					String treeRootPath =  treeRootParent.getAbsolutePath();
+					path = path.substring( treeRootPath.length()+1 );
+					path = path.replace("\\", "/");
+					dob.setElementValue(filePathTag, path);
+				}
+				
 				File tFile = File.createTempFile("TMP-",".dcm",dobFile.getParentFile());
 				dob.saveAs(tFile, false);
 				dob.close();
 				dob.getFile().delete();
+				
 				//Okay, we have saved the modified file in the temp file
 				//and deleted the original file; now rename the temp file
 				//to the original name so nobody is the wiser.
 				tFile.renameTo(dobFile);
-				//And finally parse it again so we have a real object to process;
+				
+				//And finally parse it again so we have a real object to process.
 				return new DicomObject(dobFile);
 			}
 		}

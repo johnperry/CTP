@@ -74,6 +74,9 @@ public class AnonymizerStatus {
 
 	/**
 	 * Status value indicating that the anonymization succeeded.
+	 * @param file the file
+	 * @param message the message
+	 * @return the OK status containing the file and message.
 	 */
 	public static AnonymizerStatus OK(File file, String message) {
 		return new AnonymizerStatus("OK", file, message);
@@ -81,6 +84,9 @@ public class AnonymizerStatus {
 
 	/**
 	 * Status value indicating that a skip() function call was encountered.
+	 * @param file the file
+	 * @param message the message
+	 * @return the SKIP status containing the file and message.
 	 */
 	public static AnonymizerStatus SKIP(File file, String message) {
 		return new AnonymizerStatus("SKIP", file, message);
@@ -88,6 +94,9 @@ public class AnonymizerStatus {
 
 	/**
 	 * Status value indicating that a quarantine() function call was encountered.
+	 * @param file the file
+	 * @param message the message
+	 * @return the QUARANTINE status containing the file and message.
 	 */
 	public static AnonymizerStatus QUARANTINE(File file, String message) {
 		return new AnonymizerStatus("QUARANTINE", file, message);

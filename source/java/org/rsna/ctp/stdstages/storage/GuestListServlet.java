@@ -27,9 +27,10 @@ public class GuestListServlet extends Servlet {
 	static final Logger logger = Logger.getLogger(GuestListServlet.class);
 
 	/**
-	 * Static init method to set up the root directory..
+	 * Static init method to set up the root directory.
 	 * This method copies the CSS and JS files needed
 	 * by the viewer into the root directory.
+	 * @param root the rood directory for this servlet
 	 */
 	public static void init(File root) {
 		root.mkdirs();

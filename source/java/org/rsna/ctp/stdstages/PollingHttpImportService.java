@@ -40,6 +40,7 @@ public class PollingHttpImportService extends AbstractImportService {
 	 * Construct a PollingHttpImportService.
 	 * @param element the XML element from the configuration file
 	 * specifying the configuration of the stage.
+	 * @throws Exception on any error
 	 */
 	public PollingHttpImportService(Element element) throws Exception {
 		super(element);

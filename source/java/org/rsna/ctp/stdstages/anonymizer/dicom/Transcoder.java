@@ -144,7 +144,8 @@ public class Transcoder {
     private boolean ignoreMissingPixelData;
 
     /**
-     * if true, input stream is directly copied into output stream without pixel
+     * Set the direct copy flag
+     * @param cp if true, input stream is directly copied into output stream without pixel
      * decoding. Makes sense if output ts == input ts
      */
     public void setDirectCopy(boolean cp) {
@@ -152,8 +153,8 @@ public class Transcoder {
     }
 
     /**
-     * if true, input stream is directly copied into output stream without pixel
-     * decoding. Makes sense if output ts == input ts
+     * Get the direct copy flag
+     * @return the direct copy flag
      */
     public boolean doDirectCopy() {
         return directCopy;

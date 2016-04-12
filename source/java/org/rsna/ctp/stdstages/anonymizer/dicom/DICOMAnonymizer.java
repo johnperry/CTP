@@ -94,6 +94,7 @@ public class DICOMAnonymizer {
      * @param cmds the properties object containing the anonymization commands.
      * @param lkup the properties object containing the local lookup table; null
      * if local lookup is not to be used.
+     * @param intTable the integer table containing integer remappings for elements.
      * @param forceIVRLE force the transfer syntax to IVRLE if true; leave
      * the syntax unmodified if false.
      * @param renameToSOPIUID rename the output file to [SOPInstanceUID].dcm, where
@@ -610,6 +611,7 @@ public class DICOMAnonymizer {
 	static final String timeFn 			= "time";
 	static final String processFn		= "process";
 	static final String callFn			= "call";
+	static final String pathelementFn	= "pathelement";
 
 
 	//Create the replacement for one element.
@@ -661,6 +663,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(timeFn)) 		out += time(fnCall);
 				else if (fnCall.name.equals(processFn))		out += processfn(fnCall);
 				else if (fnCall.name.equals(callFn))		out += callfn(fnCall);
+				else if (fnCall.name.equals(pathelementFn))	out += pathelement(fnCall);
 				else out += functionChar + fnCall.getCall();
 			}
 			else out += c;
@@ -922,6 +925,28 @@ public class DICOMAnonymizer {
 		catch (Exception ex) {
 			throw new Exception("!quarantine! - "+ex.getMessage());
 		}
+	}
+
+	//Execute the pathelement function. This function returns
+	//the an element in a path stored in an element. The path
+	//element returned is the one indexed by the second 
+	//argument. Positive indexes work from the root of the
+	//path (0 based). Negative indexes work from the
+	//end of the path. Thus, -1 is the last element in the path;
+	//0 is the root element of the path, and 2 is the first child
+	//of the root. If the index is not within the length of the path,
+	//the whole path is returned.
+	private static String pathelement(FnCall fn) {
+		String s = fn.context.contents(fn.args[0], fn.thisTag);
+		int index = 1000;
+		try { index = Integer.parseInt(fn.args[1]); }
+		catch (Exception useDefault) { }
+		String[] pathElements = s.split("/");
+		if (index < 0) index = pathElements.length + index;
+		if ((index >= 0) && (index < pathElements.length)) {
+			return pathElements[index];
+		}
+		return s;
 	}
 
 	//Execute the lowercase function. This function returns

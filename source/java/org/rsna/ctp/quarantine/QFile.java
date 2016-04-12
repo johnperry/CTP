@@ -53,6 +53,7 @@ public class QFile implements Serializable, Comparable<QFile> {
 	 * Get the instanceNumber for a FileObject, or "unknown" if
 	 * no instanceNumber is available.
 	 * @param fileObject the object.
+	 * @return the instance number or "unknown" if no instance number can be obtained.
 	 */
 	public static String getInstanceNumber(FileObject fileObject) {
 		String instanceNumber = "unknown";
@@ -64,6 +65,7 @@ public class QFile implements Serializable, Comparable<QFile> {
 
 	/**
 	 * Get the filename for this file.
+	 * @return the file name for this file.
 	 */
 	public String getName() {
 		return filename;
@@ -71,6 +73,7 @@ public class QFile implements Serializable, Comparable<QFile> {
 
 	/**
 	 * Get the studyUID for this file.
+	 * @return the studyUID for this file.
 	 */
 	public String getStudyUID() {
 		return studyUID;
@@ -78,18 +81,15 @@ public class QFile implements Serializable, Comparable<QFile> {
 
 	/**
 	 * Get the seriesUID for this file.
+	 * @return the seriesUID for this file.
 	 */
 	public String getSeriesUID() {
 		return seriesUID;
 	}
 
 	/**
-	 * Implement the Comparable interface.
-	 * <br>
-	 * Sort order:
-	 * <ol>
-	 * <li>SeriesNumber
-	 * </ol>
+	 * Implement the Comparable interface, sorting by 
+	 * type, and within type, by instance number
 	 */
 	public int compareTo(QFile file) {
 		int c;

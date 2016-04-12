@@ -26,8 +26,10 @@ public class StorageMonitor extends Thread {
 	static final long aDay = 24 * anHour;
 
 	/**
-	 * Create a new SharedFileCabinetManager to remove files
-	 * from the shared file cabinet after they time out.
+	 * Create a new StorageMonitor to remove files
+	 * from the storage service after they time out.
+	 * @param root the root directory of the storage service
+	 * @param timeDepth the timeout in days
 	 */
 	public StorageMonitor(File root, int timeDepth) {
 		super("FileStorageService StorageMonitor");

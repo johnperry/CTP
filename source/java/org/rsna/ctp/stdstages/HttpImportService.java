@@ -50,6 +50,7 @@ public class HttpImportService extends AbstractImportService {
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
 	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public HttpImportService(Element element) throws Exception {
 		super(element);

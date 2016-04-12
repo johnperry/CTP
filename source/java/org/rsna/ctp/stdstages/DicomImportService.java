@@ -47,6 +47,7 @@ public class DicomImportService extends AbstractImportService {
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
 	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public DicomImportService(Element element) throws Exception {
 		super(element);

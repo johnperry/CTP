@@ -46,6 +46,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 	 * Get the seriesUID for a FileObject, or "unknown" if
 	 * no seriesUID is available.
 	 * @param fileObject the object.
+	 * @return the seriesUID, or "unknown" if the series UID cannot be obtained
 	 */
 	public static String getSeriesUID(FileObject fileObject) {
 		String seriesUID = fileObject.getSeriesUID();
@@ -57,6 +58,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 	 * Get the seriesNumber for a FileObject, or "unknown" if
 	 * no seriesNumber is available.
 	 * @param fileObject the object.
+	 * @return the seriesNumber, or "unknown" if the series number cannot be obtained
 	 */
 	public static String getSeriesNumber(FileObject fileObject) {
 		String seriesNumber = "unknown";
@@ -68,6 +70,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Get the studyUID for this series.
+	 * @return the study UID
 	 */
 	public String getStudyUID() {
 		return studyUID;
@@ -75,6 +78,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Get the seriesUID for this series.
+	 * @return the series UID
 	 */
 	public String getSeriesUID() {
 		return seriesUID;
@@ -82,6 +86,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Get whether this series has no files.
+	 * @return true if the series has no files; false otherwise.
 	 */
 	public boolean isEmpty() {
 		return filenames.isEmpty();
@@ -89,6 +94,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Get the number of files for this series.
+	 * @return the number of files stored for this series.
 	 */
 	public int getNumberOfFiles() {
 		return filenames.size();
@@ -96,6 +102,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Get the filenames for this series.
+	 * @return the array of filenames stored for this series.
 	 */
 	public String[] getFilenames() {
 		String[] names = new String[filenames.size()];
@@ -104,6 +111,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Add a file to this series.
+	 * @param file the file to be added to this series
 	 */
 	public void add(QFile file) {
 		filenames.add(file.getName());
@@ -111,6 +119,7 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Remove a file from this series.
+	 * @param file the file to be removed from this series
 	 */
 	public void remove(QFile file) {
 		filenames.remove(file.getName());
@@ -118,11 +127,6 @@ public class QSeries implements Serializable, Comparable<QSeries> {
 
 	/**
 	 * Implement the Comparable interface.
-	 * <br>
-	 * Sort order:
-	 * <ol>
-	 * <li>SeriesNumber
-	 * </ol>
 	 */
 	public int compareTo(QSeries series) {
 		int c;

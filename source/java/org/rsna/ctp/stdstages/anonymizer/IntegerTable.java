@@ -28,6 +28,7 @@ public class IntegerTable {
 	/**
 	 * Constructor; create an IntegerTable from a database file.
 	 * @param dir the directory in which the database is to be created.
+	 * @throws Exception if the table cannot be loaded.
 	 */
 	public IntegerTable(File dir) throws Exception {
 		this.dir = dir;

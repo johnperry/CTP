@@ -50,6 +50,7 @@ public class DatabaseAdapter {
 
 	/**
 	 * Set an ID string for this DatabaseAdapter.
+	 * @param n the adapter number (in the pool)
 	 */
 	public void setID(int n) {
 		this.adapterNumber = n;
@@ -59,6 +60,7 @@ public class DatabaseAdapter {
 	/**
 	 * Reset the database interface. This method is called by
 	 * the DatabaseExportService if it is restarted.
+	 * @return the status after the reset
 	 */
 	public Status reset() {
 		logger.debug(id+"reset method call received");
@@ -70,6 +72,7 @@ public class DatabaseAdapter {
 	 * the DatabaseExportService when it is about to call methods in
 	 * the database interface. This call can be used  by the database
 	 * interface to, for example, connect to a relational database.
+	 * @return the status after the connect
 	 */
 	public Status connect() {
 		logger.debug(id+"connect method call received");
@@ -82,6 +85,7 @@ public class DatabaseAdapter {
 	 * with the database. This call can be used by the database
 	 * interface to, for example, disconnect from a relational
 	 * database.
+	 * @return the status after the disconnect
 	 */
 	public Status disconnect() {
 		logger.debug(id+"disconnect method call received");
@@ -95,6 +99,7 @@ public class DatabaseAdapter {
 	 * accesses will occur. The database interface should not
 	 * rely on this call for anything critical since external
 	 * conditions may prevent the call from occurring.
+	 * @return the status after the shutdown
 	 */
 	public Status shutdown() {
 		logger.debug(id+"shutdown method call received");
@@ -109,6 +114,7 @@ public class DatabaseAdapter {
 	 * @param storedFile The File pointing to the object stored in the
 	 * FileStorageService, or null if the object has not been stored.
 	 * @param url The URL pointing to the stored object or null if no URL is available.
+	 * @return the status after the object has been processed
 	 */
 	public Status process(DicomObject dicomObject, File storedFile, String url) {
 		logger.info(id+"DicomObject received: "+dicomObject.getFile());
@@ -125,6 +131,7 @@ public class DatabaseAdapter {
 	 * @param storedFile The File pointing to the object stored in the
 	 * FileStorageService, or null if the object has not been stored.
 	 * @param url The URL pointing to the stored object or null if no URL is available.
+	 * @return the status after the object has been processed
 	 */
 	public Status process(XmlObject xmlObject, File storedFile, String url) {
 		logger.info(id+"XmlObject received: "+xmlObject.getFile());
@@ -141,6 +148,7 @@ public class DatabaseAdapter {
 	 * @param storedFile The File pointing to the object stored in the
 	 * FileStorageService, or null if the object has not been stored.
 	 * @param url The URL pointing to the stored object or null if no URL is available.
+	 * @return the status after the object has been processed
 	 */
 	public Status process(ZipObject zipObject, File storedFile, String url) {
 		logger.info(id+"ZipObject received: "+zipObject.getFile());
@@ -158,6 +166,7 @@ public class DatabaseAdapter {
 	 * @param storedFile The File pointing to the object stored in the
 	 * FileStorageService, or null if the object has not been stored.
 	 * @param url The URL pointing to the stored object or null if no URL is available.
+	 * @return the status after the object has been processed
 	 */
 	public Status process(FileObject fileObject, File storedFile, String url) {
 		logger.info(id+"FileObject received: "+fileObject.getFile());

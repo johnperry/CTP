@@ -63,6 +63,7 @@ public class DicomSTOWRSExportService extends AbstractExportService {
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
 	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public DicomSTOWRSExportService(Element element) throws Exception {
 		super(element);

@@ -40,6 +40,7 @@ public class Pipeline extends Thread {
 	 * and ZipObjects).
 	 * @param pipeline the XML element from the configuration file
 	 * specifying the stages in the pipeline.
+	 * @param index of the pipeline (used by stages to find their pipeline).
 	 */
 	public Pipeline(Element pipeline, int index) {
 		super();
@@ -97,6 +98,7 @@ public class Pipeline extends Thread {
 	 * Check whether a user has admin privileges for this pipeline. To have admin
 	 * privileges, the user must either have the global admin role or be named
 	 * in the admin attribute of the pipeline.
+	 * @param user the user whose privileges are to be checked.
 	 * @return true if the user has admin privileges for this pipeline, false otherwise.
 	 */
 	public boolean allowsAdminBy(User user) {

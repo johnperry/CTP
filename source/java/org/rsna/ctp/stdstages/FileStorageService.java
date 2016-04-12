@@ -138,6 +138,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 
 	/**
 	 * Get the export directory specified in the configuration.
+	 * @return the export directory
 	 */
 	public File getExportDirectory() {
 		return exportDirectory;

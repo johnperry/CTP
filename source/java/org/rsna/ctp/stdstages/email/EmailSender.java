@@ -34,6 +34,12 @@ public class EmailSender {
 
 	/**
 	 * Send a message in plain text.
+	 * @param to the recipients
+	 * @param from the sender
+	 * @param cc the copy recipients
+	 * @param subject the subject of the message
+	 * @param body the body of the message
+	 * @return true of the message was successfully sent
 	 */
 	public boolean sendPlainText(String to,
 								 String from,
@@ -66,6 +72,13 @@ public class EmailSender {
 	/**
 	 * Send a message with a plain text part and
 	 * an HTML alternative.
+	 * @param to the recipients
+	 * @param from the sender
+	 * @param cc the copy recipients
+	 * @param subject the subject of the message
+	 * @param textBody the plain text of the message
+	 * @param htmlBody the HTML text of the message
+	 * @return true of the message was successfully sent
 	 */
 	public boolean sendHTML(String to,
 							String from,
@@ -109,6 +122,14 @@ public class EmailSender {
 
 	/**
 	 * Send a message with attachments.
+	 * @param to the recipients
+	 * @param from the sender
+	 * @param cc the copy recipients
+	 * @param subject the subject of the message
+	 * @param textBody the plain text of the message
+	 * @param subtype "html" or "plain"
+	 * @param files the array of attachments
+	 * @return true of the message was successfully sent
 	 */
 	public boolean sendTextWithAttachments(
 							String to,

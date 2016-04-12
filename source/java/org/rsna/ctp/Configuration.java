@@ -301,6 +301,7 @@ public class Configuration {
 
 	/**
 	 * Get a value from the manifest.
+	 * @param name the name of the attribute
 	 * @return the value from the manifest, or the empty string if the
 	 * requested value is missing.
 	 */

@@ -35,6 +35,7 @@ public class SftpExportService extends AbstractExportService {
 	/**
 	 * Class constructor; creates a new instance of the ExportService.
 	 * @param element the configuration element.
+	 * @throws Exception on any error
 	 */
 	public SftpExportService(Element element) throws Exception {
 		super(element);

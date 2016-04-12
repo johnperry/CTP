@@ -158,6 +158,11 @@ public class Util {
 					command.add("-Dcom.sun.management.jmxremote");
 				}
 
+				//Force 32-bit data model, if required
+				if (props.getProperty("d32", "no").equals("yes")) {
+					command.add("-d32");
+				}
+
 				//Set the extensions directories
 				String extDirs = props.getProperty("ext", "").trim();
 				if (!extDirs.equals("")) {

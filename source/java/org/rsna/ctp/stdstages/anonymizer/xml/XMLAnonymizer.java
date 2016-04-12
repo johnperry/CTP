@@ -66,7 +66,6 @@ public class XMLAnonymizer {
 	 * @return AnonymizerStatus.OK if successful; AnonymizerStatus.QUARANTINE otherwise.
 	 * IMPORTANT: if the anonymization fails, the DOM Document may still have been
 	 * at least partially modified.
-	 * @throws Exception if the anonymization fails;
 	 */
 	public static AnonymizerStatus anonymize(
 			Document xmlDocument,

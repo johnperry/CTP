@@ -224,6 +224,8 @@ public class Study implements Comparable {
 	 * returned will be a class name element (DicomObject, XmlObject, ZipObject, or FileObject);
 	 * @return the DOM Element corresponding to the specified filename, or null if
 	 * no such element exists.
+	 * @param filename the filename whose index entry is to be returned
+	 * @return the DOM Element in the index corresponding to the filename
 	 */
 	public Element getIndexElementForFilename(String filename) {
 		try {
@@ -246,7 +248,10 @@ public class Study implements Comparable {
 	/**
 	 * Store a FileObject in this Study.
 	 * @param fileObject the object to store.
+	 * @param acceptDuplicateUIDs true if duplicate UIDs are to be accepted and stored; false if 
+	 * objects with duplicate UIDs are to overwrite previously stored objects with the same UID.
 	 * @return the file that was stored.
+	 * @throws Exception on any error
 	 */
 	public File store(FileObject fileObject, boolean acceptDuplicateUIDs) throws Exception {
 

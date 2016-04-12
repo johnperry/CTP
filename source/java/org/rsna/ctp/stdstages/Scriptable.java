@@ -18,6 +18,7 @@ public interface Scriptable {
 
 	/**
 	 * Get the script file.
+	 * @return the arrasy of script files
 	 */
 	public File[] getScriptFiles();
 
