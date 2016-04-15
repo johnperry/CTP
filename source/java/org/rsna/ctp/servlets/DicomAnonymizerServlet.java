@@ -129,7 +129,11 @@ public class DicomAnonymizerServlet extends CTPServlet {
 	 */
 	public void doPost(HttpRequest req, HttpResponse res) {
 		super.loadParameters(req);
-		res.setContentEncoding(req);
+		
+		//Do NOT call setContentEncoding.
+		//If you do, the AJAX clients won't get any content.
+		//They will get a 200 response, but no text.
+		//res.setContentEncoding(req);
 
 		//Make sure the user is authorized to do this.
 		if (!userIsAuthorized || !req.isReferredFrom(context)) {

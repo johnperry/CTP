@@ -52,7 +52,7 @@ public class ObjectTrackerServlet extends CTPServlet {
 
 	/**
 	 * The GET handler: return a page displaying either the list of
-	 * ObjectTracker stages or the search form.for a selected ObjectTracker.
+	 * ObjectTracker stages or the search form for a selected ObjectTracker.
 	 * @param req the request object
 	 * @param res the response object
 	 */
