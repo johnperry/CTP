@@ -288,7 +288,7 @@ public class Study implements Comparable {
 		Element o = indexDoc.createElement(className);
 		append(o, "file", newFile.getName());
 		String uid = fileObject.getUID();
-		if (uid.equals("")) uid = newFile.getName();
+		if ((uid == null) || uid.equals("")) uid = newFile.getName();
 		append(o, "uid", uid);
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;

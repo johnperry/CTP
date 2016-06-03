@@ -221,7 +221,8 @@ public class FileSystem {
 			append(s, "storageDate", StringUtil.getDate(System.currentTimeMillis(),""));
 			append(s, "studyDate", fileObject.getStudyDate());
 			append(s, "studyName", studyName);
-			String stuid = fileObject.getStudyUID().trim();
+			String stuid = fileObject.getStudyUID();
+			stuid = (stuid != null) ? stuid.trim() : "";
 			if (stuid.equals("") && studyName.equals("__bullpen")) stuid = studyName;
 			append(s, "studyUID", stuid);
 			indexDoc.getDocumentElement().appendChild(s);

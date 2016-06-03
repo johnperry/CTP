@@ -909,7 +909,8 @@ public class DicomObject extends FileObject {
 	 * @return the value of the specified element in the specified dataset,
 	 * or null of the value cannot be obtained.
 	 */
-	public static String getElementValue(DcmElement de, Dataset ds) {	
+	public static String getElementValue(DcmElement de, Dataset ds) {
+		if ((de == null) || (ds == null)) return null;		
 		SpecificCharacterSet cs = ds.getSpecificCharacterSet();
 		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 		

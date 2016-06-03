@@ -26,7 +26,7 @@ public class SopClass {
 	/** The KIN SOP Class UID. */
 	static final String kosSopClass = "1.2.840.10008.5.1.4.1.1.88.59";
 
-	/** The DICOMDIR SOP Classx UID. */
+	/** The DICOMDIR SOP Class UID. */
 	static final String dicomdirClass = "1.2.840.10008.1.3.10";
 
 	/**

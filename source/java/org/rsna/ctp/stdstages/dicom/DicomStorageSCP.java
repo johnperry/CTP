@@ -164,10 +164,19 @@ public class DicomStorageSCP extends DcmServiceBase {
 				skipObject(in);
 			}
 			else {
+				String affectedSOPClassUID = rqCmd.getAffectedSOPClassUID();
+				String affectedSOPInstanceUID = rqCmd.getAffectedSOPInstanceUID();
+				String transferSyntaxUID = rq.getTransferSyntaxUID();
+				if (logger.isDebugEnabled()) {
+					logger.warn(dicomImportService.getName()+": request parameters:");
+					logger.warn("    AffectedSOPClassUID:    " + affectedSOPClassUID);
+					logger.warn("    AffectedSOPInstanceUID: " + affectedSOPInstanceUID);
+					logger.warn("    TransferSyntaxUID:      " + transferSyntaxUID);
+				}
 				FileMetaInfo fmi = objFact.newFileMetaInfo(
-						rqCmd.getAffectedSOPClassUID(),
-						rqCmd.getAffectedSOPInstanceUID(),
-						rq.getTransferSyntaxUID());
+						affectedSOPClassUID,
+						affectedSOPInstanceUID,
+						transferSyntaxUID);
 
 				boolean isDuplicate = false;
 				boolean isRecent = false;
@@ -211,7 +220,10 @@ public class DicomStorageSCP extends DcmServiceBase {
 				}
 			}
         }
-        catch (IOException ioe) { ioe.printStackTrace(); }
+        catch (IOException ioe) { 
+			ioe.printStackTrace();
+			logger.debug("doCStore exception", ioe);
+		}
         finally { in.close(); }
         if (rspDelay > 0L) {
             try { Thread.sleep(rspDelay); }
