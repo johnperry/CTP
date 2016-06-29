@@ -173,6 +173,13 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 		//First, see if the object is already in the store;
 		File savedFile;
 		String uid = fileObject.getUID();
+		if (uid == null) {
+			if (fileObject instanceof DicomObject) {
+				DicomObject dob = (DicomObject)fileObject;
+				uid = dob.getSOPInstanceUID();
+			}
+			if (uid == null) uid = fileObject.getDigest(10);
+		}
 		String path = null;
 		try { path = (String)index.get(uid); }
 		catch (Exception notThere) { path = null; }

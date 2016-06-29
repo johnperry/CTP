@@ -93,7 +93,6 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 		interval = StringUtil.getInt(element.getAttribute("interval").trim());
 		if ((interval < minInterval) || (interval > maxInterval)) interval = defaultInterval;
 		enableExport = !element.getAttribute("enableExport").trim().equals("no");
-		exporter = new Exporter();
 	}
 	
 	private LogAdapter getLogAdapter(String adapterClassName) {
@@ -125,7 +124,9 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 			}
 			else logger.warn(name+": cacheID \""+objectCacheID+"\" does not reference any PipelineStage");
 		}
-		if ((logAdapter != null) && (objectCache != null) && (exporter != null)) {
+		else logger.warn(name+": missing cacheID");
+		if ((logAdapter != null) && (objectCache != null)) {
+			exporter = new Exporter();
 			exporter.start();
 		}
 		else logger.warn(name+": logging is disabled");
@@ -136,7 +137,7 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 	 */
 	public synchronized void shutdown() {
 		super.shutdown();
-		exporter.interrupt();
+		if (exporter != null) exporter.interrupt();
 	}
 
 	/**

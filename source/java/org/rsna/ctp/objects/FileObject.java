@@ -46,7 +46,16 @@ public class FileObject {
 	 * @return the MD5 digest of the file.
 	 */
 	public String getDigest() {
-		return DigestUtil.digest("MD5", file, 16);
+		return getDigest(16);
+	}
+
+	/**
+	 * Compute the MD5 digest of the contents of the file
+	 * and return a string representing the result in the specified base.
+	 * @return the MD5 digest of the file.
+	 */
+	public String getDigest(int base) {
+		return DigestUtil.digest("MD5", file, base);
 	}
 
 	/**

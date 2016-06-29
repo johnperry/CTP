@@ -131,6 +131,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 			if (fileObject instanceof DicomObject) {
 				DicomObject dob = (DicomObject)fileObject;
+				logger.debug("name: "+name);
+				if (dob.isDICOMDIR() && (name == null)) name = dob.getSOPInstanceUID();
 
 				//If there is a dirs array, get the storage hierarchy.
 				//If there is a cache, get the cached object; otherwise,
@@ -178,7 +180,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				//always stored in the root, so we are now ready to store.
 			}
 
-			if (name.equals("")) name = fileObject.getClassName();
+			if ((name == null) || name.equals("")) name = fileObject.getClassName();
 			name = name.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 			name = name.replaceAll(filter, "");
 			logger.debug("...filtered filename: "+name);
