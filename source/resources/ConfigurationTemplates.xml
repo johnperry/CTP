@@ -163,6 +163,7 @@
 			<attr name="fsName" required="no" default=""/>
 			<attr name="fsNameTag" required="no" default=""/>
 			<attr name="filePathTag" required="no" default=""/>
+			<attr name="fileNameTag" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
@@ -1022,6 +1023,7 @@
 		<dicomScript>The script file determining whether DicomObjects are to be accepted for processing</dicomScript>
 		<expandTARs>Whether to unpack TAR files found in the archive</expandTARs>
 		<exportDirectory>Storage directory to which selected studies can be copied for export</exportDirectory>
+		<fileNameTag>DICOM tag in which to store the name of the file in the archive directory (ggggeeee or DICOM PS 3.6 keyword)</fileNameTag>
 		<filePathTag>DICOM tag in which to store the path to the file in the archive directory (ggggeeee or DICOM PS 3.6 keyword)</filePathTag>
 		<fileStorageServiceID>The ID of the StorageService that manages objects referenced by the data stored in the database</fileStorageServiceID>
 		<filenameTag>DICOM tag in which to store the name of the file (ggggeeee or DICOM PS 3.6 keyword)</filenameTag>

@@ -56,6 +56,9 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	int filePathTag = 0;
 	boolean setFilePath;
 	
+	int fileNameTag = 0;
+	boolean setFileName;
+	
 	File lastArchiveFileFound = null;
 
 	/**
@@ -83,6 +86,10 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 		//See if there is a filePathTag
 		filePathTag = DicomObject.getElementTag(element.getAttribute("filePathTag"));
 		setFilePath = (filePathTag > 0);
+		
+		//See if there is a fileNameTag
+		fileNameTag = DicomObject.getElementTag(element.getAttribute("fileNameTag"));
+		setFileName = (fileNameTag > 0);
 
 		if ((root != null) && (treeRoot != null)) {
 			active = new File(root, "active");
@@ -116,7 +123,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 					//Only change the extension if it isn't a TAR file.
 					fileObject.setStandardExtension();
 				}
-				if (setFileSystemName || setFilePath) fileObject = setNames(fileObject);
+				if (setFileSystemName || setFilePath || setFileName) fileObject = setNames(fileObject);
 				lastFileOut = fileObject.getFile();
 				lastTimeOut = System.currentTimeMillis();
 				return fileObject;
@@ -151,6 +158,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 					path = path.replace("\\", "/");
 					dob.setElementValue(filePathTag, path);
 				}
+				if (setFileName) dob.setElementValue(fileNameTag, dob.getFile().getName());
 				
 				File tFile = File.createTempFile("TMP-",".dcm",dobFile.getParentFile());
 				dob.saveAs(tFile, false);
