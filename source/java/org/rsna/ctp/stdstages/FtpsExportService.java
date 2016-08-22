@@ -96,12 +96,12 @@ public class FtpsExportService extends AbstractExportService {
 			logger.debug("Remote filename: "+remoteFilename);
 
 			FTPSClient client = new FTPSClient( /*isImplicit=*/false );
-			client.setFileType(FTP.BINARY_FILE_TYPE);
 			
 			// Connect to the host
 			client.connect(host, port);
 			int reply = client.getReplyCode();
 			if (FTPReply.isPositiveCompletion(reply)) {
+				client.setFileType(FTP.BINARY_FILE_TYPE);
 
 				//Login
 				if (client.login(username, password)) {
