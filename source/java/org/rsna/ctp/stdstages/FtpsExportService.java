@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
@@ -95,6 +96,7 @@ public class FtpsExportService extends AbstractExportService {
 			logger.debug("Remote filename: "+remoteFilename);
 
 			FTPSClient client = new FTPSClient( /*isImplicit=*/false );
+			client.setFileType(FTP.BINARY_FILE_TYPE);
 			
 			// Connect to the host
 			client.connect(host, port);
