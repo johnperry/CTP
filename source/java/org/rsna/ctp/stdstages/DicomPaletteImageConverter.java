@@ -39,7 +39,7 @@ public class DicomPaletteImageConverter extends AbstractPipelineStage implements
 	 * Process a DicomObject, logging the filename and returning the processed object.
 	 * If the object is not a DicomObject, pass the object unmodified.
 	 * If the object is not an image, pass the object unmodified.
-	 * If the object does not have PhotometricInterpretation PALETTE COLOR, pass the object unmodified.
+	 * If the object does not have PhotometricInterpretation PALETTE COLOR, pass the object unmodified.
 	 * @param fileObject the object to process.
 	 * @return the processed FileObject.
 	 */

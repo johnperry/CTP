@@ -101,13 +101,13 @@ public class FtpsExportService extends AbstractExportService {
 			client.connect(host, port);
 			int reply = client.getReplyCode();
 			if (FTPReply.isPositiveCompletion(reply)) {
-				client.setFileType(FTP.BINARY_FILE_TYPE);
 
 				//Login
 				if (client.login(username, password)) {
 					client.execPBSZ(0);		// Set protection buffer size
 					client.execPROT("P");	// Set data channel protection to private
 					client.enterLocalPassiveMode();
+					client.setFileType(FTP.BINARY_FILE_TYPE);
 					
 					//Change to the remote directory
 					if (cd(client, remoteDirPath) ) {
