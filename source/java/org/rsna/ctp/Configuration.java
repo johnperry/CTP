@@ -103,6 +103,7 @@ public class Configuration {
 			String thisJavaVMVendor = System.getProperty("java.vm.vendor");
 			String thisJavaVMVersion = System.getProperty("java.vm.version");
 			String thisJavaBits = System.getProperty("sun.arch.data.model") + " bits";
+			String thisJavaMaxMemory = String.format("%,d bytes", Runtime.getRuntime().maxMemory());
 			int thisJCEKeyLength = CipherUtil.getMaxAllowedKeyLength();
 			int thisJCEMaxKeyLength = CipherUtil.getMaxAllowedKeyLength("AES");
 
@@ -125,6 +126,7 @@ public class Configuration {
 			logger.info("Java VM vendor:      " + thisJavaVMVendor);
 			logger.info("Java VM version:     " + thisJavaVMVersion);
 			logger.info("Java data model:     " + thisJavaBits);
+			logger.info("Java max memory:     " + thisJavaMaxMemory);
 			logger.info("CTP crypto strength: " + thisJCEKeyLength);
 			logger.info("Max crypto strength: " + thisJCEMaxKeyLength);
 			logger.info("ImageIO Tools:       " + thisImageIOVersion);
