@@ -187,6 +187,7 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 						if (quarantine != null) quarantine.insertCopy(fileObject);
 						logger.warn(name+": Unable to enter difference object in the export queue");
 					}
+					entryFile.delete(); //Get rid of the temp file
 				}
 				catch (Exception ex) {
 					logger.warn(name+": Unable to enter difference object in the export queue");
