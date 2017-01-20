@@ -52,7 +52,7 @@ import org.apache.log4j.Logger;
  */
 public class DICOMPaletteImageConverter {
 
-	static final Logger logger = Logger.getLogger(DICOMPlanarConfigurationConverter.class);
+	static final Logger logger = Logger.getLogger(DICOMPaletteImageConverter.class);
 	static final DcmParserFactory pFact = DcmParserFactory.getInstance();
 	static final DcmObjectFactory oFact = DcmObjectFactory.getInstance();
 	static final DictionaryFactory dFact = DictionaryFactory.getInstance();
@@ -232,6 +232,7 @@ public class DICOMPaletteImageConverter {
 			}
 
 			//Quarantine the object
+			logger.debug(e.getMessage());
 			return AnonymizerStatus.QUARANTINE(inFile, e.getMessage());
 		}
     }
@@ -273,7 +274,7 @@ public class DICOMPaletteImageConverter {
 					color[i] = (byte)((data[i] >> 8) & 0xff);
 				}
 			}				
-			logger.info("desc = "+nEntries+"; "+firstValue+"; "+nBits);
+			logger.debug("desc = "+nEntries+"; "+firstValue+"; "+nBits);
 		}
 		
 		public byte get(int pd) {
