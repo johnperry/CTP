@@ -113,8 +113,15 @@ public class DICOMPaletteImageConverter {
 			}
 
 
-			//Get the encoding and set the parameters
+			//Get the encoding
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
+			if (fileParam.encapsulated) {
+				logger.debug("Encapsulated pixel data found");
+				close(in);
+				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
+			}			
+			
+			//Set the parameters
         	String fileEncodingUID = UIDs.ImplicitVRLittleEndian;
 			FileMetaInfo fmi = dataset.getFileMetaInfo();
             if (fmi != null) fileEncodingUID = fmi.getTransferSyntaxUID();
@@ -123,12 +130,6 @@ public class DICOMPaletteImageConverter {
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(encodingUID);
 			boolean swap = (fileParam.byteOrder != encoding.byteOrder);
 
-			if (encoding.encapsulated) {
-				logger.debug("Encapsulated pixel data found");
-				close(in);
-				return AnonymizerStatus.SKIP(inFile, "Encapsulated pixel data not supported");
-			}
-			
 			//Get the LUTs
 			LUT red = new LUT(dataset.getInts(Tags.RedPaletteColorLUTDescriptor),
 							  dataset.getInts(Tags.RedPaletteColorLUTData));
