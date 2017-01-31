@@ -24,7 +24,9 @@ import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DAScript;
 import org.rsna.ctp.stdstages.DicomAnonymizer;
 import org.rsna.ctp.stdstages.ScriptableDicom;
+import org.rsna.ctp.stdstages.SupportsLookup;
 import org.rsna.ctp.stdstages.XmlAnonymizer;
+import org.rsna.ctp.stdstages.ZipAnonymizer;
 import org.rsna.multipart.UploadedFile;
 import org.rsna.server.HttpRequest;
 import org.rsna.server.HttpResponse;
@@ -133,14 +135,14 @@ public class LookupServlet extends CTPServlet {
 		}
 		
 		PipelineStage stage = Configuration.getInstance().getRegisteredStage(id);
-		if ((stage == null) || !(stage instanceof DicomAnonymizer)) {
+		if ((stage == null) || !(stage instanceof SupportsLookup)) {
 			res.setResponseCode(res.notmodified);
 			res.send();
 			return;
 		}
 
-		DicomAnonymizer da = (DicomAnonymizer)stage;
-		File lutFile = da.getLookupTableFile();
+		SupportsLookup lookupableStage = (SupportsLookup)stage;
+		File lutFile = lookupableStage.getLookupTableFile();
 		LookupTable lut = LookupTable.getInstance(lutFile);
 		if (lut == null) {
 			res.setResponseCode(res.notmodified);
@@ -304,8 +306,8 @@ public class LookupServlet extends CTPServlet {
 	//Get the lookup table file
 	private File getLookupTableFile(int p, int s) {
 		PipelineStage stage = getPipelineStage(p, s);
-		if ((stage != null) && (stage instanceof DicomAnonymizer)) {
-			return ((DicomAnonymizer)stage).getLookupTableFile();
+		if ((stage != null) && (stage instanceof SupportsLookup)) {
+			return ((SupportsLookup)stage).getLookupTableFile();
 		}
 		return null;
 	}
@@ -331,6 +333,23 @@ public class LookupServlet extends CTPServlet {
 					String group = matcher.group(1);
 					keyTypeSet.add(group.trim());
 				}
+			}
+		}
+		else if ((stage instanceof XmlAnonymizer) || (stage instanceof ZipAnonymizer)) {
+			File scriptFile = 
+				(stage instanceof XmlAnonymizer) ? 
+					((XmlAnonymizer)stage).getScriptFile() :
+					((ZipAnonymizer)stage).getScriptFile() ;					
+			String script = FileUtil.getText(scriptFile);
+			Pattern pattern = Pattern.compile("\\s*\\$lookup\\s*\\([^,]+,([^),]+)");
+			Matcher matcher = pattern.matcher(script);
+			while (matcher.find()) {
+				String group = matcher.group(1);
+				group = group.trim();
+				if (group.startsWith("\"") && group.endsWith("\"")) {
+					group = group.substring(1, group.length()-1);
+				}
+				keyTypeSet.add(group.trim());
 			}
 		}
 		return keyTypeSet;
@@ -421,8 +440,8 @@ public class LookupServlet extends CTPServlet {
 			for (int s=0; s<stages.size(); s++) {
 				PipelineStage stage = stages.get(s);
 				File file = null;
-				if (stage instanceof ScriptableDicom) {
-					file = ((ScriptableDicom)stage).getLookupTableFile();
+				if (stage instanceof SupportsLookup) {
+					file = ((SupportsLookup)stage).getLookupTableFile();
 				}
 				if (file != null) {
 					Element el = doc.createElement("Stage");

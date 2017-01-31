@@ -10,6 +10,7 @@ package org.rsna.ctp.stdstages.anonymizer.xml;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Hashtable;
+import java.util.Properties;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerFunctions;
 import org.rsna.util.XmlUtil;
 import org.w3c.dom.Document;
@@ -27,6 +28,7 @@ class XmlScript {
 	public boolean hasMore = true;
 	Document document = null;
 	Hashtable<String,String> table = null;
+	Properties lookup = null;
 	int k = 0; //the current parsing position.
 
 	/**
@@ -37,11 +39,13 @@ class XmlScript {
 	 */
 	public XmlScript(Document document,
 					 Hashtable<String,String> table,
-					 String script) {
+					 String script,
+					 Properties lookup) {
 		this.document = document;
 		this.table = table;
 		if (script != null) script = script.trim();
 		this.script = script;
+		this.lookup = lookup;
 		this.k = 0;
 	}
 
@@ -122,7 +126,7 @@ class XmlScript {
 					name = script.substring(k,kk);
 					kp = findParamsEnd(script,kk);
 					temp = script.substring(kk+1,kp);
-					paramsScript = new XmlScript(document,table,temp);
+					paramsScript = new XmlScript(document,table,temp,lookup);
 					params = new ArrayList<String>();
 					while (paramsScript.hasMore) params.add(paramsScript.getNextValue(nodeValue));
 					k = kp + 1;
@@ -254,6 +258,12 @@ class XmlScript {
 					else if (name.equals("$date")) {
 						String sep = (params.size()>0) ? params.get(0) : "";
 						value += AnonymizerFunctions.date(sep);
+					}
+					
+					else if (name.equals("$lookup")) {
+						String index = params.get(0);
+						String keyType = params.get(1);
+						value += AnonymizerFunctions.lookup(lookup, keyType, index);
 					}
 				}
 				else {

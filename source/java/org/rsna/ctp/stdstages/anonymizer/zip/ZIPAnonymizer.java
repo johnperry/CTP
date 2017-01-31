@@ -11,6 +11,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
+import java.util.Properties;
 import java.util.zip.*;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.ZipObject;
@@ -43,13 +44,14 @@ public class ZIPAnonymizer {
 	public static AnonymizerStatus anonymize(
 			File inFile,
 			File outFile,
-			File cmdFile) {
+			File cmdFile,
+			Properties lookup) {
 
 		try {
 			ZipObject zob = new ZipObject(inFile);
 			Document manifestXML = zob.getManifestDocument();
 			AnonymizerStatus status
-					= XMLAnonymizer.anonymize(manifestXML, cmdFile);
+					= XMLAnonymizer.anonymize(manifestXML, cmdFile, lookup);
 			if (status.isOK()) {
 				File tempFile =
 					File.createTempFile("TMP-", outFile.getName(), outFile.getParentFile());

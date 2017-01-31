@@ -14,12 +14,12 @@ import java.io.File;
  * that contains one or more scripts that can be edited by the
  * ScriptServlet.
  */
-public interface Scriptable {
+public interface SupportsLookup {
 
 	/**
-	 * Get the script file.
-	 * @return the array of script files
+	 * Get the lookup table file.
+	 * @return the lookup table file
 	 */
-	public File[] getScriptFiles();
+	public File getLookupTableFile();
 
 }

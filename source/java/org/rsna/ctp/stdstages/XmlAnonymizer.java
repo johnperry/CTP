@@ -9,25 +9,31 @@ package org.rsna.ctp.stdstages;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.LinkedList;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.objects.XmlObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
+import org.rsna.ctp.stdstages.anonymizer.LookupTable;
 import org.rsna.ctp.stdstages.anonymizer.xml.XMLAnonymizer;
+import org.rsna.ctp.stdstages.SupportsLookup;
 import org.rsna.util.FileUtil;
+import org.rsna.server.User;
 import org.w3c.dom.Element;
 
 /**
  * The XmlAnonymizer pipeline stage class.
  */
-public class XmlAnonymizer extends AbstractPipelineStage implements Processor, Scriptable {
+public class XmlAnonymizer extends AbstractPipelineStage implements Processor, Scriptable, SupportsLookup {
 
 	static final Logger logger = Logger.getLogger(XmlAnonymizer.class);
 
 	public File scriptFile = null;
+	public File lookupTableFile = null;
 
 	/**
 	 * Construct the XmlAnonymizer PipelineStage.
@@ -37,6 +43,10 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 	public XmlAnonymizer(Element element) {
 		super(element);
 		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-xml-anonymizer.script");
+		String lookupTable = element.getAttribute("lookupTable").trim();
+		if (!lookupTable.equals("")) {
+			lookupTableFile = new File(lookupTable);
+		}
 	}
 
 	/**
@@ -52,7 +62,8 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 
 		if ( (fileObject instanceof XmlObject) && (scriptFile != null) ) {
 			File file = fileObject.getFile();
-			AnonymizerStatus status = XMLAnonymizer.anonymize(file,file,scriptFile);
+			Properties lookup = LookupTable.getProperties(lookupTableFile);
+			AnonymizerStatus status = XMLAnonymizer.anonymize(file,file,scriptFile,lookup);
 			if (status.isOK()) {
 				fileObject = FileObject.getInstance(file);
 			}
@@ -72,9 +83,43 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 
 	/**
 	 * Get the script file.
+	 */
+	public File getScriptFile() {
+		return scriptFile;
+	}
+
+	/**
+	 * Get the script file.
 	 * @return the script file used by this stage.
 	 */
 	public File[] getScriptFiles() {
 		return new File[] {scriptFile};
 	}
+
+	/**
+	 * Get the lookup table file.
+	 */
+	public File getLookupTableFile() {
+		return lookupTableFile;
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if (allowsAdminBy(user)) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			if (lookupTableFile != null) {
+				links.addFirst( new SummaryLink("/lookup"+qs, null, "Edit the Lookup Table", false) );
+			}
+			if (scriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs+"&f=0", null, "Edit the Anonymizer Script", false) );
+			}
+		}
+		return links;
+	}
+
 }

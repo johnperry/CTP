@@ -62,7 +62,7 @@
 				<p>
 					<xsl:choose>
 						<xsl:when test="$KeyTypeCount != 0">
-							<xsl:text>KeyTypes used in this DicomAnonymizer script: </xsl:text>
+							<xsl:text>KeyTypes used in this anonymizer script: </xsl:text>
 							<xsl:for-each select="KeyType">
 								<xsl:if test="position()!=1">
 									<xsl:text>, </xsl:text>
@@ -72,7 +72,7 @@
 							<xsl:text>. </xsl:text>
 						</xsl:when>
 						<xsl:otherwise>
-							There are no KeyTypes specified in this DicomAnonymizer script.
+							There are no KeyTypes specified in this anonymizer script.
 						</xsl:otherwise>
 					</xsl:choose>
 					For instructions, see <a href="http://mircwiki.rsna.org/index.php?title=The_CTP_Lookup_Table_Editor" target="wiki">this article</a>.

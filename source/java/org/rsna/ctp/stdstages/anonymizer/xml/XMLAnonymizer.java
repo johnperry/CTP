@@ -46,10 +46,11 @@ public class XMLAnonymizer {
 	public static AnonymizerStatus anonymize(
 			File inFile,
 			File outFile,
-			File cmdFile) {
+			File cmdFile,
+			Properties lookup) {
 		try {
 			Document xmlDocument = XmlUtil.getDocument(inFile);
-			AnonymizerStatus status = anonymize(xmlDocument, cmdFile);
+			AnonymizerStatus status = anonymize(xmlDocument, cmdFile, lookup);
 			if (status.isOK()) {
 				FileUtil.setText(outFile,XmlUtil.toString(xmlDocument));
 				return AnonymizerStatus.OK(outFile,"");
@@ -69,7 +70,8 @@ public class XMLAnonymizer {
 	 */
 	public static AnonymizerStatus anonymize(
 			Document xmlDocument,
-			File cmdFile) {
+			File cmdFile,
+			Properties lookup) {
 		try {
 			Hashtable<String,String> store = new Hashtable<String,String>();
 			String cmds = FileUtil.getText(cmdFile);
@@ -78,7 +80,7 @@ public class XMLAnonymizer {
 			String value = null;
 			while ((cmd=ch.getNextCommand()) != null) {
 				if (cmd.type == cmd.ASSIGN) {
-					value = (new XmlScript(xmlDocument,store,cmd.right)).getValue("");
+					value = (new XmlScript(xmlDocument,store,cmd.right,lookup)).getValue("");
 					//Trap print commands
 					if (cmd.left.equals("$print"))
 						logger.warn(value);
@@ -89,7 +91,7 @@ public class XMLAnonymizer {
 					processPath(
 						xmlDocument,
 						cmd.left,
-						new XmlScript(xmlDocument,store,cmd.right));
+						new XmlScript(xmlDocument,store,cmd.right,lookup));
 				}
 			}
 		}

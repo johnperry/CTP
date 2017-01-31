@@ -492,6 +492,7 @@
 			<attr name="script" required="yes" default="scripts/XmlAnonymizer.script">
 				<helptext>The script file containing the anonymization instructions</helptext>
 			</attr>
+			<attr name="lookupTable" required="yes" default="scripts/LookupTable.properties"/>
 			<attr name="quarantine" required="yes" default="quarantines/XmlAnonymizer"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
