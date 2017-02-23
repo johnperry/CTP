@@ -298,7 +298,7 @@ public class LookupServlet extends CTPServlet {
 	private File getScriptFile(int p, int s) {
 		PipelineStage stage = getPipelineStage(p, s);
 		if ((stage != null) && (stage instanceof DicomAnonymizer)) {
-			return ((DicomAnonymizer)stage).getScriptFile();
+			return ((DicomAnonymizer)stage).getDAScriptFile();
 		}
 		return null;
 	}
@@ -322,7 +322,7 @@ public class LookupServlet extends CTPServlet {
 		HashSet<String> keyTypeSet = new HashSet<String>();
 		if (stage instanceof DicomAnonymizer) {
 			DicomAnonymizer anonymizer = (DicomAnonymizer)stage;
-			File scriptFile = anonymizer.getScriptFile();
+			File scriptFile = anonymizer.getDAScriptFile();
 			DAScript script = DAScript.getInstance(scriptFile);
 			Properties scriptProps = script.toProperties();
 			Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
@@ -490,7 +490,7 @@ public class LookupServlet extends CTPServlet {
 		doc.appendChild(root);
 		root.setAttribute("lutFile", lutFile.getAbsolutePath());
 		if (stage instanceof DicomAnonymizer) {
-			File scriptFile = ((DicomAnonymizer)stage).getScriptFile();
+			File scriptFile = ((DicomAnonymizer)stage).getDAScriptFile();
 			root.setAttribute("scriptFile", scriptFile.getAbsolutePath());
 		}
 

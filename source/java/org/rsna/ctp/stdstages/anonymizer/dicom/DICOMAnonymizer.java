@@ -13,12 +13,13 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.*;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Enumeration;
@@ -27,11 +28,12 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Set;
 
 import org.dcm4che.data.Dataset;
 import org.dcm4che.data.DcmDecodeParam;
@@ -597,6 +599,7 @@ public class DICOMAnonymizer {
 	static final String alwaysFn 		= "always";
 	static final String hashdateFn 		= "hashdate";
 	static final String incrementdateFn = "incrementdate";
+	static final String dateintervalFn	= "dateinterval";
 	static final String lowercaseFn		= "lowercase";
 	static final String uppercaseFn		= "uppercase";
 	static final String modifydateFn	= "modifydate";
@@ -637,6 +640,7 @@ public class DICOMAnonymizer {
 				else if (fnCall.name.equals(valueFn))		out += value(fnCall);
 				else if (fnCall.name.equals(truncateFn))	out += truncate(fnCall);
 				else if (fnCall.name.equals(dateFn)) 		out += date(fnCall);
+				else if (fnCall.name.equals(dateintervalFn)) out += dateinterval(fnCall);
 				else if (fnCall.name.equals(decryptFn))		out += decrypt(fnCall);
 				else if (fnCall.name.equals(encryptFn))		out += encrypt(fnCall);
 				else if (fnCall.name.equals(hashFn))		out += hash(fnCall);
@@ -904,6 +908,35 @@ public class DICOMAnonymizer {
 		}
 	}
 
+	//Execute the dateinterval function. This function computes the number of days
+	//between a date in an element and a base date contained in a local unencrypted 
+	//lookup table indexed by the value of another element and returns the result.
+	//If the requested element is not present or the value of the element is not
+	//a key in the lookup table, throw a quarantine exception.
+	//The arguments are: DateElementName, keyType, KeyElement
+	//where keyType is the name of a specific key, which must appear in the lkup
+	//Properties as keyType/KeyElementValue = replacement.
+	//Values and replacements are trimmed before use.
+	private static final long oneDay = 24 * 60 * 60 * 1000;
+	private static SimpleDateFormat dcmDF = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+	private static SimpleDateFormat basedateDF = new SimpleDateFormat("M/d/yyyy", Locale.ENGLISH);
+	private static String dateinterval(FnCall fn) throws Exception {
+		try {
+			if (fn.args.length > 2) {
+				String dateElementName = fn.args[0];
+				String dateElementValue = fn.context.contents(dateElementName.trim(), fn.thisTag);
+				String keyElementName = fn.args[2];
+				String key = fn.context.contents(keyElementName.trim(), fn.thisTag);
+				String basedate = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key).trim();
+				long dateMS = dcmDF.parse(dateElementValue).getTime();
+				long basedateMS = basedateDF.parse(basedate).getTime();
+				return Long.toString((dateMS - basedateMS)/oneDay);
+			}
+		}
+		catch (Exception error) { }
+		throw new Exception("!quarantine!");
+	}
+	
 	//Execute the integer function. This function uses the value of an element
 	//to create an integer replacement string of a specified width.
 	//If the requested element is not present or the value of the replacement

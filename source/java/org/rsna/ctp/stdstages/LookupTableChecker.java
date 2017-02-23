@@ -60,7 +60,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
     Pipeline pipe = null;
     DicomAnonymizer anonymizer = null;
-    File dcmScriptFile = null;
+    File daScriptFile = null;
     File lutFile = null;
 	ScriptTable scriptTable = null;
 	Properties lutProps = null;
@@ -68,6 +68,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
     static final Pattern processPattern = Pattern.compile("@\\s*process\\s*\\(\\s*\\)");
     static final Pattern lookupPattern = Pattern.compile("@\\s*lookup\\s*\\(([^,)]+),([^,)]+),?([^,)]*),?([^\\)]*)\\)");
+    static final Pattern intervalPattern = Pattern.compile("@\\s*dateinterval\\s*\\(([^,]+),([^,]+),([^)]+)\\s*\\)");
 
 	/**
 	 * Construct the LookupTableChecker PipelineStage.
@@ -127,20 +128,21 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 */
 	public FileObject process(FileObject fileObject) {
 		String cmd;
-
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
-
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
-			if (dcmScriptFile != null) {
-				DAScript daScript = DAScript.getInstance(dcmScriptFile);
+
+			daScriptFile = anonymizer.getDAScriptFile();
+			lutFile = anonymizer.getLookupTableFile();
+			if (daScriptFile != null) {
+				DAScript daScript = DAScript.getInstance(daScriptFile);
 				scriptTable = new ScriptTable(daScript);
 				lutProps = LookupTable.getProperties(lutFile);
 				synchronized(this) {
 					Dataset ds = dob.getDataset();
 					charset = ds.getSpecificCharacterSet();
-					boolean ok = checkDataset(ds);
+					boolean ok = checkDataset(ds) & handleAlwaysCalls(ds);
 					if (!ok) {
 						try { recman.commit(); }
 						catch (Exception unable) { };
@@ -150,12 +152,14 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 				}
 			}
 		}
+		
+		logger.info("Done checking "+fileObject.getType());
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
 	}
 
-	private boolean checkDataset(Dataset ds) {
+	private boolean checkDataset(Dataset ds) {		
 		boolean ok = true;
 		for (Iterator it=ds.iterator(); it.hasNext(); ) {
 			DcmElement el = (DcmElement)it.next();
@@ -175,49 +179,103 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 					}
 				}
 				else {
-					Matcher lookupMatcher = lookupPattern.matcher(command);
-					//logger.info("Parsing: "+command);
-					while (lookupMatcher.find()) {
+					//Look for lookup function calls
+					ok &= checkLookupCalls(ds, tag, command);
+					
+					//Look for dateinterval function calls
+					ok &= checkDateIntervalCalls(ds, tag, command);
+				}
+			}
+		}
+		return ok;
+	}
+	
+	private boolean checkLookupCalls(Dataset ds, int tag, String command) {
+		boolean ok = true;
+		Matcher lookupMatcher = lookupPattern.matcher(command);
+		while (lookupMatcher.find()) {
 
-						int nGroups = lookupMatcher.groupCount();
-						String element = lookupMatcher.group(1).trim();
-						String keyType = lookupMatcher.group(2).trim() + "/";
-						String action = (nGroups > 2) ? lookupMatcher.group(3).trim() : "";
-						String regex = (nGroups > 3) ? lookupMatcher.group(4).trim() : "";
+			int nGroups = lookupMatcher.groupCount();
+			String element = lookupMatcher.group(1).trim();
+			String keyType = lookupMatcher.group(2).trim() + "/";
+			String action = (nGroups > 2) ? lookupMatcher.group(3).trim() : "";
+			String regex = (nGroups > 3) ? lookupMatcher.group(4).trim() : "";
 
-						//logger.info("...nGroups  = "+nGroups);
-						//logger.info("...element: |"+element+"|");
-						//logger.info("...keyType: |"+keyType+"|");
-						//logger.info("...action : |"+action+"|");
-						//logger.info("...regex:   |"+regex+"|");
+			//logger.info("...nGroups  = "+nGroups);
+			//logger.info("...element: |"+element+"|");
+			//logger.info("...keyType: |"+keyType+"|");
+			//logger.info("...action : |"+action+"|");
+			//logger.info("...regex:   |"+regex+"|");
 
-						int targetTag = ( element.equals("this") ? tag : DicomObject.getElementTag(element) );
-						String targetValue = handleNull( ds.getString(targetTag) );
+			int targetTag = ( element.equals("this") ? tag : DicomObject.getElementTag(element) );
+			String targetValue = handleNull( ds.getString(targetTag) );
 
-						if (!targetValue.equals("")) {
-							String key = keyType + targetValue;
-							if (lutProps.getProperty(key) == null) {
-								boolean there = false;
-								if (action.equals("keep")   ||
-									action.equals("skip")   ||
-									action.equals("remove") ||
-									action.equals("empty")  ||
-									action.equals("default")) there = true;
-								else if (action.equals("ignore")) {
-									regex = removeQuotes(regex);
-									there = targetValue.matches(regex);
-								}
-								try {
-									if (!there) {
-										index.insert(key, keyType, true);
-										ok = false;
-									}
-								}
-								catch (Exception ignore) { }
-							}
+			if (!targetValue.equals("")) {
+				String key = keyType + targetValue;
+				if (lutProps.getProperty(key) == null) {
+					boolean there = false;
+					if (action.equals("keep")   ||
+						action.equals("skip")   ||
+						action.equals("remove") ||
+						action.equals("empty")  ||
+						action.equals("default")) there = true;
+					else if (action.equals("ignore")) {
+						regex = removeQuotes(regex);
+						there = targetValue.matches(regex);
+					}
+					try {
+						if (!there) {
+							index.insert(key, keyType, true);
+							ok = false;
 						}
 					}
+					catch (Exception ignore) { }
 				}
+			}
+		}
+		return ok;
+	}		
+
+	private boolean checkDateIntervalCalls(Dataset ds, int tag, String command) {
+		boolean ok = true;
+		Matcher intervalMatcher = intervalPattern.matcher(command);
+		while (intervalMatcher.find()) {
+
+			int nGroups = intervalMatcher.groupCount();
+			String dateElement = intervalMatcher.group(1).trim();
+			String keyType = intervalMatcher.group(2).trim() + "/";
+			String keyElement = intervalMatcher.group(3).trim();
+
+			//logger.info("...nGroups  = "+nGroups);
+			//logger.info("...dateElement: |"+dateElement+"|");
+			//logger.info("...keyType:     |"+keyType+"|");
+			//logger.info("...keyElement : |"+keyElement+"|");
+
+			int targetTag = ( keyElement.equals("this") ? tag : DicomObject.getElementTag(keyElement) );
+			String targetValue = handleNull( ds.getString(targetTag) );
+
+			if (!targetValue.equals("")) {
+				String key = keyType + targetValue;
+				if (lutProps.getProperty(key) == null) {
+					try {
+						index.insert(key, keyType, true);
+						ok = false;
+					}
+					catch (Exception ignore) { }
+				}
+			}
+		}
+		return ok;
+	}
+	
+	private boolean handleAlwaysCalls(Dataset ds) {
+		boolean ok = true;
+		for (Integer tagInteger : scriptTable.keySet()) {
+			String command = scriptTable.get(tagInteger);
+			if (command.contains("@always")) {
+				int tag = tagInteger.intValue();
+				ok = ok & checkLookupCalls(ds, tag, command);
+				ok = ok & checkDateIntervalCalls(ds, tag, command);
 			}
 		}
 		return ok;
@@ -307,15 +365,13 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 		}
 	}
 
-	//Find the next anonymizer stage and get its script and lookup table files.
+	//Find the next anonymizer stage.
 	private void getContext() {
-		if (dcmScriptFile == null) {
+		if (daScriptFile == null) {
 			PipelineStage next = getNextStage();
 			while (next != null) {
 				if (next instanceof DicomAnonymizer) {
 					anonymizer = ((DicomAnonymizer)next);
-					dcmScriptFile = anonymizer.getScriptFile();
-					lutFile = anonymizer.getLookupTableFile();
 					break;
 				}
 				next = next.getNextStage();
@@ -375,9 +431,11 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 						String command = eChild.getTextContent();
 						Matcher processMatcher = processPattern.matcher(command);
 						Matcher lookupMatcher = lookupPattern.matcher(command);
+						Matcher intervalMatcher = intervalPattern.matcher(command);
 						Integer tagInteger = new Integer(tag);
-						if (processMatcher.find() || lookupMatcher.find()) {
+						if (processMatcher.find() || lookupMatcher.find() || intervalMatcher.find()) {
 							this.put(tagInteger, command);
+							//logger.info("ScriptTable: "+Integer.toHexString(tagInteger.intValue())+" "+command);
 						}
 					}
 				}

@@ -12,15 +12,9 @@ import java.io.File;
 public interface ScriptableDicom {
 
 	/**
-	 * Get the script file.
+	 * Get the DicomAnonymizer script file.
 	 * @return the script file
 	 */
-	public File getScriptFile();
-
-	/**
-	 * Get the lookup table file.
-	 * @return the lookup table file
-	 */
-	public File getLookupTableFile();
+	public File getDAScriptFile();
 
 }

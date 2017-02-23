@@ -30,7 +30,7 @@ import org.w3c.dom.Element;
 /**
  * The DicomAnonymizer pipeline stage class.
  */
-public class DicomAnonymizer extends AbstractPipelineStage implements Processor, ScriptableDicom, Scriptable {
+public class DicomAnonymizer extends AbstractPipelineStage implements Processor, ScriptableDicom, SupportsLookup {
 
 	static final Logger logger = Logger.getLogger(DicomAnonymizer.class);
 
@@ -84,10 +84,11 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 	/**
 	 * Get the script file.
 	 */
-	public File getScriptFile() {
+	public File getDAScriptFile() {
 		return scriptFile;
 	}
 
+	//Implement the SupportsLookup interface
 	/**
 	 * Get the lookup table file.
 	 */

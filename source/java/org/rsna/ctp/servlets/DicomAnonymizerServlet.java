@@ -188,7 +188,7 @@ public class DicomAnonymizerServlet extends CTPServlet {
 	//Get the script file, if possible
 	private File getScriptFile() {
 		if (stage instanceof ScriptableDicom) {
-			return ((ScriptableDicom)stage).getScriptFile();
+			return ((ScriptableDicom)stage).getDAScriptFile();
 		}
 		return null;
 	}
@@ -264,7 +264,7 @@ public class DicomAnonymizerServlet extends CTPServlet {
 					PipelineStage stage = stages.get(s);
 					File scriptFile = null;
 					if (stage instanceof ScriptableDicom)
-						scriptFile = ((ScriptableDicom)stage).getScriptFile();
+						scriptFile = ((ScriptableDicom)stage).getDAScriptFile();
 					if ((scriptFile != null) && scriptFile.exists()) {
 						String scriptPath = scriptFile.getAbsolutePath();
 						scriptPath = scriptPath.replace("\\","/");
