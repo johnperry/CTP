@@ -52,6 +52,7 @@ public class FileObject {
 	/**
 	 * Compute the MD5 digest of the contents of the file
 	 * and return a string representing the result in the specified base.
+	 * @param base the the base of the digest string to be returned
 	 * @return the MD5 digest of the file.
 	 */
 	public String getDigest(int base) {

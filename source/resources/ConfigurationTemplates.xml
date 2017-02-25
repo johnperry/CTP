@@ -145,7 +145,12 @@
 			</attr>
 			<attr name="fsName" required="no" default=""/>
 			<attr name="fsNameTag" required="no" default=""/>
-			<attr name="filenameTag" required="no" default=""/>
+			<attr name="filePathTag" required="no" default="">
+				<helptext>
+					DICOM tag in which to store the relative path to the file in the import directory (ggggeeee or DICOM PS 3.6 keyword)
+				</helptext>
+			</attr>
+			<attr name="fileNameTag" required="no" default=""/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>

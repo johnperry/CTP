@@ -40,6 +40,7 @@ public class XMLAnonymizer {
 	 * @param outFile the output file. It may be same as inFile you if want
 	 * to anonymize in place.
 	 * @param cmdFile the file containing the anonymization commands.
+	 * @param lookup the anonymizer lookup table.
 	 * @return AnonymizerStatus.OK if successful; AnonymizerStatus.QUARANTINE otherwise,
 	 * in which case the input file is not modified.
 	 */
@@ -64,6 +65,7 @@ public class XMLAnonymizer {
 	 * Anonymize a DOM Document.
 	 * @param xmlDocument the object to anonymize
 	 * @param cmdFile the file containing the anonymization commands.
+	 * @param lookup the anonymizer lookup table.
 	 * @return AnonymizerStatus.OK if successful; AnonymizerStatus.QUARANTINE otherwise.
 	 * IMPORTANT: if the anonymization fails, the DOM Document may still have been
 	 * at least partially modified.

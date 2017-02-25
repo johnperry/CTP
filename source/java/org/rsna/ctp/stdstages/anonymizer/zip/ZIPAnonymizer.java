@@ -38,6 +38,7 @@ public class ZIPAnonymizer {
 	 * @param outFile the output file. It may be same as inFile you if want
 	 * to anonymize in place.
 	 * @param cmdFile the file containing the anonymization commands.
+	 * @param lookup the anonymizer lookup table.
 	 * @return AnonymizerStatus.OK if successful; AnonymizerStatus.QUARANTINE otherwise,
 	 * in which case the input file is not modified.
 	 */

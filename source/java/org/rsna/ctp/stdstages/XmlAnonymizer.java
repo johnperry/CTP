@@ -83,6 +83,7 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 
 	/**
 	 * Get the script file.
+	 * @return the script file used by this stage.
 	 */
 	public File getScriptFile() {
 		return scriptFile;

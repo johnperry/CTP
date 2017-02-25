@@ -30,18 +30,23 @@ public class DirectoryImportService extends AbstractImportService {
 
 	static final Logger logger = Logger.getLogger(DirectoryImportService.class);
 
-	String fsName = "";
-	int fsNameTag = 0;
-	int filenameTag = 0;
 	Poller poller = null;
 	long interval = 20000;
 	long minInterval = 1000;
 	long defInterval = 20000;
 	File importDirectory = null;
 	FileTracker tracker = null;
-	boolean doFileSystemName = false;
-	boolean doFilename = false;
-
+	
+	String fsName = "";
+	int fsNameTag = 0;
+	boolean setFileSystemName;
+	
+	int filePathTag = 0;
+	boolean setFilePath;
+	
+	int fileNameTag = 0;
+	boolean setFileName;
+	
 	/**
 	 * Class constructor; creates a new instance of the ImportService.
 	 * @param element the configuration element.
@@ -66,14 +71,16 @@ public class DirectoryImportService extends AbstractImportService {
 		//See if there is a FileSystem name
 		fsName = element.getAttribute("fsName").trim();
 		fsNameTag = DicomObject.getElementTag(element.getAttribute("fsNameTag"));
+		setFileSystemName = (!fsName.equals("")) && (fsNameTag > 0);
+
+		//See if there is a filePathTag
+		filePathTag = DicomObject.getElementTag(element.getAttribute("filePathTag"));
+		setFilePath = (filePathTag > 0);
 
 		//See if there is a filenameTag
-		filenameTag = DicomObject.getElementTag(element.getAttribute("filenameTag"));
+		fileNameTag = DicomObject.getElementTag(element.getAttribute("fileNameTag"));
+		setFileName = (fileNameTag > 0);
 
-		//Set the flags for storing names in objects
-		doFileSystemName = (!fsName.equals("")) && (fsNameTag != 0);
-		doFilename = (filenameTag > 0);
-		
 		//Initialize the FileTracker
 		tracker = new FileTracker();
 	}
@@ -181,7 +188,7 @@ public class DirectoryImportService extends AbstractImportService {
 
 	//Store the FileSystem name and/or the filename in the file if required.
 	private void setNames(File file) {
-		if ( doFileSystemName || doFilename ) {
+		if ((setFileSystemName || setFilePath || setFileName)) {
 			try {
 				FileObject fo = FileObject.getInstance(file);
 				if (fo instanceof DicomObject) {
@@ -191,7 +198,7 @@ public class DirectoryImportService extends AbstractImportService {
 					File dobFile = dob.getFile();
 
 					//See if we have to store the FileSystem name
-					if (doFileSystemName) {
+					if (setFileSystemName) {
 						//Modify the specified element.
 						//If the fsName is "@filename", use the name of the file;
 						//otherwise, use the value of the fsName attribute.
@@ -202,9 +209,17 @@ public class DirectoryImportService extends AbstractImportService {
 						else dob.setElementValue(fsNameTag, fsName);
 					}
 
-					if (doFilename) {
-						dob.setElementValue(filenameTag, dobFile.getName());
+					if (setFilePath) {
+						String path = dobFile.getParentFile().getAbsolutePath();
+						File treeRootParent = importDirectory.getAbsoluteFile().getParentFile();
+						if (treeRootParent == null) treeRootParent = importDirectory;
+						String treeRootPath =  treeRootParent.getAbsolutePath();
+						path = path.substring( treeRootPath.length()+1 );
+						path = path.replace("\\", "/");
+						dob.setElementValue(filePathTag, path);
 					}
+					
+					if (setFileName) dob.setElementValue(fileNameTag, dobFile.getName());
 
 					//Save the modified object
 					File tFile = File.createTempFile("TMP-", ".dcm", dobFile.getParentFile());

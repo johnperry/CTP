@@ -141,7 +141,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 	//Set the FileSystem name and/or file plath in the object if we can.
 	private FileObject setNames(FileObject fo) {
 		try {
-			if ((fo instanceof DicomObject) && (setFileSystemName || setFilePath)) {
+			if ((fo instanceof DicomObject) && (setFileSystemName || setFilePath || setFileName)) {
 				//Unfortunately, we have to parse the object again
 				//in order to be able to save it once we modify it.
 				DicomObject dob = new DicomObject(fo.getFile(), true); //leave the stream open
