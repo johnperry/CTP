@@ -355,9 +355,8 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String incrementDate(String date, long increment) throws Exception {
-		long inc = increment * 24 * 3600 * 1000;
 		GregorianCalendar dateCal = DateUtil.getCalendar(date);
-		dateCal.setTimeInMillis(dateCal.getTimeInMillis() + inc);
+		dateCal.add(GregorianCalendar.DATE, (int)increment);
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
 				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2) +
