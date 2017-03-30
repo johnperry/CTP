@@ -12,6 +12,7 @@ please send them to johnperry@dls.net.
 For information on the DicomPixelAnonymizer and the format of this file,see:
 	http://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Pixel_Anonymizer
 
+
 **************
      CT
 **************
@@ -70,8 +71,9 @@ VITREA
 
 SIEMENS
 
- CT Dose Series - This removes PHI from Top of Dose image but rest of image is all white. Window Width and Center need to be set correctly.
+  CT Dose Series - This removes PHI from Top of Dose image but rest of image is all white. Window Width and Center need to be set correctly.
   { [0008,0008].containsIgnoreCase("SECONDARY") * 
+    [0008,0060].containsIgnoreCase("CT") * 
     [0008,0070].containsIgnoreCase("SIEMENS") * 
     [0028,0010].containsIgnoreCase("860") }
   (0,0,1132,60)
@@ -111,6 +113,10 @@ GE
   { [0008,1090].containsIgnoreCase("LOGIQE9") }
   (0,0,960,70)
 
+  { [0008,1090].containsIgnoreCase("V830") }
+  (0,0,960,70)
+
+
 Philips 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
@@ -125,6 +131,21 @@ Philips
 
  IU22
   { [0008,1090].containsIgnoreCase("iU22") *
+    [0028,0010].containsIgnoreCase("600") }
+  (0,0,800,59)
+
+ EPIQ 7G
+  { [0008,1090].containsIgnoreCase("EPIQ") *
+    [0028,0010].containsIgnoreCase("600") }
+  (0,0,800,59)
+
+ EPIQ 7G
+  { [0008,1090].containsIgnoreCase("EPIQ") *
+    [0028,0010].containsIgnoreCase("768") }
+  (0,0,800,59)
+
+  CX50
+   { [0008,1090].containsIgnoreCase("CX50") *
     [0028,0010].containsIgnoreCase("600") }
   (0,0,800,59)
 
@@ -143,12 +164,19 @@ ATL
 Siemens
 { Modality.equals("US") *
     [0008,0070].containsIgnoreCase("SIEMENS") *
+    [0008,1090].containsIgnoreCase("SC2000") *
+    [0008,0008].containsIgnoreCase("SECONDARY") *
+    [0028,0010].equals("768") *
+    [0028,0011].equals("1024") }
+  (230,50,260,370)
+
+{ Modality.equals("US") *
+    [0008,0070].containsIgnoreCase("SIEMENS") *
     [0008,1090].containsIgnoreCase("ANTARES") *
     [0028,0010].equals("768") *
     [0028,0011].equals("1024") }
   (0,0,1024,60) (200,60,20,20) (800,65,104,14) 
 
-Siemens
 { Modality.equals("US") *
     [0008,0070].containsIgnoreCase("SIEMENS") *
     [0008,1090].containsIgnoreCase("ACUSON") *
@@ -186,7 +214,7 @@ Supersonic Imagine 5A
     ManufacturerModelName.containsIgnoreCase("Aixplorer") *
     Rows.equals("1050") *
     Columns.equals("1400") }
-  (0,0,1000,89)
+  (0,0,1400,89)
 
 ************** 
      MRI
@@ -201,6 +229,17 @@ Canon
     [0008,1090].containsIgnoreCase("CXDI") * 
     [0028,0010].containsIgnoreCase("2592") }
   (0,0,2208,80) (0,2512,2208,80)
+
+**************
+     NM
+**************
+
+SIEMENS
+  { [0008,0008].containsIgnoreCase("SECONDARY") * 
+    [0008,0060].containsIgnoreCase("NM") * 
+    [0008,0070].containsIgnoreCase("SIEMENS") * 
+    [0028,0010].containsIgnoreCase("860") }
+  (0,0,1132,82) (0,780,1132,80)
 
 **************
     OTHER
