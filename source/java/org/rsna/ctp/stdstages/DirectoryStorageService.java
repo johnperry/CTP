@@ -238,11 +238,12 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	static final Pattern bracketPattern = Pattern.compile("\\[([0-9]+)\\]");
 	private String getDuplicateName(File dir, String name, String ext) {
 		boolean hasExtension = name.toLowerCase().endsWith(ext.toLowerCase());
-		if (hasExtension) name = name.substring( 0, name.length() - ext.length() );
-		File[] files = dir.listFiles(new NameFilter(name));
+		String nameNoExt = name;
+		if (hasExtension) nameNoExt = name.substring( 0, name.length() - ext.length() );
+		File[] files = dir.listFiles(new NameFilter(nameNoExt));
 		if (files.length == 0) return name;
 		if (logDuplicates) {
-			logger.info("Found "+files.length+" duplicate files for: "+name);
+			logger.info("Found "+files.length+" duplicate files for: "+nameNoExt);
 			for (File file: files) logger.debug("   "+file);
 		}
 		int n = 0;
@@ -252,7 +253,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 				n = Math.max( n, StringUtil.getInt(matcher.group(1)) );
 			}
 		}
-		return name + "["+(n+1)+"]" + (hasExtension ? ext : "");
+		return nameNoExt + "["+(n+1)+"]" + (hasExtension ? ext : "");
 	}
 
 	//An implementation of java.io.FileFilter to return

@@ -684,6 +684,30 @@
 			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</StorageService>
+		
+		<StorageService>
+			<attr name="name" required="yes" default="PDFStorageService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PDFStorageService" editable="no"/>
+			<attr name="id" required="no" default=""/>
+			<attr name="root" required="yes" default="roots/PDFStorageService"/>
+			<attr name="cacheID" required="no" default=""/>
+			<attr name="structure" required="yes" default=""/>
+			<attr name="defaultString" required="yes" default="">
+				<helptext>
+					Value to use in a directory or file name when an element specified in
+					the structure attibute is missing in an object
+				</helptext>
+			</attr>
+			<attr name="whitespaceReplacement" required="yes" default="_">
+				<helptext>Value to substitute for whitespace in directory and file names</helptext>
+			</attr>
+			<attr name="dicomScript" required="no"  default=""/>
+			<attr name="logDuplicates" required="yes" default="no" options="yes|no">
+				<helptext>If yes, list duplicate files as they are stored</helptext>
+			</attr>
+			<attr name="quarantine" required="yes" default="quarantines/DirectoryStorageService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</StorageService>
 
 		<ExportService>
 			<attr name="name" required="yes" default="DicomExportService"/>
