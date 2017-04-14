@@ -81,7 +81,7 @@ public class DAScript {
 	 * to ensure that we don't jump on a file that is still being modified.
 	 * @return true if this DAScript instance is up-to-date; false if the file has changed.
 	 */
-	public boolean isCurrent() {
+	public synchronized boolean isCurrent() {
 		long lastModified = file.lastModified();
 		long age = System.currentTimeMillis() - lastModified;
 		return ( (lastVersionLoaded >= lastModified) || (age < 5000) );
@@ -91,7 +91,7 @@ public class DAScript {
 	 * Get the script as an XML string.
 	 * @return the script as an XML string
 	 */
-	public String toXMLString() {
+	public synchronized String toXMLString() {
 		if (scriptIsXML) return script;
 
 		if (xmlScript != null) return xmlScript;
@@ -106,7 +106,7 @@ public class DAScript {
 		return xmlScript;
 	}
 
-	public Properties toProperties() {
+	public synchronized Properties toProperties() {
 		if (properties != null) return properties;
 
 		if (!scriptIsXML) {
@@ -181,7 +181,7 @@ public class DAScript {
 		props.setProperty(key, "");
 	}
 
-	public Document toXML() {
+	public synchronized Document toXML() {
 		if (xml == null) {
 			if (scriptIsXML) {
 				//This is an XML file; parse it.
@@ -305,7 +305,7 @@ public class DAScript {
 	 * Get a set containing all the LookupTable KeyTypes in use in the script.
 	 * @return the set of key types
 	 */
-	public HashSet<String> getKeyTypes() {
+	public synchronized HashSet<String> getKeyTypes() {
 		HashSet<String> keyTypeSet = new HashSet<String>();
 		Properties scriptProps = toProperties();
 		Pattern pattern = Pattern.compile("@\\s*lookup\\s*\\([^,]+,([^),]+)");
@@ -325,7 +325,7 @@ public class DAScript {
 	 * one KeyType is in use in the script, return null.
 	 * @return the default key type
 	 */
-	public String getDefaultKeyType() {
+	public synchronized String getDefaultKeyType() {
 		HashSet<String> keyTypeSet = getKeyTypes();
 		String defaultKeyType = null;
 		if (keyTypeSet.size() == 1) {
