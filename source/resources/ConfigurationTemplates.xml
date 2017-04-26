@@ -343,6 +343,14 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DuplicateFilter"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DuplicateFilter" editable="no"/>
+			<attr name="root" required="yes" default="roots/DuplicateFilter"/>
+			<attr name="quarantine" required="yes" default="quarantines/DuplicateFilter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="IDMap"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.IDMap" editable="no"/>
 			<attr name="root" required="yes" default="roots/IDMap"/>
@@ -486,6 +494,9 @@
 			<attr name="name" required="yes" default="DicomPaletteImageConverter"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPaletteImageConverter" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomPaletteImageConverter"/>
+			<attr name="script" required="yes" default="scripts/DicomPaletteImageConverter.script">
+				<helptext>The script file determining whether objects are to be converted</helptext>
+			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/DicomPaletteImageConverter"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
