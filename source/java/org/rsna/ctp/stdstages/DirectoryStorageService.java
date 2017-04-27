@@ -86,9 +86,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 		if (!temp.equals("")) whitespaceReplacement = temp;
 
 		//Get the script files
-		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
-		xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript").trim(), "examples/example-filter.script");
-		zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript").trim(), "examples/example-filter.script");
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
+		xmlScriptFile = getFilterScriptFile(element.getAttribute("xmlScript"));
+		zipScriptFile = getFilterScriptFile(element.getAttribute("zipScript"));
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
@@ -274,13 +274,13 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private boolean checkFilter(FileObject fileObject) {
 		if (fileObject instanceof DicomObject) {
-			return (dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile);
+			return ((DicomObject)fileObject).matches(dicomScriptFile);
 		}
 		else if (fileObject instanceof XmlObject) {
-			return (xmlScriptFile == null) || ((XmlObject)fileObject).matches(xmlScriptFile);
+			return ((XmlObject)fileObject).matches(xmlScriptFile);
 		}
 		else if (fileObject instanceof ZipObject) {
-			return (zipScriptFile == null) || ((ZipObject)fileObject).matches(zipScriptFile);
+			return ((ZipObject)fileObject).matches(zipScriptFile);
 		}
 		return true; //Don't filter on other object types.
 	}

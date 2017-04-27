@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import org.rsna.ctp.objects.*;
 import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.server.User;
+import org.rsna.util.FileUtil;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -89,6 +90,16 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 			file.mkdirs();
 		}
 		return file;
+	}
+
+	public File getFilterScriptFile(String scriptAttribute) {
+		if (scriptAttribute != null) {
+			scriptAttribute = scriptAttribute.trim();
+			if (!scriptAttribute.equals("")) {
+				return FileUtil.getFile(scriptAttribute, "examples/example-filter.script");
+			}
+		}
+		return null;
 	}
 
 	/**

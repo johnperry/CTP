@@ -42,7 +42,7 @@ public class XmlAnonymizer extends AbstractPipelineStage implements Processor, S
 	 */
 	public XmlAnonymizer(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-xml-anonymizer.script");
+		scriptFile = getFilterScriptFile(element.getAttribute("script"));
 		String lookupTable = element.getAttribute("lookupTable").trim();
 		if (!lookupTable.equals("")) {
 			lookupTableFile = new File(lookupTable);

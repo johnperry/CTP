@@ -51,9 +51,9 @@ public abstract class AbstractQueuedExportService
 		if (root == null)
 			logger.error(name+": No root directory was specified.");
 		else {
-			dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
-			xmlScriptFile = FileUtil.getFile(element.getAttribute("xmlScript").trim(), "examples/example-filter.script");
-			zipScriptFile = FileUtil.getFile(element.getAttribute("zipScript").trim(), "examples/example-filter.script");
+			dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
+			xmlScriptFile = getFilterScriptFile(element.getAttribute("xmlScript"));
+			zipScriptFile = getFilterScriptFile(element.getAttribute("zipScript"));
 
 			temp = new File(root, "temp");
 			temp.mkdirs();
@@ -67,7 +67,7 @@ public abstract class AbstractQueuedExportService
 			cacheManager = queueManager;
 		}
 	}
-
+	
 	/**
 	 * Get the script files.
 	 * @return the script files used by this stage.
@@ -113,22 +113,19 @@ public abstract class AbstractQueuedExportService
 		lastTimeIn = System.currentTimeMillis();
 		if (fileObject instanceof DicomObject) {
 			if (acceptDicomObjects) {
-				if ((dicomScriptFile == null)
-					|| ((DicomObject)fileObject).matches(dicomScriptFile))
+				if (((DicomObject)fileObject).matches(dicomScriptFile))
 							enqueue(fileObject);
 			}
 		}
 		else if (fileObject instanceof XmlObject) {
 			if (acceptXmlObjects) {
-				if ((xmlScriptFile == null)
-					|| ((XmlObject)fileObject).matches(xmlScriptFile))
+				if (((XmlObject)fileObject).matches(xmlScriptFile))
 							enqueue(fileObject);
 			}
 		}
 		else if (fileObject instanceof ZipObject) {
 			if (acceptZipObjects) {
-				if ((zipScriptFile == null)
-					|| ((ZipObject)fileObject).matches(zipScriptFile))
+				if (((ZipObject)fileObject).matches(zipScriptFile))
 							enqueue(fileObject);
 			}
 		}

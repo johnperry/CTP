@@ -59,10 +59,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		try { intTable = new IntegerTable(root); }
 		catch (Exception ex) { logger.warn(name+": "+ex.getMessage()); }
 
-		String dicomScript = element.getAttribute("dicomScript").trim();
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 	}
 
 	/**
@@ -147,7 +144,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 		if ( (fileObject instanceof DicomObject) && (scriptFile != null) ) {
 
 			//If there is a dicomScriptFile, use it to determine whether to anonymize
-			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
+			if (((DicomObject)fileObject).matches(dicomScriptFile)) {
 
 				//Okay, anonymize the object
 				File file = fileObject.getFile();

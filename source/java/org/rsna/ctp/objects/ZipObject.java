@@ -443,9 +443,14 @@ public class ZipObject extends FileObject {
 	 * the object does not contain a manifest.
 	 */
 	public boolean matches(File scriptFile) {
-		String script = FileUtil.getText(scriptFile);
-		if (manifestXML != null) XmlUtil.matches(manifestXML, script);
-		return false;
+		if (scriptFile != null) {
+			if (manifestXML != null) {
+				String script = FileUtil.getText(scriptFile);
+				return XmlUtil.matches(manifestXML, script);
+			}
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -458,7 +463,9 @@ public class ZipObject extends FileObject {
 	 * the object does not contain a manifest.
 	 */
 	public boolean matches(String script) {
-		if (manifestXML != null) XmlUtil.matches(manifestXML, script);
+		if (manifestXML != null) {
+			return XmlUtil.matches(manifestXML, script);
+		}
 		return false;
 	}
 

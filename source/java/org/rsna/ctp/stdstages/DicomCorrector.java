@@ -8,13 +8,16 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
+import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.pipeline.Processor;
 import org.rsna.ctp.stdstages.anonymizer.AnonymizerStatus;
 import org.rsna.ctp.stdstages.anonymizer.dicom.DICOMCorrector;
+import org.rsna.server.User;
 import org.rsna.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -37,12 +40,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 	 */
 	public DicomCorrector(Element element) {
 		super(element);
-
-		String dicomScript = element.getAttribute("dicomScript").trim();
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
-
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 		fixPrivateElements = element.getAttribute("fixPrivateElements").trim().toLowerCase().equals("yes");
 		quarantineUncorrectedMismatches = element.getAttribute("quarantineUncorrectedMismatches").trim().toLowerCase().equals("yes");
 		logUncorrectedMismatches = element.getAttribute("logUncorrectedMismatches").trim().toLowerCase().equals("yes");
@@ -71,7 +69,7 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 		if (fileObject instanceof DicomObject) {
 
 			//If there is a dicomScriptFile, use it to determine whether to anonymize
-			if ((dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile)) {
+			if (((DicomObject)fileObject).matches(dicomScriptFile)) {
 
 				//Okay, correct the object
 				File file = fileObject.getFile();
@@ -96,6 +94,22 @@ public class DicomCorrector extends AbstractPipelineStage implements Processor, 
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
+	}
+
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if (allowsAdminBy(user)) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			if (dicomScriptFile != null) {
+				links.addFirst( new SummaryLink("/script"+qs+"&f=0", null, "Edit the Stage Filter Script", false) );
+			}
+		}
+		return links;
 	}
 
 }

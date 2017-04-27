@@ -42,7 +42,7 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 	 */
 	public DicomDecompressor(Element element) {
 		super(element);
-		dicomScriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("script"));
 		skipJPEGBaseline = element.getAttribute("skipJPEGBaseline").trim().equals("yes");
 	}
 
@@ -63,8 +63,7 @@ public class DicomDecompressor extends AbstractPipelineStage implements Processo
 			DicomObject dob = (DicomObject)fileObject;
 			if (dob.isEncapsulated()) {
 				boolean skip = skipJPEGBaseline && dob.hasTransferSyntaxUID(JPEGBaseline);
-				if (dob.isImage() && !skip && 
-					((dicomScriptFile == null) || dob.matches(FileUtil.getText(dicomScriptFile)))) {
+				if (dob.isImage() && !skip && (dob.matches(FileUtil.getText(dicomScriptFile)))) {
 					File file = dob.getFile();
 					AnonymizerStatus status = DICOMDecompressor.decompress(file, file);
 					if (status.isOK()) {

@@ -62,10 +62,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	public EmailService(Element element) {
 		super(element);
 
-		String dicomScript = element.getAttribute("dicomScript").trim();
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 		studies = new Hashtable<String,Study>();
 		includePatientName = element.getAttribute("includePatientName").toLowerCase().trim().equals("yes");
 		includePatientID = element.getAttribute("includePatientID").toLowerCase().trim().equals("yes");
@@ -141,7 +138,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			DicomObject dob = (DicomObject)fileObject;
 
 			//If there is a dicomScriptFile, use it to determine whether to consider this object.
-			if ((dicomScriptFile == null) || dob.matches(dicomScriptFile)) {
+			if (dob.matches(dicomScriptFile)) {
 
 				//Okay, add the object to the table.
 				String siuid = dob.getStudyInstanceUID();

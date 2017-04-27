@@ -36,7 +36,7 @@ public class XmlFilter extends AbstractPipelineStage implements Processor, Scrip
 	 */
 	public XmlFilter(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		scriptFile = getFilterScriptFile(element.getAttribute("script"));
 	}
 
 	/**

@@ -2292,8 +2292,11 @@ public class DicomObject extends FileObject {
 	 * @return the computed boolean value of the script.
 	 */
 	public boolean matches(File scriptFile) {
-		String script = FileUtil.getText(scriptFile);
-		return matches(script);
+		if (scriptFile != null) {
+			String script = FileUtil.getText(scriptFile);
+			return matches(script);
+		}
+		return true;
 	}
 
 	/**

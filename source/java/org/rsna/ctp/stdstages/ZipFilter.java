@@ -35,7 +35,7 @@ public class ZipFilter extends AbstractPipelineStage implements Processor, Scrip
 	 */
 	public ZipFilter(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		scriptFile = getFilterScriptFile(element.getAttribute("script"));
 	}
 
 	/**

@@ -35,7 +35,7 @@ public class DicomFilter extends AbstractPipelineStage implements Processor, Scr
 	 */
 	public DicomFilter(Element element) {
 		super(element);
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-filter.script");
+		scriptFile = getFilterScriptFile(element.getAttribute("script"));
 	}
 
 	/**
@@ -49,8 +49,7 @@ public class DicomFilter extends AbstractPipelineStage implements Processor, Scr
 		lastTimeIn = System.currentTimeMillis();
 
 		if (fileObject instanceof DicomObject) {
-			String script = FileUtil.getText(scriptFile);
-			boolean match = ((DicomObject)fileObject).matches(script);
+			boolean match = ((DicomObject)fileObject).matches(scriptFile);
 			if (!match) {
 				if (quarantine != null) quarantine.insert(fileObject);
 				lastFileOut = null;

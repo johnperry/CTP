@@ -78,7 +78,7 @@ public class PDFStorageService extends AbstractPipelineStage implements StorageS
 		if (!temp.equals("")) whitespaceReplacement = temp;
 
 		//Get the script file
-		dicomScriptFile = FileUtil.getFile(element.getAttribute("dicomScript").trim(), "examples/example-filter.script");
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 
 		lastFileIn = null;
 		if (root == null) logger.error(name+": No root directory was specified.");
@@ -258,7 +258,7 @@ public class PDFStorageService extends AbstractPipelineStage implements StorageS
 
 	private boolean checkFilter(FileObject fileObject) {
 		if (fileObject instanceof DicomObject) {
-			return (dicomScriptFile == null) || ((DicomObject)fileObject).matches(dicomScriptFile);
+			return ((DicomObject)fileObject).matches(dicomScriptFile);
 		}
 		return false; //Don't accept other object types.
 	}

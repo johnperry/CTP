@@ -37,11 +37,7 @@ public class DicomPaletteImageConverter extends AbstractPipelineStage implements
 	 */
 	public DicomPaletteImageConverter(Element element) {
 		super(element);
-
-		String dicomScript = element.getAttribute("script").trim();
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("script"));
 	}
 
 	/**
@@ -67,7 +63,7 @@ public class DicomPaletteImageConverter extends AbstractPipelineStage implements
 			DicomObject dob = (DicomObject)fileObject;
 			if (dob.isImage()
 					&& dob.getPhotometricInterpretation().trim().equals("PALETTE COLOR")
-					&& ((dicomScriptFile == null) || dob.matches(FileUtil.getText(dicomScriptFile)))) {
+					&& (dob.matches(FileUtil.getText(dicomScriptFile)))) {
 
 				File file = fileObject.getFile();
 				AnonymizerStatus status = DICOMPaletteImageConverter.convert(file, file);

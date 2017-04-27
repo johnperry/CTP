@@ -41,12 +41,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	 */
 	public DicomTranscoder(Element element) {
 		super(element);
-		
-		String dicomScript = element.getAttribute("script").trim();
-		if (!dicomScript.equals("")) {
-			dicomScriptFile = FileUtil.getFile(dicomScript, "examples/example-filter.script");
-		}
-
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 		transcoder = new Transcoder();
 		tsuid = element.getAttribute("tsuid").trim();
 		if (!tsuid.equals("")) transcoder.setTransferSyntax(tsuid);
@@ -74,7 +69,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 			boolean isJPEGBaseline = transferSyntaxUID.equals(JPEGBaseline);
 			boolean skip = (isJPEGBaseline && skipJPEGBaseline) || transferSyntaxUID.equals(tsuid);
 			if (dob.isImage() && !skip) {
-				if ((dicomScriptFile == null) || dob.matches(dicomScriptFile)) {
+				if (dob.matches(dicomScriptFile)) {
 					File file = dob.getFile();
 					AnonymizerStatus status = transcoder.transcode(file, file);
 					if (status.isOK()) {

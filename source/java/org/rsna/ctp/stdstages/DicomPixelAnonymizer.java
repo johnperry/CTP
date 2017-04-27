@@ -47,7 +47,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	public DicomPixelAnonymizer(Element element) {
 		super(element);
 		log = element.getAttribute("log").trim().equals("yes");
-		scriptFile = FileUtil.getFile(element.getAttribute("script").trim(), "examples/example-dicom-pixel-anonymizer.script");
+		scriptFile = getFilterScriptFile(element.getAttribute("script"));
 		setBurnedInAnnotation = element.getAttribute("setBurnedInAnnotation").trim().equals("yes");
 		test = element.getAttribute("test").trim().equals("yes");
 	}
