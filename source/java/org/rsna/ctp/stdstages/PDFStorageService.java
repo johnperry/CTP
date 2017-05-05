@@ -7,7 +7,7 @@
 
 package org.rsna.ctp.stdstages;
 
-import java.io.BufferedOutputStream;;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
@@ -71,7 +71,7 @@ public class PDFStorageService extends AbstractPipelineStage implements StorageS
 			dirs = structure.split("/");
 		}
 
-		String temp = element.getAttribute("defaultString").trim();;
+		String temp = element.getAttribute("defaultString").trim();
 		if (!temp.equals("")) defaultString = temp;
 
 		temp = element.getAttribute("whitespaceReplacement").trim();
