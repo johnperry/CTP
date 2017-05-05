@@ -1122,7 +1122,13 @@ public class DICOMAnonymizer {
 			if (n > 4) incString = incString.substring( n-4, n);
 			long inc = Long.parseLong(incString);
 			inc = -1 * (inc % (10 * 365));
-			return AnonymizerFunctions.incrementDate(date, inc);
+			String[] dates = date.split("\\\\");
+			StringBuffer sb = new StringBuffer();
+			for (int i=0; i<dates.length; i++) {
+				if (i > 0) sb.append("\\");
+				sb.append(AnonymizerFunctions.incrementDate(dates[i], inc));
+			}
+			return sb.toString();
 		}
 		catch (Exception e) {
 			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in hashdate"+fn.getArgs()+": "+e.getMessage());
@@ -1146,7 +1152,13 @@ public class DICOMAnonymizer {
 			if (date.length() < 8) return emptyDate;
 			String incString = fn.context.getParam(fn.args[1]);
 			long inc = Long.parseLong(incString);
-			return AnonymizerFunctions.incrementDate(date, inc);
+			String[] dates = date.split("\\\\");
+			StringBuffer sb = new StringBuffer();
+			for (int i=0; i<dates.length; i++) {
+				if (i > 0) sb.append("\\");
+				sb.append(AnonymizerFunctions.incrementDate(dates[i], inc));
+			}
+			return sb.toString();
 		}
 		catch (Exception e) {
 			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in incrementdate"+fn.getArgs()+": "+e.getMessage());
@@ -1172,7 +1184,13 @@ public class DICOMAnonymizer {
 			int y = getReplacementValue(fn.context.getParam(fn.args[1]).trim());
 			int m = getReplacementValue(fn.context.getParam(fn.args[2]).trim());
 			int d = getReplacementValue(fn.context.getParam(fn.args[3]).trim());
-			return AnonymizerFunctions.modifyDate(date, y, m, d);
+			String[] dates = date.split("\\\\");
+			StringBuffer sb = new StringBuffer();
+			for (int i=0; i<dates.length; i++) {
+				if (i > 0) sb.append("\\");
+				sb.append(AnonymizerFunctions.modifyDate(dates[i], y, m, d));
+			}
+			return sb.toString();
 		}
 		catch (Exception e) {
 			logger.warn(Tags.toString(fn.thisTag)+": Exception caught in modifydate"+fn.getArgs()+": "+e.getMessage());
