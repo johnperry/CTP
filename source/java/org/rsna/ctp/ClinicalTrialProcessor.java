@@ -168,6 +168,7 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("status",		StatusServlet.class);
 		selector.addServlet("quarantines",	QuarantineServlet.class);
 		selector.addServlet("idmap",		IDMapServlet.class);
+		selector.addServlet("objectlogger",	ObjectLoggerServlet.class);
 		selector.addServlet("objecttracker",ObjectTrackerServlet.class);
 		selector.addServlet("databaseverifier",DBVerifierServlet.class);
 		selector.addServlet("decipher",		DecipherServlet.class);

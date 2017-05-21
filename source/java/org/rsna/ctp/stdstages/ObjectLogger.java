@@ -8,11 +8,14 @@
 package org.rsna.ctp.stdstages;
 
 import java.io.File;
+import java.util.LinkedList;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractPipelineStage;
 import org.rsna.ctp.pipeline.Processor;
+import org.rsna.ctp.servlets.SummaryLink;
+import org.rsna.server.User;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
@@ -23,10 +26,13 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 
 	static final Logger logger = Logger.getLogger(ObjectLogger.class);
 
-	int count = 0;
+	volatile boolean loggingEnabled = true;
+	volatile int count = 0;
 	int interval = 1;
 	boolean verbose = false;
-	final String margin = "\n                              ";
+	volatile String lastLogEntry = null;
+	final String spaces = "                              ";
+	final String margin = "\n" + spaces;
 
 	/**
 	 * Construct the ObjectLogger PipelineStage.
@@ -36,6 +42,7 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 	public ObjectLogger(Element element) {
 		super(element);
 		verbose = element.getAttribute("verbose").trim().equals("yes");
+		loggingEnabled = !element.getAttribute("log").trim().equals("no");
 		interval = Math.max( 1, StringUtil.getInt(element.getAttribute("interval").trim(), 1) );
 		count = 0;
 	}
@@ -48,12 +55,13 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 	public FileObject process(FileObject fileObject) {
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
+		
+		String verboseString = "";
 
-		if ((count % interval) == 0) {
+		if (loggingEnabled && ((count % interval) == 0)) {
 			DicomObject dob = null;
 			if (fileObject instanceof DicomObject) dob = (DicomObject)fileObject;
 
-			String verboseString = "";
 			if (verbose) {
 				verboseString =
 					( (dob == null) ? ""
@@ -65,15 +73,16 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 									: margin + "InstanceNumber   = " + dob.getInstanceNumber() ) +
 					margin + "Digest           = " + fileObject.getDigest();
 			}
-
-			logger.info(
+			
+			lastLogEntry = 
 				name
 				+ margin + fileObject.getClassName()
 				+ ": (" + (count+1) + ") "
 				+ fileObject.getFile().getName()
 				+ " @ " + StringUtil.getTime(":")
-				+ verboseString
-			);
+				+ verboseString;
+			
+			logger.info(lastLogEntry);
 		}
 		count++;
 
@@ -81,16 +90,53 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
 	}
+	
+	public synchronized boolean getLoggingEnabled() {
+		return loggingEnabled;
+	}
 
+	public synchronized void setLoggingEnabled(boolean loggingEnabled) {
+		this.loggingEnabled = loggingEnabled;
+	}
+	
 	/**
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
 	public String getStatusHTML() {
+		String logEntry = "";
+		if (lastLogEntry != null) {
+			logEntry = 
+				"<tr>" +
+					"<td width=\"20%\">LastLogEntry:</td>" +
+					"<td>" + lastLogEntry.replace(margin, "<br/>") + "</td>" +
+				"</tr>";
+		}
 		String stageUniqueStatus =
-			"<tr><td width=\"20%\">Files processed:</td>"
-			+ "<td>" + count + "</td></tr>";
+			"<tr>" + 
+				"<td width=\"20%\">Files processed:</td>" +
+				"<td>" + count + "</td>" +
+				logEntry +
+			"</tr>";
 		return super.getStatusHTML(stageUniqueStatus);
 	}
 
+	/**
+	 * Get the list of links for display on the summary page.
+	 * @param user the requesting user.
+	 * @return the list of links for display on the summary page.
+	 */
+	public LinkedList<SummaryLink> getLinks(User user) {
+		LinkedList<SummaryLink> links = super.getLinks(user);
+		if (allowsAdminBy(user)) {
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			if (loggingEnabled) {
+				links.addFirst( new SummaryLink("/objectlogger"+qs+"&log=no", null, "Disable Logging", false) );
+			}
+			else {
+				links.addFirst( new SummaryLink("/objectlogger"+qs+"&log=yes", null, "Enable Logging", false) );
+			}
+		}
+		return links;
+	}
 }

@@ -220,7 +220,8 @@ public class Transcoder {
             setOutput(ios = ImageIO.createImageOutputStream(tempfile));
             transcode();
         }
-        catch (IOException e) {
+        catch (Exception e) {
+			e.printStackTrace();
         	return AnonymizerStatus.QUARANTINE(infile, e.getMessage());
         }
         finally {

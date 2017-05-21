@@ -291,6 +291,9 @@
 			<attr name="verbose" required="yes" default="yes" options="yes|no">
 				<helptext>Increase the amount of information logged</helptext>
 			</attr>
+			<attr name="log" required="yes" default="yes" options="yes|no">
+				<helptext>Make entries in the log. Entries are always available on the status page.</helptext>
+			</attr>
 		</Processor>
 
 		<Processor>
