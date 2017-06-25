@@ -567,6 +567,7 @@
 				<helptext>Length of time in days before studies are automatically purged (0 = forever)</helptext>
 			</attr>
 			<attr name="acceptDuplicateUIDs" required="no" default="yes" options="yes|no"/>
+			<attr name="skipNonImageObjects" required="no" default="no" options="yes|no"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>

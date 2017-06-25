@@ -65,6 +65,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	boolean setReadable = false;
 	boolean setWritable = false;
 	boolean acceptDuplicateUIDs = true;
+	boolean skipNonImageObjects = false;
 	List<ImageQualifiers> qualifiers = null;
 	StorageMonitor storageMonitor = null;
 	HttpServer httpServer = null;
@@ -89,6 +90,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		fsNameTag = DicomObject.getTagArray(element.getAttribute("fsNameTag").trim());
 		autoCreateUser = element.getAttribute("auto-create-user").trim().toLowerCase().equals("yes");
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").trim().toLowerCase().equals("no");
+		skipNonImageObjects = element.getAttribute("skipNonImageObjects").trim().toLowerCase().equals("yes");
 		port = StringUtil.getInt(element.getAttribute("port").trim());
 		ssl = element.getAttribute("ssl").equals("yes");
 		if (root == null) logger.error(name+": No root directory was specified.");
@@ -208,31 +210,37 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	public FileObject store(FileObject fileObject) {
 
 		//See if the StorageService is configured to accept the object type.
-		if (!acceptable(fileObject)) return fileObject;
-
-		//The object is acceptable.
-		try {
-			//Get the file system for the object.
-			String fsName = getFSName(fileObject);
-			FileSystem fs = fsm.getFileSystem(fsName);
-			//Store the object
-			File storedFile = fs.store(fileObject);
-			if (returnStoredFile) fileObject = FileObject.getInstance(storedFile);
-			if (autoCreateUser) createUserForFileSystem(fs);
+		if (acceptable(fileObject) && !skip(fileObject)) {
+			//The object is acceptable.
+			try {
+				//Get the file system for the object.
+				String fsName = getFSName(fileObject);
+				FileSystem fs = fsm.getFileSystem(fsName);
+				//Store the object
+				File storedFile = fs.store(fileObject);
+				if (returnStoredFile) fileObject = FileObject.getInstance(storedFile);
+				if (autoCreateUser) createUserForFileSystem(fs);
+			}
+			catch (Exception ex) {
+				logger.debug("Unable to store "+fileObject.getFile().getName(), ex);
+				if (quarantine != null) quarantine.insert(fileObject);
+				return null;
+			}
+			lastFileStored = fileObject.getFile();
+			lastTime = System.currentTimeMillis();
 		}
-		catch (Exception ex) {
-			logger.debug("Unable to store "+fileObject.getFile().getName(), ex);
-			if (quarantine != null) quarantine.insert(fileObject);
-			return null;
-		}
-
-		lastFileStored = fileObject.getFile();
-		lastTime = System.currentTimeMillis();
-		lastFileOut = lastFileStored;
-		lastTimeOut = lastTime;
+		
+		lastFileOut = fileObject.getFile();
+		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
 	}
 
+	//Test whether to skip an object
+	private boolean skip(FileObject fileObject) {
+		return skipNonImageObjects
+			&& (fileObject instanceof DicomObject)
+				&& !((DicomObject)fileObject).isImage();		
+	}
 
 	//Get the file system name for the object.
 	private String getFSName(FileObject fileObject) throws Exception {
