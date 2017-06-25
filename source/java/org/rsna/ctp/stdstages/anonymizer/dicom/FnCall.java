@@ -158,6 +158,8 @@ public class FnCall {
 		boolean inQuote = false;
 		boolean inBracket = false;
 		boolean inParen = false;
+		int bracketCount = 0;
+		int parenCount = 0;
 		
 		StringBuffer arg = new StringBuffer();
 		while (currentIndex < call.length()) {
@@ -171,17 +173,23 @@ public class FnCall {
 				if (c == '"') {
 					inQuote = !inQuote;
 				}
-				else if (c == '[') {
-					inBracket = true;
-				}
-				else if (inBracket && (c == ']')) {
-					inBracket = false;
-				}
-				else if (c == '(') {
-					inParen = true;
-				}
-				else if (inParen && (c == ')')) {
-					inParen = false;
+				if (!inQuote) {
+					if (c == '[') {
+						inBracket = true;
+						bracketCount++;
+					}
+					else if (inBracket && (c == ']')) {
+						bracketCount--;
+						if (bracketCount == 0) inBracket = false;
+					}
+					else if (c == '(') {
+						inParen = true;
+						parenCount++;
+					}
+					else if (inParen && (c == ')')) {
+						parenCount--;
+						if (parenCount == 0) inParen = false;
+					}
 				}
 				inEscape = false;
 			}
@@ -193,7 +201,6 @@ public class FnCall {
 		
 		//skip the comma delimiter
 		if (c == ',') currentIndex++;
-		
 		return arg.toString().trim();
 	}
 	

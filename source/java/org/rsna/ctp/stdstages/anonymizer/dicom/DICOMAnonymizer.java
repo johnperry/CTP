@@ -759,6 +759,12 @@ public class DICOMAnonymizer {
 		else if (fn.args[1].equals("exists")) {
 			return fn.context.contains(tag);
 		}
+		else if (fn.args[1].equals("greaterthan")) {
+			if ((element == null) || (fn.args.length < 3)) return false;
+			int eValue = StringUtil.getInt(element.replaceAll("[^0-9]", ""));
+			int cValue = StringUtil.getInt(getArg(fn, 2).replaceAll("[^0-9]", ""));
+			return (eValue > cValue);
+		}
 		return false;
 	}
 

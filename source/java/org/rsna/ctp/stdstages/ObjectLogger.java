@@ -57,31 +57,32 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 		lastTimeIn = System.currentTimeMillis();
 		
 		String verboseString = "";
+		
+		DicomObject dob = null;
+		if (fileObject instanceof DicomObject) dob = (DicomObject)fileObject;
 
+		if (verbose) {
+			verboseString =
+				( (dob == null) ? ""
+								: margin + "TransferSyntax   = " + dob.getTransferSyntaxName() + " (" + dob.getTransferSyntaxUID() + ")" ) +
+				margin + "PatientID        = " + fileObject.getPatientID() +
+				margin + "StudyInstanceUID = " + fileObject.getStudyInstanceUID() +
+				margin + "SOPInstanceUID   = " + fileObject.getSOPInstanceUID() +
+				( (dob == null) ? ""
+								: margin + "InstanceNumber   = " + dob.getInstanceNumber() ) +
+				(!loggingEnabled ? ""
+								: margin + "Digest           = " + fileObject.getDigest());
+		}
+
+		lastLogEntry = 
+			name
+			+ margin + fileObject.getClassName()
+			+ ": (" + (count+1) + ") "
+			+ fileObject.getFile().getName()
+			+ " @ " + StringUtil.getTime(":")
+			+ verboseString;
+			
 		if (loggingEnabled && ((count % interval) == 0)) {
-			DicomObject dob = null;
-			if (fileObject instanceof DicomObject) dob = (DicomObject)fileObject;
-
-			if (verbose) {
-				verboseString =
-					( (dob == null) ? ""
-									: margin + "TransferSyntax   = " + dob.getTransferSyntaxName() + " (" + dob.getTransferSyntaxUID() + ")" ) +
-					margin + "PatientID        = " + fileObject.getPatientID() +
-					margin + "StudyInstanceUID = " + fileObject.getStudyInstanceUID() +
-					margin + "SOPInstanceUID   = " + fileObject.getSOPInstanceUID() +
-					( (dob == null) ? ""
-									: margin + "InstanceNumber   = " + dob.getInstanceNumber() ) +
-					margin + "Digest           = " + fileObject.getDigest();
-			}
-			
-			lastLogEntry = 
-				name
-				+ margin + fileObject.getClassName()
-				+ ": (" + (count+1) + ") "
-				+ fileObject.getFile().getName()
-				+ " @ " + StringUtil.getTime(":")
-				+ verboseString;
-			
 			logger.info(lastLogEntry);
 		}
 		count++;
