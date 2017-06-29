@@ -269,6 +269,7 @@ public class AnonymizerFunctions {
 	}
 
 	//Get a Cipher initialized with the specified key.
+	static SecureRandom secureRandom = null;
 	private static Cipher getCipher(String keyText, int mode) {
 		try {
 			Provider sunJce = new com.sun.crypto.provider.SunJCE();
@@ -276,12 +277,17 @@ public class AnonymizerFunctions {
 			byte[] key = getEncryptionKey(keyText,128);
 			SecretKeySpec skeySpec = new SecretKeySpec(key,"Blowfish");
 
-			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
-			byte[] seed = random.generateSeed(8);
-			random.setSeed(seed);
-
+			if (secureRandom == null) {
+				String osname = System.getProperty("os.name");
+				if ((osname != null) && osname.toLowerCase().contains("windows")) {
+					secureRandom = SecureRandom.getInstance("SHA1PRNG", "SUN");
+				}
+				else secureRandom = new SecureRandom();
+				byte[] seed = secureRandom.generateSeed(8);
+				secureRandom.setSeed(seed);
+			}
 			Cipher cipher = Cipher.getInstance("Blowfish");
-			cipher.init(mode, skeySpec, random);
+			cipher.init(mode, skeySpec, secureRandom);
 			return cipher;
 		}
 		catch (Exception ex) { return null; }
