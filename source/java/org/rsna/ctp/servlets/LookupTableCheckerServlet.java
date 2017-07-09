@@ -57,6 +57,7 @@ public class LookupTableCheckerServlet extends CTPServlet {
 
 		//Make sure the user is authorized to do this.
 		if (!userIsAuthorized) {
+			logger.warn(req.toString());
 			res.setResponseCode(res.forbidden);
 			res.send();
 			return;
@@ -77,20 +78,20 @@ public class LookupTableCheckerServlet extends CTPServlet {
 			PipelineStage stage = config.getRegisteredStage(context);
 			LookupTableChecker ltcStage = (LookupTableChecker)stage;
 			Document doc = ltcStage.getIndexDocument();
-
-			//logger.info("LUTDoc:\n"+XmlUtil.toPrettyString(doc));
-
 			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/LookupTableCheckerServlet.xsl" ) );
 			Object[] params = {
 				"context", context,
 				"home", home,
 				"pipelineName", ltcStage.getPipeline().getPipelineName(),
 				"stageName", ltcStage.getName(),
-				"lutFile", ltcStage.getLookupTableFile().getAbsolutePath()
+				"lutFile", ltcStage.getAnonymizer().getLookupTableFile().getAbsolutePath()
 			};
+			
 			return XmlUtil.getTransformedText( doc, xsl, params );
 		}
-		catch (Exception unable) { }
+		catch (Exception unable) { 
+			logger.warn("Unable to create the Editor page", unable);
+		}
 		return "Unable to create the Editor page";
 	}
 
@@ -105,8 +106,12 @@ public class LookupTableCheckerServlet extends CTPServlet {
 	 */
 	public void doPost(HttpRequest req, HttpResponse res) {
 		super.loadParameters(req);
-
+		Configuration config = Configuration.getInstance();
+		PipelineStage stage = config.getRegisteredStage(context);
+		LookupTableChecker ltcStage = (LookupTableChecker)stage;
+		
 		//Make sure the user is authorized to do this.
+		userIsAuthorized = stage.getPipeline().allowsAdminBy(req.getUser());
 		if (!userIsAuthorized || !req.isReferredFrom(context)) {
 			res.setResponseCode(res.forbidden);
 			res.send();
@@ -118,9 +123,6 @@ public class LookupTableCheckerServlet extends CTPServlet {
 		if (req.hasParameter("suppress")) home = "";
 
 		try {
-			Configuration config = Configuration.getInstance();
-			PipelineStage stage = config.getRegisteredStage(context);
-			LookupTableChecker ltcStage = (LookupTableChecker)stage;
 			Document doc = XmlUtil.getDocument();
 			Element root = doc.createElement("Terms");
 			doc.appendChild(root);

@@ -132,7 +132,6 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 		lastTimeIn = System.currentTimeMillis();
 		if (fileObject instanceof DicomObject) {
 			DicomObject dob = (DicomObject)fileObject;
-
 			daScriptFile = anonymizer.getDAScriptFile();
 			lutFile = anonymizer.getLookupTableFile();
 			if (daScriptFile != null) {
@@ -152,8 +151,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 				}
 			}
 		}
-		
-		logger.info("Done checking "+fileObject.getType());
+		logger.debug("Done checking "+fileObject.getType());
 		lastFileOut = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeOut = System.currentTimeMillis();
 		return fileObject;
@@ -323,7 +321,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 * Get the lookup table file.
 	 * @return the lookup table file.
 	 */
-	public File getLookupTableFile() {
+	public synchronized File getLookupTableFile() {
 		return lutFile;
 	}
 
@@ -331,7 +329,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 * Get the DicomAnonymizer stage that is being checked.
 	 * @return the DicomAnonymizer stage that is being checked.
 	 */
-	public DicomAnonymizer getAnonymizer() {
+	public synchronized DicomAnonymizer getAnonymizer() {
 		return anonymizer;
 	}
 
@@ -340,7 +338,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 * @param doc the Document containing the values to be
 	 * added to the lookup table
 	 */
-	public synchronized void update(Document doc) {
+	public synchronized boolean update(Document doc) {
 		LookupTable lut = LookupTable.getInstance(lutFile);
 		Properties props = lut.getProperties();
 		Element root = doc.getDocumentElement();
@@ -363,19 +361,18 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 			catch (Exception ignore) { }
 			lut.save();
 		}
+		return changed;
 	}
 
 	//Find the next anonymizer stage.
 	private void getContext() {
-		if (daScriptFile == null) {
-			PipelineStage next = getNextStage();
-			while (next != null) {
-				if (next instanceof DicomAnonymizer) {
-					anonymizer = ((DicomAnonymizer)next);
-					break;
-				}
-				next = next.getNextStage();
+		PipelineStage next = getNextStage();
+		while (next != null) {
+			if (next instanceof DicomAnonymizer) {
+				anonymizer = ((DicomAnonymizer)next);
+				break;
 			}
+			next = next.getNextStage();
 		}
 	}
 
@@ -399,7 +396,8 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	public LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if (allowsAdminBy(user)) {
-			links.addFirst( new SummaryLink("/"+id, null, "View the LookupTableChecker Database", false) );
+			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
+			links.addFirst( new SummaryLink("/"+id+qs, null, "View the LookupTableChecker Database", false) );
 		}
 		return links;
 	}
