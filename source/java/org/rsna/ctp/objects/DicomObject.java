@@ -847,7 +847,7 @@ public class DicomObject extends FileObject {
 	 * double-colons. All but the last ID must identify an SQ element. The last
 	 * can identify any element. The ID for an element can have be the DICOM keyword
 	 * (as modified by dcm4che), a standard hexadecimal group-element pair, with or 
-	 * without the comma and enclosed eithe by parentheses or square brackets.
+	 * without the comma and enclosed either by parentheses or square brackets.
 	 * Private elements can be identified by a keyword from the PrivateTagIndex or by
 	 * the group[creator]element syntax, where group is the full hexadecimal group
 	 * number, creator is the value stored in the Private Creator Element for the
@@ -865,6 +865,14 @@ public class DicomObject extends FileObject {
 		if (specifier == null) return null;
 		specifier = specifier.trim();
 		if (specifier.equals("")) return null;
+		
+		//See if this is a root reference
+		if (specifier.startsWith("root:")) {
+			specifier = specifier.substring(5).trim();
+			Dataset parent;
+			while ((parent = ds.getParent()) != null) ds = parent;
+		}
+		
 		String[] specs = specifier.split("::");
 		DcmElement de = null;
 		for (int k=0; k<specs.length; k++) {

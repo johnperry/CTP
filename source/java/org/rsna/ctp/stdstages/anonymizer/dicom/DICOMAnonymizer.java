@@ -919,9 +919,14 @@ public class DICOMAnonymizer {
 	//lookup table indexed by the value of another element and returns the result.
 	//If the requested element is not present or the value of the element is not
 	//a key in the lookup table, throw a quarantine exception.
-	//The arguments are: DateElementName, keyType, KeyElement
+	//The arguments are: DateElementName, keyType, KeyElement, [offset date]
 	//where keyType is the name of a specific key, which must appear in the lkup
 	//Properties as keyType/KeyElementValue = replacement.
+	//[origindate] is an optional argument (which can be a parameter reference) specifying
+	//a date in DICOM format (YYYYMMDD).
+	//If [origindate] is not present, the function returns the computed number of days.
+	//If [origindate] is returned, the function returns the origindate incremented by
+	//the computed number of days.
 	//Values and replacements are trimmed before use.
 	private static final long oneDay = 24 * 60 * 60 * 1000;
 	private static SimpleDateFormat dcmDF = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
@@ -936,7 +941,13 @@ public class DICOMAnonymizer {
 				String basedate = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key).trim();
 				long dateMS = dcmDF.parse(dateElementValue).getTime();
 				long basedateMS = basedateDF.parse(basedate).getTime();
-				return Long.toString((dateMS - basedateMS)/oneDay);
+				long days = Math.round( (double)(dateMS - basedateMS) / (double)oneDay );
+				
+				if (fn.args.length == 3) return Long.toString(days);
+				else {
+					String originDate = fn.context.getParam(fn.args[3]);
+					return AnonymizerFunctions.incrementDate(originDate, days);
+				}
 			}
 		}
 		catch (Exception error) { }

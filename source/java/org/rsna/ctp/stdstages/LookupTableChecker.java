@@ -68,7 +68,7 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 
     static final Pattern processPattern = Pattern.compile("@\\s*process\\s*\\(\\s*\\)");
     static final Pattern lookupPattern = Pattern.compile("@\\s*lookup\\s*\\(([^,)]+),([^,)]+),?([^,)]*),?([^\\)]*)\\)");
-    static final Pattern intervalPattern = Pattern.compile("@\\s*dateinterval\\s*\\(([^,]+),([^,]+),([^)]+)\\s*\\)");
+    static final Pattern intervalPattern = Pattern.compile("@\\s*dateinterval\\s*\\(([^,]+),([^,]+),([^,)]+),?([^)]*)\\)");
 
 	/**
 	 * Construct the LookupTableChecker PipelineStage.
@@ -244,10 +244,10 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 			String keyType = intervalMatcher.group(2).trim() + "/";
 			String keyElement = intervalMatcher.group(3).trim();
 
-			//logger.info("...nGroups  = "+nGroups);
-			//logger.info("...dateElement: |"+dateElement+"|");
-			//logger.info("...keyType:     |"+keyType+"|");
-			//logger.info("...keyElement : |"+keyElement+"|");
+			logger.info("...nGroups  = "+nGroups);
+			logger.info("...dateElement: |"+dateElement+"|");
+			logger.info("...keyType:     |"+keyType+"|");
+			logger.info("...keyElement : |"+keyElement+"|");
 
 			int targetTag = ( keyElement.equals("this") ? tag : DicomObject.getElementTag(keyElement) );
 			String targetValue = handleNull( ds.getString(targetTag) );
