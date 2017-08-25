@@ -845,7 +845,7 @@ public class DicomObject extends FileObject {
 	 * Get the value of an element corresponding to an element specifier.
 	 * An element specifier consists of a sequence of element IDs, separated by
 	 * double-colons. All but the last ID must identify an SQ element. The last
-	 * can identify any element. The ID for an element can have be the DICOM keyword
+	 * can identify any element. The ID for an element can be the DICOM keyword
 	 * (as modified by dcm4che), a standard hexadecimal group-element pair, with or 
 	 * without the comma and enclosed either by parentheses or square brackets.
 	 * Private elements can be identified by a keyword from the PrivateTagIndex or by
@@ -917,9 +917,9 @@ public class DicomObject extends FileObject {
 	 * @return the value of the specified element in the specified dataset,
 	 * or null of the value cannot be obtained.
 	 */
-	public static String getElementValue(DcmElement de, Dataset ds) {
-		if ((de == null) || (ds == null)) return null;		
-		SpecificCharacterSet cs = ds.getSpecificCharacterSet();
+	public static String getElementValue(DcmElement de, DcmObject dcmObject) {
+		if ((de == null) || (dcmObject == null)) return null;		
+		SpecificCharacterSet cs = dcmObject.getSpecificCharacterSet();
 		PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
 		
 		int tag = de.tag();
@@ -930,35 +930,72 @@ public class DicomObject extends FileObject {
 			}
 
 			//Not FMI, handle dataset references
+			Dataset ds = (Dataset)dcmObject;
+			
+			boolean privateElement = ((tag & 0x00010000) != 0);
 			boolean privateText = false;
+			boolean privateInt = false;
+			boolean privateFloat = false;
 			boolean privateUN = false;
-			if (((tag & 0x00010000) != 0) && ((tag & 0x0000ff00) != 0)) {
+			String vr = "";
+			if (privateElement && ((tag & 0x0000ff00) != 0)) {
 				int blk = (tag & 0xffff0000) | ((tag & 0x0000ff00) >> 8);
 				try { 
 					String owner = ds.getString(blk);
-					String vr = ptIndex.getVR(owner, tag);
+					vr = ptIndex.getVR(owner, tag);
 					privateText = (owner.equals("CTP") || vr.equals("LO") || vr.equals("LT")
 						|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
 						|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
-						|| vr.equals("PN") || vr.equals("UI"));
+						|| vr.equals("PN") || vr.equals("UC") || vr.equals("UI") || vr.equals("UR"));
+					privateInt = !privateText && (vr.equals("SL") || vr.equals("SS") || vr.equals("UL")
+						 || vr.equals("US"));
+					privateFloat = !privateText && !privateInt && (vr.equals("FL") || vr.equals("FD"));
 					privateUN = vr.equals("UN");
 				}
-				catch (Exception notPrivateText) { privateText = false; }
+				catch (Exception ignore) { }
 			}
 
-			if (privateText || privateUN) {
-				byte[] bytes = de.getByteBuffer().array();
+			if (privateElement) {
 				if (privateText) {
+					byte[] bytes = de.getByteBuffer().array();
 					return cs.decode(bytes);
 				}
 				else if (privateUN) {
 					//This is a kludge to deal with a VR=UN element whose value is requested.
 					//In practice, nobody would rationally get a string for a non-text element
-					//in a private group, so we will decode it and hope for the best.
+					//in a private group, but we will decode it and hope for the best.
 					//We keep this path in the code separate so we can more easily change it
 					//if things go south in the field.
+					byte[] bytes = de.getByteBuffer().array();
 					return cs.decode(bytes);
 				}
+				else if (privateInt) {
+					//This is my best try at handling both Big and Little Endian,
+					//but it is certainly a kludge. I can't find a way to get
+					//the actual byte order of the binary directly from the dataset.
+					byte[] bytes = de.getByteBuffer().array();
+					FileMetaInfo fmi = ds.getFileMetaInfo();
+					String tsUID = fmi.getTransferSyntaxUID();
+					boolean isLE = !tsUID.equals(UIDs.ExplicitVRBigEndian);
+					StringBuffer sb = new StringBuffer();
+					for (int k=0; k<bytes.length/4; k++) {
+						int value = 0;
+						if (isLE) {
+							int valueL = (bytes[4*k+0] & 0xff) | ((bytes[4*k+1] << 8) & 0xff00);
+							int valueH = (bytes[4*k+2] & 0xff) | ((bytes[4*k+3] << 8) & 0xff00);
+							value = (valueH << 16) | valueL;
+						}
+						else {
+							for (int i=0; i<4; i++) value = (value << 8) | (bytes[4*k+i] & 0xff);
+						}
+						if (k != 0) sb.append("\\");
+						sb.append(Integer.toString(value));
+					}
+					return sb.toString();
+				}
+				else if (privateFloat) {
+					//do nothing for now
+				}					
 			}
 
 			//Not private or can't make it out to be text, just return the strings.		
@@ -1326,6 +1363,61 @@ public class DicomObject extends FileObject {
 			return sb.toString();
 		}
 		catch (Exception e) { return ""; }
+	}
+
+	/**
+	 * Get the contents of a DICOM element in the DicomObject's dataset as a
+	 * String. This method supports accessing the item datasets of SQ elements,
+	 * but it only searches the first item dataset at each level.
+	 * It returns the empty String if the element cannot be obtained.
+	 * @param spec the sequence of tags specifcations, separated by "::",
+	 * defining the target element, where all the tags but the last must 
+	 * refer to an SQ element.
+	 * @return the String value of the element, or the empty string
+	 * if the element does not exist.
+	 */
+	public String getElementString(String spec) {
+		try {
+			spec = spec.trim();
+			if (spec.equals("")) return "";
+			Dataset ds = dataset;
+			DcmElement de = null;
+			String[] tagSpecs = spec.split("::");
+			for (int i=0; i<tagSpecs.length; i++) {
+				String tagSpec = tagSpecs[i];
+				
+				//Try it as a standard element specifier
+				int tag = getElementTag(tagSpec);
+
+				//If that fails, try it as a Private Creator or Private Data Element with a block specifier
+				if (tag == 0) tag = getPrivateElementTag(ds, tagSpec);
+
+				//If that fails, bail out
+				if (tag == 0) return "";
+
+				//We have a tag, now get the DcmElement
+				if ((fileMetaInfo != null) && ((tag & 0x7FFFFFFF) < 0x80000)) {
+					de = fileMetaInfo.get(tag);
+				}
+				else de = ds.get(tag);
+				if (de == null) return "";
+				
+				if (de.vr() == VRs.SQ) {
+					if (i < tagSpecs.length -1) {
+						ds = de.getItem(0);
+						if (ds == null) return "";
+					}
+					else return "";
+				}
+			}
+			if (de != null) {
+				String value = getElementValue(de, ds);
+				String[] s = value.split("\\\\");
+				return s[0];
+			}
+		}
+		catch (Exception ex) { }
+		return "";
 	}
 
 	/**
@@ -2136,7 +2228,7 @@ public class DicomObject extends FileObject {
 					}
 				}
 				else {
-					valueString = getElementValueString(el, maxLength);
+					valueString = getElementValueString(el, dataset, maxLength);
 					table.append("<td>" + valueString + "</td>");
 				}
 				table.append("</tr>\n");
@@ -2155,22 +2247,16 @@ public class DicomObject extends FileObject {
 	//Make a displayable text value for an element, handling
 	//cases where the element is multivalued and where the element value
 	//is too long to be reasonably displayed.
-	private String getElementValueString(DcmElement el, int maxLength) {
+	private String getElementValueString(DcmElement el, DcmObject dataset, int maxLength) {
 		StringBuffer sb = new StringBuffer();
 		int tag = el.tag();
 		if ((tag & 0xffff0000) >= 0x60000000) return "...";
-		/*
-		if ((tag &10000) != 0) {
-			String vString = String.format("%08x: %s: \"%s\"",tag,VRs.toString(el.vr()),cs.decode(el.getByteBuffer().array()));
-			System.out.println(vString);
-		}
-		*/
-		String[] s;
-		try { s = el.getStrings(charset); }
-		catch (Exception e) { s = null; }
-		if (s == null) return nullValue;
-		else {
-			for (int i=0; i<s.length; i++) {
+		
+		String values = getElementValue(el, dataset);
+		if (values == null) return nullValue;
+		String[] s = values.split("\\\\");
+		for (int i=0; i<s.length; i++) {
+			if (sb.length() < 5*maxLength) {
 				if (s[i].length() <= maxLength) {
 					sb.append("<span>" + s[i].replaceAll("\\s","&nbsp;") + "</span>");
 				}
@@ -2180,6 +2266,10 @@ public class DicomObject extends FileObject {
 				}
 				if (i < s.length - 1) sb.append("<br>");
 			}
+			else {
+				sb.append("<span>...</span><br>");
+				break;
+			}					
 		}
 		return sb.toString();
 	}
