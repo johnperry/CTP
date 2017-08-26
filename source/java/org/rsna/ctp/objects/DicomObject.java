@@ -935,6 +935,7 @@ public class DicomObject extends FileObject {
 			boolean privateElement = ((tag & 0x00010000) != 0);
 			boolean privateText = false;
 			boolean privateInt = false;
+			boolean privateShort = false;
 			boolean privateFloat = false;
 			boolean privateUN = false;
 			String vr = "";
@@ -947,9 +948,10 @@ public class DicomObject extends FileObject {
 						|| vr.equals("SH") || vr.equals("CS") || vr.equals("ST") || vr.equals("DA")
 						|| vr.equals("DS") || vr.equals("DT") || vr.equals("TM") || vr.equals("IS")
 						|| vr.equals("PN") || vr.equals("UC") || vr.equals("UI") || vr.equals("UR"));
-					privateInt = !privateText && (vr.equals("SL") || vr.equals("SS") || vr.equals("UL")
-						 || vr.equals("US"));
-					privateFloat = !privateText && !privateInt && (vr.equals("FL") || vr.equals("FD"));
+					privateInt = !privateText && (vr.equals("SL") || vr.equals("UL"));
+					privateShort = !privateText && !privateInt && (vr.equals("US") || vr.equals("SS"));
+					privateFloat = !privateText && !privateInt && !privateShort
+						&& (vr.equals("FL") || vr.equals("FD"));
 					privateUN = vr.equals("UN");
 				}
 				catch (Exception ignore) { }
@@ -969,7 +971,7 @@ public class DicomObject extends FileObject {
 					byte[] bytes = de.getByteBuffer().array();
 					return cs.decode(bytes);
 				}
-				else if (privateInt) {
+				else if (privateInt || privateShort) {
 					//This is my best try at handling both Big and Little Endian,
 					//but it is certainly a kludge. I can't find a way to get
 					//the actual byte order of the binary directly from the dataset.
@@ -978,19 +980,41 @@ public class DicomObject extends FileObject {
 					String tsUID = fmi.getTransferSyntaxUID();
 					boolean isLE = !tsUID.equals(UIDs.ExplicitVRBigEndian);
 					StringBuffer sb = new StringBuffer();
-					for (int k=0; k<bytes.length/4; k++) {
-						int value = 0;
-						if (isLE) {
-							int valueL = (bytes[4*k+0] & 0xff) | ((bytes[4*k+1] << 8) & 0xff00);
-							int valueH = (bytes[4*k+2] & 0xff) | ((bytes[4*k+3] << 8) & 0xff00);
-							value = (valueH << 16) | valueL;
+					
+					if (privateInt) {
+						//Handle ints
+						for (int k=0; k<bytes.length/4; k++) {
+							int value = 0;
+							if (isLE) {
+								int valueL = (bytes[4*k+0] & 0xff) | ((bytes[4*k+1] << 8) & 0xff00);
+								int valueH = (bytes[4*k+2] & 0xff) | ((bytes[4*k+3] << 8) & 0xff00);
+								value = (valueH << 16) | valueL;
+							}
+							else {
+								for (int i=0; i<4; i++) value = (value << 8) | (bytes[4*k+i] & 0xff);
+							}
+							if (k != 0) sb.append("\\");
+							sb.append(Integer.toString(value));
 						}
-						else {
-							for (int i=0; i<4; i++) value = (value << 8) | (bytes[4*k+i] & 0xff);
-						}
-						if (k != 0) sb.append("\\");
-						sb.append(Integer.toString(value));
 					}
+					else if (privateShort) {
+						//Handle shorts
+						for (int k=0; k<bytes.length/2; k++) {
+							int value = 0;
+							if (isLE) {
+								int valueL = (bytes[2*k+0] & 0xff);
+								int valueH = (bytes[2*k+1] & 0xff);
+								value = (valueH << 8) | valueL;
+							}
+							else {
+								int valueL = (bytes[2*k+1] & 0xff);
+								int valueH = (bytes[2*k+0] & 0xff);
+								value = (valueH << 8) | valueL;
+							}
+							if (k != 0) sb.append("\\");
+							sb.append(Integer.toString(value));
+						}
+					}						
 					return sb.toString();
 				}
 				else if (privateFloat) {

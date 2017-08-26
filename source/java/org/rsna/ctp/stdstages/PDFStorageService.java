@@ -288,8 +288,7 @@ public class PDFStorageService extends AbstractPipelineStage implements StorageS
 	private String getElementValue(DicomObject dob, String group) {
 		String value = "";
 		try {
-			int[] tags = DicomObject.getTagArray(group);
-			value = dob.getElementString(tags);
+			value = dob.getElementString(group);
 		}
 		catch (Exception ex) { logger.debug("......exception processing: "+group); }
 		return value;
