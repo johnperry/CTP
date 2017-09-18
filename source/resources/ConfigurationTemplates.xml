@@ -138,6 +138,7 @@
 		<ImportService>
 			<attr name="name" required="yes" default="DirectoryImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DirectoryImportService" editable="no"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/DirectoryImportService"/>
 			<attr name="import" required="yes" default="roots/DirectoryImportService/import"/>
 			<attr name="interval" required="no" default="">

@@ -47,7 +47,11 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	public DicomPixelAnonymizer(Element element) {
 		super(element);
 		log = element.getAttribute("log").trim().equals("yes");
-		scriptFile = getFilterScriptFile(element.getAttribute("script"));
+		String defaultScriptName = "examples/example-dicom-pixel-anonymizer.script";
+		String scriptName = element.getAttribute("script").trim();
+		scriptFile = FileUtil.getFile(scriptName, defaultScriptName);
+		getScript();
+		if (script == null) logger.warn(name + ": Unable to load script file: " + scriptName);
 		setBurnedInAnnotation = element.getAttribute("setBurnedInAnnotation").trim().equals("yes");
 		test = element.getAttribute("test").trim().equals("yes");
 	}
@@ -114,8 +118,10 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 	//Load the script if necessary
 	private void getScript() {
 		if ((scriptFile != null) && scriptFile.exists()) {
-			if (scriptFile.lastModified() > lastModified) {
+			long lm = scriptFile.lastModified();
+			if (lm > lastModified) {
 				script = new PixelScript(scriptFile);
+				lastModified = lm;
 			}
 		}
 		else script = null;
