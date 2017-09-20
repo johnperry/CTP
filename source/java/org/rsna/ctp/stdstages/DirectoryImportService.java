@@ -154,6 +154,14 @@ public class DirectoryImportService extends AbstractImportService {
 	}
 
 	/**
+	 * Get the import directory; this is the directory that the stage monitors for submissions.
+	 * @return the import directory.
+	 */
+	public File getImportDirectory() {
+		return importDirectory;
+	}
+		
+	/**
 	 * Get the next object available for processing.
 	 * @return the next object available, or null if no object is available.
 	 */
