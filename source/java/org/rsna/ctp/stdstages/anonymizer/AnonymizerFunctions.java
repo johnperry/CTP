@@ -361,12 +361,16 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String incrementDate(String date, long increment) throws Exception {
+		boolean iso = date.contains("-");
+		int dlen = (iso ? 10 : 8);
 		GregorianCalendar dateCal = DateUtil.getCalendar(date);
 		dateCal.add(GregorianCalendar.DATE, (int)increment);
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
+				(iso ? "-" : "") +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
+				(iso ? "-" : "") +
 				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2) +
-				((date.length() > 8) ? date.substring(8) : "");
+				((date.length() > dlen) ? date.substring(dlen) : "");
 	}
 
 	/**
@@ -379,21 +383,20 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String modifyDate(String date, int y, int m, int d) throws Exception {
+		boolean iso = date.contains("-");
+		int dlen = (iso ? 10 : 8);
 		GregorianCalendar dateCal = DateUtil.getCalendar(date);
-
 		if (y < 0) y = dateCal.get(Calendar.YEAR);
-
 		if (m < 0) m = dateCal.get(Calendar.MONTH);
 		else m--;
-
 		if (d < 0) d = dateCal.get(Calendar.DAY_OF_MONTH);
-
 		dateCal.set(y, m, d);
-
 		return  intToString(dateCal.get(Calendar.YEAR), 4) +
+				(iso ? "-" : "") +
 				intToString(dateCal.get(Calendar.MONTH) + 1, 2) +
+				(iso ? "-" : "") +
 				intToString(dateCal.get(Calendar.DAY_OF_MONTH), 2) +
-				((date.length() > 8) ? date.substring(8) : "");
+				((date.length() > dlen) ? date.substring(dlen) : "");
 	}
 
 	// A static integer for preventing two new uids created
