@@ -230,7 +230,7 @@ class XmlScript {
 							value += AnonymizerFunctions.incrementDate(string, inc);
 						}
 						catch (Exception ex) {
-							logger.warn("Non-parsing increment (\""+incString+"\") in $incrementdate script");
+							logger.warn("Unable to increment date: \""+string+"\" by \""+incString+"\"");
 							throw ex;
 						}
 					}
