@@ -102,6 +102,28 @@ SIEMENS
   { [6000,0022].containsIgnoreCase("Siemens MedCom Object Graphics") }
   (0,0,512,90)
 
+Philips
+  { Modality.equals("PT") *
+    [0008,0070].containsIgnoreCase("Philips Medical Systems") *
+    [0008,1090].containsIgnoreCase("GEMINI") *
+    [0028,0010].equals("446") *
+    [0028,0011].equals("245") }
+  (0,0,125,50)
+
+  { Modality.equals("PT") *
+    [0008,0070].containsIgnoreCase("Philips Medical Systems") *
+    [0008,1090].containsIgnoreCase("GEMINI") *
+    [0028,0010].equals("445") *
+    [0028,0011].equals("493") }
+  (0,0,140,55)
+
+  { Modality.equals("PT") *
+    [0008,0070].containsIgnoreCase("Philips Medical Systems") *
+    [0008,1090].containsIgnoreCase("GEMINI") *
+    [0028,0010].equals("373") *
+    [0028,0011].equals("492") }
+  (0,0,100,25)
+
 **************
      US
 **************
@@ -137,12 +159,12 @@ Philips
  EPIQ 7G
   { ManufacturerModelName.containsIgnoreCase("EPIQ") *
     Rows.equals("600") }
-  (0,0,800,59)
+  (0,0,1024,49)
 
  EPIQ 7G
   { ManufacturerModelName.containsIgnoreCase("EPIQ") *
     Rows.equals("768") }
-  (0,0,800,59)
+  (0,0,1024,49)
 
   CX50
    { ManufacturerModelName.containsIgnoreCase("CX50") *
@@ -189,7 +211,7 @@ Siemens
     ManufacturerModelName.containsIgnoreCase("S2000") *
     Rows.equals("768") *
     Columns.equals("1024") }
-  (0,0,1010,55)
+  (0,0,1024,60)
 
 Acuson
 { Modality.equals("US") *
@@ -246,7 +268,19 @@ SIEMENS
     Modality.containsIgnoreCase("NM") * 
     Manufacturer.containsIgnoreCase("SIEMENS") * 
     Rows.equals("860") }
-  (0,0,1132,82) (0,780,1132,80)
+  (0,0,1132,90) (0,780,1132,80)
+
+  { ImageType.containsIgnoreCase("SECONDARY") *
+    Modality.containsIgnoreCase("NM") *
+    Manufacturer.containsIgnoreCase("SIEMENS") *
+    Rows.equals("865") }
+  (0,0,1132,35)
+
+  { ImageType.containsIgnoreCase("SECONDARY") *
+    Modality.containsIgnoreCase("NM") *
+    Manufacturer.containsIgnoreCase("SIEMENS") *
+    Rows.equals("882") }
+  (0,0,1132,65)
 
 **************
     OTHER
@@ -256,7 +290,13 @@ ADAC
   { Manufacturer.containsIgnoreCase("ADAC") *
     Rows.equals("832") *
     Columns.equals("1024") }
-  (0,0,1024,60) (0,762,1024,80)
+  (0,0,1024,80) (0,762,1024,80)
+
+  { Manufacturer.containsIgnoreCase("ADAC") *
+    Rows.equals("832") *
+    Columns.equals("1024") *
+    [0018,1030].containsIgnoreCase("DUAL DETEC") }
+  (0,0,1024,130) (0,762,1024,80)
  
 MEDRAD Injection Profile
   { SeriesDescription.containsIgnoreCase("MEDRAD") *
