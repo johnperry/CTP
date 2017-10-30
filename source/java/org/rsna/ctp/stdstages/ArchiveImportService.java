@@ -138,7 +138,7 @@ public class ArchiveImportService extends AbstractPipelineStage implements Impor
 		return null;
 	}
 
-	//Set the FileSystem name and/or file plath in the object if we can.
+	//Set the FileSystem name and/or file path in the object if we can.
 	private FileObject setNames(FileObject fo) {
 		try {
 			if ((fo instanceof DicomObject) && (setFileSystemName || setFilePath || setFileName)) {

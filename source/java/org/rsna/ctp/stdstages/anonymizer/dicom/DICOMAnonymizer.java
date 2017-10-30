@@ -939,6 +939,7 @@ public class DICOMAnonymizer {
 				String keyElementName = fn.args[2];
 				String key = fn.context.contents(keyElementName.trim(), fn.thisTag);
 				String basedate = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key).trim();
+				if (dateElementValue.length() > 8) dateElementValue = dateElementValue.substring(0,8);
 				long dateMS = dcmDF.parse(dateElementValue).getTime();
 				long basedateMS = basedateDF.parse(basedate).getTime();
 				long days = Math.round( (double)(dateMS - basedateMS) / (double)oneDay );
