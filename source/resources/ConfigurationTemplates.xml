@@ -797,6 +797,7 @@
 		<ExportService>
 			<attr name="name" required="yes" default="HttpExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.HttpExportService" editable="no"/>
+			<attr name="id" required="no" default=""/>
 			<attr name="root" required="yes" default="roots/HttpExportService"/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination HttpImportService (starting with http:// or https://)</helptext>

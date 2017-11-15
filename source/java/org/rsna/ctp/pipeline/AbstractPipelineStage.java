@@ -174,6 +174,13 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	/**
+	 * Get the index for this stage.
+	 */
+	public synchronized int getStageIndex() {
+		return stageIndex;
+	}
+
+	/**
 	 * Get the next stage in the pipeline.
 	 * @return the next stage in the pipeline.
 	 */
