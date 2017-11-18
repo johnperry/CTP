@@ -6,32 +6,62 @@ import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
 
 public class EmailSender {
 
-	Session session;
-	String username;
-	String password;
+	Session session = null;
+	Transport transport = null;
+	String smtpServer = null;
+	String senderUsername = null;
+	String senderPassword = null;
 
-    public EmailSender(String smtpServer, String username, String password) throws Exception {
-		this.username = check(username);
-		this.password = check(password);
+	public EmailSender(String smtpServer, 
+					   String smtpPort, 
+					   String senderUsername, 
+					   String senderPassword) {
+		this.smtpServer = smtpServer;
+		this.senderUsername = senderUsername;
+		this.senderPassword = senderPassword;
+
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", smtpServer);
+		if (smtpPort != null) props.put("mail.smtp.port", smtpPort);
+		if ((senderUsername != null) && (senderPassword != null)) {
+			props.put("mail.smtp.auth", "true");
+			props.put("mail.smtp.starttls.enable", "true");
+		}
 		session = Session.getDefaultInstance(props, null);
 	}
-
-	private String check(String s) {
-		return (s != null) ? s.trim() : "";
+	
+	public boolean connect() {
+		try {
+			if (transport == null) transport = session.getTransport("smtp");
+			transport.connect(smtpServer, senderUsername, senderPassword);
+			return true;
+		}
+		catch (Exception ex) { }
+		return false;
 	}
-
+	
+	public boolean close() {
+		try {
+			if (transport != null) {
+				transport.close();
+				transport = null;
+				return true;
+			}
+		}
+		catch (Exception ex) { }
+		return false;
+	}
+	
 	/**
 	 * Send a message in plain text.
 	 * @param to the recipients
@@ -49,7 +79,7 @@ public class EmailSender {
 		try {
 			// Create the message
 			Message msg = new MimeMessage(session);
-			msg.setFrom(new InternetAddress(from));
+			msg.setFrom( new InternetAddress(from) );
 			addRecipients(msg, Message.RecipientType.TO, to);
 			addRecipients(msg, Message.RecipientType.CC, cc);
 			msg.setSubject(subject);
@@ -57,10 +87,8 @@ public class EmailSender {
 
 			// Set additional header information
 			msg.setSentDate(new Date());
-
-			// Send the message
-			if (username.equals("")) Transport.send(msg);
-			else Transport.send(msg, username, password);
+			
+			transport.sendMessage(msg, msg.getAllRecipients());
 			return true;
 		}
 		catch (Exception ex) {
@@ -89,7 +117,7 @@ public class EmailSender {
 		try {
 			// Create the message
 			Message msg = new MimeMessage(session);
-			msg.setFrom(new InternetAddress(from));
+			msg.setFrom( new InternetAddress(from) );
 			addRecipients(msg, Message.RecipientType.TO, to);
 			addRecipients(msg, Message.RecipientType.CC, cc);
 			msg.setSubject(subject);
@@ -110,8 +138,7 @@ public class EmailSender {
 			msg.setContent(mp);
 
 			// Send the message
-			if (username.equals("")) Transport.send(msg);
-			else Transport.send(msg, username, password);
+			transport.sendMessage(msg, msg.getAllRecipients());
 			return true;
 		}
 		catch (Exception ex) {
@@ -142,7 +169,7 @@ public class EmailSender {
 		try {
 			// Create the message
 			Message msg = new MimeMessage(session);
-			msg.setFrom(new InternetAddress(from));
+			msg.setFrom( new InternetAddress(from) );
 			addRecipients(msg, Message.RecipientType.TO, to);
 			addRecipients(msg, Message.RecipientType.CC, cc);
 			msg.setSubject(subject);
@@ -169,8 +196,7 @@ public class EmailSender {
 			msg.setContent(mp);
 
 			// Send the message
-			if (username.equals("")) Transport.send(msg);
-			else Transport.send(msg, username, password);
+			transport.sendMessage(msg, msg.getAllRecipients());
 			return true;
 		}
 		catch (Exception ex) {
@@ -178,12 +204,12 @@ public class EmailSender {
 			return false;
 		}
 	}
-
+	
 	private void addRecipients(Message msg, Message.RecipientType type, String addrs) {
 		if (addrs != null) {
 			String[] recs = addrs.split(",");
-			for (int i=0; i<recs.length; i++) {
-				String rec = recs[i].trim();
+			for (String rec : recs) {
+				rec = rec.trim();
 				if (!rec.equals("")) {
 					try { msg.addRecipient(type, new InternetAddress(rec)); }
 					catch (Exception ignore) {

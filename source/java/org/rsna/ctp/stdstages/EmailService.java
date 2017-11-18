@@ -20,6 +20,7 @@ import org.rsna.ctp.servlets.SummaryLink;
 import org.rsna.ctp.stdstages.email.EmailSender;
 import org.rsna.server.User;
 import org.rsna.util.FileUtil;
+import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
 /**
@@ -32,6 +33,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	File dicomScriptFile = null;
 	Hashtable<String,Study> studies;
 	String smtpServer;
+	String smtpPort;
 	String username;
 	String password;
 	String to;
@@ -70,8 +72,11 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		includeStudyDate = element.getAttribute("includeStudyDate").toLowerCase().trim().equals("yes");
 		includeAccessionNumber = element.getAttribute("includeAccessionNumber").toLowerCase().trim().equals("yes");
 		logSentEmails = element.getAttribute("logSentEmails").toLowerCase().trim().equals("yes");
+		long timeout = StringUtil.getInt(element.getAttribute("timeout").trim());
+		if (timeout != 0) maxAge = timeout * aMinute;
 
 		smtpServer = element.getAttribute("smtpServer").trim();
+		smtpPort = element.getAttribute("smtpPort").trim();
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
 		to = element.getAttribute("to").trim();
@@ -205,7 +210,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		EmailSender sender = null;
 		public Emailer() {
 			super(name + " - email");
-			try { sender = new EmailSender(smtpServer, username, password); }
+			try { sender = new EmailSender(smtpServer, smtpPort, username, password); }
 			catch (Exception ex) {
 				logger.warn("Unable to instantiate the EmailSender.");
 			}
@@ -236,17 +241,21 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			}
 		}
 		private void sendEmail(Study study) {
-			boolean ok = sender.sendHTML(
-							to,
-							from,
-							cc,
-							subject,
-							getPlainText(study),
-							getHtmlText(study));
-			if (ok && logSentEmails) {
-				logger.info(name+": Study email sent to "+to+" ("+subject+")");
+			if (sender.connect()) {
+				boolean ok = sender.sendHTML(
+								to,
+								from,
+								cc,
+								subject,
+								getPlainText(study),
+								getHtmlText(study));
+				if (ok && logSentEmails) {
+					logger.info(name+": Study email sent to "+to+" ("+subject+")");
+				}
+				else if (!ok) logger.info(name+": Unable to send email to "+to+" ("+subject+")");
+				sender.close();
 			}
-			else if (!ok) logger.info(name+": Unable to send email to "+to+" ("+subject+")");
+			else logger.info(name+": Unable to establish connection to "+smtpServer);
 		}
 		private String getPlainText(Study study) {
 			StringBuffer sb = new StringBuffer();

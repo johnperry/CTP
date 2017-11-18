@@ -536,6 +536,7 @@
 				<helptext>The script file determining whether to send an email for a study</helptext>
 			</attr>
 			<attr name="smtpServer" required="yes"/>
+			<attr name="smtpPort" required="yes"/>
 			<attr name="username" required="yes" default="">
 				<helptext>The username of the account on the SMTP server. If blank, no authentication is done.</helptext>
 			</attr>
@@ -552,6 +553,9 @@
 			<attr name="includeStudyDate" required="yes" default="no" options="yes|no"/>
 			<attr name="includeAccessionNumber" required="yes" default="no" options="yes|no"/>
 			<attr name="logSentEmails" required="yes" default="no" options="yes|no"/>
+			<attr name="timeout" required="no" default="10">
+				<helptext>The maximum time in minutes between images in a study before sending the email.</helptext>
+			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/EmailService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
@@ -1116,7 +1120,8 @@
 		<setWorldReadable>Set the read permission on stored files</setWorldReadable>
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
 		<skipJPEGBaseline>Skip objects with the JPEGBaseline TransferSyntaxUID.</skipJPEGBaseline>
-		<smtpServer>The SMTP server to be used to send emails (e.g., mail.isp.net).</smtpServer>
+		<smtpServer>The SMTP server to be used to send emails (e.g., mail.isp.net or smtp.gmail.com).</smtpServer>
+		<smtpPort>The port of the SMTP server (e.g., 25 or 587).</smtpPort>
 		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>
 		<subject>The subject for the sent emails. This can be used to indicate the trial name.</subject>
