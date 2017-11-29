@@ -361,6 +361,16 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String incrementDate(String date, long increment) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		String[] dates = date.split("\\\\");
+		for (String aDate : dates) {
+			if (sb.length() != 0) sb.append("\\");
+			sb.append(incDate(aDate, increment));
+		}
+		return sb.toString();
+	}
+	
+	private static String incDate(String date, long increment) throws Exception {
 		boolean iso = date.contains("-");
 		int dlen = (iso ? 10 : 8);
 		GregorianCalendar dateCal = DateUtil.getCalendar(date);
@@ -383,6 +393,16 @@ public class AnonymizerFunctions {
 	 * @throws Exception if the date is in an illegal format.
 	 */
 	public static String modifyDate(String date, int y, int m, int d) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		String[] dates = date.split("\\\\");
+		for (String aDate : dates) {
+			if (sb.length() != 0) sb.append("\\");
+			sb.append(modDate(aDate, y, m, d));
+		}
+		return sb.toString();
+	}
+	
+	private static String modDate(String date, int y, int m, int d) throws Exception {
 		boolean iso = date.contains("-");
 		int dlen = (iso ? 10 : 8);
 		GregorianCalendar dateCal = DateUtil.getCalendar(date);
