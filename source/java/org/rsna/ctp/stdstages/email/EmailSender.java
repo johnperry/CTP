@@ -6,7 +6,9 @@ import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.mail.Authenticator;
 import javax.mail.Message;
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -36,14 +38,24 @@ public class EmailSender {
 		if ((senderUsername != null) && (senderPassword != null)) {
 			props.put("mail.smtp.auth", "true");
 			props.put("mail.smtp.starttls.enable", "true");
+			final String un = senderUsername;
+			final String pw = senderPassword;
+			session = Session.getDefaultInstance(
+						props, 
+						new Authenticator() {
+            				protected PasswordAuthentication getPasswordAuthentication() {
+                				return new PasswordAuthentication(un, pw);
+            				}
+          				}
+          			);
 		}
-		session = Session.getDefaultInstance(props, null);
+		else session = Session.getDefaultInstance(props, null);
 	}
 	
 	public boolean connect() {
 		try {
 			if (transport == null) transport = session.getTransport("smtp");
-			transport.connect(smtpServer, senderUsername, senderPassword);
+			transport.connect();
 			return true;
 		}
 		catch (Exception ex) { }
