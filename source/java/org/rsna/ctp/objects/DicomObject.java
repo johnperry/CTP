@@ -1559,6 +1559,15 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the InstitutionName element.
+	 * @return the text of the element or the empty String if the
+	 * element does not exist.
+	 */
+	public String getInstitutionName() {
+		return getElementValue(Tags.InstitutionName);
+	}
+
+	/**
 	 * Convenience method to get the contents of the BodyPartExamined element.
 	 * @return the text of the element or the empty String if the
 	 * element does not exist.
@@ -1752,6 +1761,14 @@ public class DicomObject extends FileObject {
 	 */
 	public String getSeriesUID() {
 		return getSeriesInstanceUID();
+	}
+
+	/**
+	 * Convenience method to get the contents of the SeriesDate element.
+	 * @return the text of the element or the empty string if the element does not exist.
+	 */
+	public String getSeriesDate() {
+		return getElementValue(Tags.SeriesDate);
 	}
 
 	/**

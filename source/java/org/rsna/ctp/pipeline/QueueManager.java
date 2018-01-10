@@ -30,7 +30,7 @@ public class QueueManager {
 	private File lastFileIn;
 	private FileFilter dirsOnly;
 	private FileFilter filesOnly;
-	private int size;
+	private volatile int size;
 	private int subNameLength;
 	private int topNameLength = 10;
 	private String zeroes = "0000000000000000";
@@ -60,9 +60,10 @@ public class QueueManager {
 
 	/**
 	 * Get the size of the queue.
-	 * @return the number of objects in the queue..
+	 * @return the number of objects in the queue.
 	 */
 	public synchronized int size() {
+		if (size < 10) recount();
 		return size;
 	}
 

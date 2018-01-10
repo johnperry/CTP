@@ -543,17 +543,21 @@
 			<attr name="password" required="yes" default="">
 				<helptext>The password of the account on the SMTP server (ignored if no authentication is done).</helptext>
 			</attr>
+			<attr name="tls" required="yes" default="yes" options="yes|no">
+				<helptext>If yes, use TLS for connection to the email server.</helptext>
+			</attr>
 			<attr name="to" required="yes"/>
 			<attr name="from" required="yes"/>
 			<attr name="cc" required="yes"/>
 			<attr name="subject" required="yes"/>
+			<attr name="includeInstitutionName" required="yes" default="no" options="yes|no"/>
 			<attr name="includePatientName" required="yes" default="no" options="yes|no"/>
 			<attr name="includePatientID" required="yes" default="no" options="yes|no"/>
 			<attr name="includeModality" required="yes" default="no" options="yes|no"/>
 			<attr name="includeStudyDate" required="yes" default="no" options="yes|no"/>
 			<attr name="includeAccessionNumber" required="yes" default="no" options="yes|no"/>
 			<attr name="logSentEmails" required="yes" default="no" options="yes|no"/>
-			<attr name="timeout" required="no" default="10">
+			<attr name="timeout" required="yes" default="10">
 				<helptext>The maximum time in minutes between images in a study before sending the email.</helptext>
 			</attr>
 			<attr name="quarantine" required="yes" default="quarantines/EmailService"/>
@@ -1121,7 +1125,7 @@
 		<setWorldWritable>Set the write permission on stored files</setWorldWritable>
 		<skipJPEGBaseline>Skip objects with the JPEGBaseline TransferSyntaxUID.</skipJPEGBaseline>
 		<smtpServer>The SMTP server to be used to send emails (e.g., mail.isp.net or smtp.gmail.com).</smtpServer>
-		<smtpPort>The port of the SMTP server (e.g., 25 or 587).</smtpPort>
+		<smtpPort>The port of the SMTP server (e.g., 25 or 465).</smtpPort>
 		<ssl>Use SSL for communication</ssl>
 		<structure>Sequence of DICOM tags specifying the elements that define the hierarchy</structure>
 		<subject>The subject for the sent emails. This can be used to indicate the trial name.</subject>

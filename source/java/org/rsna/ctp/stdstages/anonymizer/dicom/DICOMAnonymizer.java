@@ -919,9 +919,11 @@ public class DICOMAnonymizer {
 	//lookup table indexed by the value of another element and returns the result.
 	//If the requested element is not present or the value of the element is not
 	//a key in the lookup table, throw a quarantine exception.
-	//The arguments are: DateElementName, keyType, KeyElement, [offset date]
+	//The arguments are: DateElementName, keyType, KeyElement, [origindate]
 	//where keyType is the name of a specific key, which must appear in the lkup
 	//Properties as keyType/KeyElementValue = replacement.
+	//KeyElement is always obtained from the root dataset, even when processing item
+	//datasets of SQ elements.
 	//[origindate] is an optional argument (which can be a parameter reference) specifying
 	//a date in DICOM format (YYYYMMDD).
 	//If [origindate] is not present, the function returns the computed number of days.
@@ -937,7 +939,13 @@ public class DICOMAnonymizer {
 				String dateElementName = fn.args[0];
 				String dateElementValue = fn.context.contents(dateElementName.trim(), fn.thisTag);
 				String keyElementName = fn.args[2];
-				String key = fn.context.contents(keyElementName.trim(), fn.thisTag);
+				String key = fn.context.contents(keyElementName.trim(), fn.thisTag, fn.context.getRootDataset());
+				
+				logger.debug("dateElementName:  \""+dateElementName+"\"");
+				logger.debug("dateElementValue: \""+dateElementValue+"\"");
+				logger.debug("keyElementName:   \""+keyElementName+"\"");
+				logger.debug("key:              \""+key+"\"");
+					
 				String basedate = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key).trim();
 				if (dateElementValue.length() > 8) dateElementValue = dateElementValue.substring(0,8);
 				long dateMS = dcmDF.parse(dateElementValue).getTime();
@@ -951,7 +959,7 @@ public class DICOMAnonymizer {
 				}
 			}
 		}
-		catch (Exception error) { }
+		catch (Exception error) { logger.debug("Error in dateinterval"+fn.getArgs(), error); }
 		throw new Exception("!quarantine!");
 	}
 	

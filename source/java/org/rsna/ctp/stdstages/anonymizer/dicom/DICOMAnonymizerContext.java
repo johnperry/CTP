@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 /**
  * Encapsulate the context of the anonymizer, including
  * the script, the lookup table, the integer table,
- * the root dataset, and the current dataset..
+ * the root dataset, and the current dataset.
  */
 public class DICOMAnonymizerContext {
 
@@ -180,6 +180,15 @@ public class DICOMAnonymizerContext {
 	}
 
 	/*
+	 * Get the root dataset.
+	 */
+	public Dataset getRootDataset() {
+		logger.debug("inStack.size() = "+inStack.size());
+		if (inStack.size() == 0) return inDS;
+		return inStack.peekFirst();
+	}
+
+	/*
 	 * Get the replacement script for a tag
 	 * @param tag the tag value
 	 * @return the text of the replacement script, or null if
@@ -249,7 +258,19 @@ public class DICOMAnonymizerContext {
 	 * or the empty string if the element is missing.
 	 */
 	public String contents(String tagName, int thisTag) {
-		String value = contentsNull(tagName, thisTag);
+		return contents(tagName, thisTag, inDS);
+	}
+
+	/*
+	 * Get the contents of an element of a specified dataset by tagName.
+	 * @param tagName the dcm4che name of the element
+	 * @param thisTag the tag to be used for the "this" keyword
+	 * @param ds the dataset from which to obtain the element
+	 * @return the value of the specified element in the current dataset,
+	 * or the empty string if the element is missing.
+	 */
+	public String contents(String tagName, int thisTag, Dataset ds) {
+		String value = contentsNull(tagName, thisTag, ds);
 		if (value == null) value = "";
 		return value;
 	}
@@ -262,8 +283,20 @@ public class DICOMAnonymizerContext {
 	 * or null if the element is missing.
 	 */
 	public String contentsNull(String tagName, int thisTag) {
+		return contentsNull(tagName, thisTag, inDS);
+	}
+	
+	/*
+	 * Get the contents of an element of a specified dataset by tagName.
+	 * @param tagName the dcm4che name of the element
+	 * @param thisTag the tag to be used for the "this" keyword
+	 * @param ds the dataset from which to obtain the element
+	 * @return the value of the specified element in the current dataset,
+	 * or null if the element is missing.
+	 */
+	public String contentsNull(String tagName, int thisTag, Dataset ds) {
 		if (tagName.equals("this")) return contents(thisTag);
-		return DicomObject.getElementValue(inFMI, inDS, tagName, privateElementNames);
+		return DicomObject.getElementValue(inFMI, ds, tagName, privateElementNames);
 	}
 	
 	/*
@@ -285,7 +318,7 @@ public class DICOMAnonymizerContext {
 	/*
 	 * See if the input dataset contains a specific element.
 	 * @param tag the tag to test for in the input dataset.
-	 * @return the true if the element is present in the input dataset; false otherwise.
+	 * @return true if the element is present in the input dataset; false otherwise.
 	 */
 	public boolean contains(int tag) {
 		return inDS.contains(tag);

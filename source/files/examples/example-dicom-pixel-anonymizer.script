@@ -130,13 +130,29 @@ Philips
 GE 
  Logiq US
   { ManufacturerModelName.containsIgnoreCase("LOGIQ9") }
-  (0,0,640,40)
+  (60,0,606,60)
 
   { ManufacturerModelName.containsIgnoreCase("LOGIQE9") }
   (0,0,960,70)
 
   { ManufacturerModelName.containsIgnoreCase("V830") }
   (0,0,960,70)
+
+Supersonic Imagine 5A
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("SuperSonic Imagine SA") *
+    ManufacturerModelName.containsIgnoreCase("Aixplorer") *
+    Rows.equals("788") *
+    Columns.equals("1050") }
+  (0,0,1050,66)
+
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("SuperSonic Imagine SA") *
+    ManufacturerModelName.containsIgnoreCase("Aixplorer") *
+    Rows.equals("698") *
+    Columns.equals("930") }
+  (0,0,890,66)
+
 
 
 Philips 

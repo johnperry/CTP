@@ -36,10 +36,12 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	String smtpPort;
 	String username;
 	String password;
+	boolean tls;
 	String to;
 	String from;
 	String cc;
 	String subject;
+	boolean includeInstitutionName = false;
 	boolean includePatientName = false;
 	boolean includePatientID = false;
 	boolean includeModality = false;
@@ -66,6 +68,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 
 		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
 		studies = new Hashtable<String,Study>();
+		includeInstitutionName = element.getAttribute("includeInstitutionName").toLowerCase().trim().equals("yes");
 		includePatientName = element.getAttribute("includePatientName").toLowerCase().trim().equals("yes");
 		includePatientID = element.getAttribute("includePatientID").toLowerCase().trim().equals("yes");
 		includeModality = element.getAttribute("includeModality").toLowerCase().trim().equals("yes");
@@ -79,6 +82,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		smtpPort = element.getAttribute("smtpPort").trim();
 		username = element.getAttribute("username").trim();
 		password = element.getAttribute("password").trim();
+		tls = !element.getAttribute("tls").equals("no"); //default is yes
 		to = element.getAttribute("to").trim();
 		from = element.getAttribute("from").trim();
 		cc = element.getAttribute("cc").trim();
@@ -160,6 +164,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	}
 
 	class Study {
+		public String institutionName;
 		public String patientName;
 		public String patientID;
 		public String modality;
@@ -171,6 +176,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		long lastTime = 0;
 
 		public Study(DicomObject dob) {
+			this.institutionName = dob.getInstitutionName();
 			this.patientName = dob.getPatientName();
 			this.patientID = dob.getPatientID();
 			this.modality = dob.getModality();
@@ -210,7 +216,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		EmailSender sender = null;
 		public Emailer() {
 			super(name + " - email");
-			try { sender = new EmailSender(smtpServer, smtpPort, username, password); }
+			try { sender = new EmailSender(smtpServer, smtpPort, username, password, tls); }
 			catch (Exception ex) {
 				logger.warn("Unable to instantiate the EmailSender.");
 			}
@@ -260,14 +266,15 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		private String getPlainText(Study study) {
 			StringBuffer sb = new StringBuffer();
 			sb.append("A study was received and processed by CTP.\n");
-			if (includePatientName) 	sb.append("Patient Name: "+study.patientName+"\n");
-			if (includePatientID  ) 	sb.append("Patient ID:   "+study.patientID+"\n");
-			if (includeModality   ) 	sb.append("Modality:     "+study.modality+"\n");
-			if (includeStudyDate  ) 	sb.append("Study Date:   "+study.studyDate+"\n");
-			if (includeAccessionNumber) sb.append("Accession:    "+study.studyDate+"\n");
-			sb.append("Objects:      "+study.getObjectCount()+"\n");
-			sb.append("Series:       "+study.getSeriesCount()+"\n");
-			sb.append("Images:       "+study.getImageCount()+"\n");
+			if (includeInstitutionName)	sb.append("Institution Name: "+study.institutionName+"\n");
+			if (includePatientName) 	sb.append("Patient Name:     "+study.patientName+"\n");
+			if (includePatientID  ) 	sb.append("Patient ID:       "+study.patientID+"\n");
+			if (includeModality   ) 	sb.append("Modality:         "+study.modality+"\n");
+			if (includeStudyDate  ) 	sb.append("Study Date:       "+study.studyDate+"\n");
+			if (includeAccessionNumber) sb.append("Accession:        "+study.studyDate+"\n");
+			sb.append("Objects:          "+study.getObjectCount()+"\n");
+			sb.append("Series:           "+study.getSeriesCount()+"\n");
+			sb.append("Images:           "+study.getImageCount()+"\n");
 			return sb.toString();
 		}
 		private String getHtmlText(Study study) {
@@ -275,6 +282,12 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			sb.append("<html><head><title>Study Received</title></head><body>\n");
 			sb.append("<h2>A study was received and processed by CTP.</h2>\n");
 			sb.append("<table>\n");
+			if (includeInstitutionName) {
+				sb.append("<tr>\n");
+				sb.append("<td>Institution Name:</td>\n");
+				sb.append("<td>"+study.institutionName+"</td>\n");
+				sb.append("</tr>\n");
+			}
 			if (includePatientName) {
 				sb.append("<tr>\n");
 				sb.append("<td>Patient Name:</td>\n");

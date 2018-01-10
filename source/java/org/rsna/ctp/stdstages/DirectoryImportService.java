@@ -222,8 +222,14 @@ public class DirectoryImportService extends AbstractImportService {
 						File treeRootParent = importDirectory.getAbsoluteFile().getParentFile();
 						if (treeRootParent == null) treeRootParent = importDirectory;
 						String treeRootPath =  treeRootParent.getAbsolutePath();
+						if (treeRootPath.endsWith(File.separator)) {
+							treeRootPath = treeRootPath.substring(0, treeRootPath.length() -1);
+						}
+						//logger.info("dobFile:  \""+ path + "\"");
+						//logger.info("treeRoot: \""+ treeRootPath + "\"");
 						path = path.substring( treeRootPath.length()+1 );
 						path = path.replace("\\", "/");
+						//logger.info("path stored: \""+path+"\"");
 						dob.setElementValue(filePathTag, path);
 					}
 					

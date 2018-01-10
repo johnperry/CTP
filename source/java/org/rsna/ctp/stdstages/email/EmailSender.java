@@ -27,7 +27,8 @@ public class EmailSender {
 	public EmailSender(String smtpServer, 
 					   String smtpPort, 
 					   String senderUsername, 
-					   String senderPassword) {
+					   String senderPassword,
+					   boolean tls) {
 		this.smtpServer = smtpServer;
 		this.senderUsername = senderUsername;
 		this.senderPassword = senderPassword;
@@ -35,9 +36,9 @@ public class EmailSender {
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", smtpServer);
 		if (smtpPort != null) props.put("mail.smtp.port", smtpPort);
+		props.put("mail.smtp.starttls.enable", Boolean.toString(tls));
 		if ((senderUsername != null) && (senderPassword != null)) {
 			props.put("mail.smtp.auth", "true");
-			props.put("mail.smtp.starttls.enable", "true");
 			final String un = senderUsername;
 			final String pw = senderPassword;
 			session = Session.getDefaultInstance(
