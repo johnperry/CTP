@@ -119,7 +119,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 		stop.addActionListener(this);
 		sp.add(Box.createHorizontalStrut(70));
 
-		launchBrowser = new JButton(config.browserButtonName+ " Home Page");
+		launchBrowser = new JButton(config.browserButtonName);
 		sp.add(launchBrowser);
 		launchBrowser.addActionListener(this);
 
@@ -150,6 +150,7 @@ public class JavaPanel extends BasePanel implements ActionListener {
 			String ip = IPUtil.getIPAddress();
 			String protocol = "http" + (config.ssl ? "s" : "");
 			String url = protocol + "://" + ip + ":" + config.port;
+			if (config.isTCIA) url += "/tcia-wizard.html";
 			BrowserUtil.openURL( url );
 		}
 		else if (event.getSource().equals(stop)) {

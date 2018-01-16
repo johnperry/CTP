@@ -57,6 +57,13 @@ public class VersionPanel extends BasePanel {
 				+(!config.isnVersion.equals("") ? "<tr><td>ISN Version:</td><td>"+config.isnVersion+"</td></tr>" : "");
 		}
 
+		if (config.isTCIA) {
+
+			page +=
+				 (!config.tciaJava.equals("") ? "<tr><td>TCIA Java Version:</td><td>"+config.tciaJava+"</td></tr>" : "")
+				+(!config.tciaDate.equals("") ? "<tr><td>TCIA Date:</td><td>"+config.tciaDate+"</td></tr>" : "");
+		}
+
 		page +=
 				"<tr><td>ImageIO Tools Version:</td><td>"+config.imageIOVersion+"</td></tr>"
 			+	"</table>"

@@ -31,6 +31,8 @@ public class Configuration {
 	public String isnJava = "";
 	public String isnDate = "";
 	public String isnVersion = "";
+	public String tciaJava = "";
+	public String tciaDate = "";
 	public String imageIOVersion  = "";
 	public String thisJava = "";
 	public String thisJavaBits = "";
@@ -38,6 +40,7 @@ public class Configuration {
 
 	public boolean isMIRC;
 	public boolean isISN;
+	public boolean isTCIA;
 	public int port;
 	public boolean ssl;
 	public Properties props;
@@ -66,6 +69,7 @@ public class Configuration {
 
 		isMIRC = Util.containsAttribute(configXML, "Plugin", "class", "mirc.MIRC");
 		isISN = (new File("libraries/isn/ISN.jar")).exists();
+		isTCIA = Util.containsAttribute(configXML, "Plugin", "class", "edu.uams.tcia.TCIAPlugin");
 
 		try { port = Integer.parseInt( Util.getAttribute(configXML, "Server", "port") ); }
 		catch (Exception ex) { port = 0; }
@@ -73,9 +77,13 @@ public class Configuration {
 
 		if (isMIRC) programName = "RSNA Teaching File System";
 		else if (isISN) programName = "RSNA ISN";
+		else if (isTCIA) programName = "TCIA CTP";
 		else programName = "RSNA CTP";
 
-		browserButtonName = isMIRC ? "TFS" : (isISN ? "ISN" : "CTP");
+		browserButtonName = isMIRC ? "TFS Home Page" : 
+							(isISN ? "ISN Home Page" :
+							(isTCIA ? "TCIA Wizard" :
+							"CTP Home Page"));
 		windowTitle = programName + " Launcher";
 
 		//Get the installation information
@@ -119,6 +127,13 @@ public class Configuration {
 			isnJava = isnManifest.get("Java-Version");
 			isnDate = isnManifest.get("Date");
 			isnVersion = isnManifest.get("Version");
+		}
+
+		//Get the TCIA.jar parameters
+		Hashtable<String,String> tciaManifest = JarUtil.getManifestAttributes(new File("libraries/TCIAPlugin.jar"));
+		if (tciaManifest != null) {
+			tciaJava = tciaManifest.get("Java-Version");
+			tciaDate = tciaManifest.get("Date");
 		}
 
 		//Set up the installation information for display
