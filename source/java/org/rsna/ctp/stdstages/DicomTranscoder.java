@@ -102,7 +102,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex+"&f=0";

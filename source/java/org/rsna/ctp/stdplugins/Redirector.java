@@ -62,7 +62,7 @@ public class Redirector extends AbstractPlugin {
 	/**
 	 * Stop the plugin.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (monitor != null) {
 			monitor.stopServer();
 			logger.info("Redirector Plugin stopped");

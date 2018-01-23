@@ -98,7 +98,7 @@ public class AuditLog extends AbstractPlugin {
 	/**
 	 * Stop the plugin.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (recman != null) {
 			try { recman.commit(); recman.close(); recman = null; }
 			catch (Exception ignore) { }
@@ -124,7 +124,7 @@ public class AuditLog extends AbstractPlugin {
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if ((user != null) && (user.hasRole("admin") || user.hasRole("audit"))) {
 			links.addFirst( new SummaryLink("/"+id+"?export&xml", null, "Export the AuditLog as XML", false) );

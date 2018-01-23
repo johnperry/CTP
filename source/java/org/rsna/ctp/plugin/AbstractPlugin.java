@@ -66,14 +66,14 @@ public abstract class AbstractPlugin implements Plugin {
 	/**
 	 * Stop the plugin.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		stop = true;
 	}
 
 	/**
 	 * Determine whether the plugin has shut down.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		return stop;
 	}
 
@@ -118,7 +118,7 @@ public abstract class AbstractPlugin implements Plugin {
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		return new LinkedList<SummaryLink>();
 	}
 
@@ -130,7 +130,7 @@ public abstract class AbstractPlugin implements Plugin {
 	 * @param user the requesting user.
 	 * @return HTML text describing the configuration of the stage.
 	 */
-	public String getConfigHTML(User user) {
+	public synchronized String getConfigHTML(User user) {
 		boolean admin = (user != null) && user.hasRole("admin");
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
@@ -184,7 +184,7 @@ public abstract class AbstractPlugin implements Plugin {
 	 * This method must be overridden in real Plugin implementations.
 	 * @return HTML text displaying the current status of the plugin.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		return getStatusHTML("");
 	}
 
@@ -194,7 +194,7 @@ public abstract class AbstractPlugin implements Plugin {
 	 * the HTML status table for this plugin
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML(String pluginUniqueStatus) {
+	public synchronized String getStatusHTML(String pluginUniqueStatus) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

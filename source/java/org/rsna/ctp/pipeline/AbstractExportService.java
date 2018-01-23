@@ -139,7 +139,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 	 * Get the interval for polling the export queue.
 	 * @return the interval in milliseconds
 	 */
-	public int getInterval() {
+	public synchronized int getInterval() {
 		return interval;
 	}
 

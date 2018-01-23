@@ -85,7 +85,7 @@ public class DicomSTOWRSImportService extends AbstractImportService {
 	/**
 	 * Stop the pipeline stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (httpReceiver != null) {
 			httpReceiver.stopServer();
 		}

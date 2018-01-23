@@ -54,7 +54,7 @@ public class ObjectTracker extends AbstractPipelineStage implements Processor {
 	/**
 	 * Stop the stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		//Commit and close the database
 		if (recman != null) {
 			try {

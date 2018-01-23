@@ -57,7 +57,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	/**
 	 * Stop the stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		stop = true;
 		if (connector != null) connector.interrupt();
 		super.shutdown();
@@ -66,7 +66,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	/**
 	 * Determine whether the pipeline stage has shut down.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		return stop && !handling;
 	}
 

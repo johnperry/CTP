@@ -153,7 +153,7 @@ public class DicomDifferenceLogger extends AbstractPipelineStage implements Expo
 	 * Log objects as they are received by the stage.
 	 * @param fileObject the object to log.
 	 */
-	public void export(FileObject fileObject) {
+	public synchronized void export(FileObject fileObject) {
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();
 

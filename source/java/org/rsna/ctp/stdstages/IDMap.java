@@ -280,7 +280,7 @@ public class IDMap extends AbstractPipelineStage implements Processor {
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		boolean admin = allowsAdminBy(user);
 		if (admin) {

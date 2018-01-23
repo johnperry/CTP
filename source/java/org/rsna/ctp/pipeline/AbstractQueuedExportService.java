@@ -108,7 +108,7 @@ public abstract class AbstractQueuedExportService
 	 * This method enqueues the object and returns immediately.
 	 * @param fileObject the object to be exported.
 	 */
-	public synchronized void export(FileObject fileObject) {
+	public void export(FileObject fileObject) {
 		lastFileIn = fileObject.getFile();
 		lastTimeIn = System.currentTimeMillis();
 		if (fileObject instanceof DicomObject) {

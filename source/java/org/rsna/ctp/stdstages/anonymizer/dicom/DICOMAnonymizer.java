@@ -276,8 +276,12 @@ public class DICOMAnonymizer {
 
 			//Rename the temp file to the specified outFile.
 			if (renameToSOPIUID) outFile = new File(outFile.getParentFile(),sopiUID+".dcm");
-			outFile.delete();
-			tempFile.renameTo(outFile);
+			if (!outFile.delete()) {
+				logger.warn("Unable to delete " + outFile);
+			}
+			if (!tempFile.renameTo(outFile)) {
+				logger.warn("Unable to rename "+ tempFile + " to " + outFile);
+			}
 		}
 
 		catch (Exception e) {

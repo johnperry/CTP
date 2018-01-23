@@ -39,8 +39,8 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 
 	static final Logger logger = Logger.getLogger(BasicFileStorageService.class);
 
-	File lastFileStored = null;
-	long lastTime = 0;
+	volatile File lastFileStored = null;
+	volatile long lastTime = 0;
 	boolean returnStoredFile = true;
 	boolean logDuplicates = false;
 	boolean rejectDuplicates = false;
@@ -56,9 +56,9 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	String zeroes = "0000000000000000";
     RecordManager recman = null;
     HTree index = null;
-    int totalCount = 0;
-    int acceptedCount = 0;
-    int duplicateCount = 0;
+    volatile int totalCount = 0;
+    volatile int acceptedCount = 0;
+    volatile int duplicateCount = 0;
 
 	/**
 	 * Construct a BasicFileStorageService.
@@ -95,7 +95,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	/**
 	 * Stop the stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (recman != null) {
 			try {
 				recman.commit();
@@ -158,7 +158,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	 * @return either the original FileObject or the stored FileObject, or null
 	 * if the object could not be stored.
 	 */
-	public FileObject store(FileObject fileObject) {
+	public synchronized FileObject store(FileObject fileObject) {
 
 		//Count all the files
 		totalCount++;
@@ -424,7 +424,7 @@ public class BasicFileStorageService extends AbstractPipelineStage implements St
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

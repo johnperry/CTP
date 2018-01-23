@@ -90,7 +90,7 @@ public class Pipeline extends Thread {
 	 * Check whether this pipeline is enabled in the configuration.
 	 * @return true if this pipeline is enabled, false otherwise.
 	 */
-	public boolean isEnabled() {
+	public synchronized boolean isEnabled() {
 		return enabled;
 	}
 
@@ -101,7 +101,7 @@ public class Pipeline extends Thread {
 	 * @param user the user whose privileges are to be checked.
 	 * @return true if the user has admin privileges for this pipeline, false otherwise.
 	 */
-	public boolean allowsAdminBy(User user) {
+	public synchronized boolean allowsAdminBy(User user) {
 		return (user != null) && 
 					( user.hasRole("admin") || 
 							( !admin.equals("") && user.getUsername().equals(admin) ) );

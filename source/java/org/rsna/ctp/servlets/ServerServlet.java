@@ -24,7 +24,7 @@ import org.rsna.ctp.stdstages.ScriptableDicom;
 /**
  * The ServerServlet. This servlet is intended for use by Ajax
  * calls on web pages which need to know key parameters of the server
- * (IP, port, CTP build)..
+ * (IP, port, CTP build).
  */
 public class ServerServlet extends Servlet {
 

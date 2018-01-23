@@ -78,7 +78,7 @@ public class DuplicateFilter extends AbstractPipelineStage implements Processor 
 	/**
 	 * Stop the stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (recman != null) {
 			try {
 				recman.commit();

@@ -125,13 +125,13 @@ public class DicomImportService extends AbstractImportService {
 	/**
 	 * Stop the pipeline stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		dicomStorageSCP.stop();
 		super.shutdown();
 	}
 
 	/**
-	 * Get the IP address onm which to open the SCP
+	 * Get the IP address on which to open the SCP
 	 * @return the IP address on which to listen for DICOM transfers
 	 */
 	public String getLocalAddress() {

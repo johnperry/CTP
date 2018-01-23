@@ -71,7 +71,7 @@ public class DicomExportService extends AbstractExportService {
 	 * @param fileToExport the file to export.
 	 * @return the status of the attempt to export the file.
 	 */
-	public Status export(File fileToExport) {
+	public synchronized Status export(File fileToExport) {
 		DicomObject dicomObject = null;
 
 		//Get a DicomObject for the file.

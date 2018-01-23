@@ -133,7 +133,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	/**
 	 * Stop the pipeline stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (httpServer != null) httpServer.shutdown();
 		super.shutdown();
 	}
@@ -207,7 +207,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 * @return either the original FileObject or the stored FileObject, or null
 	 * if the object could not be stored.
 	 */
-	public FileObject store(FileObject fileObject) {
+	public synchronized FileObject store(FileObject fileObject) {
 
 		//See if the StorageService is configured to accept the object type.
 		if (acceptable(fileObject) && !skip(fileObject)) {
@@ -295,7 +295,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");

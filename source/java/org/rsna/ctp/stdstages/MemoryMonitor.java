@@ -77,7 +77,7 @@ public class MemoryMonitor extends AbstractPipelineStage implements Processor {
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		String stageUniqueStatus =
 			"<tr><td width=\"20%\">Files processed:</td>"
 			+ "<td>" + count + "</td></tr>";

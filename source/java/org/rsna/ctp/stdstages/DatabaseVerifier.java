@@ -92,7 +92,7 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 	/**
 	 * Stop the stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (recman != null) {
 			try {
 				recman.commit();
@@ -127,7 +127,7 @@ public class DatabaseVerifier extends AbstractPipelineStage implements Processor
 	 * @param fileObject the object to process.
 	 * @return the same FileObject if the result is true; otherwise null.
 	 */
-	public FileObject process(FileObject fileObject) {
+	public synchronized FileObject process(FileObject fileObject) {
 
 		lastFileIn = new File(fileObject.getFile().getAbsolutePath());
 		lastTimeIn = System.currentTimeMillis();

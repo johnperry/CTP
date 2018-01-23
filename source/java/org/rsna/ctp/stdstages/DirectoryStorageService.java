@@ -38,9 +38,9 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	File lastFileStored = null;
 	long lastTime = 0;
 	File lastFileIn;
-    int totalCount = 0;
-    int acceptedCount = 0;
-    int storedCount = 0;
+    volatile int totalCount = 0;
+    volatile int acceptedCount = 0;
+    volatile int storedCount = 0;
     boolean returnStoredFile = true;
     boolean setStandardExtensions = false;
     boolean acceptDuplicates = true;
@@ -320,7 +320,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<h3>"+name+"</h3>");
 		sb.append("<table border=\"1\" width=\"100%\">");
@@ -346,7 +346,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = super.getLinks(user);
 		if (allowsAdminBy(user)) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;

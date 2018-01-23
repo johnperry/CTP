@@ -80,7 +80,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * @param path the path to the directory to create.
 	 * @return the File pointing to the directory
 	 */
-	public File getDirectory(String path) {
+	public synchronized File getDirectory(String path) {
 		File file = null;
 		if (!path.equals("")) {
 			file = new File(path);
@@ -92,7 +92,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 		return file;
 	}
 
-	public File getFilterScriptFile(String scriptAttribute) {
+	public synchronized File getFilterScriptFile(String scriptAttribute) {
 		if (scriptAttribute != null) {
 			scriptAttribute = scriptAttribute.trim();
 			if (!scriptAttribute.equals("")) {
@@ -247,7 +247,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * @param user the requesting user.
 	 * @return true if the user is an admin of this stage.
 	 */
-	public boolean allowsAdminBy(User user) {
+	public synchronized boolean allowsAdminBy(User user) {
 		return getPipeline().allowsAdminBy(user);
 	}
 
@@ -258,7 +258,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * @param user the requesting user.
 	 * @return the list of links for display on the summary page.
 	 */
-	public LinkedList<SummaryLink> getLinks(User user) {
+	public synchronized LinkedList<SummaryLink> getLinks(User user) {
 		LinkedList<SummaryLink> links = new LinkedList<SummaryLink>();
 		if ((quarantine != null) && (allowsAdminBy(user) || ((user != null) && user.hasRole("qadmin")))) {
 			String qs = "?p="+pipeline.getPipelineIndex()+"&s="+stageIndex;
@@ -328,7 +328,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	 * Get HTML text displaying the current status of the stage.
 	 * @return HTML text displaying the current status of the stage.
 	 */
-	public String getStatusHTML() {
+	public synchronized String getStatusHTML() {
 		return getStatusHTML("");
 	}
 

@@ -90,7 +90,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	/**
 	 * Stop the pipeline stage.
 	 */
-	public void shutdown() {
+	public synchronized void shutdown() {
 		if (verifierService != null) verifierService.stopServer();
 		super.shutdown();
 	}
@@ -131,7 +131,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 	 * stop is set in the AbstractPipelineStage ancestor class.
 	 * @return true if the pipeline has cleanly shut down; false otherwise.
 	 */
-	public boolean isDown() {
+	public synchronized boolean isDown() {
 		for (int i=0; i<exporters.length; i++) {
 			if (!exporters[i].getState().equals(Thread.State.TERMINATED)) return false;
 		}
@@ -200,7 +200,7 @@ public class DatabaseExportService extends AbstractQueuedExportService {
 			dba.shutdown();
 		}
 
-		private Status export(File fileToExport) {
+		private synchronized Status export(File fileToExport) {
 
 			//Get the object as whatever FileObject subclass it is.
 			FileObject fileObject = FileObject.getInstance(fileToExport);
