@@ -31,6 +31,7 @@ public class Pipeline extends Thread {
 	List<PipelineStage> stages = null;
 	protected volatile boolean stop = false;
 	final boolean enabled;
+	protected volatile boolean paused = false;
 	int pipelineIndex = -1;
 	String admin = "";
 
@@ -92,6 +93,22 @@ public class Pipeline extends Thread {
 	 */
 	public synchronized boolean isEnabled() {
 		return enabled;
+	}
+
+	/**
+	 * Check whether this pipeline is paused.
+	 * @return true if this pipeline is paused, false otherwise.
+	 */
+	public synchronized boolean isPaused() {
+		return paused;
+	}
+
+	/**
+	 * Set the paused status.
+	 * @param paused true if this pipeline is to be paused, false otherwise.
+	 */
+	public synchronized void setPaused(boolean paused) {
+		this.paused = paused;
 	}
 
 	/**
@@ -195,7 +212,7 @@ public class Pipeline extends Thread {
 		ImportService importService;
 		ImportedObject importedObject;
 
-		while (!interrupted() && ((importedObject=getNextObject()) != null)) {
+		while (!interrupted() && !paused && ((importedObject=getNextObject()) != null)) {
 			//Get the object and where it came from.
 			fileObject = importedObject.object;
 			importService = importedObject.provider;

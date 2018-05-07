@@ -112,10 +112,8 @@ public class DirectoryImportService extends AbstractImportService {
 			super("Poller");
 		}
 
-		//To ensure that files are not
 		public void run() {
 			while (!isInterrupted()) {
-
 				//Queue all the files that were found last time.
 				//This ensures that they are at least 'interval' old.
 				if (fileList != null) {
@@ -125,7 +123,6 @@ public class DirectoryImportService extends AbstractImportService {
 						tracker.add(file);
 					}
 				}
-
 				//Get ready for the next search
 				fileList = new LinkedList<File>();
 				tracker.purge();

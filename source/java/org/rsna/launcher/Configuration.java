@@ -164,6 +164,7 @@ public class Configuration {
 	}
 
 	private File getFile(File dir, String nameStart, String nameEnd) {
+		if ((dir == null) || !dir.exists()) return null;
 		File[] files = dir.listFiles( new NameFilter(nameStart, nameEnd) );
 		if (files.length == 0) return null;
 		return files[0];

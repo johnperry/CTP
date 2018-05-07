@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
@@ -164,6 +166,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 	}
 
 	class Study {
+		public String studySubject;
 		public String institutionName;
 		public String patientName;
 		public String patientID;
@@ -176,6 +179,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 		long lastTime = 0;
 
 		public Study(DicomObject dob) {
+			this.studySubject = replace(subject, dob);
 			this.institutionName = dob.getInstitutionName();
 			this.patientName = dob.getPatientName();
 			this.patientID = dob.getPatientID();
@@ -252,7 +256,7 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 								to,
 								from,
 								cc,
-								subject,
+								getSubject(study),
 								getPlainText(study),
 								getHtmlText(study));
 				if (ok && logSentEmails) {
@@ -262,6 +266,9 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 				sender.close();
 			}
 			else logger.info(name+": Unable to establish connection to "+smtpServer);
+		}
+		private String getSubject(Study study) {
+			return study.studySubject;
 		}
 		private String getPlainText(Study study) {
 			StringBuffer sb = new StringBuffer();
@@ -335,6 +342,37 @@ public class EmailService extends AbstractPipelineStage implements Processor, Sc
 			sb.append("</body></html>\n");
 			return sb.toString();
 		}
+	}
+
+	private String replace(String string, DicomObject dob) {
+		try {
+			String singleTag = "[\\[\\(][0-9a-fA-F]{1,4}(\\[[^\\]]*\\])??[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
+			Pattern pattern = Pattern.compile( singleTag + "(::"+singleTag+")*" );
+
+			Matcher matcher = pattern.matcher(string);
+			StringBuffer sb = new StringBuffer();
+			while (matcher.find()) {
+				String group = matcher.group();
+				String repl = getElementValue(dob, group);
+				if (repl.equals("")) repl = "???";
+				matcher.appendReplacement(sb, repl);
+			}
+			matcher.appendTail(sb);
+			return sb.toString();
+		}
+		catch (Exception ex) {
+			logger.warn(ex);
+			return string;
+		}
+	}
+
+	private String getElementValue(DicomObject dob, String group) {
+		String value = "";
+		try {
+			value = dob.getElementString(group);
+		}
+		catch (Exception ex) { logger.debug("......exception processing: "+group); }
+		return value;
 	}
 
 }

@@ -132,13 +132,16 @@ public class ClinicalTrialProcessor {
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
 		
 		//Instantiate the singleton Cache, clear it, and preload
-		//files from the jars. Other files will be loaded as required..
+		//files from the jars. Other files will be loaded as required.
 		Cache cache = Cache.getInstance(new File("CACHE"));
 		cache.clear();
 		logger.info("Cache cleared");
 		File libraries = new File("libraries");
 		cache.load(new File(libraries, "util.jar"));
 		cache.load(new File(libraries, "CTP.jar"));
+
+		//Load the ImageIOTools if necessary
+		ImageIOTools.load(new File(libraries, "imageio"));
 
 		//Get the configuration
 		Configuration config = Configuration.load();
@@ -196,9 +199,6 @@ public class ClinicalTrialProcessor {
 			logger.error("Unable to instantiate the HTTP Server on port "+port, ex);
 			System.exit(0);
 		}
-
-		//Load the ImageIOTools if necessary
-		ImageIOTools.load(new File(libraries, "imageio"));
 
 		//Start the system
 		config.start(httpServer);

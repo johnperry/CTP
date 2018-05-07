@@ -29,6 +29,7 @@ import org.rsna.server.HttpServer;
 import org.rsna.util.CipherUtil;
 import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
+import org.rsna.util.ImageIOTools;
 import org.rsna.util.IPUtil;
 import org.rsna.util.JarUtil;
 import org.rsna.util.ProxyServer;
@@ -163,6 +164,7 @@ public class Configuration {
 			//Log the configuration.
 			logger.info("Classpath:\n"+ClasspathUtil.listClasspath());
 			logger.info("Configuration:\n" + XmlUtil.toPrettyString(root));
+			logger.info("Available ImageIO Codecs:\n" + ImageIOTools.listAvailableCodecs());
 
 			//Get the children and instantiate them.
 			//Save the parameters of the Server element.
@@ -256,7 +258,7 @@ public class Configuration {
 		}
 
 		//Start the web server.
-		httpServer.start();
+		if (httpServer != null) httpServer.start();
 
 		//Start the quarantine purge thread
 		Quarantine.startQuarantinePurge();

@@ -900,10 +900,17 @@ public class DICOMAnonymizer {
 				key += fn.context.contents(name.trim(), fn.thisTag);
 				first = false;
 			}
+			key = key.replaceAll("\\\\","");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Calling @lookup"+fn.getArgs());
+				logger.debug("   keytype: \""+fn.args[1]+"\"");
+				logger.debug("   key:     \""+key+"\"");
+			}
 			String value = AnonymizerFunctions.lookup(fn.context.lkup, fn.args[1], key);
 			return value;
 		}
 		catch (Exception ex) {
+			logger.debug("Exception caught in looklup function", ex);
 			if (fn.args.length > 2) {
 				String action = fn.getArg(2).trim();
 				if (action.equals("keep")) return "@keep()";

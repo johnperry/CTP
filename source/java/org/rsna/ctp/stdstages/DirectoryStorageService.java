@@ -116,7 +116,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 	 * @return either the original FileObject or the stored FileObject, or null
 	 * if the object could not be stored.
 	 */
-	public FileObject store(FileObject fileObject) {
+	public synchronized FileObject store(FileObject fileObject) {
 		logger.debug("File received for storage: "+fileObject.getFile());
 
 		//Count all the files
@@ -213,6 +213,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			}
 			else {
 				savedFile.delete();
+				tempFile.delete();
 				if (fileObject.copyTo(tempFile) && tempFile.renameTo(savedFile)) {
 					//The object was successfully saved, count it.
 					storedCount++;

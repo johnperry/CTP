@@ -211,7 +211,7 @@ public class Installer extends JFrame {
 			
 			//Set up the ImageIO Tools if they weren't already installed
 			installImageIOTools(directory);
-
+			
 			cp.append("Installation complete.");
 
 			JOptionPane.showMessageDialog(this,
@@ -254,6 +254,7 @@ public class Installer extends JFrame {
 	}
 	
 	private File getFile(File dir, String nameStart, String nameEnd) {
+		if ((dir == null) || !dir.exists()) return null;
 		File[] files = dir.listFiles( new NameFilter(nameStart, nameEnd) );
 		if (files.length == 0) return null;
 		return files[0];
@@ -642,9 +643,15 @@ public class Installer extends JFrame {
 			cp.appendln(Color.black, "...home: "+home);
 			home = home.replaceAll("\\\\", "\\\\\\\\");
 			props.put("home", home);
-
 			bat = replace(bat, props);
 			setFileText(install, bat);
+			
+			//Choose the correct CTP-xx.exe for this Java
+			String thisJavaBits = System.getProperty("sun.arch.data.model");
+			File ctp = new File(windows, "CTP.exe");
+			File procrun = new File(windows, "CTP-"+thisJavaBits+".exe");
+			if (copy(procrun, ctp)) cp.appendln("...Service runner copied for "+thisJavaBits+" bits.");
+			else cp.appendln("...Service runner could not be copied for "+thisJavaBits+" bits.");
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
@@ -744,6 +751,24 @@ public class Installer extends JFrame {
 			return sb.toString();
 		}
 		catch (Exception ex) { return string; }
+	}
+
+	//Copy a file.
+	public boolean copy(File inFile, File outFile) {
+		try { 
+			BufferedInputStream in = new BufferedInputStream( new FileInputStream(inFile));
+			BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream(outFile) );
+			int bufferSize = 1024 * 64;
+			byte[] b = new byte[bufferSize];
+			int n;
+			while ( (n = in.read(b, 0, b.length)) != -1 ) {
+				out.write(b, 0, n);
+			}
+			out.flush();
+			out.close();
+			return true;
+		}
+		catch (Exception ex) { return false; }
 	}
 
 	private String getFileText(File file) throws Exception {

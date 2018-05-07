@@ -337,6 +337,8 @@ public class LookupTableChecker extends AbstractPipelineStage implements Process
 	 * Update the lookup table and the database.
 	 * @param doc the Document containing the values to be
 	 * added to the lookup table
+	 * @return true if the lookup table update resulted in a
+	 * change to the table; false otherwise.
 	 */
 	public synchronized boolean update(Document doc) {
 		LookupTable lut = LookupTable.getInstance(lutFile);
