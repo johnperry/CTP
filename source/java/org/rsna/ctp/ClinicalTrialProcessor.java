@@ -33,7 +33,10 @@ import org.rsna.util.ClasspathUtil;
 import org.rsna.util.FileUtil;
 import org.rsna.util.HttpUtil;
 import org.rsna.util.ImageIOTools;
+import org.rsna.util.JarClassLoader;
 import org.rsna.util.ProxyServer;
+import org.rsna.util.StringUtil;
+import org.rsna.util.XmlUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -54,11 +57,22 @@ public class ClinicalTrialProcessor {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) {
+		//Make sure the libraries directory is present
+		libraries.mkdirs();
+		
+		//Get a JarClassLoader pointing to the libraries directory
+		JarClassLoader cl = 
+			JarClassLoader.getInstance(new File[] { libraries });
+			
 		//Set the context classloader to allow dcm4che to load its classes
-		Thread.currentThread().setContextClassLoader(ClinicalTrialProcessor.class.getClassLoader());
+		Thread.currentThread().setContextClassLoader(cl);
 
-		//Instantiate the main class
-		new ClinicalTrialProcessor();
+		//Load the class and instantiate it
+		try {
+			Class ctpClass = cl.loadClass(mainClassName);
+			ctpClass.getConstructor( new Class[0] ).newInstance( new Object[0] );
+		}
+		catch (Exception unable) { unable.printStackTrace(); }
 	}
 
 	/**
@@ -76,6 +90,7 @@ public class ClinicalTrialProcessor {
 			catch (Exception ignore) { }
 		}
 		if (logger != null) logger.info("startService returned\n");
+		System.out.println("Stop [ServiceManager]");
 	}
 
 	/**
@@ -87,25 +102,27 @@ public class ClinicalTrialProcessor {
 	 */
 	public static void stopService(String[] args) {
 		try {
-			Configuration config = Configuration.getInstance();
-			boolean ssl = config.getServerSSL();
-			int port = config.getServerPort();
-
+			Document doc = XmlUtil.getDocument(new File("config.xml"));
+			Element root = doc.getDocumentElement();
+			Element server = XmlUtil.getElementViaPath(root, "Configuration/Server");
+			int port = StringUtil.getInt(server.getAttribute("port").trim());
+			boolean ssl = server.getAttribute("ssl").trim().equals("yes");
+			
 			URL url = new URL( "http" + (ssl?"s":"") + "://127.0.0.1:" + port + "/shutdown" );
 			HttpURLConnection conn = HttpUtil.getConnection(url);
 			conn.setRequestMethod("GET");
-			conn.setRequestProperty("servicemanager", "stayalive");
+			conn.setRequestProperty("servicemanager", "stayalive"); // was: "exit"
 			conn.connect();
 
 			String result = FileUtil.getText( conn.getInputStream() );
 			if (result.contains("Goodbye.")) {
 				System.out.println("Normal shutdown [ServiceManager]");
 				running = false;
+				System.exit(0);
 			}
 			else System.out.println("Unable to service the shutdown request from ServiceManager.");
 		}
 		catch (Exception keepRunning) { keepRunning.printStackTrace(); }
-		if (logger != null) logger.info("stopService returned");
 	}
 
 	/**
@@ -116,9 +133,6 @@ public class ClinicalTrialProcessor {
 	 */
 	public ClinicalTrialProcessor() {
 
-		//Set up the classpath
-		ClasspathUtil.addJARs( new File("libraries") );
-		
 		//Initialize Log4J
 		File logs = new File("logs");
 		logs.mkdirs();
@@ -139,9 +153,6 @@ public class ClinicalTrialProcessor {
 		File libraries = new File("libraries");
 		cache.load(new File(libraries, "util.jar"));
 		cache.load(new File(libraries, "CTP.jar"));
-
-		//Load the ImageIOTools if necessary
-		ImageIOTools.load(new File(libraries, "imageio"));
 
 		//Get the configuration
 		Configuration config = Configuration.load();

@@ -60,7 +60,7 @@ public class Installer extends JFrame {
 	String thisJavaBits = "";
 	boolean imageIOTools = false;
 	
-	static boolean test;
+	static boolean test = false;
 
 	public static void main(String args[]) {
 		test = (args.length > 0) && args[0].trim().equals("test");
@@ -75,7 +75,12 @@ public class Installer extends JFrame {
 	public Installer() {
 		super();
 		addWindowListener(new WindowAdapter() {
-			public void windowClosing( WindowEvent evt ) { exit(); }
+			public void windowClosing( WindowEvent evt ) { 
+				if (!test && !programName.equals("ISN")) {
+					startLauncher(new File(directory, "CTP"));
+				};
+				exit(); 
+			}
 		});
 
 		//Make a text pane to record the details
@@ -228,7 +233,6 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if (!test && !programName.equals("ISN") && startLauncher(new File(directory, "CTP"))) System.exit(0);
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.

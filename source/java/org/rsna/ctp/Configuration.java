@@ -108,19 +108,9 @@ public class Configuration {
 			int thisJCEKeyLength = CipherUtil.getMaxAllowedKeyLength();
 			int thisJCEMaxKeyLength = CipherUtil.getMaxAllowedKeyLength("AES");
 
-			//Find the ImageIO Tools and get the version
-			String javaHome = System.getProperty("java.home");
-			File extDir = new File(javaHome);
-			extDir = new File(extDir, "lib");
-			extDir = new File(extDir, "ext");
-			File clib = FileUtil.getFile(extDir, "clibwrapper_jiio", ".jar");
-			File jai = FileUtil.getFile(extDir, "jai_imageio", ".jar");
-			boolean imageIOTools = (clib != null) && (jai != null);
-			String thisImageIOVersion = "not installed";
-			if (imageIOTools) {
-				Hashtable<String,String> jaiManifest = JarUtil.getManifestAttributes(jai);
-				thisImageIOVersion  = jaiManifest.get("Implementation-Version");
-			}
+			//Load the ImageIO Tools and get the version
+			String thisImageIOVersion = ImageIOTools.load(new File("libraries/imageio"));
+
 			logger.info("Operating system:    " + thisOS);
 			logger.info("Java vendor:         " + thisJavaVendor);
 			logger.info("Java version:        " + thisJavaVersion);
