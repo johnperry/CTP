@@ -251,15 +251,18 @@ public class DICOMAnonymizer {
 						&& ((tag=parser.getReadTag()) != -1)
 							&& (tag != 0xFFFAFFFA)
 							&& (tag != 0xFFFCFFFC)) {
+				logger.debug("Post-pixels element: "+Tags.toString(tag));
 				int len = parser.getReadLength();
 				boolean isPrivate = ((tag & 0x10000) != 0);
 				String script = context.getScriptFor(tag);
 				if ( (isPrivate && context.rpg) || ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()") ) ) {
 					//skip this element
+					logger.debug("Skipping element: "+Tags.toString(tag));
 					parser.setStreamPosition(parser.getStreamPosition() + len);
 				}
 				else {
 					//write this element
+					logger.debug("Writing element: "+Tags.toString(tag));
 					dataset.writeHeader(
 						out,
 						encoding,
@@ -268,7 +271,11 @@ public class DICOMAnonymizer {
 						parser.getReadLength());
 					writeValueTo(parser, buffer, out, swap);
 				}
-				parser.parseHeader();
+				logger.debug("About to get next post-pixels element:\n" +
+						"parser.hasSeenEOF() = "+parser.hasSeenEOF()+"\n" +
+						"fileLength          = "+fileLength+"\n" +
+						"streamPosition      = "+parser.getStreamPosition());
+				if (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength)) parser.parseHeader();
 			}
 			out.flush();
 			out.close();
@@ -623,7 +630,7 @@ public class DICOMAnonymizer {
 
 	//Create the replacement for one element.
 	public static String makeReplacement(String cmd, DICOMAnonymizerContext context, int thisTag) throws Exception {
-		logger.debug("Script: \""+cmd+"\"");
+		logger.debug(Tags.toString(thisTag)+": \""+cmd+"\"");
 		if (cmd == null) return "";
 		String out = "";
 		char c;

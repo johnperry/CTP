@@ -310,11 +310,15 @@ public class IDMapServlet extends CTPServlet {
 		StringBuffer sb = new StringBuffer();
 		sb.append(keyTitle + "," + valueTitle + "\n");
 		for (int i=0; i<data.length; i++) {
-			sb.append("\""+data[i].key + "\",\"" + data[i].value + "\"\n");
+			sb.append(wrap(data[i].key) + "," + wrap(data[i].value) + "\n");
 		}
 		return sb.toString();
 	}
-
+	
+	private String wrap(String s) {
+		return "=(\""+s+"\")";
+	}
+	
 	private String getMapTable(Pair[] data, String keyTitle, String valueTitle) {
 		StringBuffer sb = new StringBuffer("<table border=\"1\">");
 		sb.append("<tr>");
@@ -335,7 +339,9 @@ public class IDMapServlet extends CTPServlet {
 		String[] keys = keyString.trim().split("\n");
 		LinkedList<Pair> pairs = new LinkedList<Pair>();
 		try {
-			if ((keys.length == 0) || ((keys.length == 1) && keys[0].trim().equals(""))) {
+			if ( (keys.length == 0) || 
+				 ( (keys.length == 1) && (keys[0].trim().equals("") || keys[0].trim().equals("*")) )
+			   ) {
 				//Return all the data in the index
 				FastIterator fit = index.keys();
 				String key;

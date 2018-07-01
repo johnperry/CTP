@@ -470,7 +470,7 @@ public class HttpExportService extends AbstractExportService {
 			Element xnat = XmlUtil.getFirstNamedChild(element, "xnat");
 			if (xnat != null) {
 				String urlString = xnat.getAttribute("url").trim();
-				cookieName = xnat.getAttribute("oookieName").trim();
+				cookieName = xnat.getAttribute("cookieName").trim();
 				if (cookieName.equals("")) cookieName = "JSESSIONID";
 				String username = xnat.getAttribute("username").trim();
 				String password = xnat.getAttribute("password").trim();
