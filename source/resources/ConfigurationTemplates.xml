@@ -254,6 +254,82 @@
 			</child>
 		</ImportService>
 
+		<ImportService>
+			<attr name="name" required="yes" default="GoogleCloudImportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.GoogleCloudImportService" editable="no"/>
+			<attr name="projectId" required="yes" editable="yes">
+				<helptext>
+					Google Cloud  project_id to import data from.
+				</helptext>
+			</attr>
+			<attr name="dicomStoreName" required="no"  editable="yes">
+				<helptext>
+					DICOM Store name to import data from.
+					If not specified then data from all DICOM Stores of the project will be imported
+				</helptext>
+			</attr>
+			<attr name="googleCredentials" required="no" default="">
+				<helptext>
+					Google Application Credentials key-file location.
+					If empty, GOOGLE_APPLICATION_CREDENTIALS environment should point to valid credentials file.
+				</helptext>
+			</attr>
+			<attr name="id" required="no" default=""/>
+			<attr name="root" required="yes" default="roots/DirectoryImportService"/>
+			<attr name="import" required="yes" default="roots/DirectoryImportService/import"/>
+			<attr name="interval" required="no" default="">
+				<helptext>Sleep time in milliseconds between polls of the import directory</helptext>
+			</attr>
+			<attr name="fsName" required="no" default=""/>
+			<attr name="fsNameTag" required="no" default=""/>
+			<attr name="filePathTag" required="no" default="">
+				<helptext>
+					DICOM tag in which to store the relative path to the file in the import directory (ggggeeee or DICOM PS 3.6 keyword)
+				</helptext>
+			</attr>
+			<attr name="fileNameTag" required="no" default=""/>
+			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
+			<attr name="quarantine" required="yes" default="quarantines/DirectoryImportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ImportService>
+
+		<ExportService>
+			<attr name="name" required="yes" default="GoogleCloudExportService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.GoogleCloudExportService" editable="no"/>
+			<attr name="dicomStoreName" required="yes"  editable="yes">
+				<helptext>
+					DICOM Store name to export data to.
+				</helptext>
+			</attr>
+			<attr name="root" required="yes" default="roots/GoogleCloudExportService"/>
+			<attr name="url" required="yes" default="">
+				<helptext>URL of the destination DICOM STOW-RS SCP (starting with http:// or https://)</helptext>
+			</attr>
+			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
+			<attr name="includeContentDispositionHeader" required="no" default="no" options="yes|no">
+				<helptext>Include a Content-Disposition header in file export connections
+					(not required by DICOM STOW-RS, but may be useful in some situations).</helptext>
+			</attr>
+			<attr name="username" required="no" default=""/>
+			<attr name="password" required="no" default=""/>
+			<attr name="dicomScript" required="no" default=""/>
+			<attr name="logDuplicates" required="no" default="no" options="yes|no">
+				<helptext>
+					Make a log entry when an object is transmitted with a SOPInstanceUID
+					that has occurred in the last 10 objects.
+				</helptext>
+			</attr>
+			<attr name="auditLogID" required="no" default=""/>
+			<attr name="auditLogTags" required="no" default=""/>
+			<attr name="throttle" required="no" default="0"/>
+			<attr name="interval" required="no" default="5000"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomSTOWRSExportService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</ExportService>
+
 		<Processor>
 			<attr name="name" required="yes" default="ObjectCache"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.ObjectCache" editable="no"/>
@@ -1507,7 +1583,49 @@
 				returnStoredFile="no"
 				root="roots/classroom/FileStorageService2"/>
 		</Pipeline>
-
+        <Pipeline name="Google Cloud Healthcare de-identification pipeline">
+            <GoogleCloudImportService
+                    class="org.rsna.ctp.stdstages.GoogleCloudImportService"
+                    import="roots/GoogleCloudImportService/import"
+                    name="GoogleCloudImportService"
+                    projectId=""
+					googleCredentials="/path_to/service-account-key.json"
+                    quarantine="quarantines/GoogleCloudImportService"
+                    root="roots/GoogleCloudImportService"/>
+            <FileStorageService
+                    class="org.rsna.ctp.stdstages.FileStorageService"
+                    name="FileStorageService-PHI"
+                    quarantine="quarantines/classroom/FileStorageService1"
+                    returnStoredFile="no"
+                    root="roots/classroom/FileStorageService1"/>
+            <DicomAnonymizer
+                    class="org.rsna.ctp.stdstages.DicomAnonymizer"
+                    lookupTable="scripts/LookupTable.properties"
+                    name="DicomAnonymizer"
+                    quarantine="quarantines/classroom/DicomAnonymizer"
+                    root="roots/classroom/DicomAnonymizer"
+                    script="scripts/DicomAnonymizer.script"/>
+			<DicomPixelAnonymizer
+					class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+					name="DicomPixelAnonymizer"
+					quarantine="quarantines/DicomPixelAnonymizer"
+					root="roots/DicomPixelAnonymizer"
+					script="scripts/DicomPixelAnonymizer.script"/>
+			<FileStorageService
+                    class="org.rsna.ctp.stdstages.FileStorageService"
+                    name="FileStorageService-Anonymized"
+                    port="8105"
+                    quarantine="quarantines/classroom/FileStorageService2"
+                    returnStoredFile="no"
+                    root="roots/classroom/FileStorageService2"/>
+            <GoogleCloudExportService
+                    class="org.rsna.ctp.stdstages.GoogleCloudExportService"
+                    dicomStoreName=""
+                    name="GoogleCloudExportService"
+                    quarantine="quarantines/GoogleCloudExportService"
+                    root="roots/GoogleCloudExportService"
+                    url=""/>
+        </Pipeline>
 	</StandardPipelines>
 
 </TemplateDefinitions>

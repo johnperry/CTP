@@ -1,3 +1,48 @@
 <Configuration>
-    <Server port="80"/>
+    <Server
+            maxThreads="20"
+            port="80"/>
+    <Pipeline name="Google Cloud Healthcare de-identification pipeline">
+        <GoogleCloudImportService
+                class="org.rsna.ctp.stdstages.GoogleCloudImportService"
+                googleCredentials="/path_to/service-account-key.json"
+                import="roots/GoogleCloudImportService/import"
+                name="GoogleCloudImportService"
+                projectId=""
+                quarantine="quarantines/GoogleCloudImportService"
+                root="roots/GoogleCloudImportService"/>
+        <FileStorageService
+                class="org.rsna.ctp.stdstages.FileStorageService"
+                name="FileStorageService-PHI"
+                quarantine="quarantines/classroom/FileStorageService1"
+                returnStoredFile="no"
+                root="roots/classroom/FileStorageService1"/>
+        <DicomAnonymizer
+                class="org.rsna.ctp.stdstages.DicomAnonymizer"
+                lookupTable="scripts/LookupTable.properties"
+                name="DicomAnonymizer"
+                quarantine="quarantines/classroom/DicomAnonymizer"
+                root="roots/classroom/DicomAnonymizer"
+                script="scripts/DicomAnonymizer.script"/>
+        <DicomPixelAnonymizer
+                class="org.rsna.ctp.stdstages.DicomPixelAnonymizer"
+                name="DicomPixelAnonymizer"
+                quarantine="quarantines/DicomPixelAnonymizer"
+                root="roots/DicomPixelAnonymizer"
+                script="scripts/DicomPixelAnonymizer.script"/>
+        <FileStorageService
+                class="org.rsna.ctp.stdstages.FileStorageService"
+                name="FileStorageService-Anonymized"
+                port="8105"
+                quarantine="quarantines/classroom/FileStorageService2"
+                returnStoredFile="no"
+                root="roots/classroom/FileStorageService2"/>
+        <GoogleCloudExportService
+                class="org.rsna.ctp.stdstages.GoogleCloudExportService"
+                dicomStoreName=""
+                name="GoogleCloudExportService"
+                quarantine="quarantines/GoogleCloudExportService"
+                root="roots/GoogleCloudExportService"
+                url=""/>
+    </Pipeline>
 </Configuration>

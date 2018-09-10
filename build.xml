@@ -31,6 +31,17 @@
 		<pathelement location="${libraries}/ftp/commons-net-3.3.jar"/>
 		<pathelement location="${libraries}/ftp/commons-vfs2-2.0.jar"/>
 		<pathelement location="${libraries}/ftp/jsch-0.1.53.jar"/>
+		<pathelement location="${libraries}/guava-19.0.jar"/>
+		<pathelement location="${libraries}/google-auth-library-oauth2-http-0.10.0.jar"/>
+		<pathelement location="${libraries}/commons-codec-1.3.jar"/>
+		<pathelement location="${libraries}/commons-logging-1.1.1.jar"/>
+		<pathelement location="${libraries}/google-auth-library-credentials-0.10.0.jar"/>
+		<pathelement location="${libraries}/google-http-client-1.19.0.jar"/>
+		<pathelement location="${libraries}/google-http-client-jackson2-1.19.0.jar"/>
+		<pathelement location="${libraries}/httpclient-4.0.1.jar"/>
+		<pathelement location="${libraries}/httpcore-4.0.1.jar"/>
+		<pathelement location="${libraries}/jackson-core-2.1.3.jar"/>
+		<pathelement location="${libraries}/jsr305-1.3.9.jar"/>
 	</path>
 
 	<target name="clean">
@@ -85,6 +96,10 @@
 
 		<copy overwrite="true" todir="${build}">
 			<fileset dir="${resources}"/>
+		</copy>
+
+		<copy overwrite="true" todir="${build}/CTP">
+			<file file="${config}/config.xml"/>
 		</copy>
 
 		<jar jarfile="${libraries}/CTP.jar">
