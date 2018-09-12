@@ -7,8 +7,6 @@
 
 package org.rsna.ctp.stdstages;
 
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
@@ -94,7 +92,7 @@ public class GoogleCloudImportService extends AbstractImportService {
 		dicomStoreName =  element.getAttribute("dicomStoreName").trim();
 
 
-		googleCredentialsPath = element.getAttribute("googleCredentialsPath").trim();
+/*		googleCredentialsPath = element.getAttribute("googleCredentialsPath").trim();
 		googleCredentialsFile = getDirectory(googleCredentialsPath);
 		if ((googleCredentialsFile == null) || !googleCredentialsFile.exists()) {
 			logger.error(name+": The import directory was not specified.");
@@ -106,7 +104,7 @@ public class GoogleCloudImportService extends AbstractImportService {
 				.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
 
 		credential.refreshIfExpired();
-		System.out.println(credential.getAccessToken().getTokenValue());
+		System.out.println(credential.getAccessToken().getTokenValue());*/
 	}
 
 	/**

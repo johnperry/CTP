@@ -19,6 +19,10 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.TransferHandler;
 import javax.swing.tree.*;
+
+import com.codeminders.demo.GoogleAPIClient;
+import com.codeminders.demo.GoogleAPIClientFactory;
+import org.apache.log4j.Logger;
 import org.rsna.ui.ColorPane;
 import org.rsna.ui.RowLayout;
 import org.rsna.util.BrowserUtil;
@@ -30,7 +34,7 @@ import org.w3c.dom.*;
 public class ConfigPanel extends BasePanel {
 
 	static final String templateFilename = "ConfigurationTemplates.xml";
-
+	static Logger logger = Logger.getLogger(ConfigPanel.class);
 	MenuPane menuPane;
 	TreePane treePane;
 	JScrollPane jspTree;
@@ -458,6 +462,11 @@ public class ConfigPanel extends BasePanel {
 
 			childrenMenu = new JMenu("Children");
 
+			JMenu authorizationMenu = new JMenu("Authorization");
+			JMenuItem googleAuthItem = new JMenuItem("Login with Google");
+			googleAuthItem.addActionListener(new AuthImpl());
+			authorizationMenu.add(googleAuthItem);
+
 			JMenu helpMenu = new JMenu("Help");
 			JMenuItem helpItem = new JMenuItem("Configuration Editor Instructions");
 			helpItem.setAccelerator( KeyStroke.getKeyStroke('H', InputEvent.CTRL_MASK) );
@@ -489,6 +498,7 @@ public class ConfigPanel extends BasePanel {
 			menuBar.add(storageServiceMenu);
 			menuBar.add(exportServiceMenu);
 			menuBar.add(childrenMenu);
+			menuBar.add(authorizationMenu);
 			menuBar.add(helpMenu);
 
 			this.add( menuBar );
@@ -646,6 +656,21 @@ public class ConfigPanel extends BasePanel {
 		class HelpImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
 				showHelp();
+			}
+		}
+
+		class AuthImpl implements ActionListener {
+			public void actionPerformed(ActionEvent event) {
+				logger.info("Creating GoogleAPIClientFactory");
+				GoogleAPIClient auth = GoogleAPIClientFactory.getInstance().createGoogleClient();
+				logger.info("Create GoogleAPIClientFactory=" + auth);
+				try {
+					logger.info("Invoking signIn()");
+					auth.signIn();
+				} catch (Exception e) {
+					logger.error("Error invoking signIn()", e);
+					e.printStackTrace();
+				}
 			}
 		}
 	}
