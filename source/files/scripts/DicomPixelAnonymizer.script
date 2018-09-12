@@ -16,6 +16,11 @@ For information on the DicomPixelAnonymizer and the format of this file,see:
 **************
      CT
 **************
+
+ FILTER FOR GOOGLE DEMO
+  { Manufacturer.containsIgnoreCase("i") }
+   (0,0,100,80)
+
 GE 
 
  CT Dose Series
