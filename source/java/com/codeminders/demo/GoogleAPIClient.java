@@ -47,7 +47,7 @@ public class GoogleAPIClient {
     /**
      * Directory to store user credentials.
      */
-    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_viewer_auth");
+    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_mirc_auth");
 
     /**
      * Global instance of the {@link DataStoreFactory}. The best practice is to make
@@ -84,6 +84,8 @@ public class GoogleAPIClient {
 
     private boolean isSignedIn = false;
     private String accessToken;
+    
+    private List<GoogleAuthListener> listeners = new ArrayList<>();
 
     protected GoogleAPIClient() {
     }
@@ -104,6 +106,14 @@ public class GoogleAPIClient {
         // authorize
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
     }
+    
+    public void addListener(GoogleAuthListener listener) {
+    	listeners.add(listener);
+    }
+    
+    public void removeListener(GoogleAuthListener listener) {
+    	listeners.remove(listener);
+    }
 
     public void signIn() throws Exception {
         if (!isSignedIn) {
@@ -113,7 +123,7 @@ public class GoogleAPIClient {
                 try {
                     tryCount++;
                     httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-                    dataStoreFactory = /*new FileDataStoreFactory(DATA_STORE_DIR); */new MemoryDataStoreFactory();
+                    dataStoreFactory = new FileDataStoreFactory(DATA_STORE_DIR); //new MemoryDataStoreFactory();
                     // authorization
                     Credential credential = authorize();
                     // set up global Oauth2 instance
@@ -128,6 +138,9 @@ public class GoogleAPIClient {
                     userInfo();
                     error = null;
                     isSignedIn = true;
+                    for (GoogleAuthListener listener: listeners) {
+                    	listener.authorized();
+                    }
                 } catch (Exception e) {
                     logger.error("Error occurred during authorization", e);
                     error = e;

@@ -13,6 +13,7 @@ import java.awt.dnd.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.zip.*;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -22,6 +23,10 @@ import javax.swing.tree.*;
 
 import com.codeminders.demo.GoogleAPIClient;
 import com.codeminders.demo.GoogleAPIClientFactory;
+import com.codeminders.demo.GoogleAuthListener;
+import com.codeminders.demo.Location;
+import com.codeminders.demo.ProjectDescriptor;
+
 import org.apache.log4j.Logger;
 import org.rsna.ui.ColorPane;
 import org.rsna.ui.RowLayout;
@@ -58,6 +63,9 @@ public class ConfigPanel extends BasePanel {
 	Hashtable<String,String> defaultHelpText = new Hashtable<String,String>();
 
 	static ConfigPanel configPanel = null;
+	
+	private GoogleAPIClient googleClient = GoogleAPIClientFactory.getInstance().createGoogleClient();
+	private Map<String, AttrPanel> comboBoxesMap = new HashMap<>();
 
 	public static synchronized ConfigPanel getInstance() {
 		if (configPanel == null) configPanel = new ConfigPanel();
@@ -661,16 +669,18 @@ public class ConfigPanel extends BasePanel {
 
 		class AuthImpl implements ActionListener {
 			public void actionPerformed(ActionEvent event) {
-				logger.info("Creating GoogleAPIClientFactory");
-				GoogleAPIClient auth = GoogleAPIClientFactory.getInstance().createGoogleClient();
-				logger.info("Create GoogleAPIClientFactory=" + auth);
-				try {
-					logger.info("Invoking signIn()");
-					auth.signIn();
-				} catch (Exception e) {
-					logger.error("Error invoking signIn()", e);
-					e.printStackTrace();
-				}
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							logger.info("Invoking signIn()");
+							googleClient.signIn();
+						} catch (Exception e) {
+							logger.error("Error invoking signIn()", e);
+							e.printStackTrace();
+						}
+					}
+				}).start();
 			}
 		}
 	}
@@ -1235,6 +1245,7 @@ public class ConfigPanel extends BasePanel {
 						if (ch.getTagName().equals("attr")) {
 							String name = ch.getAttribute("name");
 							String defValue = ch.getAttribute("default");
+							String type = ch.getAttribute("type");
 							String options = ch.getAttribute("options").trim();
 							boolean editable = !ch.getAttribute("editable").equals("no");
 
@@ -1248,12 +1259,28 @@ public class ConfigPanel extends BasePanel {
 							String configValue = element.getAttribute(name);
 							if (configValue.equals("")) configValue = defValue;
 
-							if (options.equals("")) {
-								add( new TextAttrPanel(name, configValue, helpText, editable) );
-							}
-							else {
-								//add( new ComboAttrPanel(name, configValue, options, helpText) );
-								add( new ButtonAttrPanel(name, configValue, options, helpText) );
+							switch(type) {
+							case "dynamic-combobox":
+								DefaultComboBoxModel<ProjectDescriptor> projectModel = new DefaultComboBoxModel<>(
+										new ProjectDescriptor[] { new ProjectDescriptor(defValue, null) });
+								GoogleComboAttrPanel projectComboBox = new GoogleComboAttrPanel(name, configValue, options, helpText, projectModel);
+								googleClient.addListener(new GoogleAuthListener() {
+									@Override
+									public void authorized() {
+										projectComboBox.refresh();
+									}
+								});
+								add(projectComboBox);
+								break;
+							default:
+							case "":
+								if (options.equals("")) {
+									add( new TextAttrPanel(name, configValue, helpText, editable) );
+								} else {
+									//add( new ComboAttrPanel(name, configValue, options, helpText) );
+									add( new ButtonAttrPanel(name, configValue, options, helpText) );
+								}
+								break;
 							}
 							add( Box.createVerticalStrut(10) );
 						}
@@ -1330,6 +1357,112 @@ public class ConfigPanel extends BasePanel {
 		}
 	}
 
+	class GoogleComboAttrPanel extends AttrPanel {
+		public ConfigComboBox text = new ConfigComboBox();
+		private DefaultComboBoxModel model;
+		HelpPane help = null;
+		String option;
+		public GoogleComboAttrPanel(String name, String value, String option, String comment, DefaultComboBoxModel model) {
+			super(name);
+			this.option = option;
+			this.model = model;
+			text.setModel(model);
+			this.add(text);
+			if ((comment != null) && !comment.trim().equals("")) {
+				this.add( Box.createVerticalStrut(5) );
+				comment = comment.trim().replaceAll("\\s+", " ");
+				help = new HelpPane(comment);
+				this.add(help);
+			}
+		}
+		public Object getSelected() {
+			return text.getSelectedItem();
+		}
+		public String getValue() {
+			return text.getSelectedItem().toString().trim();
+		}
+		public void refresh() {
+			refresh(null, null, null);
+		}
+		public void refresh(String parameter1) {
+			refresh(parameter1, null, null);
+		}
+		public void refresh(String parameter1, String parameter2) {
+			refresh(parameter1, parameter2, null);
+		}
+		public void refresh(String parameter1, String parameter2, String parameter3) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					comboBoxesMap.put(option, GoogleComboAttrPanel.this);
+					try {
+						switch (option) {
+						case "project":
+							googleClient.fetchProjects().stream().forEach(model::addElement);
+							text.addActionListener(new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									String id = ((ProjectDescriptor)(((ConfigComboBox)e.getSource()).getSelectedItem())).getId();
+									if (id != null && !id.isEmpty()) {
+										((GoogleComboAttrPanel)comboBoxesMap.get("location")).refresh(id);
+									}
+								}
+							});
+							break;
+						case "location":
+							// parameter: projectId
+							googleClient.fetchLocations(parameter1).stream().forEach(model::addElement);
+							text.addActionListener(new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project")).getSelected();
+									String projId = ((ProjectDescriptor)projSelected).getId();
+									String locationId = ((Location)(((ConfigComboBox)e.getSource()).getSelectedItem())).getId();
+									if (projId != null && !projId.isEmpty() && locationId != null && !locationId.isEmpty()) {
+										((GoogleComboAttrPanel)comboBoxesMap.get("dataset")).refresh(projId, locationId);
+									}
+								}
+							});
+							break;
+						case "dataset":
+							// parameters: projectId, locationId
+							googleClient.fetchDatasets(parameter1, parameter2).stream().forEach(model::addElement);
+							text.addActionListener(new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project")).getSelected();
+									String projId = ((ProjectDescriptor)projSelected).getId();
+									Object locationSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("location")).getSelected();
+									String locationId = ((Location)locationSelected).getId();
+									String dataset = ((ConfigComboBox)e.getSource()).getSelectedItem().toString();
+									((GoogleComboAttrPanel)comboBoxesMap.get("dicomstore")).refresh(projId, locationId, dataset);
+								}
+							});
+							break;
+						case "dicomstore":
+							// parameters: projectId, locationId, dataset
+							googleClient.fetchDicomstores(parameter1, parameter2, parameter3).stream().forEach(model::addElement);
+							text.addActionListener(new ActionListener() {
+								@Override
+								public void actionPerformed(ActionEvent e) {
+									// TODO: dicom selected
+									String dicomStore = ((ConfigComboBox)e.getSource()).getSelectedItem().toString();
+									System.out.println("DICOM Store:" + dicomStore);
+								}
+							});
+							break;
+						}
+					} catch(Exception e) {
+						logger.error("Error during fetching data from Google:" + e.getMessage(), e);
+						JOptionPane.showMessageDialog(null, "Error during fetching data from Google:" + e.getMessage());
+					} finally {
+						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					}
+				}
+			});
+		}
+	}
+
 	class ComboAttrPanel extends AttrPanel {
 		public ConfigComboBox text;
 		HelpPane help = null;
@@ -1394,12 +1527,18 @@ public class ConfigPanel extends BasePanel {
 	}
 
 	class ConfigComboBox extends JComboBox implements Scrollable {
+		public ConfigComboBox() {
+			init();
+		}
 		public ConfigComboBox(String[] values, int selectedIndex) {
 			super(values);
 			setSelectedIndex(selectedIndex);
+			init();
+		}
+		private void init() {
 			setFont( new Font( "Monospaced", Font.BOLD, 12 ) );
 			setBackground(Color.white);
-			setEditable(false);
+			setEditable(false);			
 		}
 		public boolean getScrollableTracksViewportHeight() { return false; }
 		public boolean getScrollableTracksViewportWidth() { return true; }
