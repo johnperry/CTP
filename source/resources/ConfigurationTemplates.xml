@@ -257,22 +257,22 @@
 		<ImportService>
 			<attr name="name" required="yes" default="GoogleCloudImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.GoogleCloudImportService" editable="no"/>
-			<attr name="projectId" type="dynamic-combobox" required="yes" default="Choose project" editable="yes" options="project">
+			<attr name="projectId" type="google-dynamic-combobox" required="yes" default="Choose project" editable="yes" options="project">
 				<helptext>
 					Google Cloud project_id to import data from.
 				</helptext>
 			</attr>
-			<attr name="locationId" type="dynamic-combobox" required="yes" default="Choose location" editable="yes" options="location">
+			<attr name="locationId" type="google-dynamic-combobox" required="yes" default="Choose location" editable="yes" options="location">
 				<helptext>
 					Google Cloud location to import data from.
 				</helptext>
 			</attr>
-			<attr name="dataSetName" type="dynamic-combobox" required="yes" default="Choose dataset" editable="yes" options="dataset">
+			<attr name="dataSetName" type="google-dynamic-combobox" required="yes" default="Choose dataset" editable="yes" options="dataset">
 				<helptext>
 					Google Cloud dataset to import data from.
 				</helptext>
 			</attr>
-			<attr name="dicomStoreName" type="dynamic-combobox" required="yes" default="Choose DICOM Store" editable="yes" options="dicomstore">
+			<attr name="dicomStoreName" type="google-dynamic-combobox" required="yes" default="Choose DICOM Store" editable="yes" options="dicomstore">
 				<helptext>
 					DICOM Store name to import data from.
 					If not specified then data from all DICOM Stores of the project will be imported

@@ -154,6 +154,10 @@ public class GoogleAPIClient {
             }
         }
     }
+    
+    public boolean isSignedIn() {
+		return isSignedIn;
+	}
 
     private static void tokenInfo(String accessToken) throws IOException {
         System.out.println("Validating token");
