@@ -1401,7 +1401,7 @@ public class ConfigPanel extends BasePanel {
 						switch (option) {
 						case "project":
 							model.removeAllElements();
-							model.addElement(new ProjectDescriptor("Choose project", null));
+							model.addElement(new ProjectDescriptor(null, "Choose project"));
 							googleClient.fetchProjects().stream().forEach(model::addElement);
 							text.addActionListener(new ActionListener() {
 								@Override

@@ -133,6 +133,7 @@ public class GoogleAPIClient {
                     cloudResourceManager = new CloudResourceManager.Builder(httpTransport, JSON_FACTORY, credential)
                             .build();
                     accessToken = credential.getAccessToken();
+                    System.out.println("Token:" + accessToken);
                     // run commands
                     tokenInfo(accessToken);
                     userInfo();
@@ -150,13 +151,17 @@ public class GoogleAPIClient {
                 }
             } while (!isSignedIn && tryCount < 4);
             if (error != null) {
-                throw error;
+                throw new IllegalStateException(error);
             }
         }
     }
     
     public boolean isSignedIn() {
 		return isSignedIn;
+	}
+    
+    public String getAccessToken() {
+		return accessToken;
 	}
 
     private static void tokenInfo(String accessToken) throws IOException {
@@ -198,6 +203,7 @@ public class GoogleAPIClient {
 
     private HttpResponse googleRequest(String url) throws Exception {
         signIn();
+        System.out.println("Google request url:" + url);
         HttpRequest request = httpTransport.createRequestFactory().buildGetRequest(new GenericUrl(url));
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", Arrays.asList(new String[]{"Bearer " + accessToken}));
@@ -248,4 +254,26 @@ public class GoogleAPIClient {
         return result;
     }
 
+	private String getGHCUrl(DICOMStoreDescriptor descriptor) {
+		return "https://healthcare.googleapis.com/v1alpha/projects/"+descriptor.getProjectId()+
+				"/locations/"+descriptor.getLocationId()+
+				"/datasets/"+descriptor.getDataSetName()+
+				"/dicomStores/"+descriptor.getDicomStoreName();
+	}
+
+	private String getDCMFileUrl(DICOMStoreDescriptor study, String dcmFileId) {
+		return getGHCUrl(study)+"/dicomWeb/studies/"+dcmFileId;
+	}
+
+	public List<String> listDCMFileIds(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		String url = getGHCUrl(descriptor)+"/dicomWeb/studies";
+		String data = googleRequest(url).parseAsString();
+        JsonElement jsonTree = new JsonParser().parse(data);
+        List<String> imageUrls = StreamSupport.stream(jsonTree.getAsJsonArray().spliterator(), false)
+        	.map(el -> el.getAsJsonObject().get("0020000D").getAsJsonObject().get("Value").getAsJsonArray().get(0).getAsString())
+        	.map(id -> getDCMFileUrl(descriptor, id))
+        	.collect(Collectors.toList());
+        return imageUrls;
+	}
 }
