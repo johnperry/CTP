@@ -198,13 +198,6 @@ public class GoogleCloudImportService extends AbstractImportService {
 		}
 	}
 
-
-//	public static void main(String[] args) throws Exception {
-//		downloadFile(
-//				"https://healthcare.googleapis.com/v1alpha/projects/gcp-health/locations/us-central1/datasets/mydataset/dicomStores/dev_viewer/dicomWeb/studies/2.16.840.1.114488.0.4.123489834087.1330071425.0",
-//				"F://DICOMtemp//");
-//	}
-
 	/**
 	 * Stop the service.
 	 */

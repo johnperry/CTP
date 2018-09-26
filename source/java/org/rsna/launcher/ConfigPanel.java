@@ -14,6 +14,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.*;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -1211,8 +1212,10 @@ public class ConfigPanel extends BasePanel {
 						Object userObject = childNode.getUserObject();
 						XMLUserObject xmlUserObject = (XMLUserObject)userObject;
 						Element c = xmlUserObject.getXML();
-						Element cImported = (Element)xml.getOwnerDocument().importNode(c, true);
-						xml.appendChild(cImported);
+						if (c != null) {
+							Element cImported = (Element)xml.getOwnerDocument().importNode(c, true);
+							xml.appendChild(cImported);
+						}
 					}
 				}
 			}
@@ -1263,7 +1266,7 @@ public class ConfigPanel extends BasePanel {
 							case "google-dynamic-combobox":
 								String firstOptionValue = googleClient.isSignedIn() ? defValue : "Login with Google";
 								DefaultComboBoxModel<ProjectDescriptor> projectModel = new DefaultComboBoxModel<>(
-										new ProjectDescriptor[] { new ProjectDescriptor( firstOptionValue, null) });
+										new ProjectDescriptor[] { new ProjectDescriptor(null, firstOptionValue) });
 								GoogleComboAttrPanel comboBox = new GoogleComboAttrPanel(name, configValue, options, helpText, projectModel);
 								googleClient.addListener(new GoogleAuthListener() {
 									@Override
@@ -1397,8 +1400,11 @@ public class ConfigPanel extends BasePanel {
 				@Override
 				public void run() {
 					comboBoxesMap.put(option, GoogleComboAttrPanel.this);
+					String[] options = option.split(Pattern.quote("|"));
+					String optionName = options[0];
+					String optionId = options[1];
 					try {
-						switch (option) {
+						switch (optionName) {
 						case "project":
 							model.removeAllElements();
 							model.addElement(new ProjectDescriptor(null, "Choose project"));
@@ -1408,61 +1414,63 @@ public class ConfigPanel extends BasePanel {
 								public void actionPerformed(ActionEvent e) {
 									String id = ((ProjectDescriptor)(((ConfigComboBox)e.getSource()).getSelectedItem())).getId();
 									if (id != null && !id.isEmpty()) {
-										((GoogleComboAttrPanel)comboBoxesMap.get("location")).refresh(id);
+										((GoogleComboAttrPanel)comboBoxesMap.get("location|" + optionId)).refresh(id);
 									}
 								}
 							});
 							break;
 						case "location":
+							model.removeAllElements();
 							// parameter: projectId
 							if (projectId != null) {
-								model.removeAllElements();
 								model.addElement(new Location(null, "Choose Location"));
 								googleClient.fetchLocations(projectId).stream().forEach(model::addElement);
 								text.addActionListener(new ActionListener() {
 									@Override
 									public void actionPerformed(ActionEvent e) {
-										Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project")).getSelected();
+										Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project|" + optionId)).getSelected();
 										String projId = ((ProjectDescriptor)projSelected).getId();
 										String locationId = ((Location)(((ConfigComboBox)e.getSource()).getSelectedItem())).getId();
 										if (projId != null && !projId.isEmpty() && locationId != null && !locationId.isEmpty()) {
-											((GoogleComboAttrPanel)comboBoxesMap.get("dataset")).refresh(projId, locationId);
+											((GoogleComboAttrPanel)comboBoxesMap.get("dataset|" + optionId)).refresh(projId, locationId);
 										}
 									}
 								});
 							}
 							break;
 						case "dataset":
+							model.removeAllElements();
 							// parameters: projectId, locationId
 							if (projectId != null && locationId != null) {
-								model.removeAllElements();
 								model.addElement("Choose dataset");
 								googleClient.fetchDatasets(projectId, locationId).stream().forEach(model::addElement);
 								text.addActionListener(new ActionListener() {
 									@Override
 									public void actionPerformed(ActionEvent e) {
-										Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project")).getSelected();
+										Object projSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("project|" + optionId)).getSelected();
 										String projId = ((ProjectDescriptor)projSelected).getId();
-										Object locationSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("location")).getSelected();
+										Object locationSelected = ((GoogleComboAttrPanel)comboBoxesMap.get("location|" + optionId)).getSelected();
 										String locationId = ((Location)locationSelected).getId();
 										String dataset = ((ConfigComboBox)e.getSource()).getSelectedItem().toString();
-										((GoogleComboAttrPanel)comboBoxesMap.get("dicomstore")).refresh(projId, locationId, dataset);
+										GoogleComboAttrPanel nestPanel = (GoogleComboAttrPanel)comboBoxesMap.get("dicomstore|" + optionId);
+										if (nestPanel != null) {
+											nestPanel.refresh(projId, locationId, dataset);
+										}
 									}
 								});
 							}
 							break;
 						case "dicomstore":
+							model.removeAllElements();
 							// parameters: projectId, locationId, dataset
 							if (projectId != null && locationId != null && dataset != null) {
-								model.removeAllElements();
 								model.addElement("Choose dicomstore");
 								googleClient.fetchDicomstores(projectId, locationId, dataset).stream().forEach(model::addElement);
 								text.addActionListener(new ActionListener() {
 									@Override
 									public void actionPerformed(ActionEvent e) {
 										String dicomStore = ((ConfigComboBox)e.getSource()).getSelectedItem().toString();
-										// TODO: dicom selected
-										System.out.println("DICOM Store:" + dicomStore);
+										logger.info("DICOM store chosen:" + dicomStore);
 									}
 								});
 							}

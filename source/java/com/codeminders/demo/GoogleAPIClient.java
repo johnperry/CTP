@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -14,7 +15,9 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.EmptyContent;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
@@ -86,7 +89,7 @@ public class GoogleAPIClient {
     private String accessToken;
     
     private List<GoogleAuthListener> listeners = new ArrayList<>();
-
+    
     protected GoogleAPIClient() {
     }
 
@@ -136,7 +139,6 @@ public class GoogleAPIClient {
                     System.out.println("Token:" + accessToken);
                     // run commands
                     tokenInfo(accessToken);
-                    userInfo();
                     error = null;
                     isSignedIn = true;
                     for (GoogleAuthListener listener: listeners) {
@@ -173,12 +175,6 @@ public class GoogleAPIClient {
         }
     }
 
-    private static void userInfo() throws IOException {
-        System.out.println("Obtaining User Profile Information");
-        Userinfoplus userinfo = oauth2.userinfo().get().execute();
-        System.out.println(userinfo.toString());
-    }
-
     public List<ProjectDescriptor> fetchProjects() throws Exception {
         signIn();
         List<ProjectDescriptor> result = new ArrayList<ProjectDescriptor>();
@@ -210,6 +206,17 @@ public class GoogleAPIClient {
         request.setHeaders(headers);
         return request.execute();
     }
+    
+    private HttpResponse googlePostRequest(String url, HttpContent content) throws Exception {
+        signIn();
+        System.out.println("Google request url:" + url);
+        HttpRequest request = httpTransport.createRequestFactory().buildPostRequest(new GenericUrl(url), content);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", Arrays.asList(new String[]{"Bearer " + accessToken}));
+        request.setHeaders(headers);
+        return request.execute();
+    }
+
 
     public List<Location> fetchLocations(String projectId) throws Exception {
         signIn();
@@ -254,20 +261,23 @@ public class GoogleAPIClient {
         return result;
     }
 
-	private String getGHCUrl(DICOMStoreDescriptor descriptor) {
+	public String getGHCDatasetUrl(DICOMStoreDescriptor descriptor) {
 		return "https://healthcare.googleapis.com/v1alpha/projects/"+descriptor.getProjectId()+
 				"/locations/"+descriptor.getLocationId()+
-				"/datasets/"+descriptor.getDataSetName()+
-				"/dicomStores/"+descriptor.getDicomStoreName();
+				"/datasets/"+descriptor.getDataSetName();
+	}
+
+	public String getGHCDicomstoreUrl(DICOMStoreDescriptor descriptor) {
+		return getGHCDatasetUrl(descriptor) + "/dicomStores/"+descriptor.getDicomStoreName();
 	}
 
 	private String getDCMFileUrl(DICOMStoreDescriptor study, String dcmFileId) {
-		return getGHCUrl(study)+"/dicomWeb/studies/"+dcmFileId;
+		return getGHCDicomstoreUrl(study)+"/dicomWeb/studies/"+dcmFileId;
 	}
 
 	public List<String> listDCMFileIds(DICOMStoreDescriptor descriptor) throws Exception {
 		signIn();
-		String url = getGHCUrl(descriptor)+"/dicomWeb/studies";
+		String url = getGHCDicomstoreUrl(descriptor)+"/dicomWeb/studies";
 		String data = googleRequest(url).parseAsString();
         JsonElement jsonTree = new JsonParser().parse(data);
         List<String> imageUrls = StreamSupport.stream(jsonTree.getAsJsonArray().spliterator(), false)
@@ -276,4 +286,27 @@ public class GoogleAPIClient {
         	.collect(Collectors.toList());
         return imageUrls;
 	}
+
+	public String createDicomstore(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		String url = getGHCDatasetUrl(descriptor)+"/dicomStores?dicomStoreId=" + descriptor.getDicomStoreName();
+		String data = googlePostRequest(url, new EmptyContent()).parseAsString();
+        JsonElement jsonTree = new JsonParser().parse(data);
+        JsonElement errorEl = jsonTree.getAsJsonObject().get("error");
+        if (errorEl != null) {
+        	throw new IllegalStateException("Dicomstore save error: " + errorEl.getAsJsonObject().get("message").getAsString());
+        }
+        return jsonTree.getAsJsonObject().get("name").getAsString();
+	}
+
+	public void checkDicomstore(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		List<String> dicomstores = fetchDicomstores(descriptor.getProjectId(), descriptor.getLocationId(), descriptor.getDataSetName());
+		boolean isNewDicomStore = !dicomstores.contains(descriptor.getDicomStoreName());
+		if (isNewDicomStore) {
+			String dicomStorePath = createDicomstore(descriptor);
+			logger.info("DICOM store created: " + dicomStorePath);
+		}
+	}
+	
 }
