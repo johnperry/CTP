@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -14,7 +15,9 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.EmptyContent;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
@@ -47,7 +50,7 @@ public class GoogleAPIClient {
     /**
      * Directory to store user credentials.
      */
-    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_viewer_auth");
+    private static final java.io.File DATA_STORE_DIR = new java.io.File(System.getProperty("user.home"), ".store/google_mirc_auth");
 
     /**
      * Global instance of the {@link DataStoreFactory}. The best practice is to make
@@ -84,7 +87,9 @@ public class GoogleAPIClient {
 
     private boolean isSignedIn = false;
     private String accessToken;
-
+    
+    private List<GoogleAuthListener> listeners = new ArrayList<>();
+    
     protected GoogleAPIClient() {
     }
 
@@ -104,6 +109,14 @@ public class GoogleAPIClient {
         // authorize
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
     }
+    
+    public void addListener(GoogleAuthListener listener) {
+    	listeners.add(listener);
+    }
+    
+    public void removeListener(GoogleAuthListener listener) {
+    	listeners.remove(listener);
+    }
 
     public void signIn() throws Exception {
         if (!isSignedIn) {
@@ -113,7 +126,7 @@ public class GoogleAPIClient {
                 try {
                     tryCount++;
                     httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-                    dataStoreFactory = /*new FileDataStoreFactory(DATA_STORE_DIR); */new MemoryDataStoreFactory();
+                    dataStoreFactory = new FileDataStoreFactory(DATA_STORE_DIR); //new MemoryDataStoreFactory();
                     // authorization
                     Credential credential = authorize();
                     // set up global Oauth2 instance
@@ -123,11 +136,14 @@ public class GoogleAPIClient {
                     cloudResourceManager = new CloudResourceManager.Builder(httpTransport, JSON_FACTORY, credential)
                             .build();
                     accessToken = credential.getAccessToken();
+                    System.out.println("Token:" + accessToken);
                     // run commands
                     tokenInfo(accessToken);
-                    userInfo();
                     error = null;
                     isSignedIn = true;
+                    for (GoogleAuthListener listener: listeners) {
+                    	listener.authorized();
+                    }
                 } catch (Exception e) {
                     logger.error("Error occurred during authorization", e);
                     error = e;
@@ -137,10 +153,18 @@ public class GoogleAPIClient {
                 }
             } while (!isSignedIn && tryCount < 4);
             if (error != null) {
-                throw error;
+                throw new IllegalStateException(error);
             }
         }
     }
+    
+    public boolean isSignedIn() {
+		return isSignedIn;
+	}
+    
+    public String getAccessToken() {
+		return accessToken;
+	}
 
     private static void tokenInfo(String accessToken) throws IOException {
         System.out.println("Validating token");
@@ -149,12 +173,6 @@ public class GoogleAPIClient {
         if (!tokeninfo.getAudience().equals(clientSecrets.getDetails().getClientId())) {
             System.err.println("ERROR: audience does not match our client ID!");
         }
-    }
-
-    private static void userInfo() throws IOException {
-        System.out.println("Obtaining User Profile Information");
-        Userinfoplus userinfo = oauth2.userinfo().get().execute();
-        System.out.println(userinfo.toString());
     }
 
     public List<ProjectDescriptor> fetchProjects() throws Exception {
@@ -181,12 +199,24 @@ public class GoogleAPIClient {
 
     private HttpResponse googleRequest(String url) throws Exception {
         signIn();
+        System.out.println("Google request url:" + url);
         HttpRequest request = httpTransport.createRequestFactory().buildGetRequest(new GenericUrl(url));
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", Arrays.asList(new String[]{"Bearer " + accessToken}));
         request.setHeaders(headers);
         return request.execute();
     }
+    
+    private HttpResponse googlePostRequest(String url, HttpContent content) throws Exception {
+        signIn();
+        System.out.println("Google request url:" + url);
+        HttpRequest request = httpTransport.createRequestFactory().buildPostRequest(new GenericUrl(url), content);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", Arrays.asList(new String[]{"Bearer " + accessToken}));
+        request.setHeaders(headers);
+        return request.execute();
+    }
+
 
     public List<Location> fetchLocations(String projectId) throws Exception {
         signIn();
@@ -231,4 +261,52 @@ public class GoogleAPIClient {
         return result;
     }
 
+	public String getGHCDatasetUrl(DICOMStoreDescriptor descriptor) {
+		return "https://healthcare.googleapis.com/v1alpha/projects/"+descriptor.getProjectId()+
+				"/locations/"+descriptor.getLocationId()+
+				"/datasets/"+descriptor.getDataSetName();
+	}
+
+	public String getGHCDicomstoreUrl(DICOMStoreDescriptor descriptor) {
+		return getGHCDatasetUrl(descriptor) + "/dicomStores/"+descriptor.getDicomStoreName();
+	}
+
+	private String getDCMFileUrl(DICOMStoreDescriptor study, String dcmFileId) {
+		return getGHCDicomstoreUrl(study)+"/dicomWeb/studies/"+dcmFileId;
+	}
+
+	public List<String> listDCMFileIds(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		String url = getGHCDicomstoreUrl(descriptor)+"/dicomWeb/studies";
+		String data = googleRequest(url).parseAsString();
+        JsonElement jsonTree = new JsonParser().parse(data);
+        List<String> imageUrls = StreamSupport.stream(jsonTree.getAsJsonArray().spliterator(), false)
+        	.map(el -> el.getAsJsonObject().get("0020000D").getAsJsonObject().get("Value").getAsJsonArray().get(0).getAsString())
+        	.map(id -> getDCMFileUrl(descriptor, id))
+        	.collect(Collectors.toList());
+        return imageUrls;
+	}
+
+	public String createDicomstore(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		String url = getGHCDatasetUrl(descriptor)+"/dicomStores?dicomStoreId=" + descriptor.getDicomStoreName();
+		String data = googlePostRequest(url, new EmptyContent()).parseAsString();
+        JsonElement jsonTree = new JsonParser().parse(data);
+        JsonElement errorEl = jsonTree.getAsJsonObject().get("error");
+        if (errorEl != null) {
+        	throw new IllegalStateException("Dicomstore save error: " + errorEl.getAsJsonObject().get("message").getAsString());
+        }
+        return jsonTree.getAsJsonObject().get("name").getAsString();
+	}
+
+	public void checkDicomstore(DICOMStoreDescriptor descriptor) throws Exception {
+		signIn();
+		List<String> dicomstores = fetchDicomstores(descriptor.getProjectId(), descriptor.getLocationId(), descriptor.getDataSetName());
+		boolean isNewDicomStore = !dicomstores.contains(descriptor.getDicomStoreName());
+		if (isNewDicomStore) {
+			String dicomStorePath = createDicomstore(descriptor);
+			logger.info("DICOM store created: " + dicomStorePath);
+		}
+	}
+	
 }

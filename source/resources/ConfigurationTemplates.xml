@@ -257,12 +257,16 @@
 		<ImportService>
 			<attr name="name" required="yes" default="GoogleCloudImportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.GoogleCloudImportService" editable="no"/>
-			<attr name="projectId" required="yes" editable="yes">
-				<helptext>
-					Google Cloud  project_id to import data from.
-				</helptext>
+			<attr name="projectId" type="google-dynamic-combobox" required="yes" default="Choose project" editable="yes" options="project|1">
+				<helptext>Google Cloud project_id to import data from.</helptext>
 			</attr>
-			<attr name="dicomStoreName" required="no"  editable="yes">
+			<attr name="locationId" type="google-dynamic-combobox" required="yes" default="Choose location" editable="yes" options="location|1">
+				<helptext>Google Cloud location to import data from.</helptext>
+			</attr>
+			<attr name="dataSetName" type="google-dynamic-combobox" required="yes" default="Choose dataset" editable="yes" options="dataset|1">
+				<helptext>Google Cloud dataset to import data from.</helptext>
+			</attr>
+			<attr name="dicomStoreName" type="google-dynamic-combobox" required="yes" default="Choose DICOM Store" editable="yes" options="dicomstore|1">
 				<helptext>
 					DICOM Store name to import data from.
 					If not specified then data from all DICOM Stores of the project will be imported
@@ -299,28 +303,23 @@
 		<ExportService>
 			<attr name="name" required="yes" default="GoogleCloudExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.GoogleCloudExportService" editable="no"/>
+			<attr name="projectId" type="google-dynamic-combobox" required="yes" default="Choose project" editable="yes" options="project|2">
+				<helptext>Google Cloud project_id to export data to.</helptext>
+			</attr>
+			<attr name="locationId" type="google-dynamic-combobox" required="yes" default="Choose location" editable="yes" options="location|2">
+				<helptext>Google Cloud location to export data to.</helptext>
+			</attr>
+			<attr name="dataSetName" type="google-dynamic-combobox" required="yes" default="Choose dataset" editable="yes" options="dataset|2">
+				<helptext>Google Cloud dataset to export data to.</helptext>
+			</attr>
 			<attr name="dicomStoreName" required="yes"  editable="yes">
-				<helptext>
-					DICOM Store name to export data to.
-				</helptext>
+				<helptext>DICOM Store name to export data to.</helptext>
 			</attr>
 			<attr name="root" required="yes" default="roots/GoogleCloudExportService"/>
-			<attr name="url" required="yes" default="">
-				<helptext>URL of the destination DICOM STOW-RS SCP (starting with http:// or https://)</helptext>
-			</attr>
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="includeContentDispositionHeader" required="no" default="no" options="yes|no">
 				<helptext>Include a Content-Disposition header in file export connections
 					(not required by DICOM STOW-RS, but may be useful in some situations).</helptext>
-			</attr>
-			<attr name="username" required="no" default=""/>
-			<attr name="password" required="no" default=""/>
-			<attr name="dicomScript" required="no" default=""/>
-			<attr name="logDuplicates" required="no" default="no" options="yes|no">
-				<helptext>
-					Make a log entry when an object is transmitted with a SOPInstanceUID
-					that has occurred in the last 10 objects.
-				</helptext>
 			</attr>
 			<attr name="auditLogID" required="no" default=""/>
 			<attr name="auditLogTags" required="no" default=""/>
