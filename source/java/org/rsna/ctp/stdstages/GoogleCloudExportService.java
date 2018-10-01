@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
+import org.rsna.ctp.objects.DicomObject;
 import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractExportService;
 import org.rsna.ctp.pipeline.Status;
@@ -130,7 +131,7 @@ public class GoogleCloudExportService extends AbstractExportService {
 				logger.debug(name + ": Response code: " + responseCode);
 				logger.debug(name + ": XML Response Message:\n" + response);
 			}
-
+			
 			if (responseCode == HttpResponse.unauthorized) {
 				if (logUnauthorizedResponses) {
 					logger.warn("Unauthorized for " + url);
@@ -138,7 +139,7 @@ public class GoogleCloudExportService extends AbstractExportService {
 				}
 				conn.disconnect();
 				enableExport = false;
-				return failOrRetry();
+				return reportStatus(fileObject, Status.FAIL);
 			} else if (responseCode == HttpResponse.forbidden) {
 				if (logUnauthorizedResponses) {
 					logger.warn("Forbidden for " + url);
@@ -146,16 +147,16 @@ public class GoogleCloudExportService extends AbstractExportService {
 				}
 				conn.disconnect();
 				enableExport = false;
-				return failOrRetry();
+				return reportStatus(fileObject, Status.FAIL);
 			} else if (!logUnauthorizedResponses) {
 				logUnauthorizedResponses = true;
 			}
 
 			if (responseCode == HttpResponse.ok) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
-				return Status.OK;
+				return reportStatus(fileObject, Status.OK);
 			} else {
-				return Status.FAIL;
+				return reportStatus(fileObject, Status.FAIL);
 			}
 		} catch (Exception e) {
 			if (logger.isDebugEnabled()) {
@@ -163,12 +164,18 @@ public class GoogleCloudExportService extends AbstractExportService {
 			} else {
 				logger.warn(name + ": export failed: " + e.getMessage());
 			}
-			return failOrRetry();
+			return reportStatus(fileToExport, Status.FAIL);
 		}
 	}
 
-	private Status failOrRetry() {
-		return logger.isDebugEnabled() ? Status.FAIL : Status.RETRY;
+	private Status reportStatus(File file, Status status) {
+		ReportService.getInstance().addExported(file.getAbsolutePath(), status, "");
+		return status;
 	}
 
+	private Status reportStatus(FileObject fileObject, Status status) {
+		String info = ((DicomObject)fileObject).getFileMetaInfo().toString();
+		ReportService.getInstance().addExported(fileObject.getFile().getAbsolutePath(), status, info);
+		return status;
+	}
 }

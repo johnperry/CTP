@@ -145,8 +145,6 @@ public class GoogleCloudImportService extends AbstractImportService {
 		if (responseCode == HttpURLConnection.HTTP_OK) {
 			String fileName = "";
 			String disposition = httpConn.getHeaderField("Content-Disposition");
-			String contentType = httpConn.getContentType();
-			int contentLength = httpConn.getContentLength();
 
 			if (disposition != null) {
 				// extracts file name from header field
@@ -159,10 +157,7 @@ public class GoogleCloudImportService extends AbstractImportService {
 				fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1, fileURL.length());
 			}
 
-			System.out.println("Content-Type = " + contentType);
-			System.out.println("Content-Disposition = " + disposition);
-			System.out.println("Content-Length = " + contentLength);
-			System.out.println("fileName = " + fileName);
+			logger.info("Starting download file = " + fileName);
 
 			// opens input stream from the HTTP connection
 			InputStream inputStream = httpConn.getInputStream();
@@ -184,10 +179,11 @@ public class GoogleCloudImportService extends AbstractImportService {
 
 			outputStream.close();
 			inputStream.close();
-
-			System.out.println("File downloaded");
+			
+			logger.info("File downloaded");
+			ReportService.getInstance().addDownloaded(fileURL);
 		} else {
-			System.out.println("No file to download. Server replied HTTP code: " + responseCode);
+			logger.info("No file to download. Server replied HTTP code: " + responseCode);
 		}
 		httpConn.disconnect();
 	}
@@ -287,6 +283,12 @@ public class GoogleCloudImportService extends AbstractImportService {
 				FileObject fileObject = FileObject.getInstance(lastFileOut);
 				fileObject.setStandardExtension();
 
+				if (fileObject instanceof DicomObject) {
+					ReportService.getInstance().addImported(file.getAbsolutePath(), ((DicomObject)fileObject).getFileMetaInfo().toString());
+				} else {
+					ReportService.getInstance().addImported(file.getAbsolutePath(), "");
+				}
+				
 				// Make sure we accept objects of this type.
 				if (acceptable(fileObject)) {
 					fileObject.setStandardExtension();
