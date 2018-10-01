@@ -161,6 +161,7 @@ public class DicomAnonymizer extends AbstractPipelineStage implements Processor,
 					return null;
 				}
 				else if (status.isSKIP()) ; //keep the input object
+				ReportService.getInstance().addAnonymized(file.getAbsolutePath(), status);
 			}
 		}
 

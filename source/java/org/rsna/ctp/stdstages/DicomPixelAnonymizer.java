@@ -88,6 +88,7 @@ public class DicomPixelAnonymizer extends AbstractPipelineStage implements Proce
 							return null;
 						}
 						else if (status.isSKIP()) ; //keep the input object
+						ReportService.getInstance().addPixelAnonymized(file.getAbsolutePath(), status);
 					}
 				}
 			}

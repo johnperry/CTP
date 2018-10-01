@@ -32,6 +32,7 @@ public class Launcher extends JFrame implements ChangeListener {
 	ConfigPanel		configPanel;
 	IOPanel			ioPanel;
 	LogPanel		logPanel;
+	ReportPanel		reportPanel;
 
 	static boolean	autostart = false;
 
@@ -65,6 +66,7 @@ public class Launcher extends JFrame implements ChangeListener {
 			configPanel = ConfigPanel.getInstance();
 			ioPanel = new IOPanel();
 			logPanel = LogPanel.getInstance();
+			reportPanel = ReportPanel.getInstance();
 			tp = new JTabbedPane();
 			tp.setBackground( Color.white );
 			tp.setForeground( BasePanel.titleColor );
@@ -76,6 +78,7 @@ public class Launcher extends JFrame implements ChangeListener {
 			tp.add("Configuration", configPanel);
 			tp.add("Console", ioPanel);
 			tp.add("Log", logPanel);
+			tp.add("Report", reportPanel);
 
 			tp.addChangeListener(this);
 
