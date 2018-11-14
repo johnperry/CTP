@@ -346,8 +346,11 @@ public class Installer extends JFrame {
 		File libDir = new File(ctpDir, "libraries");
 		File toolsDir = new File(libDir, "imageio");
 		
-		if (imageIOTools) deleteAll(toolsDir);
-		else cp.appendln("ImageIO Tools copied to "+toolsDir);
+		if (imageIOTools) {
+			deleteAll(toolsDir);
+			cp.appendln("ImageIO Tools are already installed, deleting "+toolsDir);
+		}
+		else cp.appendln("ImageIO Tools are not installed, tools files copied to "+toolsDir);
 	}
 	
 	private boolean moveFile(File inFile, File outDir) {

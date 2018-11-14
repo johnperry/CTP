@@ -230,7 +230,7 @@ public class StorageServlet extends Servlet {
 				}
 				else if (format.equals("dir")) {
 					File expdir = fsm.getExportDirectory();
-					if ((expdir != null) && user.hasRole("admin")) {
+					if ((expdir != null) && (user.hasRole("admin") || user.hasRole("export"))) {
 						try {
 							expdir.mkdirs();
 							File studyDir = study.getDirectory();

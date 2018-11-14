@@ -166,6 +166,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 						dir = replace(dir, xdob);
 						dir = dir.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 						dir = dir.replaceAll(filter, "");
+						if (dir.endsWith(".")) dir = dir.substring(0, dir.length()-1);
 						if (dir.equals("")) dir = defaultString;
 						destDir = new File(destDir, dir);
 					}

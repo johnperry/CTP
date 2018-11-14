@@ -207,7 +207,7 @@ public abstract class AbstractExportService extends AbstractQueuedExportService 
 			logger.info(name+" Thread: Interrupt received; exporter thread stopped");
 		}
 	}
-
+	
 	/**
 	 * Make an entry in the AuditLog for a successfully transmitted DicomObject.
 	 * @param fileObject the object that was transmitted.

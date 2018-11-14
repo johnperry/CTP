@@ -161,7 +161,7 @@ public class ClinicalTrialProcessor {
 		Users users = Users.getInstance(config.getUsersClassName(), config.getServerElement());
 
 		//Add the CTP roles
-		String[] roles = { "read", "delete", "import", "qadmin", "guest", "proxy" };
+		String[] roles = { "read", "delete", "import", "export", "qadmin", "guest", "proxy" };
 		for (String role : roles) users.addRole(role);
 
 		//Disable session timeouts for the server
