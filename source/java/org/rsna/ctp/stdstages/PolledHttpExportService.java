@@ -13,6 +13,9 @@ import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import org.apache.log4j.Logger;
 import org.rsna.ctp.pipeline.AbstractQueuedExportService;
+import org.rsna.ctp.servlets.PolledServlet;
+import org.rsna.server.*;
+import org.rsna.servlets.Servlet;
 import org.rsna.util.StringUtil;
 import org.w3c.dom.Element;
 
@@ -23,10 +26,10 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 
 	static final Logger logger = Logger.getLogger(PolledHttpExportService.class);
 
-	Connector connector = null;
+	HttpServer server = null;
+	ServletSelector selector;
 	int port = 9100;
-	volatile boolean waiting = false;
-	volatile boolean handling = false;
+	boolean ssl;
 	WhiteList ipWhiteList = null;
 	BlackList ipBlackList = null;
 
@@ -42,14 +45,21 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 		try { port = Integer.parseInt(element.getAttribute("port").trim()); }
 		catch (Exception ex) { logger.error(name+": Unparseable port value"); }
 
+		//Get the protocol
+		ssl = element.getAttribute("ssl").trim().equals("yes");
+
 		//Get the whitelist and blacklist
 		ipWhiteList = new WhiteList(element, "ip");
 		ipBlackList = new BlackList(element, "ip");
 
-		//Create the Connector
-		try { connector = new Connector(); }
+		//Create the HttpServer
+		try {
+			selector = new ServletSelector(new File("ROOT"), false);
+			selector.addServlet(id, PolledServlet.class);
+			server = new HttpServer(ssl, port, 1, selector);
+		}			
 		catch (Exception ex) {
-			logger.warn("Unable to instantiate the connector", ex);
+			logger.warn("Unable to instantiate the HttpServer", ex);
 			throw ex;
 		}
 	}
@@ -59,7 +69,7 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	 */
 	public synchronized void shutdown() {
 		stop = true;
-		if (connector != null) connector.interrupt();
+		if (server != null) server.shutdown();
 		super.shutdown();
 	}
 
@@ -67,137 +77,31 @@ public class PolledHttpExportService extends AbstractQueuedExportService {
 	 * Determine whether the pipeline stage has shut down.
 	 */
 	public synchronized boolean isDown() {
-		return stop && !handling;
+		return stop;
 	}
-
+	
 	/**
-	 * Start the connector.
+	 * Start the stage.
 	 */
 	public void start() {
-		connector.start();
+		if (server != null) server.start();
+	}
+	
+	//Give the PolledServlet access
+	public WhiteList getWhiteList() {
+		return ipWhiteList;
 	}
 
-	//A server to return files from the queue.
-	class Connector extends Thread {
+	public BlackList getBlackList() {
+		return ipBlackList;
+	}
+	
+	public File getNextFile() {
+		return super.getNextFile();
+	}
 
-		ServerSocket serverSocket;
-
-		public Connector() throws Exception {
-			super(name + " Connector");
-			ServerSocketFactory serverSocketFactory = ServerSocketFactory.getDefault();
-			serverSocket = serverSocketFactory.createServerSocket(port);
-		}
-
-		/**
-		 * Start the Connector and accept connections.
-		 */
-		public void run() {
-			while (!stop && !isInterrupted()) {
-				try {
-					//Wait for a connection
-					waiting = true;
-					final Socket socket = serverSocket.accept();
-					handling = true;
-					waiting = false;
-
-					//Serve the connection in this thread
-					//to ensure that files are delivered
-					//synchronously.
-					if (!socket.isClosed()) handle(socket);
-					handling = false;
-				}
-				catch (Exception ex) {
-					logger.warn("Shutting down");
-					break;
-				}
-			}
-			try { serverSocket.close(); }
-			catch (Exception ignore) { logger.warn("Unable to close the server socket"); }
-			serverSocket = null;
-			waiting = false;
-			handling = false;
-		}
-
-		//Handle one connection.
-		private void handle(Socket socket) {
-			//logger.warn("Entering handle method");
-			String connectionIP = getRemoteAddress(socket);
-			boolean accept = ipWhiteList.contains(connectionIP) && !ipBlackList.contains(connectionIP);
-			try {
-				//Set parameters on the socket
-				try {
-					socket.setTcpNoDelay(true);
-					//socket.setSoLinger(true,10);
-					socket.setSoTimeout(0);
-				}
-				catch (Exception ex) { logger.warn("Unable to set socket params",ex); }
-
-				//Get the streams
-				InputStream in = socket.getInputStream();
-				OutputStream out = socket.getOutputStream();
-
-				//Get the file
-				File next = null;
-				;
-				if (accept && ((next=getNextFile()) != null)) {
-
-					logger.debug("Exporting "+next);
-
-					//Send the length
-					sendLong(out, next.length());
-
-					//Send the file
-					FileInputStream fis = new FileInputStream(next);
-					int nbytes;
-					byte[] buffer = new byte[2048];
-					while ((nbytes = fis.read(buffer)) != -1) {
-						out.write(buffer,0,nbytes);
-					}
-					fis.close();
-
-					//Get the response
-					if (in.read() == 1) {
-						//Success, release the file from the queue
-						release(next);
-					}
-					else {
-						//Something went wrong. Requeue the file and
-						//delete it from its temporary location.
-						getQueueManager().enqueue(next);
-						next.delete();
-					}
-				}
-				else {
-					//No file is available, send a zero length;
-					sendLong(out, 0);
-				}
-			}
-			catch (Exception ex) {
-				logger.error("Internal error.",ex);
-			}
-
-			//Close everything.
-			try { socket.close(); }
-			catch (Exception ignore) { logger.warn("Unable to close the socket."); }
-			//logger.warn("Leaving handle method");
-		}
-
-		//Send a long as four bytes
-		private void sendLong(OutputStream out, long x) throws Exception {
-			for (int i=0; i<4; i++) {
-				out.write((byte)(x & 0xff));
-				x >>>= 8;
-			}
-		}
-
-		String getRemoteAddress(Socket socket) {
-			SocketAddress rsa = socket.getRemoteSocketAddress();
-			String rsaString = "unknown";
-			if ((rsa != null) && (rsa instanceof InetSocketAddress)) {
-				rsaString = ((InetSocketAddress)rsa).getAddress().getHostAddress();
-			}
-			return rsaString;
-		}
+	public boolean release(File file) {
+		return super.release(file);
 	}
 
 }

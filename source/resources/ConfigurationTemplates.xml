@@ -884,10 +884,12 @@
 		<ExportService>
 			<attr name="name" required="yes" default="PolledHttpExportService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PolledHttpExportService" editable="no"/>
+			<attr name="id" required="yes" default="poll"/>
 			<attr name="root" required="yes" default="roots/PolledHttpExportService"/>
 			<attr name="port" required="yes" default="7777">
 				<helptext>Port on which the PolledHttpImportService listens for connections</helptext>
 			</attr>
+			<attr name="ssl" required="yes" default="no" options="yes|no"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
 			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
