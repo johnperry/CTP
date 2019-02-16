@@ -66,8 +66,8 @@ public class Regions {
 	 * Get a Vector containing all the region Rectangles.
 	 * @return all the region Rectangles
 	 */
-	public Vector<Shape> getRegionsVector() {
-		return new Vector(regions);
+	public Vector<Shape> getRegionsVector(int rows, int columns) {
+		return new Vector( getAdjustedRegions(rows, columns) );
 	}
 
 	/**
@@ -78,18 +78,39 @@ public class Regions {
 	 * @param row the y coordinate of the row
 	 * @return the ranges corresponding to the regions in the row.
 	 */
-	public int[] getRangesFor(int row) {
-		LinkedList<Rectangle> rList = new LinkedList<Rectangle>();
-		for (Rectangle r : regions) {
-			if ((r.y <= row) && ((r.y + r.height) >= row)) rList.add(r);
-		}
-		int[] ranges = new int[2 * rList.size()];
-		int k = 0;
+	public int[] getRangesFor(int row, int rows, int columns) {
+		LinkedList<Rectangle> rList = getAdjustedRegions(rows, columns);
+		LinkedList<Rectangle> filteredList = new LinkedList<Rectangle>();
 		for (Rectangle r : rList) {
+			if ((r.y <= row) && ((r.y + r.height) >= row)) {
+				filteredList.add(r);
+			}
+		}
+		int[] ranges = new int[2 * filteredList.size()];
+		int k = 0;
+		for (Rectangle r : filteredList) {
 			ranges[k++] = r.x;
 			ranges[k++] = r.x + r.width;
 		}
 		return ranges;
+	}
+	
+	private LinkedList<Rectangle> getAdjustedRegions(int rows, int columns) {
+		LinkedList<Rectangle> rList = new LinkedList<Rectangle>();
+		for (Rectangle r : regions) {
+			int rx = r.x;
+			if (rx < 0) rx += columns;
+			if (rx < 0) rx = 0;
+			int rw = r.width;
+			if (rx + rw > columns) rw = columns - rx;
+			int ry = r.y;
+			if (ry < 0) ry += rows;
+			if (ry < 0) ry = 0;
+			int rh = r.height;
+			if (ry + rh > rows) rh = rows - ry;
+			rList.add( new Rectangle(rx, ry, rw, rh) );
+		}
+		return rList;
 	}
 
 }

@@ -166,7 +166,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 						dir = replace(dir, xdob);
 						dir = dir.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 						dir = dir.replaceAll(filter, "");
-						if (dir.endsWith(".")) dir = dir.substring(0, dir.length()-1);
+						while (dir.endsWith(".")) dir = dir.substring(0, dir.length()-1);
+						dir = dir.trim();
 						if (dir.equals("")) dir = defaultString;
 						destDir = new File(destDir, dir);
 					}
@@ -184,6 +185,8 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 			if ((name == null) || name.equals("")) name = fileObject.getClassName();
 			name = name.replaceAll("[\\\\/\\s]+", whitespaceReplacement).trim();
 			name = name.replaceAll(filter, "");
+			while (name.endsWith(".")) name = name.substring(0, name.length()-1);
+			name = name.trim();
 			logger.debug("...filtered filename: "+name);
 
 			//Count the accepted objects

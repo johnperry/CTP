@@ -242,6 +242,22 @@ public class DicomObject extends FileObject {
 	 * closed and subsequent calls to this method will fail.
 	 */
 	public void saveAs(File file, boolean forceIVRLE) throws Exception {
+		saveAs(file, forceIVRLE, false);
+	}
+	
+	/**
+	 * Save the dataset in a file, resetting the input stream position afterward
+	 * to where it was before the method call, thus allowing multiple calls to be
+	 * made on the same dataset.
+	 * @param file the file pointing to where to save the dataset.
+	 * @param forceIVRLE true if the syntax of the saved file is to be IVRLE; false if
+	 * the syntax is to be determined by the syntax of the dataset. This parameter
+	 * is only used if the dataset does not contain encapsulated pixel data.
+	 * @param skipPixels true if the saved file is not to contain the pixel data.
+	 * @throws Exception if the save fails, in which case the input stream is
+	 * closed and subsequent calls to this method will fail.
+	 */
+	public void saveAs(File file, boolean forceIVRLE, boolean skipPixels) throws Exception {
 		if (in == null) throw new Exception("Input stream is not open.");
 		long streamPosition = parser.getStreamPosition();
 		byte[] buffer = new byte[4096];
@@ -265,6 +281,14 @@ public class DicomObject extends FileObject {
 
 			//Write the dataset as far as was parsed
 			dataset.writeDataset(out, encoding);
+			
+			//Stop here if we aren't writing the pixels element or any of the ones that follow it.
+			if (skipPixels) {
+				out.flush();
+				out.close();
+				parser.setStreamPosition(streamPosition);
+				return;
+			}
 
 			//Write the pixels if the parser actually stopped at the pixeldata
             if (parser.getReadTag() == Tags.PixelData) {

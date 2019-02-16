@@ -88,7 +88,7 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 		setWritable = element.getAttribute("setWorldWritable").trim().toLowerCase().equals("yes");
 		qualifiers = getJPEGQualifiers(element);
 		fsNameTag = DicomObject.getTagArray(element.getAttribute("fsNameTag").trim());
-		autoCreateUser = element.getAttribute("auto-create-user").trim().toLowerCase().equals("yes");
+		autoCreateUser = element.getAttribute("autoCreateUser").trim().toLowerCase().equals("yes");
 		acceptDuplicateUIDs = !element.getAttribute("acceptDuplicateUIDs").trim().toLowerCase().equals("no");
 		skipNonImageObjects = element.getAttribute("skipNonImageObjects").trim().toLowerCase().equals("yes");
 		port = StringUtil.getInt(element.getAttribute("port").trim());

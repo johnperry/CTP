@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.security.*;
@@ -230,6 +232,9 @@ public class DICOMPixelAnonymizer {
 
 		catch (Exception e) {
 			logger.debug("Exception while processing image.",e);
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			logger.debug("Stact trace:\n"+sw.toString());
 
 			//Close the input stream if it actually got opened.
 			close(in);
@@ -277,7 +282,9 @@ public class DICOMPixelAnonymizer {
 
 		logger.debug("Process Encapsulated Pixels:");
 
-		Vector<Shape> shapes = regions.getRegionsVector();
+		int rows = getInt(dataset, Tags.Rows, 0);
+		int columns = getInt(dataset, Tags.Columns, 0);
+		Vector<Shape> shapes = regions.getRegionsVector(rows, columns);
 		if (logger.isDebugEnabled()) {
 			for (Shape shape : shapes) {
 				Rectangle rect = shape.getBounds();
@@ -412,7 +419,7 @@ public class DICOMPixelAnonymizer {
 			for (int row=0; row<rows; row++) {
 				int c = in.read(buffer, 0, buffer.length);
 				if ((c == -1) || (c != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
-				blankRegions(buffer, row, columns, bytesPerPixel, regions, value);
+				blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, value);
 				if (swap) swapBytes(buffer);
 				out.write(buffer, 0, bytesPerRow);
 			}
@@ -429,8 +436,8 @@ public class DICOMPixelAnonymizer {
 		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
-	private static void blankRegions(byte[] bytes, int row, int columns, int bytesPerPixel, Regions regions, byte value) {
-		int[] ranges = regions.getRangesFor(row);
+	private static void blankRegions(byte[] bytes, int row, int rows, int columns, int bytesPerPixel, Regions regions, byte value) {
+		int[] ranges = regions.getRangesFor(row, rows, columns);
 		for (int i=0; i<ranges.length; i+=2) {
 			int left = bytesPerPixel * ranges[i];
 			int right = Math.min( bytesPerPixel * (ranges[i+1] + 1), bytes.length );
