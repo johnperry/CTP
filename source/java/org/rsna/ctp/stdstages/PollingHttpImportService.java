@@ -17,7 +17,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.zip.*;
 import org.apache.log4j.Logger;
+import org.rsna.ctp.objects.FileObject;
 import org.rsna.ctp.pipeline.AbstractImportService;
+import org.rsna.util.ChunkedInputStream;
 import org.rsna.util.HttpUtil;
 import org.w3c.dom.Element;
 
@@ -80,6 +82,7 @@ public class PollingHttpImportService extends AbstractImportService {
 			File file;
 			while (!isInterrupted()) {
 				while ( !isInterrupted() && (file=getFile()) != null ) {
+					logger.debug("...enqueuing "+file);
 					if (!zip) fileReceived(file);
 					else unpackAndReceive(file);
 				}
@@ -92,40 +95,65 @@ public class PollingHttpImportService extends AbstractImportService {
 
 		//Get a file from the external system.
 		private File getFile() {
+			logger.debug("Sending poll request");
 			File file = null;
 			try {
 				HttpURLConnection conn = HttpUtil.getConnection(url);
 				conn.setRequestMethod("GET");
 				conn.connect();
-				if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+				int responseCode = conn.getResponseCode();
+				logger.debug("...received response code "+responseCode);
+				if (responseCode == HttpURLConnection.HTTP_OK) {
 					long length = conn.getContentLengthLong();
+					logger.debug("...response content length = "+length);
 					InputStream in = conn.getInputStream();
-					if (length > 0) {
-						file = File.createTempFile(prefix,".md", getTempDirectory());
-						BufferedInputStream is = new BufferedInputStream(in);
-						FileOutputStream fos = null;
-						try {
-							fos = new FileOutputStream(file);
-							int n;
-							byte[] bbuf = new byte[1024];
-							while ((length > 0) && ((n=is.read(bbuf,0,bbuf.length)) >= 0)) {
-								fos.write(bbuf,0,n);
-								length -= n;
-							}
-							fos.flush();
-							fos.close();
+					
+					String transferEncoding = conn.getHeaderField("Transfer-Encoding");
+					boolean isChunked = (transferEncoding != null) && transferEncoding.equals("chunked");
+					logger.debug("...transferEncoding: "+transferEncoding);
+										
+					if (length <= 0) {
+						if (!isChunked) {
+							logger.warn("Non-chunked file posted with Content-Length = "+length);
 						}
-						catch (Exception ex) {
-							logger.warn("Exception while receiving a file", ex);
-							try { fos.close(); }
-							catch (Exception ignore) { }
-							file.delete();
-							file = null;
+						length = Long.MAX_VALUE;
+					}
+
+					file = File.createTempFile(prefix,".md", getTempDirectory());
+					InputStream is = new BufferedInputStream(in);
+					if (isChunked) is = new ChunkedInputStream(is);
+					FileOutputStream fos = null;
+					try {
+						fos = new FileOutputStream(file);
+						byte[] b = new byte[10000];
+						int len;
+						int bytesRead = 0;
+						while ((bytesRead < length) && ((len=is.read(b,0,b.length)) > 0)) {
+							fos.write(b,0,len);
+							bytesRead += len;
 						}
+						logger.debug("...bytesRead = "+bytesRead);
+					}
+					catch (Exception ex) {
+						logger.warn("Exception while receiving a file", ex);
+						file.delete();
+						file = null;
+					}
+					finally {
+						try { fos.flush(); fos.close(); fos = null; }
+						catch (Exception ignore) { }
 					}
 				}
+				else logger.debug("...responseCode test failed ("+responseCode+")");
 			}
-			catch (Exception ex) { logger.debug("Exception while polling", ex); }
+			catch (Exception ex) { logger.debug("...Exception while polling", ex); }
+			if ((file != null) && logger.isDebugEnabled()) {
+				logger.debug("...successfully received "+file);
+				logger.debug("...file length = "+file.length());
+				FileObject fob = FileObject.getInstance(file);
+				logger.debug("...file parses as a "+fob.getType());
+			}
+			else if (file == null) logger.debug("...returning null file");
 			return file;
 		}
 

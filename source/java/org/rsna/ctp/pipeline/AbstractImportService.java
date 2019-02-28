@@ -154,7 +154,12 @@ public abstract class AbstractImportService extends AbstractPipelineStage implem
 					}
 
 					//Make sure we accept objects of this type.
-					if (acceptable(fileObject)) return fileObject;
+					if (acceptable(fileObject)) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("supplying "+fileObject.getType()+" (length = "+fileObject.getFile().length()+")");
+						}
+						return fileObject;
+					}
 
 					//If we get here, this import service does not accept
 					//objects of the active type. Try to quarantine the

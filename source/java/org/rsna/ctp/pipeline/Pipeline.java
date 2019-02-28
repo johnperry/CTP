@@ -216,6 +216,11 @@ public class Pipeline extends Thread {
 			//Get the object and where it came from.
 			fileObject = importedObject.object;
 			importService = importedObject.provider;
+			
+			if (logger.isDebugEnabled()) {
+				logger.debug("processing "+fileObject.getType()+" (length = "+fileObject.getFile().length()
+								+") obtained from "+importService.getClass().getName());
+			}
 
 			//Make sure it has a standard extension
 			fileObject.setStandardExtension();

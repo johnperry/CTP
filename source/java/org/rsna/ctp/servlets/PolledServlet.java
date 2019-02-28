@@ -55,17 +55,20 @@ public class PolledServlet extends Servlet {
 		String connectionIP = req.getRemoteAddress();
 		boolean accept = phes.getWhiteList().contains(connectionIP) 
 							&& !phes.getBlackList().contains(connectionIP);
-
+		logger.debug("Poll request "+(accept?"accepted":"rejected")+" from "+connectionIP);
+		
 		//If ok, get the file and return it
 		File next;
 		if (accept && ((next=phes.getNextFile()) != null)) {
 			res.setContentDisposition(next);
 			res.write(next);
 			if (res.send()) {
+				logger.debug("...successfully transmitted "+next);
 				//Success, delete the file
 				phes.release(next);
 			}
 			else {
+				logger.debug("...transmission failed for "+next);
 				//Something went wrong. Requeue the file and
 				//delete it from its temporary location.
 				phes.getQueueManager().enqueue(next);
@@ -73,6 +76,7 @@ public class PolledServlet extends Servlet {
 			}
 		}
 		else {
+			logger.debug("...returning "+res.notfound);
 			res.setResponseCode(res.notfound);
 			res.send();
 		}
