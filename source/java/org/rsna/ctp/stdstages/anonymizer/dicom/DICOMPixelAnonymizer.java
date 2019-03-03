@@ -178,7 +178,7 @@ public class DICOMPixelAnonymizer {
 					encoding,
 					parser.getReadTag(),
 					parser.getReadVR(),
-					parser.getReadLength());
+					parser.getReadLength() );
 				if (!encoding.encapsulated) {
 					//Handle the non-encapsulated case
 					processUnencapsulatedPixels(parser,
@@ -319,24 +319,6 @@ public class DICOMPixelAnonymizer {
 				int size = outFrame.size();
 				dataset.writeHeader(out, encoding, Tags.Item, VRs.NONE, size);
 				out.write(outFrame.toByteArray());
-/***************************************************************************************
-//Save the JPEGs as files for testing
-				File jpegs = new File("JPEGs");
-				jpegs.mkdirs();
-				File anon = new File(jpegs, "Frame"+frameNumber+".anon.jpeg");
-				File orig = new File(jpegs, "Frame"+frameNumber+".orig.jpeg");
-				try {
-					FileOutputStream anonfos = new FileOutputStream(anon);
-					anonfos.write(outFrame.toByteArray());
-					anonfos.flush();
-					anonfos.close();
-					FileOutputStream origfos = new FileOutputStream(orig);
-					origfos.write(frame.toByteArray());
-					origfos.flush();
-					origfos.close();
-				}
-				catch (Exception ex) { logger.warn("Unable to write JPEG for frame "+frameNumber); }
-***************************************************************************************/
 				logger.debug("Processed frame " + frameNumber++ + "; item length = " + size);
 
 				//Reset for the next frame
@@ -390,7 +372,26 @@ public class DICOMPixelAnonymizer {
 		logger.debug("Process Unencapsulated Pixels:");
 		logger.debug("Read length = "+len);
 
+		String pi = photometricInterpretation.toUpperCase();
+		boolean isYBR = pi.startsWith("YBR");
+		boolean isYBR_FULL_422 = pi.equals("YBR_FULL_422");
+		boolean isM2 = pi.equals("MONOCHROME2");
+		
 		int bytesPerPixel = bitsAllocated/8;
+		
+		if ((isYBR_FULL_422) && (samplesPerPixel == 3)) {
+			/*
+			Apparently, in this case, if samplesPerPixel is 3, it is really 2.
+			Downsampled chrominance planes of a color Photometric Interpretation 
+			are a special case, e.g., for a Photometric Interpretation (0028,0004) 
+			of YBR_FULL_422. In such cases, Samples per Pixel (0028,0002) describes 
+			the nominal number of channels (i.e., 3), and does not reflect that two 
+			chrominance samples are shared between four luminance samples. 
+			For YBR_FULL_422, Rows (0028,0010) and Columns (0028,0011) describe
+			the size of the luminance plane, not the downsampled chrominance planes.
+			*/
+			samplesPerPixel = 2;
+		}
 
 		if (planarConfiguration == 0) {
 			//MONOCHROME2 or RGB images arranged as RGBRGBRGB...
@@ -405,10 +406,6 @@ public class DICOMPixelAnonymizer {
 			//a single sample wide.
 			numberOfFrames *= samplesPerPixel;
 		}
-
-		String pi = photometricInterpretation.toUpperCase();
-		boolean isYBR = pi.startsWith("YBR");
-		//boolean isM2 = pi.equals("MONOCHROME2");
 
 		int bytesPerRow = bytesPerPixel * columns;
 		byte[] buffer = new byte[bytesPerRow];
