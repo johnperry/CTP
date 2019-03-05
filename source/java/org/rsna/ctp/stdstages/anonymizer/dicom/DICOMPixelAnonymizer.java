@@ -418,7 +418,7 @@ public class DICOMPixelAnonymizer {
 				
 				//blank the regions for the row
 				if (isYBR && (planarConfiguration==0)) {
-					byte y = (byte)(test ? 86 : 16);
+					byte y = (byte)(test ? 128 : 0);
 					byte c = (byte)(test ? 128 : 128);
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
 				}
