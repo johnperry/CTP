@@ -178,7 +178,7 @@ public class DICOMPixelAnonymizer {
 					encoding,
 					parser.getReadTag(),
 					parser.getReadVR(),
-					parser.getReadLength() );
+					parser.getReadLength());
 				if (!encoding.encapsulated) {
 					//Handle the non-encapsulated case
 					processUnencapsulatedPixels(parser,
@@ -411,12 +411,22 @@ public class DICOMPixelAnonymizer {
 		byte[] buffer = new byte[bytesPerRow];
 		InputStream in = parser.getInputStream();
 		for (int frame=0; frame<numberOfFrames; frame++) {
-			byte value = (byte)(isYBR ? (test ? 0 : 128) : (test ? 127 : 0));
-			if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) value = 0;
 			for (int row=0; row<rows; row++) {
-				int c = in.read(buffer, 0, buffer.length);
-				if ((c == -1) || (c != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
-				blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, value);
+				//read the row
+				int n = in.read(buffer, 0, buffer.length);
+				if ((n == -1) || (n != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
+				
+				//blank the regions for the row
+				if (isYBR && (planarConfiguration==0)) {
+					byte y = (byte)(test ? 86 : 16);
+					byte c = (byte)(test ? 128 : 128);
+					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
+				}
+				else {
+					byte x = (byte)(test ? 127 : 0);
+					if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) x = 0;
+					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, x);
+				}
 				if (swap) swapBytes(buffer);
 				out.write(buffer, 0, bytesPerRow);
 			}
@@ -439,6 +449,21 @@ public class DICOMPixelAnonymizer {
 			int left = bytesPerPixel * ranges[i];
 			int right = Math.min( bytesPerPixel * (ranges[i+1] + 1), bytes.length );
 			for (int k=left; k<right; k++) bytes[k] = value;
+		}
+	}
+
+	private static void blankRegions(byte[] bytes, int row, int rows, int columns, int bytesPerPixel, Regions regions, byte y, byte c) {
+		int[] ranges = regions.getRangesFor(row, rows, columns);
+		for (int i=0; i<ranges.length; i+=2) {
+			int leftIndex = ranges[i] & 0xfffffffe; //make it even
+			int rightIndex = (ranges[i+1] + 1) & 0xfffffffe;
+			for (int k=leftIndex; k<rightIndex & k<columns-1; k+=2) {
+				int x = bytesPerPixel * k;
+				bytes[x++] = y;
+				bytes[x++] = y;
+				bytes[x++] = c;
+				bytes[x++] = c;
+			}
 		}
 	}
 
