@@ -495,6 +495,14 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomPhotometricInterpretationConverter"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPhotometricInterpretationConverter" editable="no"/>
+			<attr name="root" required="yes" default="roots/DicomPhotometricInterpretationConverter"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomPhotometricInterpretationConverter"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="DicomPaletteImageConverter"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomPaletteImageConverter" editable="no"/>
 			<attr name="root" required="yes" default="roots/DicomPaletteImageConverter"/>
