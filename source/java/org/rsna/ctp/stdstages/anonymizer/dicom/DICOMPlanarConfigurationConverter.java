@@ -127,9 +127,9 @@ public class DICOMPlanarConfigurationConverter {
 
 			//Set the encoding
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
-        	String prefEncodingUID = UIDs.ImplicitVRLittleEndian;
+        	String prefEncodingUID = UIDs.ExplicitVRLittleEndian;
 			FileMetaInfo fmi = dataset.getFileMetaInfo();
-            if (fmi != null) prefEncodingUID = fmi.getTransferSyntaxUID();
+            //if (fmi != null) prefEncodingUID = fmi.getTransferSyntaxUID();
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(prefEncodingUID);
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
 
