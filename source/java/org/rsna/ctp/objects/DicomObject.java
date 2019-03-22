@@ -1076,16 +1076,16 @@ public class DicomObject extends FileObject {
 	public static int getElementTag(String name) {
 		if (name == null) return 0;
 		name = name.trim();
+		int k = name.length() - 1;
+		if (name.startsWith("{") && name.endsWith("}")) name = name.substring(1, k);
+		else if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
+		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
 
 		//Try it as a dcm4che element name
 		try { return Tags.forName(name); }
 		catch (Exception notInDictionary) { }
 
-		//Not a name, set up to parse it as a hex specification
-		int k = name.length() - 1;
-		if (name.startsWith("[") && name.endsWith("]")) name = name.substring(1, k).trim();
-		else if (name.startsWith("(") && name.endsWith(")")) name = name.substring(1, k).trim();
-
+		//Not a name, try to parse it as a hex specification
 		//First try it as a pure hex integer, with no comma between the group and element
 		Matcher matcher = hexPattern.matcher(name);
 		if (matcher.matches()) {

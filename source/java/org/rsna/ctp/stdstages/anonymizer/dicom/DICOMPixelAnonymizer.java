@@ -234,7 +234,7 @@ public class DICOMPixelAnonymizer {
 			logger.debug("Exception while processing image.",e);
 			StringWriter sw = new StringWriter();
 			e.printStackTrace(new PrintWriter(sw));
-			logger.debug("Stact trace:\n"+sw.toString());
+			logger.debug("Stack trace:\n"+sw.toString());
 
 			//Close the input stream if it actually got opened.
 			close(in);
@@ -373,8 +373,9 @@ public class DICOMPixelAnonymizer {
 		logger.debug("Read length = "+len);
 
 		String pi = photometricInterpretation.toUpperCase();
-		boolean isYBR = pi.startsWith("YBR");
+		boolean isYBR_FULL = pi.equals("YBR_FULL");
 		boolean isYBR_FULL_422 = pi.equals("YBR_FULL_422");
+		boolean isM1 = pi.equals("MONOCHROME1");
 		boolean isM2 = pi.equals("MONOCHROME2");
 		
 		int bytesPerPixel = bitsAllocated/8;
@@ -386,7 +387,7 @@ public class DICOMPixelAnonymizer {
 			are a special case, e.g., for a Photometric Interpretation (0028,0004) 
 			of YBR_FULL_422. In such cases, Samples per Pixel (0028,0002) describes 
 			the nominal number of channels (i.e., 3), and does not reflect that two 
-			chrominance samples are shared between four luminance samples. 
+			chrominance samples are shared between two luminance samples. 
 			For YBR_FULL_422, Rows (0028,0010) and Columns (0028,0011) describe
 			the size of the luminance plane, not the downsampled chrominance planes.
 			*/
@@ -417,14 +418,23 @@ public class DICOMPixelAnonymizer {
 				if ((n == -1) || (n != bytesPerRow)) throw new EOFException("Unable to read all the pixels");
 				
 				//blank the regions for the row
-				if (isYBR && (planarConfiguration==0)) {
+				if (isYBR_FULL_422 && (planarConfiguration==0)) {
+					byte y = (byte)(test ? 128 : 0);
+					byte c = (byte)(test ? 128 : 128);
+					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
+				}
+				else if (isYBR_FULL && (planarConfiguration==0)) {
+					//for now, do the same, but we
 					byte y = (byte)(test ? 128 : 0);
 					byte c = (byte)(test ? 128 : 128);
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
 				}
 				else {
 					byte x = (byte)(test ? 127 : 0);
-					if (isYBR && (planarConfiguration==1) && ((frame%3)==0)) x = 0;
+					if (isM1 && (bytesPerPixel==2)) x = (byte)(test ? 8 : 15);
+					else if (isM1 && (bytesPerPixel==1)) x = (byte)(test ? 127 : 255);
+					else if (isM2 && (bytesPerPixel==2)) x = (byte)(test ? 8 : 0);
+					else if (isYBR_FULL && (planarConfiguration==1) && ((frame%3)==0) && !test) x = 0;
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, x);
 				}
 				if (swap) swapBytes(buffer);

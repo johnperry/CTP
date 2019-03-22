@@ -292,7 +292,10 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private String replace(String string, DicomObject dob) {
 		try {
-			String singleTag = "[\\[\\(][0-9a-fA-F]{1,4}(\\[[^\\]]*\\])??[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
+			
+			String singleHexTag = "[\\[\\(][0-9a-fA-F]{1,4}(\\[[^\\]]*\\])??[,]?[0-9a-fA-F]{1,4}[\\]\\)]";
+			String singleKeywordTag = "\\{[A-Z][^\\}]*\\}";
+			String singleTag = "(("+singleHexTag+")|("+singleKeywordTag+"))";
 			Pattern pattern = Pattern.compile( singleTag + "(::"+singleTag+")*" );
 
 			Matcher matcher = pattern.matcher(string);
@@ -314,9 +317,7 @@ public class DirectoryStorageService extends AbstractPipelineStage implements St
 
 	private String getElementValue(DicomObject dob, String group) {
 		String value = "";
-		try {
-			value = dob.getElementString(group);
-		}
+		try { value = dob.getElementString(group); }
 		catch (Exception ex) { logger.debug("......exception processing: "+group); }
 		return value;
 	}

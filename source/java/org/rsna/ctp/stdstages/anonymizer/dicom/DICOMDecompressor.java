@@ -115,7 +115,6 @@ public class DICOMDecompressor {
 			String photometricInterpretation = getString(dataset, Tags.PhotometricInterpretation, "").toUpperCase();
 			boolean isMonochrome = photometricInterpretation.contains("MONOCHROME");
 			boolean isPalette = photometricInterpretation.contains("PALETTE");
-			boolean isYBR = photometricInterpretation.contains("YBR");
 			boolean isRGB = photometricInterpretation.contains("RGB");
 
 			//Set the encoding of the output file
@@ -137,8 +136,7 @@ public class DICOMDecompressor {
             fmi.write(out);
 
             //********************************************************************************
-            //This is a kludge to avoid the green image problem. For color
-            //images, we will convert to RGB with PlanarConfiguration 0 and
+            //Convert everything but monochrome to RGB with PlanarConfiguration 0 and
             //force SamplesPerPixel to 3.
             if (!isMonochrome) {
 				dataset.putXX(Tags.PhotometricInterpretation, "RGB");
@@ -184,7 +182,6 @@ public class DICOMDecompressor {
                 logger.debug("nPixelBytes      = "+nPixelBytes);
                 logger.debug("pixelBytesLength = "+pixelBytesLength);
 
-
                 //Write the element header
                 dataset.writeHeader(
                     out,
@@ -200,7 +197,7 @@ public class DICOMDecompressor {
 				for (int i=0; i<numberOfFrames; i++) {
 					logger.debug("Decompressing frame "+i);
 					BufferedImage bi = reader.read(i);
-					if (!isMonochrome && !isRGB) bi = convertToRGB(bi);
+					if (!isMonochrome /*&& !isRGB*/) bi = convertToRGB(bi);
 					WritableRaster wr = bi.getRaster();
 					DataBuffer b = wr.getDataBuffer();
 					int numBanks = b.getNumBanks();
