@@ -431,7 +431,7 @@ public class DICOMAnonymizer {
 			boolean hasScript = (script != null);
 
 			boolean keep  = context.containsKeepGroup(group) ||
-							isCreatorBlock ||
+							//isCreatorBlock ||
 							(isSafe && context.kspe) ||
 							(tag == 0x00080016)   	 || 	//SopClassUID
 							(tag == 0x00080018)   	 || 	//SopInstanceUID
@@ -439,7 +439,7 @@ public class DICOMAnonymizer {
 							(group == 0x0002) 		 ||		//FMI group
 							(group == 0x0028) 		 ||		//the image description
 							(group == 0x7FE0) 		 ||		//the image
-							(isOverlay && !context.rol && !(isPrivate & context.rpg)) || //overlays
+							(isOverlay && !context.rol && !(isPrivate && context.rpg)) || //overlays
 							(isCurve && !context.rc && !(isPrivate && context.rpg));      //curves
 
 			/*
