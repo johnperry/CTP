@@ -431,7 +431,7 @@ public class DICOMAnonymizer {
 			boolean hasScript = (script != null);
 
 			boolean keep  = context.containsKeepGroup(group) ||
-							//isCreatorBlock ||
+							(isCreatorBlock && context.kspe) ||
 							(isSafe && context.kspe) ||
 							(tag == 0x00080016)   	 || 	//SopClassUID
 							(tag == 0x00080018)   	 || 	//SopInstanceUID
