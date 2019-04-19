@@ -238,7 +238,6 @@ public class DICOMAnonymizer {
                 else {
                     writeValueTo(parser, buffer, out, swap && (parser.getReadVR() == VRs.OW));
                 }
-				parser.parseHeader(); //get ready for the next element
 			}
 
 			//Now do any elements after the pixels one at a time.
@@ -248,9 +247,10 @@ public class DICOMAnonymizer {
 			long fileLength = inFile.length();
 			while (!parser.hasSeenEOF()
 					&& (parser.getStreamPosition() < fileLength)
-						&& ((tag=parser.getReadTag()) != -1)
-							&& (tag != 0xFFFAFFFA)
-							&& (tag != 0xFFFCFFFC)) {
+						&& (parser.parseHeader() != -1)
+							&& ((tag=parser.getReadTag()) != -1)
+								&& (tag != 0xFFFAFFFA)
+									&& (tag != 0xFFFCFFFC)) {
 				logger.debug("Post-pixels element: "+Tags.toString(tag));
 				int len = parser.getReadLength();
 				boolean isPrivate = ((tag & 0x10000) != 0);
