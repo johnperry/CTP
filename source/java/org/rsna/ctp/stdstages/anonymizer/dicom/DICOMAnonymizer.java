@@ -245,19 +245,26 @@ public class DICOMAnonymizer {
 			//that occur above Tags.PixelData.
 			int tag;
 			long fileLength = inFile.length();
-			while (!parser.hasSeenEOF()
+			logger.debug("fileLength = "+fileLength+" ("+Long.toHexString(fileLength)+")");
+			while (logPosition("About to seek post-pixels element:", parser)
+					&& !parser.hasSeenEOF()
 					&& (parser.getStreamPosition() < fileLength)
-						&& (parser.parseHeader() != -1)
-							&& ((tag=parser.getReadTag()) != -1)
-								&& (tag != 0xFFFAFFFA)
-									&& (tag != 0xFFFCFFFC)) {
-				logger.debug("Post-pixels element: "+Tags.toString(tag));
+					&& (parser.parseHeader() != -1)
+					&& ((tag=parser.getReadTag()) != -1)
+					&& (tag != 0xFFFAFFFA)
+					&& (tag != 0xFFFCFFFC)) {
+				logPosition("Found post-pixels element: "+Tags.toString(tag), parser);
 				int len = parser.getReadLength();
+				logger.debug("...readLength = "+len+" ("+Integer.toHexString(len)+")");
 				boolean isPrivate = ((tag & 0x10000) != 0);
 				String script = context.getScriptFor(tag);
 				if ( (isPrivate && context.rpg) || ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()") ) ) {
 					//skip this element
 					logger.debug("Skipping element: "+Tags.toString(tag));
+					//read past the data
+								InputStream inStream = parser.getInputStream();
+								for (int i = 0; i < len; ++i) inStream.read();
+					//now reset the stream position in the parser
 					parser.setStreamPosition(parser.getStreamPosition() + len);
 				}
 				else {
@@ -271,11 +278,8 @@ public class DICOMAnonymizer {
 						parser.getReadLength());
 					writeValueTo(parser, buffer, out, swap);
 				}
-				logger.debug("About to get next post-pixels element:\n" +
-						"parser.hasSeenEOF() = "+parser.hasSeenEOF()+"\n" +
-						"fileLength          = "+fileLength+"\n" +
-						"streamPosition      = "+parser.getStreamPosition());
-				if (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength)) parser.parseHeader();
+				logPosition("Position after processing last post-pixels element:", parser);
+				//if (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength)) parser.parseHeader();
 			}
 			out.flush();
 			out.close();
@@ -316,6 +320,16 @@ public class DICOMAnonymizer {
 		}
 		return AnonymizerStatus.OK(outFile, exceptions);
     }
+    
+    private static boolean logPosition(String msg, DcmParser parser) {
+		if (logger.isDebugEnabled()) {
+			long pos = parser.getStreamPosition();
+			logger.debug(msg);
+			logger.debug("...parser.hasSeenEOF() = "+parser.hasSeenEOF());
+			logger.debug("...streamPosition      = "+pos+" ("+Long.toHexString(pos)+")");
+		}
+		return true;
+	}		
 
 	private static void writeValueTo(
 					DcmParser parser,
@@ -917,8 +931,8 @@ public class DICOMAnonymizer {
 			return value;
 		}
 		catch (Exception ex) {
-			logger.debug("Exception caught in looklup function", ex);
-			if (fn.args.length > 2) {
+			if (fn.args.length <= 2) logger.debug("Exception caught in lookup function", ex);
+			else {
 				String action = fn.getArg(2).trim();
 				if (action.equals("keep")) return "@keep()";
 				if (action.equals("remove")) return "@remove()";
