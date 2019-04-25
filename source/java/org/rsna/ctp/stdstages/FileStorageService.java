@@ -281,7 +281,9 @@ public class FileStorageService extends AbstractPipelineStage implements Storage
 			boolean canView = !requireAuthentication || (isAuthenticated && user.hasRole("read"));
 			if (isAuthenticated) links.addFirst( new SummaryLink(":"+port+"/guests", null, "Manage the Guest List", false) );
 			List<String> fsList = fsm.getFileSystemsFor(user);
-			for (String fsName : fsList) {
+			String[] fsArray = fsList.toArray(new String[fsList.size()]);
+			for (int i=fsArray.length-1; i>=0; i--) {
+				String fsName = fsArray[i];
 				FileSystem fs = fsm.getFileSystem(fsName);
 				if (fs.getNumberOfStudies() > 0) {
 					links.addFirst( new SummaryLink(":"+port+"/storage/"+fsName, null, "View Stored Studies for "+fsName, false) );

@@ -8,6 +8,7 @@
 package org.rsna.ctp.stdstages.storage;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -145,6 +146,7 @@ public class FileSystemManager {
 			FileSystem fs = getFileSystem(fsName);
 			if (fs.allowsAccessBy(user)) allowedFileSystems.add(fsName);
 		}
+		Collections.sort(allowedFileSystems);
 		return allowedFileSystems;
 	}
 
