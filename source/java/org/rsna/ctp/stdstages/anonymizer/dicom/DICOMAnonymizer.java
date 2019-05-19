@@ -411,6 +411,9 @@ public class DICOMAnonymizer {
 				else if (script.startsWith("@always()@require()") && (vr == VRs.SQ)) {
 					context.putXX(tag, vr, "");
 				}
+				else if (script.startsWith("@always()@call") && (vr == VRs.SQ)) {
+					makeReplacement(script, context, tag); //just do the call; let the call modify the output dataset
+				}
 				else if (tag == 0x00120064) updateDeIdentificationMethodCodeSeq(script, context);
 			}
 		}
