@@ -9,6 +9,7 @@ package org.rsna.ctp.stdstages.anonymizer.dicom;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -201,6 +202,7 @@ public class DICOMAnonymizer {
 			dataset.writeDataset(out, encoding);
 
 			//Write the pixels if the parser actually stopped before pixeldata
+			logger.debug("Parser stopped at "+Tags.toString(parser.getReadTag()));
             if (parser.getReadTag() == Tags.PixelData) {
                 dataset.writeHeader(
                     out,
@@ -239,6 +241,17 @@ public class DICOMAnonymizer {
                     writeValueTo(parser, buffer, out, swap && (parser.getReadVR() == VRs.OW));
                 }
 			}
+			
+			//If there was no pixels element, then we have already parsed the header 
+			//of the first post-pixels element, so we need to suppress parsing it again.
+			boolean suppress = (parser.getReadTag() != Tags.PixelData);
+			
+			//Get the PrivateTagIndex for checking the post-pixels elements
+			PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();
+			
+			//Set up for building the index of creators for a private group
+			int lastGroup = 0;
+			Hashtable<Integer,String> creatorIndex = new Hashtable<Integer,String>();
 
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
@@ -249,37 +262,77 @@ public class DICOMAnonymizer {
 			while (logPosition("About to seek post-pixels element:", parser)
 					&& !parser.hasSeenEOF()
 					&& (parser.getStreamPosition() < fileLength)
-					&& (parser.parseHeader() != -1)
+					&& (suppress || (parser.parseHeader() != -1))
 					&& ((tag=parser.getReadTag()) != -1)
 					&& (tag != 0xFFFAFFFA)
 					&& (tag != 0xFFFCFFFC)) {
+				suppress = false;
 				logPosition("Found post-pixels element: "+Tags.toString(tag), parser);
 				int len = parser.getReadLength();
 				logger.debug("...readLength = "+len+" ("+Integer.toHexString(len)+")");
+				
+				//Build an index of the creators for the current private group
+				int group = (tag >> 16) & 0xffff;
 				boolean isPrivate = ((tag & 0x10000) != 0);
-				String script = context.getScriptFor(tag);
-				if ( (isPrivate && context.rpg) || ((script == null) && context.rue) || ((script != null) && script.startsWith("@remove()") ) ) {
-					//skip this element
-					logger.debug("Skipping element: "+Tags.toString(tag));
-					//read past the data
-								InputStream inStream = parser.getInputStream();
-								for (int i = 0; i < len; ++i) inStream.read();
-					//now reset the stream position in the parser
-					parser.setStreamPosition(parser.getStreamPosition() + len);
+				boolean isCreator = ((tag & 0xFF00) == 0);
+				if (isPrivate && isCreator) {
+					if (lastGroup != group) {
+						creatorIndex = new Hashtable<Integer,String>();
+						lastGroup = group;
+						logger.debug("Found new private group: "+Integer.toHexString(group));
+					}
+					//Read the creator
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					InputStream inStream = parser.getInputStream();
+					for (int i = 0; i < len; ++i) baos.write(inStream.read());
+					String creator = new String(baos.toByteArray()).toString().trim();
+					creatorIndex.put(new Integer(group), creator);
+					logger.debug("Creator element: "+Tags.toString(tag)+": \""+creator+"\"");
+					if (!context.rpg || context.kspe) {
+						logger.debug("Writing element: "+Tags.toString(tag));
+						dataset.writeHeader(
+							out,
+							encoding,
+							parser.getReadTag(),
+							parser.getReadVR(),
+							parser.getReadLength());
+						out.write(baos.toByteArray());
+					}
+					else logger.debug("Skipping element: "+Tags.toString(tag));
 				}
 				else {
-					//write this element
-					logger.debug("Writing element: "+Tags.toString(tag));
-					dataset.writeHeader(
-						out,
-						encoding,
-						parser.getReadTag(),
-						parser.getReadVR(),
-						parser.getReadLength());
-					writeValueTo(parser, buffer, out, swap);
+					String script = context.getScriptFor(tag);
+					boolean isSafePrivateElement = false;
+					if (isPrivate) {
+						String creator = creatorIndex.get(new Integer(group));
+						logger.debug("Found creator \""+creator+"\" for "+Tags.toString(tag));
+						String code = ptIndex.getCode(group, creator, tag & 0xff).trim();
+						logger.debug("Got \""+code+"\" code for "+Tags.toString(tag));
+						if (creator != null) isSafePrivateElement = code.equals("K");
+						logger.debug("isSafePrivateElement = "+isSafePrivateElement);
+					}
+					if ((isPrivate && context.rpg && !(context.kspe && isSafePrivateElement)) || 
+							((script == null) && context.rue) || 
+							((script != null) && script.startsWith("@remove()") ) ) {
+						//skip this element
+						logger.debug("Skipping element: "+Tags.toString(tag));
+						//read past the data
+						InputStream inStream = parser.getInputStream();
+						for (int i = 0; i < len; ++i) inStream.read();
+					}
+					else {
+						//write this element
+						logger.debug("Writing element: "+Tags.toString(tag));
+						dataset.writeHeader(
+							out,
+							encoding,
+							parser.getReadTag(),
+							parser.getReadVR(),
+							parser.getReadLength());
+						writeValueTo(parser, buffer, out, swap);
+					}
 				}
 				logPosition("Position after processing last post-pixels element:", parser);
-				//if (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength)) parser.parseHeader();
 			}
 			out.flush();
 			out.close();
@@ -379,7 +432,6 @@ public class DICOMAnonymizer {
 				remain -= c;
 			}
 		}
-		parser.setStreamPosition(parser.getStreamPosition() + len);
 	}
 
 	//Insert any elements that are missing from the dataset but required by the script.
