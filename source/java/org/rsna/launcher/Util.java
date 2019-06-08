@@ -118,7 +118,8 @@ public class Util {
 			Runtime rt = Runtime.getRuntime();
 			try {
 				boolean osIsWindows = System.getProperty("os.name").toLowerCase().contains("windows");
-				String ext = System.getProperty("java.ext.dirs");
+				String ver = System.getProperty("java.version");
+				String ext = System.getProperty("java.ext.dirs", "");
 				String sep = System.getProperty("path.separator");
 				String user = System.getProperty("user.dir");
 				File dir = new File(user);
@@ -163,13 +164,19 @@ public class Util {
 					command.add("-d32");
 				}
 
-				//Set the extensions directories
-				String extDirs = props.getProperty("ext", "").trim();
-				if (!extDirs.equals("")) {
-					extDirs += sep;
-					ext = "-Djava.ext.dirs=" + extDirs + ext;
-					if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
-					command.add(ext);
+				//Set the extensions directories if Java 8 or less
+				int n = ver.indexOf(".");
+				if (n > 0) ver = ver.substring(0,n);
+				n = Integer.parseInt(ver);
+				if (n < 9) {
+					String extDirs = props.getProperty("ext", "").trim();
+					if (!extDirs.equals("") && !ext.equals("")) extDirs += sep;
+					extDirs += ext;
+					if (!extDirs.equals("")) {
+						ext = "-Djava.ext.dirs=" + extDirs;
+						if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
+						command.add(ext);
+					}
 				}
 
 				//Set the program name

@@ -174,7 +174,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("RTIonBeamsTreatmentRecordStorage","$ts-native"),
 		new PC("RTIonPlanStorage","$ts-native"),
 		new PC("RTPlanStorage","$ts-native"),
-		new PC("RTStructureSetStorage","$ts-implicitleonly"),
+		new PC("RTStructureSetStorage","$ts-native") /*was $ts-implicitleonly*/,
 		new PC("RTTreatmentSummaryRecordStorage","$ts-native"),
 		new PC("SecondaryCaptureImageStorage","$ts-epd,$ts-native"),
 		new PC("SegmentationStorage","$ts-native"),

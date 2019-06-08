@@ -185,10 +185,14 @@ public class DICOMAnonymizer {
 
 			//Set the encoding
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
-        	String prefEncodingUID = UIDs.ImplicitVRLittleEndian;
+        	String prefEncodingUID = UIDs.ExplicitVRLittleEndian;
 			FileMetaInfo fmi = dataset.getFileMetaInfo();
             if ((fmi != null) && (fileParam.encapsulated || !forceIVRLE)) {
             	prefEncodingUID = fmi.getTransferSyntaxUID();
+            	logger.debug("FMI TransferSyntaxUID = "+prefEncodingUID);
+			}
+			else if (forceIVRLE) {
+				prefEncodingUID = UIDs.ExplicitVRLittleEndian;
 			}
 			DcmEncodeParam encoding = (DcmEncodeParam)DcmDecodeParam.valueOf(prefEncodingUID);
 			boolean swap = fileParam.byteOrder != encoding.byteOrder;
@@ -445,7 +449,11 @@ public class DICOMAnonymizer {
 			int tag = intTag.intValue();
 			if (!ds.contains(tag)) {
 				String script = context.getScriptFor(tag).trim();
-				vr = getVR(tag);
+
+				TagDictionary.Entry entry = tagDictionary.lookup(tag);
+				try { vr = VRs.valueOf(entry.vr); }
+				catch (Exception ex) { vr = VRs.valueOf("SH"); }
+
 				if (script.startsWith("@always()") && (vr != VRs.SQ)) {
 					String value = makeReplacement(script, context, tag);
 					if (value.equals("@keep()") || value.equals("@remove()")) {
@@ -484,6 +492,7 @@ public class DICOMAnonymizer {
 		for (Iterator it=context.inDS.iterator(); it.hasNext(); ) {
 			DcmElement el = (DcmElement)it.next();
 			int tag = el.tag();
+			int vr = el.vr();
 
 			int group = (tag >> 16) & 0xFFFF;
 			boolean isOverlay = ((group & 0xFF00) == 0x6000);
@@ -558,7 +567,7 @@ public class DICOMAnonymizer {
 							n = Integer.parseInt(nString);
 						}
 						if (n > blanks.length()) n = blanks.length();
-						try { context.putXX(tag, getVR(tag), blanks.substring(0,n)); }
+						try { context.putXX(tag, vr, blanks.substring(0,n)); }
 						catch (Exception e) {
 							String tagString = Tags.toString(tag);
 							logger.warn(tagString + " exception: " + e.toString()
@@ -570,7 +579,7 @@ public class DICOMAnonymizer {
 					else {
 						try {
 							if (value.equals("@empty()")) value = "";
-							context.putXX(tag, getVR(tag), value);
+							context.putXX(tag, vr, value);
 						}
 						catch (Exception e) {
 							String tagString = Tags.toString(tag);
@@ -652,12 +661,6 @@ public class DICOMAnonymizer {
 			setProperty("113110", "Retain UIDs");
 			setProperty("113111", "Retain Safe Private Option");
 		}
-	}
-
-	private static int getVR(int tag) {
-		TagDictionary.Entry entry = tagDictionary.lookup(tag);
-		try { return VRs.valueOf(entry.vr); }
-		catch (Exception ex) { return VRs.valueOf("SH"); }
 	}
 
 	static final char escapeChar 		= '\\';
@@ -765,12 +768,12 @@ public class DICOMAnonymizer {
 		Dataset newInDS;
 		Dataset newOutDS;
 		int tag = fn.thisTag;
-		//Only do this for an SQ element
-		if ( getVR(tag) == VRs.SQ ) {
-			DICOMAnonymizerContext ctx = fn.context;
-			DcmElement inElement = ctx.inDS.get(tag);
-			DcmElement outElement = ctx.outDS.get(tag);
+		DICOMAnonymizerContext ctx = fn.context;
+		DcmElement inElement = ctx.inDS.get(tag);
+		DcmElement outElement = ctx.outDS.get(tag);
 
+		//Only do this for an SQ element
+		if ( inElement.vr() == VRs.SQ ) {
 			int item = 0;
 			while ( ((newInDS = inElement.getItem(item)) != null)
 						&& ((newOutDS = outElement.getItem(item)) != null) ) {
