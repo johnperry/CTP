@@ -244,11 +244,14 @@ public class DICOMAnonymizer {
                 else {
                     writeValueTo(parser, buffer, out, swap && (parser.getReadVR() == VRs.OW));
                 }
+                parser.parseHeader();
 			}
 			
-			//If there was no pixels element, then we have already parsed the header 
-			//of the first post-pixels element, so we need to suppress parsing it again.
-			boolean suppress = (parser.getReadTag() != Tags.PixelData);
+			logger.debug("parser.getReadTag after writing pixels: "+Tags.toString(parser.getReadTag()));
+			
+			//We have already parsed the header of the first post-pixels element,
+			//so we need to suppress parsing it again.
+			boolean suppress = true;
 			
 			//Get the PrivateTagIndex for checking the post-pixels elements
 			PrivateTagIndex ptIndex = PrivateTagIndex.getInstance();

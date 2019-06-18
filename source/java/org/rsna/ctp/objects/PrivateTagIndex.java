@@ -99,7 +99,10 @@ public class PrivateTagIndex {
 	 * @return the VR, or the empty string if the element is unknown.
 	 */
 	public String getVR(int group, String owner, int element) {
-		return getVR(new PrivateTagKey(group, owner, element));
+		if (owner != null) {
+			return getVR(new PrivateTagKey(group, owner, element));
+		}
+		return "";
 	}
 
 	/**
@@ -109,7 +112,10 @@ public class PrivateTagIndex {
 	 * @return the VR, or the empty string if the element is unknown.
 	 */
 	public String getVR(String owner, int element) {
-		return getVR(new PrivateTagKey(owner, element));
+		if (owner != null) {
+			return getVR(new PrivateTagKey(owner, element));
+		}
+		return "";
 	}
 
 	private String getVR(PrivateTagKey key) {
@@ -126,7 +132,10 @@ public class PrivateTagIndex {
 	 * @return the VM, or the empty string if the element is unknown.
 	 */
 	public String getVM(int group, String owner, int element) {
-		return getVM(new PrivateTagKey(group, owner, element));
+		if (owner != null) {
+			return getVM(new PrivateTagKey(group, owner, element));
+		}
+		return "";
 	}
 
 	/**
@@ -136,7 +145,10 @@ public class PrivateTagIndex {
 	 * @return the VM, or the empty string if the element is unknown.
 	 */
 	public String getVM(String owner, int element) {
-		return getVM(new PrivateTagKey(owner, element));
+		if (owner != null) {
+			return getVM(new PrivateTagKey(owner, element));
+		}
+		return "";
 	}
 
 	private String getVM(PrivateTagKey key) {
@@ -153,7 +165,10 @@ public class PrivateTagIndex {
 	 * @return the code, or the empty string if the element is unknown.
 	 */
 	public String getCode(int group, String owner, int element) {
-		return getCode(new PrivateTagKey(group, owner, element));
+		if (owner != null) {
+			return getCode(new PrivateTagKey(group, owner, element));
+		}
+		return "";
 	}
 
 	/**
@@ -163,7 +178,10 @@ public class PrivateTagIndex {
 	 * @return the code, or the empty string if the element is unknown.
 	 */
 	public String getCode(String owner, int element) {
-		return getCode(new PrivateTagKey(owner, element));
+		if (owner != null) {
+			return getCode(new PrivateTagKey(owner, element));
+		}
+		return "";
 	}
 	
 	private String getCode(PrivateTagKey key) {
