@@ -245,10 +245,10 @@ public class Pipeline extends Thread {
 				else if (stage instanceof ExportService)
 					((ExportService)stage).export(fileObject);
 				//Note that ImportServices are skipped;
-				//they are only suppliers, not processors.
+				//they are only suppliers.
 			}
 			//Release the file and yield in case
-			//someone else has anything on his mind.
+			//anyone else has something on his mind.
 			importService.release(importedFile);
 			Thread.yield();
 		}

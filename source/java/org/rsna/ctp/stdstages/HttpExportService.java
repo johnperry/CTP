@@ -167,7 +167,7 @@ public class HttpExportService extends AbstractExportService {
 	}
 
 	/**
-	 * Start the compressor thread if enabled..
+	 * Start the compressor thread if enabled.
 	 */
 	public void start() {
 		super.start();

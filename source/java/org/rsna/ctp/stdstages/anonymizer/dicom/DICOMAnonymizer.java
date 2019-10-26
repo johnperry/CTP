@@ -800,7 +800,7 @@ public class DICOMAnonymizer {
 		return fn.context.contents(fn.thisTag) + "\\" + value;
 	}
 
-	//Execute the slways function call
+	//Execute the always function call
 	private static String alwaysfn(FnCall fn) {
 		return "";
 	}

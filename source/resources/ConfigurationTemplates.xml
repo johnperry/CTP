@@ -194,6 +194,7 @@
 			<attr name="throttle" required="no" default="0"/>
 			<attr name="logConnections" required="yes" default="no" options="all|rejected|no"/>
 			<attr name="suppressDuplicates" required="no" default="no" options="yes|no"/>
+			<attr name="useSkipTable" required="no" default="no" options="yes|no"/>
 			<attr name="quarantine" required="yes" default="quarantines/DicomImportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 
@@ -1145,6 +1146,7 @@
 		<to>The email addresses of the recipients, separated by commas.</to>
 		<treeRoot>The root directory of the archive</treeRoot>
 		<username>The username for authentication, if required by the destination system (or blank if authentication is not used)</username>
+		<useSkipTable>Skip the JPEG2000 transfer syntaxes.</useSkipTable>
 		<usersClassName>The Java class for user authentication. Do not change this unless you know what you're doing.</usersClassName>
 		<xmlScript>The script file determining whether XmlObjects are to be accepted for processing</xmlScript>
 		<zipScript>The script file determining whether ZipObjects are to be accepted for processing</zipScript>

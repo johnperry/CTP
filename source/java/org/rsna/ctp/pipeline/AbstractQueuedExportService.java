@@ -101,6 +101,14 @@ public abstract class AbstractQueuedExportService
 	}
 
 	/**
+	 * Indicate whether this stage has a cache separate from the queue.
+	 * @return true if there is a separate cache; falser otherwise.
+	 */
+	public boolean hasCache() {
+		return !(cacheManager == queueManager);
+	}
+	
+	/**
 	 * Add a FileObject to the export queue if the ExportService is
 	 * configured to accept the FileObject class or subclass.
 	 * If a script file corresponding to the object is defined,

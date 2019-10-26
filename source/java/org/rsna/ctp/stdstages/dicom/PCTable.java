@@ -8,6 +8,7 @@
 package org.rsna.ctp.stdstages.dicom;
 
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -23,6 +24,22 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		for (int i=0; i<pcs.length; i++) {
 			this.put(pcs[i].asUID, pcs[i].list);
 		}
+		for (int i=0; i<ext_pcs.length; i++) {
+			this.put(ext_pcs[i].asUID, ext_pcs[i].list);
+		}
+	}
+
+	protected PCTable(boolean skip) {
+		super();
+		for (int i=0; i<pcs.length; i++) {
+			if (skip) {
+				for (String ts : skipTable) {
+					pcs[i].list.remove(ts);
+				}
+			}
+			this.put(pcs[i].asUID, pcs[i].list);
+		}
+		//Accept everything in the ext table, even if skipping.
 		for (int i=0; i<ext_pcs.length; i++) {
 			this.put(ext_pcs[i].asUID, ext_pcs[i].list);
 		}
@@ -47,6 +64,15 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 			return new PCTable(sopClasses);
 		}
 		else return pcTable;
+	}
+	
+	public void removeSkippedSyntaxes() {
+		for (String scUID : pcTable.keySet()) {
+			LinkedList<String> tsUIDs = pcTable.get(scUID);
+			for (String ts : skipTable) {
+				tsUIDs.remove(ts);
+			}
+		}
 	}
 
 	static class PC {
@@ -221,7 +247,17 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 
 	//SOP Classes not in the dcm4che UID dictionary
 	static PC[] ext_pcs = { };
+	
+	static class SkipTable extends HashSet<String> {
+		public SkipTable() {
+			super();
+			add(UIDs.forName("JPEG2000Lossless"));
+			add(UIDs.forName("JPEG2000Lossy"));
+		}
+	}
 
+	static SkipTable skipTable = new SkipTable();
+	
 	private static PCTable pcTable = new PCTable();
 
 }

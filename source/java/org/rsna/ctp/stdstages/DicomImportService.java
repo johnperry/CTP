@@ -42,6 +42,7 @@ public class DicomImportService extends AbstractImportService {
 	BlackList calledAETBlackList = null;
 	WhiteList callingAETWhiteList = null;
 	BlackList callingAETBlackList = null;
+	boolean useSkipTable = false;
 	PCTable pcTable = null;
 
 	/**
@@ -94,7 +95,7 @@ public class DicomImportService extends AbstractImportService {
 		acceptXmlObjects = false;
 		acceptZipObjects = false;
 		acceptFileObjects = false;
-
+		
 		//Get the PCTable
 		LinkedList<String> sopClasses = new LinkedList<String>();
 		Node child = element.getFirstChild();
@@ -106,6 +107,10 @@ public class DicomImportService extends AbstractImportService {
 			child = child.getNextSibling();
 		}
 		pcTable = PCTable.getInstance(sopClasses);
+		
+		//Get the flag telling whether to skip the transfer syntaxes in the PCTable's SkipTable
+		useSkipTable = element.getAttribute("useSkipTable").trim().equals("yes");		
+		if (useSkipTable) pcTable.removeSkippedSyntaxes();
 
 		//Create the DicomStorageSCP
 		dicomStorageSCP = new DicomStorageSCP(this);
