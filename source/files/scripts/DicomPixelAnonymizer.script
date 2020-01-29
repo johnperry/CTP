@@ -245,6 +245,20 @@ Supersonic Imagine 5A
     Columns.equals("1400") }
   (0,0,1400,89)
 
+SENO
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("SENO") *
+    Rows.equals("1058") *
+    Columns.equals("1920") }
+  (161,0,1632,50)
+
+SENO Cine
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("SENO") *
+    Rows.equals("1056") *
+    Columns.equals("1920") }
+  (161,0,1632,50)
+
 ************** 
      MRI
 **************
@@ -303,3 +317,4 @@ MEDRAD Injection Profile
     Rows.equals("1077") *
     Columns.equals("750") }
   (0,0,750,230)
+  
