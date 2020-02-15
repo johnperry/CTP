@@ -347,7 +347,7 @@ public class DICOMAnonymizer {
 
 			//Rename the temp file to the specified outFile.
 			if (renameToSOPIUID) outFile = new File(outFile.getParentFile(),sopiUID+".dcm");
-			if (!outFile.delete()) {
+			if (outFile.exists() && !outFile.delete()) {
 				logger.warn("Unable to delete " + outFile);
 			}
 			if (!tempFile.renameTo(outFile)) {
@@ -663,6 +663,7 @@ public class DICOMAnonymizer {
 			setProperty("113109", "Retain Device Identity Option");
 			setProperty("113110", "Retain UIDs");
 			setProperty("113111", "Retain Safe Private Option");
+			setProperty("113112", "Retain Device Identity Option");
 		}
 	}
 
