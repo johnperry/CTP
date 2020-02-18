@@ -663,7 +663,7 @@ public class DICOMAnonymizer {
 			setProperty("113109", "Retain Device Identity Option");
 			setProperty("113110", "Retain UIDs");
 			setProperty("113111", "Retain Safe Private Option");
-			setProperty("113112", "Retain Device Identity Option");
+			setProperty("113112", "Retain Institution Identity Option");
 		}
 	}
 
