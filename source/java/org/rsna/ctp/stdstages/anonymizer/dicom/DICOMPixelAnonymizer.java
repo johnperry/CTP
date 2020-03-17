@@ -424,17 +424,20 @@ public class DICOMPixelAnonymizer {
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
 				}
 				else if (isYBR_FULL && (planarConfiguration==0)) {
-					//for now, do the same, but we
+					//for now, do the same
 					byte y = (byte)(test ? 128 : 0);
 					byte c = (byte)(test ? 128 : 128);
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, y, c);
+				}
+				else if (isYBR_FULL && (planarConfiguration==1)) {
+					byte x = ((frame%3)==0) ? ((byte)(test ? 127 : 0)) : 127;
+					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, x);					
 				}
 				else {
 					byte x = (byte)(test ? 127 : 0);
 					if (isM1 && (bytesPerPixel==2)) x = (byte)(test ? 8 : 15);
 					else if (isM1 && (bytesPerPixel==1)) x = (byte)(test ? 127 : 255);
 					else if (isM2 && (bytesPerPixel==2)) x = (byte)(test ? 8 : 0);
-					else if (isYBR_FULL && (planarConfiguration==1) && ((frame%3)==0) && !test) x = 0;
 					blankRegions(buffer, row, rows, columns, bytesPerPixel, regions, x);
 				}
 				if (swap) swapBytes(buffer);

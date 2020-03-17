@@ -170,12 +170,14 @@ public class Util {
 				n = Integer.parseInt(ver);
 				if (n < 9) {
 					String extDirs = props.getProperty("ext", "").trim();
-					if (!extDirs.equals("") && !ext.equals("")) extDirs += sep;
-					extDirs += ext;
 					if (!extDirs.equals("")) {
-						ext = "-Djava.ext.dirs=" + extDirs;
-						if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
-						command.add(ext);
+						if (!ext.equals("")) extDirs += sep;
+						extDirs += ext;
+						if (!extDirs.equals("")) {
+							ext = "-Djava.ext.dirs=" + extDirs;
+							if (ext.contains(" ") || ext.contains("\t")) ext = "\"" + ext + "\"";
+							command.add(ext);
+						}
 					}
 				}
 
