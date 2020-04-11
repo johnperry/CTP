@@ -122,16 +122,17 @@ public class Configuration {
 			logger.info("Max crypto strength: " + thisJCEMaxKeyLength);
 			logger.info("ImageIO Tools:       " + thisImageIOVersion);
 
-			//Log the application libraries
+			//Get the jar manifest so we can get CTP attributes later
 			manifest = JarUtil.getManifestAttributes(new File("libraries/CTP.jar"));
 			ctpJava = manifest.get("Java-Version");
 
-			ctpBuild = logManifestAttribute(new File("libraries/CTP.jar"),  "Date",    "CTP build:           ");
-			logManifestAttribute(new File("libraries/util.jar"), "Date",    "Util build:          ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Date",    "MIRC build:          ");
-			logManifestAttribute(new File("libraries/isn/ISN.jar"), "Date",    "ISN build:           ");
-			logManifestAttribute(new File("libraries/MIRC.jar"), "Version", "MIRC version:        ");
-			logManifestAttribute(new File("libraries/isn/ISN.jar"), "Version",    "ISN version:         ");
+			//Log the application libraries
+			ctpBuild = logManifestAttribute(new File("libraries/CTP.jar"),	"Date",    "CTP build:           ");
+			logManifestAttribute(new File("libraries/util.jar"),			"Date",    "Util build:          ");
+			logManifestAttribute(new File("libraries/MIRC.jar"),			"Date",    "MIRC build:          ");
+			logManifestAttribute(new File("libraries/isn/ISN.jar"), 		"Date",    "ISN build:           ");
+			logManifestAttribute(new File("libraries/MIRC.jar"), 			"Version", "MIRC version:        ");
+			logManifestAttribute(new File("libraries/isn/ISN.jar"), 		"Version", "ISN version:         ");
 
 			logger.info("Start time:          "+StringUtil.getDateTime(" at "));
 			logger.info("user.dir:            "+System.getProperty("user.dir"));

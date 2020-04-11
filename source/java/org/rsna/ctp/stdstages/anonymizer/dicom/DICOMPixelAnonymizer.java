@@ -232,9 +232,6 @@ public class DICOMPixelAnonymizer {
 
 		catch (Exception e) {
 			logger.debug("Exception while processing image.",e);
-			StringWriter sw = new StringWriter();
-			e.printStackTrace(new PrintWriter(sw));
-			logger.debug("Stack trace:\n"+sw.toString());
 
 			//Close the input stream if it actually got opened.
 			close(in);

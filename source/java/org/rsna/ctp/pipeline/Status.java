@@ -16,9 +16,9 @@ public class Status {
 
 	private final String status;
 
-	//Private constructor to prevent anything but this class
+	//Protected constructor to prevent anything but this class
 	//from instantiating the class.
-	private Status(String status) { this.status = status; }
+	protected Status(String status) { this.status = status; }
 
 	/**
 	 * Get the text string name of the status class.
