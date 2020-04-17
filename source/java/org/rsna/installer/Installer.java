@@ -994,7 +994,7 @@ public class Installer extends JFrame {
 		}
 		catch (Exception ex) { return false; }
 	}
-
+	
     public boolean shutdown(int port, boolean ssl) {
         try {
             String protocol = "http" + (ssl?"s":"");

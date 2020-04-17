@@ -682,7 +682,7 @@ public class DicomObject extends FileObject {
 		return result;
 	}
 	
-	public void SaveAsJPEG(File file, BufferedImage rgbImage, int quality) {
+	public void saveAsJPEG(File file, BufferedImage rgbImage, int quality) {
 		FileImageOutputStream out = null;
 		ImageWriter writer = null;
 		try {
@@ -725,7 +725,7 @@ public class DicomObject extends FileObject {
 	 */
 	public void saveAsWindowLeveledJPEG(File file, int frame, double imageScale, int windowLevel, int windowWidth, int jpegQuality) {
 		BufferedImage image = getScaledAndWindowLeveledBufferedImage(frame, imageScale, windowLevel, windowWidth);
-		SaveAsJPEG(file, image, jpegQuality);
+		saveAsJPEG(file, image, jpegQuality);
 	}
 
 	/**
