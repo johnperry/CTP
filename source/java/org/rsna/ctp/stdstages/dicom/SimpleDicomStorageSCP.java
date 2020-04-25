@@ -78,11 +78,16 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 
 	private File directory = null;
 	PCTable pcTable = null;
+	String[] calledAETs = null;
+	String[] callingAETs = null;
 
 	HashSet<FileListener> listeners;
 
     public SimpleDicomStorageSCP(File directory, int port) {
+		super();
 		this.directory = directory;
+		this.calledAETs = calledAETs;
+		this.callingAETs = callingAETs;
 		pcTable = PCTable.getInstance();
 
 		directory.mkdirs();
@@ -90,7 +95,22 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
         initServer(port);
         initPolicy();
     }
-
+    
+    public void setCalledAET(String calledAET) {
+		this.calledAETs = new String[] { calledAET };
+		policy.setCalledAETs(calledAETs);
+	}		
+    
+    public void setCalledAETs(String[] calledAETs) {
+		this.calledAETs = calledAETs;
+		policy.setCalledAETs(calledAETs);
+	}
+    
+    public void setCallingAETs(String[] callingAETs) {
+		this.callingAETs = callingAETs;
+		policy.setCallingAETs(callingAETs);
+	}
+    
     public void start() throws IOException {
         server.start();
     }
@@ -110,7 +130,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 			String callingAET = a.getCallingAET();
 			String connectionIP = a.getSocket().getInetAddress().getHostAddress();
 			String currentUID = rqCmd.getAffectedSOPInstanceUID();
-			String name = rqCmd.getAffectedSOPInstanceUID() + ".dcm";
+			logger.debug("doCStore started - "+currentUID);
+			String name = currentUID + ".dcm";
 
 			FileMetaInfo fmi = objFact.newFileMetaInfo(
 					rqCmd.getAffectedSOPClassUID(),
@@ -118,6 +139,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 					rq.getTransferSyntaxUID());
 
 			storeToDir(in, fmi, name, callingAET);
+			logger.debug("doCStore completed - "+currentUID);
         }
         catch (IOException ioe) { ioe.printStackTrace(); }
         finally { in.close(); }
@@ -171,8 +193,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
     }
 
     private void initPolicy() {
-        policy.setCalledAETs(null);
-        policy.setCallingAETs(null);
+        policy.setCalledAETs(calledAETs);
+        policy.setCallingAETs(callingAETs);
         policy.setMaxPDULength(maxPDULength);
         policy.setAsyncOpsWindow(0, 1);
         Enumeration<String> en = pcTable.keys();

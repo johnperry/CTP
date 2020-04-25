@@ -99,6 +99,7 @@ public class DicomStorageSCP extends DcmServiceBase {
 	ExecutorService execSvc;
 
     public DicomStorageSCP(DicomImportService dicomImportService) {
+		super();
 		this.dicomImportService  = dicomImportService;
 		localAddress = dicomImportService.getLocalAddress();
 		temp = dicomImportService.getTempDirectory();

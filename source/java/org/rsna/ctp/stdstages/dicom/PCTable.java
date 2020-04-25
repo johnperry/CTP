@@ -19,6 +19,17 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 
     final static Logger logger = Logger.getLogger(PCTable.class);
 
+	static SkipTable skipTable = new SkipTable();
+	
+	private static PCTable pcTable = null;
+
+	public static synchronized PCTable getInstance() {
+		if (pcTable == null) {
+			pcTable = new PCTable();
+		}
+		return pcTable;
+	}
+
 	protected PCTable() {
 		super();
 		for (int i=0; i<pcs.length; i++) {
@@ -53,10 +64,6 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 			if (pcList != null) this.put(sopClass, pcList);
 		}
 		logger.debug("PCTable.size: "+this.size());
-	}
-
-	public static synchronized PCTable getInstance() {
-		return pcTable;
 	}
 
 	public static synchronized PCTable getInstance(LinkedList<String> sopClasses) {
@@ -125,6 +132,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
             "ImplicitVRLittleEndian";
 
 	static PC[] pcs = {
+		new PC("AcquisitionContextSRStorage","$ts-native"),
 		//new PC("AgfaAttributePresentationState","$ts-native"),
 		new PC("AmbulatoryECGWaveformStorage","$ts-native"),
 		new PC("AmbulatoryECGWaveformStorage","$ts-native"),
@@ -159,10 +167,10 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("EnhancedMRColorImageStorage","$ts-jpeglossless,$ts-native"),
 		new PC("EnhancedMRImageStorage","$ts-jpeglossless,$ts-native"),
 		new PC("EnhancedPETImageStorage","$ts-jpeglossless,$ts-native"),
-		new PC("EnhancedSR","$ts-native"),
 		new PC("EnhancedUSVolumeStorage","$ts-epd,$ts-native"),
 		new PC("EnhancedXRayAngiographicImageStorage","$ts-jpeglossless,$ts-native"),
 		new PC("EnhancedXRayRadiofluoroscopicImageStorage","$ts-jpeglossless,$ts-native"),
+		new PC("ExtensibleSRStorage","$ts-native"),
 		new PC("GeneralAudioWaveform","$ts-native"),
 		new PC("GeneralECGWaveformStorage","$ts-native"),
 		new PC("GrayscaleSoftcopyPresentationStateStorage","$ts-native"),
@@ -171,6 +179,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("HardcopyGrayscaleImageStorage","$ts-native"),
 		new PC("HemodynamicWaveformStorage","$ts-native"),
 		new PC("ImageOverlayBox","$ts-native"),
+		new PC("ImplantationPlanSRStorage","$ts-native"),
 		new PC("KeyObjectSelectionDocument","$ts-native"),
 		new PC("MammographyCADSR","$ts-native"),
 		new PC("MediaStorageDirectoryStorage","$ts-native"),
@@ -186,11 +195,15 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("OphthalmicPhotography16BitImageStorage","$ts-epd,$ts-native"),
 		new PC("OphthalmicPhotography8BitImageStorage","$ts-epd,$ts-native"),
 		new PC("OphthalmicTomographyImageStorage","$ts-epd,$ts-native"),
+		new PC("PatientRadiationDoseSRStorage","$ts-native"),
+		new PC("PerformedImagingAgentAdministrationSRStorage","$ts-native"),
+		new PC("PlannedImagingAgentAdministrationSRStorage","$ts-native"),
 		new PC("PositronEmissionTomographyImageStorage","$ts-epd,$ts-native"),
 		new PC("PresentationLUT","$ts-native"),
 		new PC("ProceduralEventLoggingSOPClass","$ts-native"),
 		new PC("ProcedureLogStorage","$ts-native"),
 		new PC("PseudoColorSoftcopyPresentationStateStorage","$ts-native"),
+		new PC("RadiopharmaceuticalRadiationDoseSRStorage","$ts-native"),
 		new PC("RawDataStorage","$ts-native"),
 		new PC("RespiratoryWaveformStorage","$ts-native"),
 		new PC("RTBeamsTreatmentRecordStorage","$ts-native"),
@@ -205,6 +218,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("SecondaryCaptureImageStorage","$ts-epd,$ts-native"),
 		new PC("SegmentationStorage","$ts-native"),
 		//new PC("SiemensCSANonImageStorage","$ts-native"),
+		new PC("SimplifiedAdultEchoSRStorage","$ts-native"),
 		new PC("SpatialFiducialsStorage","$ts-native"),
 		new PC("SpatialRegistrationStorage","$ts-native"),
 		new PC("StandaloneCurveStorage","$ts-native"),
@@ -255,9 +269,5 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 			add(UIDs.forName("JPEG2000Lossy"));
 		}
 	}
-
-	static SkipTable skipTable = new SkipTable();
-	
-	private static PCTable pcTable = new PCTable();
 
 }

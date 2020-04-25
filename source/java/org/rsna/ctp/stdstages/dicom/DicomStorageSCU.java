@@ -221,6 +221,27 @@ public class DicomStorageSCU {
 			if (requestedCallingAET == null) logger.warn("requestedCallingAET is null");
 
 			//See if we have to make a new association for this request.
+			if (logger.isDebugEnabled()) {
+				logger.debug("active is "+((active!=null)?"not ":"")+"null");
+				if (active != null) {
+					boolean x = (active.getAssociation().getState() != Association.ASSOCIATION_ESTABLISHED);
+					logger.debug("active is "+(x?"not ":"")+"established");
+				}
+				logger.debug("currentTSUID is "+((currentTSUID!=null)?"not ":"")+"null");
+				if (currentTSUID != null) {
+					boolean x = !tsUID.equals(currentTSUID);
+					logger.debug("tsUID "+(x?"!":"")+"= currentTSUID");
+				}
+				logger.debug("currentSOPClassUID is "+((currentSOPClassUID!=null)?"not ":"")+"null");
+				if (currentSOPClassUID != null) {
+					boolean x = !currentSOPClassUID.equals(currentTSUID);
+					logger.debug("currentSOPClassUID "+(x?"!":"")+"= currentSOPClassUID");
+				}
+				logger.debug("currentHost "+((!requestedHost.equals(currentHost))?"!":"")+"= requestedHost");
+				logger.debug("currentPort "+((currentPort!=requestedPort)?"!":"")+"= requestedPort");
+				logger.debug("currentCalledAET "+((!requestedCalledAET.equals(currentCalledAET))?"!":"")+"= requestedCalledAET");
+				logger.debug("currentCallingAET "+((!requestedCallingAET.equals(currentCallingAET))?"!":"")+"= requestedCallingAET");
+			}
 			if (
 				//if the active association does not exist or if it has been closed by the other end, then YES
 				(active == null) || (active.getAssociation().getState() != Association.ASSOCIATION_ESTABLISHED) ||
@@ -251,7 +272,7 @@ public class DicomStorageSCU {
 
 				//Create a new association
 		        initAssocParam(requestedCalledAET, maskNull(requestedCallingAET));
-				initPresContext(sopClassUID);
+				initPresContext(sopClassUID, dicomObject.getTransferSyntaxUID());
 				logger.debug("...attempting to open a new association");
 				active = openAssoc(requestedHost, requestedPort);
 				if (active == null) {
@@ -518,7 +539,13 @@ public class DicomStorageSCU {
         return retval;
     }
 
-    private final void initPresContext(String asUID) {
+    //method to force the PC to a specific syntax
+    private final void initPresContext(String asUID, String tsUID) {
+		assocRQ.addPresContext(aFact.newPresContext(1, asUID, tsUID));
+    }
+
+   //method to offer what is in the table
+   private final void initPresContext(String asUID) {
 		PCTable pcTable = PCTable.getInstance();
 		assocRQ.clearPresContext();
 		LinkedList<String> tsList = pcTable.get(asUID);

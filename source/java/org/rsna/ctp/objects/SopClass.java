@@ -15,9 +15,26 @@ public class SopClass {
 
 	/** The array of SR SOP Class UIDs. */
 	static final String[] srSopClassUIDs = {
-		"1.2.840.10008.5.1.4.1.1.88.11",		//basic
-		"1.2.840.10008.5.1.4.1.1.88.22",		//enhanced
-		"1.2.840.10008.5.1.4.1.1.88.33"			//comprehensive
+		"1.2.840.10008.5.1.4.1.1.88.11",	//BasicTextSR
+		"1.2.840.10008.5.1.4.1.1.88.22",	//EnhancedSR
+		"1.2.840.10008.5.1.4.1.1.88.33",	//ComprehensiveSR
+		"1.2.840.10008.5.1.4.1.1.88.1",		//StructuredReportTextStorageRetired
+		"1.2.840.10008.5.1.4.1.1.88.2",		//StructuredReportAudioStorageRetired
+		"1.2.840.10008.5.1.4.1.1.88.3",		//StructuredReportDetailStorageRetired
+		"1.2.840.10008.5.1.4.1.1.88.4",		//StructuredComprehensiveStorageRetired
+		"1.2.840.10008.5.1.4.1.1.88.34",	//Comprehensive3DSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.35",	//ExtensibleSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.50",	//MammographyCADSR
+		"1.2.840.10008.5.1.4.1.1.88.65",	//ChestCADSR
+		"1.2.840.10008.5.1.4.1.1.88.67",	//XRayRadiationDoseSR
+		"1.2.840.10008.5.1.4.1.1.88.68",	//RadiopharmaceuticalRadiationDoseSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.69",	//ColonCADSR
+		"1.2.840.10008.5.1.4.1.1.88.70",	//ImplantationPlanSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.71",	//AcquisitionContextSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.72",	//SimplifiedAdultEchoSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.73",	//PatientRadiationDoseSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.74",	//PlannedImagingAgentAdministrationSRStorage
+		"1.2.840.10008.5.1.4.1.1.88.75"		//PerformedImagingAgentAdministrationSRStorage
 	};
 	
 	/** The start of all PresentationState SOP Class UIDs. */
