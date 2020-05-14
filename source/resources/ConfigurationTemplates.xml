@@ -515,11 +515,13 @@
 		</Processor>
 
 		<Processor>
-			<attr name="name" required="yes" default="DicomWaveformProcessor"/>
-			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomWaveformProcessor" editable="no"/>
+			<attr name="name" required="yes" default="DicomECGProcessor"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomECGProcessor" editable="no"/>
 			<attr name="id" required="no" default=""/>
-			<attr name="root" required="yes" default="roots/DicomWaveformProcessor"/>
-			<attr name="quarantine" required="yes" default="quarantines/DicomWaveformProcessor"/>
+			<attr name="root" required="yes" default="roots/DicomECGProcessor"/>
+			<attr name="format" required="yes" default="portrait" options="portrait|landscape"/>
+			<attr name="synthesizeMissingLeads" required="yes" default="no" options="yes|no"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomECGProcessor"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</Processor>
 

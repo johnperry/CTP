@@ -58,6 +58,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 
 	protected PCTable(LinkedList<String> sopClasses) {
 		super();
+		getInstance();
 		for (String sopClass : sopClasses) {
 			if (!sopClass.contains(".")) sopClass = UIDs.forName(sopClass);
 			LinkedList<String> pcList = pcTable.get(sopClass);
@@ -70,7 +71,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		if ((sopClasses != null) && (sopClasses.size() > 0)) {
 			return new PCTable(sopClasses);
 		}
-		else return pcTable;
+		else return PCTable.getInstance();
 	}
 	
 	public void removeSkippedSyntaxes() {

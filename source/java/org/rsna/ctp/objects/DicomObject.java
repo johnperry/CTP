@@ -1544,6 +1544,23 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Convenience method to get the contents of the ImageType element.
+	 * @return the text of the element or the empty String if the
+	 * element does not exist.
+	 */
+	public String getImageType() {
+		return getElementValue(Tags.ImageType);
+	}
+
+	/**
+	 * Tests whether the DicomObject contains a secondary capture image.
+	 * @return true if the object contains a secondary capture image; false otherwise.
+	 */
+	public boolean isSecondaryCapture() {
+		return getImageType().toUpperCase().contains("SECONDARY");
+	}
+
+	/**
 	 * Convenience method to get the contents of the PatientName element.
 	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
 	 * is searched for the first PatientName element.
