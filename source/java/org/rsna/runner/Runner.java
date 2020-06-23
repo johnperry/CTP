@@ -50,6 +50,10 @@ public class Runner {
 				help();
 				System.exit(0);
 			}
+			else if (arg.equals("status")) {
+				System.out.println("CTP is "+(isRunning()?"":"not ")+"running");
+				System.exit(0);
+			}
 			if (!arg.equals("stop") && !arg.equals("start") && !arg.equals("toggle")) {
 				help();
 				System.out.println("Unknown command \""+arg+"\"");
@@ -69,6 +73,7 @@ public class Runner {
 
 		else {
 			if (cmd.equals ("start") || cmd.equals("toggle")) {
+				clearLogs();
 				System.out.println("Starting CTP");
 				Thread runner = startup();
 				while (runner.isAlive()) {
@@ -84,7 +89,7 @@ public class Runner {
 
 	private static void help() {
 		System.out.println("Usage: java -jar Runner.jar [command]");
-		System.out.println("   [command]: start | stop | toggle");
+		System.out.println("   [command]: start | stop | toggle | status | help");
 		System.out.println("   default command: toggle");
 	}
 
@@ -256,6 +261,22 @@ public class Runner {
 		}
 	}
 
+	public static void clearLogs() {
+		File logs = new File("logs");
+		if (logs.exists()) {
+			File[] files = logs.listFiles();
+			for (File f : files) deleteAll(f);
+		}
+	}
+	
+	public static void deleteAll(File file) {
+		if (file.isFile()) file.delete();
+		else {
+			File[] files = file.listFiles();
+			for (File f : files) deleteAll(f);
+		}
+	}
+	
 	public static int getInt(String theString, int defaultValue) {
 		if (theString == null) return defaultValue;
 		theString = theString.trim();

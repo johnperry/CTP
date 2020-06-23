@@ -107,7 +107,7 @@ public class DicomStorageSCU {
 
 	/**
 	 * Class constructor; creates a DICOM sender.
-	 * @param url the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
+	 * @param urlString the URL in the form "<tt>dicom://calledAET:callingAET@host:port</tt>".
 	 * @param associationTimeout true to force the closure of the association after a specified
 	 * time during which no further transmissions have occurred.
 	 * @param forceClose true to force the closure of the association after sending an object; false to leave
@@ -121,8 +121,28 @@ public class DicomStorageSCU {
 	 * @param callingAETTag the tag in the DicomObject from which to get the callingAET, or 0 if
 	 * the callingAET in the URL is to be used for all transmissions
 	 */
-	public DicomStorageSCU(String url, int associationTimeout, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
-		this.url = new DcmURL(url);
+	public DicomStorageSCU(String urlString, int associationTimeout, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
+		this(new DcmURL(urlString), associationTimeout, forceClose, hostTag, portTag, calledAETTag, callingAETTag);
+	}
+
+	/**
+	 * Class constructor; creates a DICOM sender.
+	 * @param url the DcmURL.
+	 * @param associationTimeout true to force the closure of the association after a specified
+	 * time during which no further transmissions have occurred.
+	 * @param forceClose true to force the closure of the association after sending an object; false to leave
+	 * the association open after a transmission.
+	 * @param hostTag the tag in the DicomObject from which to get the host name of the destination SCP, or 0 if
+	 * the host name in the URL is to be used for all transmissions
+	 * @param portTag the tag in the DicomObject from which to get the port of the destination SCP, or 0 if
+	 * the port in the URL is to be used for all transmissions
+	 * @param calledAETTag the tag in the DicomObject from which to get the calledAET, or 0 if
+	 * the calledAET in the URL is to be used for all transmissions
+	 * @param callingAETTag the tag in the DicomObject from which to get the callingAET, or 0 if
+	 * the callingAET in the URL is to be used for all transmissions
+	 */
+	public DicomStorageSCU(DcmURL url, int associationTimeout, boolean forceClose, int hostTag, int portTag, int calledAETTag, int callingAETTag) {
+		this.url = url;
 		if (associationTimeout != 0) this.associationTimeout = Math.max(associationTimeout, 5000);
 		this.forceClose = forceClose;
 		this.hostTag = hostTag;
