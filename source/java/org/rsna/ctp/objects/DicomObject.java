@@ -1561,6 +1561,14 @@ public class DicomObject extends FileObject {
 	}
 
 	/**
+	 * Tests whether the DicomObject contains a reformatted image.
+	 * @return true if the object contains a reformatted image; false otherwise.
+	 */
+	public boolean isReformatted() {
+		return getImageType().toUpperCase().contains("REFORMATTED");
+	}
+
+	/**
 	 * Convenience method to get the contents of the PatientName element.
 	 * If the DicomObject is a DICOMDIR, the DirectoryRecordSeq element
 	 * is searched for the first PatientName element.

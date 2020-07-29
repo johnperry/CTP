@@ -856,6 +856,9 @@
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination HttpImportService (starting with http:// or https://)</helptext>
 			</attr>
+			<attr name="contentType" required="no" default="application/x-mirc">
+				<helptext>The value for the Content-Type header (for XNAT, use false)</helptext>
+			</attr>
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="zip" required="no" default="no" options="yes|no">
 				<helptext>Zip data objects before transmission</helptext>
