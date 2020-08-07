@@ -2611,7 +2611,8 @@ public class DicomObject extends FileObject {
 					+Token.getTypeName(type)
 					+" expected, but "
 					+Token.getTypeName(nextToken.getType())
-					+" found.");
+					+" found:\n"
+					+script);
 		}
 		public Token next() {
 			return nextToken;

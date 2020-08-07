@@ -30,7 +30,7 @@ import org.w3c.dom.Element;
 /**
  * The DicomAnonymizer pipeline stage class.
  */
-public class DicomAnonymizer extends AbstractPipelineStage implements Processor, ScriptableDicom, SupportsLookup {
+public class DicomAnonymizer extends AbstractPipelineStage implements Processor, Scriptable, ScriptableDicom, SupportsLookup {
 
 	static final Logger logger = Logger.getLogger(DicomAnonymizer.class);
 
