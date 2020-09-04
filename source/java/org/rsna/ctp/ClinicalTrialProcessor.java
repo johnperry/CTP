@@ -91,6 +91,14 @@ public class ClinicalTrialProcessor {
 		}
 		if (logger != null) logger.info("startService returned\n");
 		System.out.println("Stop [ServiceManager]");
+		Runnable r = new Runnable() {
+			public void run() {
+				try { Thread.sleep(1000); }
+				catch (Exception ignore) { }
+				System.exit(0);
+			}
+		};
+		new Thread(r).start();
 	}
 
 	/**

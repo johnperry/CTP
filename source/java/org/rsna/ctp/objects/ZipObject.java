@@ -176,7 +176,9 @@ public class ZipObject extends FileObject {
 	 */
 	public String getPatientName() {
 		if (manifestXML == null) return "";
-		return manifestXML.getDocumentElement().getAttribute("pt-name");
+		String ptname = manifestXML.getDocumentElement().getAttribute("pt-name").trim();
+		if (!ptname.equals("")) return ptname;
+		return manifestXML.getDocumentElement().getAttribute("patientName").trim();
 	}
 
 	/**
@@ -187,7 +189,10 @@ public class ZipObject extends FileObject {
 	 */
 	public String getPatientID() {
 		if (manifestXML == null) return "";
-		return manifestXML.getDocumentElement().getAttribute("pt-id");
+		String ptid = manifestXML.getDocumentElement().getAttribute("pt-id").trim();
+		if (!ptid.equals("")) return ptid;
+		String patientID = manifestXML.getDocumentElement().getAttribute("patientID").trim();
+		return patientID;
 	}
 
 	/**
@@ -247,9 +252,10 @@ public class ZipObject extends FileObject {
 	 * in the ZipObject, or null if the ZipObject cannot be read.
 	 */
 	public ZipEntry[] getEntries() {
+		ZipEntry[] entries = null;
+		ZipFile zipFile = null;
 		try {
-			ZipEntry[] entries = null;
-			ZipFile zipFile = new ZipFile(file);
+			zipFile = new ZipFile(file);
 			ZipEntry ze;
 			Enumeration<? extends ZipEntry> e = zipFile.entries();
 			//Get the ZipEntries corresponding to files (not directories).
@@ -260,9 +266,10 @@ public class ZipObject extends FileObject {
 			}
 			entries = new ZipEntry[list.size()];
 			entries = list.toArray(entries);
-			return entries;
 		}
 		catch (Exception ex) { return null; }
+		finally { FileUtil.close(zipFile); }
+		return entries;
 	}
 
 	/**
@@ -274,6 +281,7 @@ public class ZipObject extends FileObject {
 	 * @return true if the operation succeeded; false otherwise.
 	 */
 	public boolean extractAll(File dir) {
+		boolean ok = true;
 		BufferedOutputStream out = null;
 		BufferedInputStream in = null;
 		ZipFile zipFile = null;
@@ -296,18 +304,14 @@ public class ZipObject extends FileObject {
 				}
 				else outFile.mkdirs();
 			}
-			zipFile.close();
-			return true;
 		}
-		catch (Exception e) {
-			try {
-				if (zipFile != null) zipFile.close();
-				if (in != null) in.close();
-				if (out != null) out.close();
-			}
-			catch (Exception ignore) { logger.warn("Unable to close zipFile."); }
-			return false;
+		catch (Exception e) { ok = false; }
+		finally {
+			FileUtil.close(zipFile);
+			FileUtil.close(in);
+			FileUtil.close(out);
 		}
+		return ok;
 	}
 
 	/**
@@ -322,6 +326,7 @@ public class ZipObject extends FileObject {
 	 * @return true if the operation succeeded; false otherwise.
 	 */
 	public boolean extractFile(ZipEntry entry, File dir) {
+		boolean ok = true;
 		BufferedOutputStream out = null;
 		BufferedInputStream in = null;
 		ZipFile zipFile = null;
@@ -336,15 +341,15 @@ public class ZipObject extends FileObject {
 				out = new BufferedOutputStream(new FileOutputStream(outFile));
 				in = new BufferedInputStream(zipFile.getInputStream(entry));
 				FileUtil.copy(in, out, -1);
-				zipFile.close();
-				return true;
 			}
 		}
-		catch (Exception e) { }
-		FileUtil.close(in);
-		FileUtil.close(out);
-		FileUtil.close(zipFile);
-		return false;
+		catch (Exception e) { ok = false; }
+		finally {
+			FileUtil.close(in);
+			FileUtil.close(out);
+			FileUtil.close(zipFile);
+		}
+		return ok;
 	}
 
 	/**
@@ -359,6 +364,7 @@ public class ZipObject extends FileObject {
 	 * @return true if the operation succeeded; false otherwise.
 	 */
 	public boolean extractFile(ZipEntry entry, File dir, String name) {
+		boolean ok = true;
 		BufferedOutputStream out = null;
 		BufferedInputStream in = null;
 		ZipFile zipFile = null;
@@ -372,15 +378,15 @@ public class ZipObject extends FileObject {
 				out = new BufferedOutputStream(new FileOutputStream(outFile));
 				in = new BufferedInputStream(zipFile.getInputStream(entry));
 				FileUtil.copy(in, out, -1);
-				zipFile.close();
-				return true;
 			}
 		}
-		catch (Exception e) { }
+		catch (Exception e) { ok = false; }
+		finally {
 			FileUtil.close(in);
 			FileUtil.close(out);
 			FileUtil.close(zipFile);
-		return false;
+		}
+		return ok;
 	}
 
 	/**
@@ -424,11 +430,8 @@ public class ZipObject extends FileObject {
 			return sw.toString();
 		}
 		catch (Exception e) {
-			try {
-				if (zipFile != null) zipFile.close();
-				if (in != null) in.close();
-			}
-			catch (Exception ignore) { logger.warn("Unable to close zipFile."); }
+			FileUtil.close(zipFile);
+			FileUtil.close(in);
 			return "";
 		}
 	}

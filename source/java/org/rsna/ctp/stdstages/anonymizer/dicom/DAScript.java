@@ -92,9 +92,9 @@ public class DAScript {
 	 * @return the script as an XML string
 	 */
 	public synchronized String toXMLString() {
-		if (scriptIsXML) return script;
+		//if (scriptIsXML) return script;
 
-		if (xmlScript != null) return xmlScript;
+		//if (xmlScript != null) return xmlScript;
 
 		if (xml == null) toXML();
 

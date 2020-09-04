@@ -52,6 +52,7 @@ public class HttpExportService extends AbstractExportService {
 	String password = null;
 	boolean authenticate = false;
 	String authHeader = null;
+	String contentType = "application/x-mirc";
 	boolean logUnauthorizedResponses = true;
 	boolean logDuplicates = false;
 	boolean sendDigestHeader = false;
@@ -99,7 +100,11 @@ public class HttpExportService extends AbstractExportService {
 
 		//Get the destination url
 		url = new URL(element.getAttribute("url").trim());
-
+		
+		//Get the Content-Type
+		contentType = element.getAttribute("contentType").trim();
+		if (contentType.equals("")) contentType = "application/x-mirc";
+		
 		//Get the credentials attributes, if they are present.
 		//Note: the credentials might be included in the username and password
 		//attributes or embedded in the URL's userinfo. The username and password
@@ -197,6 +202,7 @@ public class HttpExportService extends AbstractExportService {
 			conn = HttpUtil.getConnection(url);
 			conn.setReadTimeout(connectionTimeout);
 			conn.setConnectTimeout(readTimeout);
+			conn.setRequestProperty("Content-Type", contentType);
 			if (authenticate) {
 				conn.setRequestProperty("Authorization", authHeader);
 				conn.setRequestProperty("RSNA", username+":"+password); //for backward compatibility

@@ -36,7 +36,7 @@ import org.xml.sax.InputSource;
  * This class unpacks files from its own jar file into a
  * directory selected by the user.
  */
-public class Installer extends JFrame {
+public class Installer extends JFrame implements KeyListener {
 
 	JPanel			mainPanel;
 	JEditorPane		textPane;
@@ -224,6 +224,9 @@ public class Installer extends JFrame {
 					+ count + " files were installed.",
 					"Installation Complete",
 					JOptionPane.INFORMATION_MESSAGE);
+			addKeyListener(this);
+			cp.setEditable(false);
+			this.requestFocus();
 		}
 		else {
 			cp.append("Installation failed.");
@@ -233,6 +236,13 @@ public class Installer extends JFrame {
 					"Installation Failed",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
+	}
+	
+	//KeyListener to listen for the exit
+	public void keyPressed(KeyEvent e) { }
+	public void keyReleased(KeyEvent e) {  }
+	public void keyTyped(KeyEvent e) {
+		this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
 	}
 
 	//Get the installer program file by looking in the user.dir for [programName]-installer.jar.
@@ -994,7 +1004,7 @@ public class Installer extends JFrame {
 		}
 		catch (Exception ex) { return false; }
 	}
-
+	
     public boolean shutdown(int port, boolean ssl) {
         try {
             String protocol = "http" + (ssl?"s":"");

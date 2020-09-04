@@ -78,11 +78,16 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 
 	private File directory = null;
 	PCTable pcTable = null;
+	String[] calledAETs = null;
+	String[] callingAETs = null;
 
 	HashSet<FileListener> listeners;
 
     public SimpleDicomStorageSCP(File directory, int port) {
+		super();
 		this.directory = directory;
+		this.calledAETs = calledAETs;
+		this.callingAETs = callingAETs;
 		pcTable = PCTable.getInstance();
 
 		directory.mkdirs();
@@ -90,7 +95,22 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
         initServer(port);
         initPolicy();
     }
-
+    
+    public void setCalledAET(String calledAET) {
+		this.calledAETs = new String[] { calledAET };
+		policy.setCalledAETs(calledAETs);
+	}		
+    
+    public void setCalledAETs(String[] calledAETs) {
+		this.calledAETs = calledAETs;
+		policy.setCalledAETs(calledAETs);
+	}
+    
+    public void setCallingAETs(String[] callingAETs) {
+		this.callingAETs = callingAETs;
+		policy.setCallingAETs(callingAETs);
+	}
+    
     public void start() throws IOException {
         server.start();
     }
@@ -98,7 +118,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
     public void stop() {
 		server.stop();
 	}
-
+	
     //Note: this method does not handle file sets.
     protected void doCStore(ActiveAssociation assoc, Dimse rq, Command rspCmd)
         		throws IOException {
@@ -110,14 +130,16 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 			String callingAET = a.getCallingAET();
 			String connectionIP = a.getSocket().getInetAddress().getHostAddress();
 			String currentUID = rqCmd.getAffectedSOPInstanceUID();
-			String name = rqCmd.getAffectedSOPInstanceUID() + ".dcm";
+			logger.debug("doCStore started - "+currentUID);
+			String name = currentUID + ".dcm";
 
 			FileMetaInfo fmi = objFact.newFileMetaInfo(
 					rqCmd.getAffectedSOPClassUID(),
 					rqCmd.getAffectedSOPInstanceUID(),
 					rq.getTransferSyntaxUID());
 
-			storeToDir(in, fmi, name);
+			storeToDir(in, fmi, name, callingAET);
+			logger.debug("doCStore completed - "+currentUID);
         }
         catch (IOException ioe) { ioe.printStackTrace(); }
         finally { in.close(); }
@@ -127,7 +149,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
     //Store the object in the directory.
     private void storeToDir(InputStream in,
     						FileMetaInfo fmi,
-    						String name) throws IOException {
+    						String name, String callingAET) throws IOException {
+								
 		File tempFile = new File(directory, name+".partial");
 		File savedFile = new File(directory, name);
 		OutputStream out = null;
@@ -144,7 +167,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 			savedFile = null;
 		}
         finally { FileUtil.close(out); }
-        if (savedFile != null) sendFileEvent(savedFile);
+        if (savedFile != null) sendFileEvent(savedFile, callingAET);
     }
 
     private void copy(InputStream in, OutputStream out, int totLen) throws IOException {
@@ -170,8 +193,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
     }
 
     private void initPolicy() {
-        policy.setCalledAETs(null);
-        policy.setCallingAETs(null);
+        policy.setCalledAETs(calledAETs);
+        policy.setCallingAETs(callingAETs);
         policy.setMaxPDULength(maxPDULength);
         policy.setAsyncOpsWindow(0, 1);
         Enumeration<String> en = pcTable.keys();
@@ -202,8 +225,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	}
 
 	//Send a FileEvent to all FileListeners.
-	private synchronized void sendFileEvent(File file) {
-		FileEvent event = FileEvent.STORE(this, file);
+	private synchronized void sendFileEvent(File file, String callingAET) {
+		FileEvent event = FileEvent.STORE(this, file, callingAET);
 		for (FileListener listener : listeners) {
 			listener.fileEventOccurred(event);
 		}

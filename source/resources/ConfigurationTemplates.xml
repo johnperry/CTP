@@ -515,6 +515,17 @@
 		</Processor>
 
 		<Processor>
+			<attr name="name" required="yes" default="DicomECGProcessor"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.DicomECGProcessor" editable="no"/>
+			<attr name="id" required="no" default=""/>
+			<attr name="root" required="yes" default="roots/DicomECGProcessor"/>
+			<attr name="format" required="yes" default="portrait" options="portrait|landscape"/>
+			<attr name="synthesizeMissingLeads" required="yes" default="no" options="yes|no"/>
+			<attr name="quarantine" required="yes" default="quarantines/DicomECGProcessor"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</Processor>
+
+		<Processor>
 			<attr name="name" required="yes" default="XmlAnonymizer"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.XmlAnonymizer" editable="no"/>
 			<attr name="root" required="yes" default="roots/XmlAnonymizer"/>
@@ -719,6 +730,32 @@
 		</StorageService>
 		
 		<StorageService>
+			<attr name="name" required="yes" default="PictureStorageService"/>
+			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PictureStorageService" editable="no"/>
+			<attr name="id" required="no" default=""/>
+			<attr name="root" required="yes" default="roots/PictureStorageService"/>
+			<attr name="cacheID" required="no" default=""/>
+			<attr name="format" required="yes" default="jpeg" options="jpeg|png"/>
+			<attr name="maxWidth" required="yes" default="1024"/>
+			<attr name="structure" required="yes" default=""/>
+			<attr name="defaultString" required="yes" default="">
+				<helptext>
+					Value to use in a directory or file name when an element specified in
+					the structure attibute is missing in an object
+				</helptext>
+			</attr>
+			<attr name="whitespaceReplacement" required="yes" default="_">
+				<helptext>Value to substitute for whitespace in directory and file names</helptext>
+			</attr>
+			<attr name="dicomScript" required="no"  default=""/>
+			<attr name="filenameTag" required="no" default="">
+				<helptext>DICOM element containing the filename, if the SOPInstanceUID is not to be used</helptext>
+			</attr>
+			<attr name="quarantine" required="yes" default="quarantines/PictureStorageService"/>
+			<attr name="quarantineTimeDepth" required="no" default="0"/>
+		</StorageService>
+		
+		<StorageService>
 			<attr name="name" required="yes" default="PDFStorageService"/>
 			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PDFStorageService" editable="no"/>
 			<attr name="id" required="no" default=""/>
@@ -818,6 +855,9 @@
 			<attr name="root" required="yes" default="roots/HttpExportService"/>
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination HttpImportService (starting with http:// or https://)</helptext>
+			</attr>
+			<attr name="contentType" required="no" default="application/x-mirc">
+				<helptext>The value for the Content-Type header (for XNAT, use false)</helptext>
 			</attr>
 			<attr name="enableExport" required="no" default="yes" options="yes|no"/>
 			<attr name="zip" required="no" default="no" options="yes|no">

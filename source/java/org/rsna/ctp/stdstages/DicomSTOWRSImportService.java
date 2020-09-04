@@ -161,7 +161,7 @@ public class DicomSTOWRSImportService extends AbstractImportService {
 							doc.appendChild(rootEl);
 							rootEl.appendChild(dicomAttribute("00081190", "UI", "RetrieveURL", null, doc));
 							Element refSOPSeqEl = doc.createElement("DicomAttribute");
-							refSOPSeqEl.setAttribute("tag", "00081150");
+							refSOPSeqEl.setAttribute("tag", "00081199");
 							refSOPSeqEl.setAttribute("vr", "SQ");
 							refSOPSeqEl.setAttribute("keyword", "ReferencedSOPSequence");
 							rootEl.appendChild(refSOPSeqEl);
