@@ -1,4 +1,4 @@
-<project name="ClinicalTrialProcessor" default="all" basedir=".">
+	<project name="ClinicalTrialProcessor" default="all" basedir=".">
 
 	<property name="build" value="${basedir}/build"/>
 	<property name="source" value="${basedir}/source"/>
@@ -23,8 +23,8 @@
 		<pathelement location="${libraries}/edtftpj.jar"/>
 		<pathelement location="${libraries}/jdbm.jar"/>
 		<pathelement location="${libraries}/commons-compress-1.0.jar"/>
-		<pathelement location="${libraries}/jai_imageio.jar"/>
-		<pathelement location="${libraries}/pixelmed_codec.jar"/>
+		<pathelement location="${libraries}/imageio/jai_imageio-1.2-pre-dr-b04.jar"/>
+		<pathelement location="${libraries}/imageio/pixelmed_codec.jar"/>
 		<pathelement location="${libraries}/email/activation.jar"/>
 		<pathelement location="${libraries}/email/javax.mail.jar"/>
 		<pathelement location="${libraries}/ftp/commons-logging-1.2.jar"/>
