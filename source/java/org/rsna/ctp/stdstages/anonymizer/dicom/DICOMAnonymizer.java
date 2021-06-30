@@ -915,6 +915,7 @@ public class DICOMAnonymizer {
 					return value.substring(0, n);
 				}
 				else {
+					value = value.trim();
 					n = Math.max(0, value.length() + n);
 					return value.substring(n);
 				}

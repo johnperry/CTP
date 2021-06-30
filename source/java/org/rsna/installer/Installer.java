@@ -356,11 +356,15 @@ public class Installer extends JFrame implements KeyListener {
 		File libDir = new File(ctpDir, "libraries");
 		File toolsDir = new File(libDir, "imageio");
 		
+		//We're keeping al;l the codes whether the tools are installed or not.
 		if (imageIOTools) {
-			deleteAll(toolsDir);
-			cp.appendln("ImageIO Tools are already installed, deleting "+toolsDir);
+			cp.appendln("ImageIO Tools are installed.");
+			cp.appendln("Additional codecs copied to "+toolsDir);
 		}
-		else cp.appendln("ImageIO Tools are not installed, tools files copied to "+toolsDir);
+		else {
+			cp.appendln("ImageIO Tools are not installed.");
+			cp.appendln("Tools and codecs copied to "+toolsDir);
+		}
 	}
 	
 	private boolean moveFile(File inFile, File outDir) {
