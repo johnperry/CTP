@@ -98,9 +98,6 @@ public class HttpExportService extends AbstractExportService {
 		//Note: digest headers are not supplied if zip file transmission is enabled.
 		sendDigestHeader = element.getAttribute("sendDigestHeader").equals("yes");
 
-		//Get the destination url
-		url = new URL(element.getAttribute("url").trim());
-		
 		//Get the Content-Type
 		contentType = element.getAttribute("contentType").trim();
 		if (contentType.equals("")) contentType = "application/x-mirc";
