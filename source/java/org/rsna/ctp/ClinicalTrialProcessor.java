@@ -194,6 +194,7 @@ public class ClinicalTrialProcessor {
 		selector.addServlet("objecttracker",ObjectTrackerServlet.class);
 		selector.addServlet("databaseverifier",DBVerifierServlet.class);
 		selector.addServlet("decipher",		DecipherServlet.class);
+		selector.addServlet("dictionary",	DictionaryServlet.class);
 		selector.addServlet("system",		SysPropsServlet.class);
 		selector.addServlet("environment",	EnvironmentServlet.class);
 		selector.addServlet("daconfig",		DicomAnonymizerServlet.class);
