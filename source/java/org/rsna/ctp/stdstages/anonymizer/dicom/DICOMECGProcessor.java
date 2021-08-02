@@ -433,7 +433,7 @@ public class DICOMECGProcessor {
 			return cs.toArray(new Channel[cs.size()]);
 		}
 		public void makeIII() {
-			//Lead III = Lead II – Lead I
+			//Lead III = Lead II - Lead I
 			try {
 				int[] d1 = get("i").data;
 				int[] d2 = get("ii").data;
