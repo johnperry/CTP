@@ -186,12 +186,10 @@ public class Configuration {
 						requireAuthentication = serverElement.getAttribute("requireAuthentication").equals("yes");
 
 						//Set the proxy parameters
-						ProxyServer proxy = ProxyServer.getInstance(serverElement);
-						proxy.setSystemParameters();
+						ProxyServer.getInstance(serverElement);
 
 						//Set the SSL params
-						SSLConfiguration sslConfig = SSLConfiguration.getInstance(serverElement);
-						sslConfig.setSystemParameters();
+						SSLConfiguration.getInstance(serverElement);
 					}
 					else if (tagName.equals("Pipeline") && !childElement.getAttribute("enabled").equals("no")) {
 						Pipeline pipe = new Pipeline(childElement, pipelines.size());

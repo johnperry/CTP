@@ -160,7 +160,10 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
             copy(in, out, -1);
             out.close();
             out = null;
-            tempFile.renameTo(savedFile);
+            savedFile.delete();
+            if (!tempFile.renameTo(savedFile)) {
+				logger.warn("Rename of "+tempFile+" failed");
+			}
         }
         catch (Exception ex) {
 			logger.warn("Unable to store a received file.",ex);
