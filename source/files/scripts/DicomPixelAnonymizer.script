@@ -127,6 +127,12 @@ Philips
 **************
      US
 **************
+
+MINDRAY
+  { Modality.equals("US") * 
+    ImplementationVersionName.contains("MINDRAY") }
+  (0,0,1229,69)
+
 GE 
  Logiq US
   { ManufacturerModelName.containsIgnoreCase("LOGIQ9") }

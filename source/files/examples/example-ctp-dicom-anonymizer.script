@@ -156,6 +156,7 @@
  <e en="T" t="00102150" n="CountryOfResidence">@remove()</e>
  <e en="T" t="00102152" n="RegionOfResidence">@remove()</e>
  <e en="T" t="00102154" n="PatientPhoneNumbers">@remove()</e>
+ <e en="T" t="00102155" n="PatientTelecomInformation">@remove()</e>
  <e en="T" t="00102160" n="EthnicGroup">@keep()</e>
  <e en="T" t="00102180" n="Occupation">@remove()</e>
  <e en="T" t="001021a0" n="SmokingStatus">@keep()</e>

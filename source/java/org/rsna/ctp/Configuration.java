@@ -171,6 +171,13 @@ public class Configuration {
 					if (tagName.equals("Server")) {
 						serverElement = childElement;
 
+						//Set IP address if it is specified
+						String ip = serverElement.getAttribute("ip").trim();
+						String mac = serverElement.getAttribute("mac").trim();
+						//Note: MAC address takes precedence over IP address
+						if (!mac.equals("")) ipAddress = IPUtil.getIPAddressForMAC(mac);
+						else if (!ip.equals("")) ipAddress = IPUtil.getIPAddress(ip);
+						
 						serverPort = StringUtil.getInt(serverElement.getAttribute("port"), 80);
 						ssl = serverElement.getAttribute("ssl").equals("yes");
 						maxThreads = StringUtil.getInt(serverElement.getAttribute("maxThreads"), 4);
@@ -179,12 +186,10 @@ public class Configuration {
 						requireAuthentication = serverElement.getAttribute("requireAuthentication").equals("yes");
 
 						//Set the proxy parameters
-						ProxyServer proxy = ProxyServer.getInstance(serverElement);
-						proxy.setSystemParameters();
+						ProxyServer.getInstance(serverElement);
 
 						//Set the SSL params
-						SSLConfiguration sslConfig = SSLConfiguration.getInstance(serverElement);
-						sslConfig.setSystemParameters();
+						SSLConfiguration.getInstance(serverElement);
 					}
 					else if (tagName.equals("Pipeline") && !childElement.getAttribute("enabled").equals("no")) {
 						Pipeline pipe = new Pipeline(childElement, pipelines.size());

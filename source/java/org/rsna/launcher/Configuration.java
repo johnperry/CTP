@@ -13,6 +13,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.rsna.util.FileUtil;
+import org.rsna.util.IPUtil;
 import org.rsna.util.JarUtil;
 import org.rsna.util.XmlUtil;
 
@@ -66,6 +67,9 @@ public class Configuration {
 
 		//Get the configuration parameters from the CTP config file.
 		configXML = XmlUtil.getDocument(configFile);
+		
+		//Get & set the IP Address
+		setIPAddress();
 
 		isMIRC = Util.containsAttribute(configXML, "Plugin", "class", "mirc.MIRC");
 		isISN = (new File("libraries/isn/ISN.jar")).exists();
@@ -201,8 +205,19 @@ public class Configuration {
 			try { port = Integer.parseInt( Util.getAttribute(configXML, "Server", "port") ); }
 			catch (Exception ex) { port = 0; }
 			ssl = Util.getAttribute(configXML, "Server", "ssl").equals("yes");
+			setIPAddress();
 		}
 		catch (Exception ignore) { }
+	}
+	
+	public void setIPAddress() {
+		Element serverElement = XmlUtil.getElementViaPath(configXML, "Configuration/Server");
+		//Set IP address if it is specified
+		String ip = serverElement.getAttribute("ip").trim();
+		String mac = serverElement.getAttribute("mac").trim();
+		//Note: MAC address takes precedence over IP address
+		if (!mac.equals("")) IPUtil.getIPAddressForMAC(mac);
+		else if (!ip.equals("")) IPUtil.getIPAddress(ip);
 	}
 
 	public void save() {

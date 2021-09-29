@@ -72,8 +72,8 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	private final int maxPDULength = 16352;
 	private final int soCloseDelay = 500;
 	private final int dimseTimeout = 0;
-	private final int rqTimeout = 20000; //changed from 10000
-	private final int maxClients = 50; //changed from 10
+	private final int rqTimeout = 10000; //used to be 20000
+	private final int maxClients = 50;
     private final long rspDelay = 0L;
 
 	private File directory = null;
@@ -160,7 +160,12 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
             copy(in, out, -1);
             out.close();
             out = null;
-            tempFile.renameTo(savedFile);
+            savedFile.delete();
+            if (!tempFile.renameTo(savedFile)) {
+				logger.warn("Rename failed--");
+				logger.warn("         from: "+tempFile);
+				logger.warn("           to: "+savedFile);
+			}
         }
         catch (Exception ex) {
 			logger.warn("Unable to store a received file.",ex);
@@ -231,5 +236,4 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 			listener.fileEventOccurred(event);
 		}
 	}
-
 }

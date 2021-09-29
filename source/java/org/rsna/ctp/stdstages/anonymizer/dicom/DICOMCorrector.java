@@ -103,58 +103,85 @@ public class DICOMCorrector {
 			int tag = el.tag();
 			boolean isPrivate = ((tag & 0x10000) != 0);
 			TagDictionary.Entry entry = tagDictionary.lookup(tag);
-			if (!isPrivate && (entry != null)) {
-				if (entry.vr.equals("SQ") && VRs.toString(el.vr()).equals("SQ")) {
-					int i = 0;
-					Dataset sq;
-					while ((sq=el.getItem(i++)) != null) {
-						changed |= correctDataset(inFile, sq, scs, 
-												  fixPrivateElements,
-												  quarantineUncorrectedMismatches,
-												  logUncorrectedMismatches);
-					}
-				}
-				else if (!entry.vr.equals(VRs.toString(el.vr()))) {
-					int len = el.length();
-					try {
-						if (entry.vr.equals("FD") && (len > 0) && ((len % 8) == 0)) {
-							int vm = len/8;
-							ByteBuffer bb = el.getByteBuffer();
-							double[] dbl = new double[vm];
-							for (int k=0; k<vm; k++) dbl[k] = bb.getDouble(8*k);
-							ds.putFD(tag, dbl);
-							changed = true;
-						}
-						else if (entry.vr.equals("FL") && (len > 0) && ((len % 4) == 0)) {
-							int vm = len/4;
-							ByteBuffer bb = el.getByteBuffer();
-							float[] flt = new float[vm];
-							for (int k=0; k<vm; k++) flt[k] = bb.getFloat(4*k);
-							ds.putFL(tag, flt);
-							changed = true;
-						}
-						else if (entry.vr.equals("CS")) {
-							String str = "";
-							if (len > 0) {
-								ByteBuffer bb = el.getByteBuffer();
-								byte[] bytes = bb.array();
-								str = scs.decode(bytes);
-							}
-							ds.putCS(tag, str);
-							changed = true;
-						}
-						else {
-							if (logUncorrectedMismatches) {
-								logger.info(inFile+": Mismatched VR for "+Tags.toString(tag)+" "+entry.vr+"/"+VRs.toString(el.vr())+" len="+len);
-							}
-							if (quarantineUncorrectedMismatches) throw new Exception("Uncorrectable VR for "+Tags.toString(tag));
-						}
-					}
-					catch (Exception skip) { logger.warn("Unable to convert "+Tags.toString(tag), skip); }
+			if ( ((entry != null) && entry.vr.equals("SQ")) 
+					|| VRs.toString(el.vr()).equals("SQ")) {
+				int i = 0;
+				Dataset sq;
+				while ((sq=el.getItem(i++)) != null) {
+					changed |= correctDataset(inFile, sq, scs, 
+											  fixPrivateElements,
+											  quarantineUncorrectedMismatches,
+											  logUncorrectedMismatches);
 				}
 			}
-			else if (isPrivate && fixPrivateElements && VRs.toString(el.vr()).equals("UN")) {
-				
+			else if ((entry != null) && !entry.vr.equals(VRs.toString(el.vr()))) {
+				int len = el.length();
+				try {
+					if (entry.vr.equals("FD") && (len > 0) && ((len % 8) == 0)) {
+						int vm = len/8;
+						ByteBuffer bb = el.getByteBuffer();
+						double[] dbl = new double[vm];
+						for (int k=0; k<vm; k++) dbl[k] = bb.getDouble(8*k);
+						ds.putFD(tag, dbl);
+						changed = true;
+					}
+					else if (entry.vr.equals("FL") && (len > 0) && ((len % 4) == 0)) {
+						int vm = len/4;
+						ByteBuffer bb = el.getByteBuffer();
+						float[] flt = new float[vm];
+						for (int k=0; k<vm; k++) flt[k] = bb.getFloat(4*k);
+						ds.putFL(tag, flt);
+						changed = true;
+					}
+					else if (entry.vr.equals("CS")) {
+						String str = "";
+						if (len > 0) {
+							ByteBuffer bb = el.getByteBuffer();
+							byte[] bytes = bb.array();
+							str = scs.decode(bytes);
+						}
+						ds.putCS(tag, str);
+						changed = true;
+					}
+					else if (entry.vr.equals("LO")) {
+						String str = "";
+						if (len > 0) {
+							ByteBuffer bb = el.getByteBuffer();
+							byte[] bytes = bb.array();
+							str = scs.decode(bytes);
+						}
+						ds.putLO(tag, str);
+						changed = true;
+					}
+					else if (entry.vr.equals("SH")) {
+						String str = "";
+						if (len > 0) {
+							ByteBuffer bb = el.getByteBuffer();
+							byte[] bytes = bb.array();
+							str = scs.decode(bytes);
+						}
+						ds.putSH(tag, str);
+						changed = true;
+					}
+					else if (entry.vr.equals("UI")) {
+						String str = "";
+						if (len > 0) {
+							ByteBuffer bb = el.getByteBuffer();
+							byte[] bytes = bb.array();
+							str = scs.decode(bytes);
+							if (str.endsWith(".")) str = str.substring(0,str.length()-1);
+						}
+						ds.putUI(tag, str);
+						changed = true;
+					}
+					else {
+						if (logUncorrectedMismatches) {
+							logger.info(inFile+": Mismatched VR for "+Tags.toString(tag)+" "+entry.vr+"/"+VRs.toString(el.vr())+" len="+len);
+						}
+						if (quarantineUncorrectedMismatches) throw new Exception("Uncorrectable VR for "+Tags.toString(tag));
+					}
+				}
+				catch (Exception skip) { logger.warn("Unable to convert "+Tags.toString(tag), skip); }
 			}
 		}
 		return changed;

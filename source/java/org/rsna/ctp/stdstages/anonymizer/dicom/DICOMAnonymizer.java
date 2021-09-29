@@ -503,6 +503,11 @@ public class DICOMAnonymizer {
 			boolean isPrivate = ((group & 0x1) != 0);
 			boolean isCreatorBlock = isPrivate && ((tag & 0xFF00) == 0);
 			boolean isSafe = false;
+			
+			if (isPrivate) {
+				logger.debug("Private element: "+Tags.toString(tag)+"; VR="+VRs.toString(el.vr()));
+			}
+				
 			if (isPrivate && !isCreatorBlock) {
 				String block = context.getCreator(tag);
 				isSafe = ptIndex.getCode(block, tag).equals("K");
@@ -910,6 +915,7 @@ public class DICOMAnonymizer {
 					return value.substring(0, n);
 				}
 				else {
+					value = value.trim();
 					n = Math.max(0, value.length() + n);
 					return value.substring(n);
 				}

@@ -110,7 +110,7 @@ public class ShutdownServlet extends Servlet {
 			catch (Exception quit) { break; }
 		}
 
-		//Close all thed Quarantines.
+		//Close all the Quarantines.
 		Quarantine.closeAll();
 
 		//Log the result

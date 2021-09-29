@@ -121,8 +121,8 @@ public class DICOMPixelAnonymizer {
 				DcmEncodeParam encoding = DcmEncodeParam.valueOf(transferSyntaxUID);
 				if (encoding.encapsulated && !transferSyntaxUID.equals(JPEGBaseline)) {
 					close(in);
-					logger.debug("Unsupported TransferSyntaxUID: "+transferSyntaxUID+")");
-					return AnonymizerStatus.SKIP(inFile, "Unsupported TransferSyntaxUID: "+transferSyntaxUID+")");
+					logger.debug("Unsupported TransferSyntaxUID: "+transferSyntaxUID);
+					return AnonymizerStatus.SKIP(inFile, "Unsupported TransferSyntaxUID: "+transferSyntaxUID);
 				}
 			}
 

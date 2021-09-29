@@ -3,6 +3,24 @@
 	<Components>
 
 		<Server>
+			<attr name="ip" required="no" default="">
+				<helptext>
+IP address to be used for the server. 
+If both ip and mac are missing, CTP obtains the IP address from the operating system.
+If present, the attribute must contain an IPv4 adddress, e.g. 192.168.5.15.
+Use this attribute only when there are multiple network interfaces and CTP is selecting the wrong one.
+If the IP address is not static and it changes, the world will end.
+				</helptext>
+			</attr>
+			<attr name="mac" required="no" default="">
+				<helptext>
+The MAC address of the network interface whose IP address is to be used for the server. 
+If present, the attribute must contain six hex bytes, separated by dashes, e.g. 00-1A-7D-DA-71-13.
+Use this attribute only when there are multiple network interfaces and CTP is selecting the wrong one. 
+The mac attribute takes precedence over the ip attribute if both are present.
+It is preferred because it works with dynamic IP addresses.
+				</helptext>
+			</attr>
 			<attr name="port" required="yes" default="80">
 				<helptext>Server port (for Unix derivatives, use a value greater than 1024)</helptext>
 			</attr>
