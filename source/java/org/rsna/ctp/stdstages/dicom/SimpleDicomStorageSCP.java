@@ -76,7 +76,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	private final int maxClients = 50;
     private final long rspDelay = 0L;
 
-	private File directory = null;
+	File directory = null;
 	PCTable pcTable = null;
 	String[] calledAETs = null;
 	String[] callingAETs = null;
@@ -175,7 +175,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
         if (savedFile != null) sendFileEvent(savedFile, callingAET);
     }
 
-    private void copy(InputStream in, OutputStream out, int totLen) throws IOException {
+    void copy(InputStream in, OutputStream out, int totLen) throws IOException {
         int toRead = (totLen == -1) ? Integer.MAX_VALUE : totLen;
 		byte[] buffer = new byte[bufferSize];
 		for (int len; toRead > 0; toRead -= len) {
@@ -230,7 +230,7 @@ public class SimpleDicomStorageSCP extends DcmServiceBase {
 	}
 
 	//Send a FileEvent to all FileListeners.
-	private synchronized void sendFileEvent(File file, String callingAET) {
+	synchronized void sendFileEvent(File file, String callingAET) {
 		FileEvent event = FileEvent.STORE(this, file, callingAET);
 		for (FileListener listener : listeners) {
 			listener.fileEventOccurred(event);

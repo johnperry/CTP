@@ -210,7 +210,7 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 		new PC("RTBeamsTreatmentRecordStorage","$ts-native"),
 		new PC("RTBrachyTreatmentRecordStorage","$ts-native"),
 		new PC("RTDoseStorage","$ts-native"),
-		new PC("RTImageStorage","$ts-jpeglossless,$ts-native"),
+		new PC("RTImageStorage","$ts-epd,$ts-native"),
 		new PC("RTIonBeamsTreatmentRecordStorage","$ts-native"),
 		new PC("RTIonPlanStorage","$ts-native"),
 		new PC("RTPlanStorage","$ts-native"),

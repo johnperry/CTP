@@ -125,6 +125,7 @@ public class QueueManager {
 		//directory.
 		if (dir == null) return null;
 		if (dir.exists() && !dir.isDirectory()) return null;
+		
 		//Ensure that the directory and its parents exist.
 		dir.mkdirs();
 
@@ -176,7 +177,7 @@ public class QueueManager {
 	 * no file is available in the queue, null is returned. If the supplied
 	 * directory file is null or not a directory, null is returned.
 	 */
-	public synchronized File peek() {
+	private File peek() {
 		//If there is an active directory, try to get a file from it.
 		File qFile = null;
 		if (outDir != null) {
