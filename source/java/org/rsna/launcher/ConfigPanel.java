@@ -1212,6 +1212,7 @@ public class ConfigPanel extends BasePanel {
 							String defValue = ch.getAttribute("default");
 							String options = ch.getAttribute("options").trim();
 							boolean editable = !ch.getAttribute("editable").equals("no");
+							boolean password = name.equals("password");
 
 							//Get the help text if possible
 							String helpText = "";
@@ -1224,12 +1225,10 @@ public class ConfigPanel extends BasePanel {
 							if (configValue.equals("")) configValue = defValue;
 
 							if (options.equals("")) {
-								add( new TextAttrPanel(name, configValue, helpText, editable) );
+								if (password) add( new PasswordAttrPanel(name, configValue, helpText, editable) );
+								else add( new TextAttrPanel(name, configValue, helpText, editable) );
 							}
-							else {
-								//add( new ComboAttrPanel(name, configValue, options, helpText) );
-								add( new ButtonAttrPanel(name, configValue, options, helpText) );
-							}
+							else add( new ButtonAttrPanel(name, configValue, options, helpText) );
 							add( Box.createVerticalStrut(10) );
 						}
 					}
@@ -1305,20 +1304,13 @@ public class ConfigPanel extends BasePanel {
 		}
 	}
 
-	class ComboAttrPanel extends AttrPanel {
-		public ConfigComboBox text;
+	class PasswordAttrPanel extends AttrPanel {
+		public ConfigPasswordField text;
 		HelpPane help = null;
-		public ComboAttrPanel(String name, String value, String options, String comment) {
+		public PasswordAttrPanel(String name, String value, String comment, boolean editable) {
 			super(name);
-			String[] ops = options.split("\\|");
-			int idx = 0;
-			for (int i=0; i<ops.length; i++) {
-				if (value.equals(ops[i])) {
-					idx = i;
-					break;
-				}
-			}
-			text = new ConfigComboBox(ops, idx);
+			text = new ConfigPasswordField(value);
+			text.setEditable(editable);
 			this.add(text);
 			if ((comment != null) && !comment.trim().equals("")) {
 				this.add( Box.createVerticalStrut(5) );
@@ -1326,9 +1318,10 @@ public class ConfigPanel extends BasePanel {
 				help = new HelpPane(comment);
 				this.add(help);
 			}
+			else this.add( Box.createVerticalStrut(5) );
 		}
 		public String getValue() {
-			return text.getSelectedItem().toString().trim();
+			return new String(text.getPassword());
 		}
 	}
 
@@ -1368,7 +1361,15 @@ public class ConfigPanel extends BasePanel {
 		}
 	}
 
-	class ConfigComboBox extends JComboBox implements Scrollable {
+	class ConfigPasswordField extends JPasswordField {
+		public ConfigPasswordField(String s) {
+			super();
+			setText(s);
+			setBackground(Color.white);
+		}
+	}
+
+	class ConfigComboBox extends JComboBox<String> implements Scrollable {
 		public ConfigComboBox(String[] values, int selectedIndex) {
 			super(values);
 			setSelectedIndex(selectedIndex);
