@@ -75,6 +75,9 @@ public class DICOMDecompressor {
 
 		BufferedInputStream in = null;
 		BufferedOutputStream out = null;
+		ImageReader reader = null;
+		FileImageInputStream fiis = null;
+		
 		File tempFile = null;
 		byte[] buffer = new byte[4096];
 		try {
@@ -125,8 +128,7 @@ public class DICOMDecompressor {
 
 			//Save the dataset to a temporary file in a temporary directory
 			//on the same file system root, and rename at the end.
-			File tempDir = FileUtil.createTempDirectory(outFile.getParentFile().getParentFile());
-			tempDir.mkdirs();
+			File tempDir = outFile.getParentFile();
 			tempFile = File.createTempFile("DCMtemp-",".decomp",tempDir);
             out = new BufferedOutputStream(new FileOutputStream(tempFile));
 
@@ -191,8 +193,8 @@ public class DICOMDecompressor {
                     pixelBytesLength);
 
                 //Now put in the decompressed frames
-				FileImageInputStream fiis = new FileImageInputStream(inFile);
-				ImageReader reader = (ImageReader)ImageIO.getImageReadersByFormatName("DICOM").next();
+				fiis = new FileImageInputStream(inFile);
+				reader = (ImageReader)ImageIO.getImageReadersByFormatName("DICOM").next();
 				reader.setInput(fiis);
 				for (int i=0; i<numberOfFrames; i++) {
 					logger.debug("Decompressing frame "+i);
@@ -300,7 +302,6 @@ public class DICOMDecompressor {
 			in.close();
 			outFile.delete();
 			tempFile.renameTo(outFile);
-			FileUtil.deleteAll(tempDir);
 			return AnonymizerStatus.OK(outFile,"");
 		}
 
@@ -309,6 +310,14 @@ public class DICOMDecompressor {
 
 			//Close the input stream if it actually got opened.
 			close(in);
+			
+			//Close the file image input stream, if possible
+			try { if (fiis != null) fiis.close(); }
+			catch (Exception ex) { }
+			
+			//Dispose of any resources held by the Reader
+			try { if (reader != null) reader.dispose(); }
+			catch (Exception ex) { }
 
 			//Close the output stream if it actually got opened,
 			//and delete the tempFile in case it is still there.

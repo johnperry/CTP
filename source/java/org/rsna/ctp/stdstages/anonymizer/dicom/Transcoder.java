@@ -212,8 +212,7 @@ public class Transcoder {
         try {
     		//Save the dataset to a temporary file in a temporary directory
     		//on the same file system root, and rename at the end.
-    		File tempDir = new File(outfile.getParentFile().getParentFile(),"decompressor-temp");
-    		tempDir.mkdirs();
+			File tempDir = outfile.getParentFile();
     		tempfile = File.createTempFile("DCMtemp-",".decomp",tempDir);
 
             setInput(iis = ImageIO.createImageInputStream(infile));

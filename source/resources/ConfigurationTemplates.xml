@@ -435,7 +435,8 @@ It is preferred because it works with dynamic IP addresses.
 				<helptext>The script file determining whether objects are to be transcoded</helptext>
 			</attr>
 			<attr name="tsuid" required="yes" default="">
-				<helptext>The transfer syntax UID to which to convert selected DicomObjects</helptext>
+				<helptext>The transfer syntax UID to which to convert selected DicomObjects
+				(e.g. 1.2.840.10008.1.2.1 for EVRLE)</helptext>
 			</attr>
 			<attr name="quality" required="no" default="100"/>
 			<attr name="skipJPEGBaseline" required="no" options="yes|no" default="no"/>
