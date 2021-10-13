@@ -1212,7 +1212,7 @@ public class ConfigPanel extends BasePanel {
 							String defValue = ch.getAttribute("default");
 							String options = ch.getAttribute("options").trim();
 							boolean editable = !ch.getAttribute("editable").equals("no");
-							boolean password = name.equals("password");
+							boolean password = name.toLowerCase().endsWith("password");
 
 							//Get the help text if possible
 							String helpText = "";
