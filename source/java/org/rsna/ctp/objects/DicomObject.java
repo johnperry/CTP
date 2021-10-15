@@ -2762,6 +2762,28 @@ public class DicomObject extends FileObject {
 					else if (method.equals("endsWithIgnoreCase"))
 						value = elementLC.endsWith(matchLC);
 
+					else if (method.equals("isLessThan")) {
+						try {
+							String v1 = elementLC.replaceAll("[^0-9\\.]", "");
+							String v2 = matchLC.replaceAll("[^0-9\\.]", "");
+							double d1 = Double.parseDouble(v1);
+							double d2 = Double.parseDouble(v2);
+							value = (d1 < d2);
+						}
+						catch (Exception ex) { value = false; }
+					}
+
+					else if (method.equals("isGreaterThan")) {
+						try {
+							String v1 = elementLC.replaceAll("[^0-9\\.]", "");
+							String v2 = matchLC.replaceAll("[^0-9\\.]", "");
+							double d1 = Double.parseDouble(v1);
+							double d2 = Double.parseDouble(v2);
+							value = (d1 > d2);
+						}
+						catch (Exception ex) { value = false; }
+					}
+
 					else {
 						logger.error("Unknown function: "+identifier+"."+method+"(\""+match+"\")");
 						value = false;
