@@ -72,15 +72,23 @@ public class CTPServlet extends Servlet {
 			suppress = "&suppress";
 		}
 
-		p = StringUtil.getInt(req.getParameter("p"), -1);
-		if (p >= 0) {
-			List<Pipeline> pipelines = config.getPipelines();
-			pipeline = pipelines.get(p);
+		try {
+			p = StringUtil.getInt(req.getParameter("p"), -1);
 			s = StringUtil.getInt(req.getParameter("s"), -1);
-			if (s >= 0) {
-				List<PipelineStage> stages = pipeline.getStages();
-				stage = stages.get(s);
+			if (p >= 0) {
+				List<Pipeline> pipelines = config.getPipelines();
+				pipeline = pipelines.get(p);
+				if (s >= 0) {
+					List<PipelineStage> stages = pipeline.getStages();
+					stage = stages.get(s);
+				}
 			}
+		}
+		catch (Exception ex) {
+			if (logger.isDebugEnabled()) {
+				logger.warn("Unable to load pipeline and stage for ("+p+","+s+")", ex);
+			}
+			else logger.warn("Unable to load pipeline and stage for ("+p+","+s+")");
 		}
 		
 		userIsAdmin = req.userHasRole("admin");
