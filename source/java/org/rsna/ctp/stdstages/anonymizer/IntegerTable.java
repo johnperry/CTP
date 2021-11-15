@@ -22,8 +22,8 @@ public class IntegerTable {
 	static final Logger logger = Logger.getLogger(IntegerTable.class);
 
 	File dir;
-    RecordManager recman = null;
-    HTree index = null;
+    public RecordManager recman = null;
+    public HTree index = null;
 
 	/**
 	 * Constructor; create an IntegerTable from a database file.
