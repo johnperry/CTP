@@ -990,6 +990,7 @@ It is preferred because it works with dynamic IP addresses.
 			<attr name="url" required="yes" default="">
 				<helptext>URL of the destination FTP site (ftp://ip:port/path)</helptext>
 			</attr>
+			<attr name="structure" required="yes" default="/"/>
 			<attr name="username" required="yes" default="username"/>
 			<attr name="password" required="yes" default="password"/>
 			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
@@ -1074,28 +1075,6 @@ It is preferred because it works with dynamic IP addresses.
 			<attr name="throttle" required="no" default="0"/>
 			<attr name="interval" required="no" default="5000"/>
 			<attr name="quarantine" required="yes" default="quarantines/AimExportService"/>
-			<attr name="quarantineTimeDepth" required="no" default="0"/>
-		</ExportService>
-
-		<ExportService>
-			<attr name="name" required="yes" default="PosdaExportService"/>
-			<attr name="class" required="yes" default="org.rsna.ctp.stdstages.PosdaExportService" editable="no"/>
-			<attr name="id" required="no" default=""/>
-			<attr name="root" required="yes" default="roots/PosdaExportService"/>
-			<attr name="url" required="yes" default="">
-				<helptext>URL of the destination Posda server (with no protocol, but with the first path element)</helptext>
-			</attr>
-			<attr name="apikey" required="yes" default="">
-				<helptext>Key for Posda server API</helptext>
-			</attr>
-			<attr name="acceptDicomObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="acceptXmlObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="acceptZipObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="acceptFileObjects" required="no" default="yes" options="yes|no"/>
-			<attr name="dicomScript" required="no" default=""/>
-			<attr name="xmlScript" required="no" default=""/>
-			<attr name="zipScript" required="no" default=""/>
-			<attr name="quarantine" required="yes" default="quarantines/HttpExportService"/>
 			<attr name="quarantineTimeDepth" required="no" default="0"/>
 		</ExportService>
 

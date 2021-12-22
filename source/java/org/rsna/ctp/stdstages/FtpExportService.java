@@ -114,8 +114,8 @@ public class FtpExportService extends AbstractExportService {
 					client = new FileTransferClient();
 					client.setRemoteHost(ftpHost);
 					client.setRemotePort(ftpPort);
-					client.setUserName(username);
-					client.setPassword(password);
+					if (!username.equals("")) client.setUserName(username);
+					if (!password.equals("")) client.setPassword(password);
 					client.setContentType(FTPTransferType.BINARY);
 					client.getAdvancedFTPSettings().setConnectMode(FTPConnectMode.PASV);
 				}

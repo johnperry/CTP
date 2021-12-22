@@ -54,7 +54,7 @@ public class CTPServlet extends Servlet {
 	Configuration config = null;
 
 	/**
-	 * Construct an CTPServlet.
+	 * Construct a CTPServlet.
 	 * @param root the root directory of the server.
 	 * @param context the path identifying the servlet.
 	 */

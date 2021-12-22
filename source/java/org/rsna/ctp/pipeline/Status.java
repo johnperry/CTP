@@ -7,12 +7,14 @@
 
 package org.rsna.ctp.pipeline;
 
+import java.io.Serializable;
+
 /**
  * A class to encapsulate typesafe enum return status values for CTP services.
  * This class provides static final instances for each of the possible operational
  * results (OK, FAIL, RETRY).
  */
-public class Status {
+public class Status implements Serializable {
 
 	private final String status;
 
@@ -25,6 +27,12 @@ public class Status {
 	 * @return a text string describing the status instance (OK, FAIL, RETRY).
 	 */
 	public String toString() { return status; }
+
+	/**
+	 * Test whether this status text is the same as an another status text.
+	 * @return true if the texts are the same; false otherwise.
+	 */
+	public boolean is(Status s) { return this.status.equals(s.status); }
 
 	/**
 	 * Status value indicating that an operation completed successfully.
@@ -42,5 +50,15 @@ public class Status {
 	 * may succeed.
 	 */
 	public static final Status RETRY = new Status("RETRY");
+
+	/**
+	 * Status value indicating that an operation is pending.
+	 */
+	public static final Status PENDING = new Status("PENDING");
+
+	/**
+	 * Status value indicating no information.
+	 */
+	public static final Status NONE = new Status("NONE");
 
 }
