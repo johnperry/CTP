@@ -34,7 +34,7 @@ public class DictionaryServlet extends Servlet {
 	static final Logger logger = Logger.getLogger(DictionaryServlet.class);
 
 	/**
-	 * Construct a LookupTableCheckerServlet.
+	 * Construct a DictionaryServlet.
 	 * @param root the root directory of the server.
 	 * @param context the path identifying the servlet.
 	 */
@@ -63,7 +63,6 @@ public class DictionaryServlet extends Servlet {
 		try {
 			Configuration config = Configuration.getInstance();
 			PipelineStage stage = config.getRegisteredStage(context);
-			LookupTableChecker ltcStage = (LookupTableChecker)stage;
 			Document doc = XmlUtil.getDocument( FileUtil.getStream( "/dictionary.xml" ) );
 			Document xsl = XmlUtil.getDocument( FileUtil.getStream( "/DictionaryServlet.xsl" ) );
 			return XmlUtil.getTransformedText( doc, xsl, null );
