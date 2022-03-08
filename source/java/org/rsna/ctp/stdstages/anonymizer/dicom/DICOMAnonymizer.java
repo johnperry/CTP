@@ -1248,6 +1248,7 @@ public class DICOMAnonymizer {
 			if (n > 4) incString = incString.substring( n-4, n);
 			long inc = Long.parseLong(incString);
 			inc = -1 * (inc % (10 * 365));
+			if (inc == 0) inc = -1;
 			String[] dates = date.split("\\\\");
 			StringBuffer sb = new StringBuffer();
 			for (int i=0; i<dates.length; i++) {
