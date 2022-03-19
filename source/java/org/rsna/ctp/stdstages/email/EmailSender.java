@@ -38,7 +38,7 @@ public class EmailSender {
 		if (smtpPort != null) props.put("mail.smtp.port", smtpPort);
 		props.put("mail.smtp.starttls.enable", Boolean.toString(tls));
 		if ( (senderUsername != null) && (senderPassword != null) &&
-				!senderUsername.equals("") && !senderPassword .equals("") ) {
+				!senderUsername.trim().equals("") && !senderPassword.trim().equals("") ) {
 			props.put("mail.smtp.auth", "true");
 			final String un = senderUsername;
 			final String pw = senderPassword;
