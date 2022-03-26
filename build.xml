@@ -19,7 +19,10 @@
 		<pathelement location="${libraries}/util.jar"/>
 		<pathelement location="${libraries}/dcm4che.jar"/>
 		<pathelement location="${libraries}/getopt.jar"/>
-		<pathelement location="${libraries}/log4j.jar"/>
+		<!--<pathelement location="${libraries}/log4j.jar"/>-->
+		<pathelement location="${libraries}/log4j/log4j-1.2-api-2.17.2.jar"/>
+		<pathelement location="${libraries}/log4j/log4j-api-2.17.2.jar"/>
+		<pathelement location="${libraries}/log4j/log4j-core-2.17.2.jar"/>
 		<pathelement location="${libraries}/edtftpj.jar"/>
 		<pathelement location="${libraries}/jdbm.jar"/>
 		<pathelement location="${libraries}/commons-compress-1.0.jar"/>
@@ -128,6 +131,9 @@
 		</copy>
 		<copy overwrite="true" todir="${build}/CTP/libraries/imageio">
 			<fileset dir="${libraries}/imageio" includes="*.*"/>
+		</copy>
+		<copy overwrite="true" todir="${build}/CTP/libraries/log4j">
+			<fileset dir="${libraries}/log4j" includes="*.*"/>
 		</copy>
 		<copy overwrite="true" todir="${build}/config">
 			<fileset dir="${config}" includes="*.*"/>

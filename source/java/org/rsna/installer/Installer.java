@@ -460,6 +460,11 @@ public class Installer extends JFrame implements KeyListener {
 					if (name.startsWith("slf4j-") || name.startsWith("dcm4che-imageio-rle")) {
 						file.delete();
 					}
+					if (name.equals("log4j.jar")) {
+						//remove the old log4j.
+						//the new version (3 files) is located in the log4j subdirectory.
+						file.delete();
+					}
 				}
 			}
 			//remove the imageio subdirectory
