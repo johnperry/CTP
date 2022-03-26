@@ -41,7 +41,7 @@ public class DicomTranscoder extends AbstractPipelineStage implements Processor,
 	 */
 	public DicomTranscoder(Element element) {
 		super(element);
-		dicomScriptFile = getFilterScriptFile(element.getAttribute("dicomScript"));
+		dicomScriptFile = getFilterScriptFile(element.getAttribute("script"));
 		transcoder = new Transcoder();
 		tsuid = element.getAttribute("tsuid").trim();
 		if (!tsuid.equals("")) transcoder.setTransferSyntax(tsuid);

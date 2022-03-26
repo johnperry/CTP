@@ -65,6 +65,8 @@ public class Regions {
 	/**
 	 * Get a Vector containing all the region Rectangles.
 	 * @return all the region Rectangles
+	 * @param rows the number of rows in the image
+	 * @param columns the number of columns in the image
 	 */
 	public Vector<Shape> getRegionsVector(int rows, int columns) {
 		return new Vector( getAdjustedRegions(rows, columns) );
@@ -76,6 +78,8 @@ public class Regions {
 	 * each range has two ints, the first defining the start
 	 * of a region and the second defining the end of the region.
 	 * @param row the y coordinate of the row
+	 * @param rows the number of rows in the image
+	 * @param columns the number of columns in the image
 	 * @return the ranges corresponding to the regions in the row.
 	 */
 	public int[] getRangesFor(int row, int rows, int columns) {

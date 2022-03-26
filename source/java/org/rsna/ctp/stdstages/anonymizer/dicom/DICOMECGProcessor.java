@@ -83,6 +83,8 @@ public class DICOMECGProcessor {
      * @param inFile the file to anonymize.
      * @param outFile the output file.  It may be same as inFile if you want
      * to anonymize in place.
+     * @param synthesizeMissingLeads true to create synthetic leads, false to just show actual leads.
+     * @param format "portrait" or "landscape".
      * @return the static status result
      */
     public static AnonymizerStatus process(File inFile, File outFile, boolean synthesizeMissingLeads, String format) {

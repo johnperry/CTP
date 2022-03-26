@@ -30,6 +30,7 @@ public class Status implements Serializable {
 
 	/**
 	 * Test whether this status text is the same as an another status text.
+	 * @param s Status to test against
 	 * @return true if the texts are the same; false otherwise.
 	 */
 	public boolean is(Status s) { return this.status.equals(s.status); }
