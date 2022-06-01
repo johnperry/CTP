@@ -35,7 +35,10 @@ public class IntegerTable {
 		File indexFile = new File(dir, "integers");
 		recman = JdbmUtil.getRecordManager( indexFile.getAbsolutePath() );
 		index = JdbmUtil.getHTree( recman, "index" );
-		if (index == null) throw new Exception("Unable to load the integer database.");
+		if (index == null) {
+			logger.warn("Unable to load the integer database.");
+			throw new Exception("Unable to load the integer database.");
+		}
 	}
 
 	/**
@@ -64,22 +67,37 @@ public class IntegerTable {
 		try {
 			text = text.trim();
 			type = type.trim();
+			logger.debug("getInteger: \""+type+"\", \""+text+"\", "+width);
 			String key = type + "/" + text;
+			logger.debug("...searching for "+key);
 			Integer value = (Integer)index.get(key);
 			if (value == null) {
+				logger.debug("...got null");
 				String lastIntKey = "__" + type + "__";
+				logger.debug("...searching for "+lastIntKey);
 				Integer lastInt = (Integer)index.get(lastIntKey);
+				logger.debug("...got "+lastInt);
 				if (lastInt == null) lastInt = new Integer(0);
 				value = new Integer( lastInt.intValue() + 1 );
+				logger.debug("...storing "+value+" for "+lastIntKey);
 				index.put(lastIntKey, value);
+				logger.debug("...storing "+value+" for "+key);
 				index.put(key, value);
+				logger.debug("...success");
 				recman.commit();
+			}
+			else {
+				logger.debug("...got "+value);
+				logger.debug("...success");
 			}
 			int intValue = value.intValue();
 			String format = (width > 0) ? ("%0"+width+"d") : ("%d");
 			return String.format(format, intValue);
 		}
-		catch (Exception ex) { return "error"; }
+		catch (Exception e) {
+			logger.warn("Unable to create integer for (\""+type+"\",\""+text+"\","+width+")", e);
+			return "error";
+		}
 	}
 
 }

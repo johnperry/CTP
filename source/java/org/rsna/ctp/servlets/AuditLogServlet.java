@@ -110,9 +110,8 @@ public class AuditLogServlet extends Servlet {
 
 	/**
 	 * The POST handler
-	 * This method interprets the posted parameters as search criteria
-	 * for the selected IdMap. It performs the search and then
-	 * returns the results in the selected format.
+	 * This method interprets the posted parameters as search criteria. 
+	 * It performs the search and then returns the results in the selected format.
 	 * @param req The HttpRequest provided by the servlet container.
 	 * @param res The HttpResponse provided by the servlet container.
 	 */
@@ -201,11 +200,13 @@ public class AuditLogServlet extends Servlet {
 			//Make one or two heading rows depending on whether
 			//the entries contain ObjectCache information
 			if (!c.getTagName().equals("Elements")) {
+				sb.append(" ,");
 				for (String child : childNames) {
 					sb.append(child+","+child+",");
 				}
 				sb.append("\n");
 			}
+			sb.append("EntryDateTime,");
 			for (String name : childNames) {
 				for (String attr : attrNames) {
 					sb.append(attr+",");
@@ -215,10 +216,11 @@ public class AuditLogServlet extends Servlet {
 			//Make the DicomObject rows
 			for (int i=0; i<nl.getLength(); i++) {
 				Element d = (Element)nl.item(i);
+				sb.append("=\""+d.getAttribute("EntryDateTime")+"\",");
 				for (String child : childNames) {
 					Element dc = XmlUtil.getFirstNamedChild(d, child);
 					for (String attr : attrNames) {
-						sb.append("\""+dc.getAttribute(attr)+"\",");
+						sb.append("=\""+dc.getAttribute(attr)+"\",");
 					}
 				}
 				sb.append("\n");
@@ -251,7 +253,8 @@ public class AuditLogServlet extends Servlet {
 		NamedNodeMap attributes = e.getAttributes();
 		for (int i=0; i<attributes.getLength(); i++) {
 			Node attr = attributes.item(i);
-			names.add(attr.getNodeName());
+			String name = attr.getNodeName();
+			if (!name.equals("EntryDateTime")) names.add(name);
 		}
 		return names;
 	}

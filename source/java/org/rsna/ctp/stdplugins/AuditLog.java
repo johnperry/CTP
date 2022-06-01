@@ -251,6 +251,10 @@ public class AuditLog extends AbstractPlugin {
 			while ((id = (Integer)fit.next()) != null) {
 				String entry = (String)entryTable.get(id);
 				if (entry.toLowerCase().contains(text)) ids.add(id);
+				else {
+					String t = getTime(id);
+					if (t.toLowerCase().contains(text)) ids.add(id);
+				}
 			}
 		}
 		catch (Exception ex) { }
@@ -336,11 +340,13 @@ public class AuditLog extends AbstractPlugin {
 			FastIterator fit = entryTable.keys();
 			Integer id;
 			while ((id = (Integer)fit.next()) != null) {
+				String t = getTime(id);
 				if (getContentType(id).toLowerCase().equals("xml")) {
 					String entry = (String)entryTable.get(id);
 					try {
 						Document entryDoc = XmlUtil.getDocument(entry);
 						Element entryRoot = entryDoc.getDocumentElement();
+						entryRoot.setAttribute("EntryDateTime", t);
 						root.appendChild(doc.importNode(entryRoot, true));
 					}
 					catch (Exception skip) { logger.warn("Skip", skip); }
