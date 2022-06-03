@@ -71,7 +71,11 @@ public class FnCall {
 
 		//find the function name
 		currentIndex = call.indexOf("(");
-		if (currentIndex == -1) length = -1;
+		if (currentIndex == -1) {
+			length = -1;
+			logger.warn("Unable to find opening paren in \""+call+"\"");
+			return;
+		}
 		name = call.substring(0, currentIndex).replaceAll("\\s", "");
 		
 		//skip the initial '('
