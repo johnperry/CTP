@@ -57,6 +57,7 @@ public class HttpExportService extends AbstractExportService {
 	boolean logDuplicates = false;
 	boolean sendDigestHeader = false;
 	long maxUnchunked = defaultMaxUnchunked;
+	boolean isXNAT = false;
 
 	int cacheSize = 0;
     String[] dirs = null;
@@ -287,7 +288,7 @@ public class HttpExportService extends AbstractExportService {
 			catch (Exception ex) { logger.warn("Unable to read response: "+ex.getMessage()); }
 			logger.debug(name+": Response: "+result);
 			conn.disconnect();
-			if (result.equals("OK")) {
+			if ((isXNAT && (responseCode == 200)) || result.equals("OK")) {
 				makeAuditLogEntry(fileObject, Status.OK, getName(), url.toString());
 				return Status.OK;
 			}
@@ -475,6 +476,7 @@ public class HttpExportService extends AbstractExportService {
 		public ExportSession(Element element) {
 			Element xnat = XmlUtil.getFirstNamedChild(element, "xnat");
 			if (xnat != null) {
+				isXNAT = true;
 				String urlString = xnat.getAttribute("url").trim();
 				cookieName = xnat.getAttribute("cookieName").trim();
 				if (cookieName.equals("")) cookieName = "JSESSIONID";
@@ -486,6 +488,7 @@ public class HttpExportService extends AbstractExportService {
 					logger.warn("Unable to construct XNAT URL: \""+urlString+"\"");
 				}
 			}
+			else isXNAT = false;
 		}
 		
 		public boolean isConfigured() {
