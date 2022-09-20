@@ -65,6 +65,8 @@ public class ObjectLogger extends AbstractPipelineStage implements Processor {
 			verboseString =
 				( (dob == null) ? ""
 								: margin + "TransferSyntax   = " + dob.getTransferSyntaxName() + " (" + dob.getTransferSyntaxUID() + ")" ) +
+				( (dob == null) ? ""
+								: margin + "SOPClass         = " + dob.getSOPClassName() + " (" + dob.getSOPClassUID() + ")" ) +
 				margin + "PatientID        = " + fileObject.getPatientID() +
 				margin + "StudyInstanceUID = " + fileObject.getStudyInstanceUID() +
 				margin + "SOPInstanceUID   = " + fileObject.getSOPInstanceUID() +
