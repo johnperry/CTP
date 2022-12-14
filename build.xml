@@ -28,8 +28,8 @@
 		<pathelement location="${libraries}/commons-compress-1.0.jar"/>
 		<pathelement location="${libraries}/imageio/jai_imageio-1.2-pre-dr-b04.jar"/>
 		<pathelement location="${libraries}/imageio/pixelmed_codec.jar"/>
-		<pathelement location="${libraries}/email/activation.jar"/>
-		<pathelement location="${libraries}/email/javax.mail.jar"/>
+		<pathelement location="${libraries}/email/mailapi.jar"/>
+		<pathelement location="${libraries}/email/mail.jar"/>
 		<pathelement location="${libraries}/ftp/commons-logging-1.2.jar"/>
 		<pathelement location="${libraries}/ftp/commons-net-3.3.jar"/>
 		<pathelement location="${libraries}/ftp/commons-vfs2-2.0.jar"/>
