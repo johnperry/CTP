@@ -1268,6 +1268,7 @@ public class DICOMAnonymizer {
 	//Get a new date by adding a constant to an date value.
 	private static String incrementdate(FnCall fn) {
 		//arg must contain: DateElementName, increment
+		//or DateElementName, {PatientID or other element name}, lookup table keytype
 		//DateElementName is the name of the element containing the date to be incremented.
 		//increment specifies the number of days to add to the date (positive generates
 		//later dates; negative generates earlier dates.
@@ -1277,7 +1278,24 @@ public class DICOMAnonymizer {
 			String date = fn.context.contentsNull(fn.args[0], fn.thisTag);
 			if (date == null) return removeDate;
 			if (date.length() < 8) return emptyDate;
-			String incString = fn.context.getParam(fn.args[1]);
+			String incString = "0";
+			if (fn.args.length == 2) {
+				//first argument sequence
+				incString = fn.context.getParam(fn.args[1]);
+			}
+			else if (fn.args.length == 3) {
+				//second argument sequence
+				String key = fn.context.contentsNull(fn.args[1], fn.thisTag);
+				String keytype = fn.context.getParam(fn.args[2]);
+				incString = AnonymizerFunctions.lookup(fn.context.lkup, keytype, key);
+				if (logger.isDebugEnabled()) {
+					logger.debug("Calling @incrementdate"+fn.getArgs());
+					logger.debug("   key:     \""+key+"\"");
+					logger.debug("   keytype: \""+fn.args[1]+"\"");
+					logger.debug("   offset:  \""+incString+"\"");
+				}
+			}
+			else throw new Exception("Unknown calling sequence in incrementdate");
 			long inc = Long.parseLong(incString);
 			String[] dates = date.split("\\\\");
 			StringBuffer sb = new StringBuffer();
