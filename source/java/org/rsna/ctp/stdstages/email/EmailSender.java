@@ -36,6 +36,7 @@ public class EmailSender {
 		Properties props = System.getProperties();
 		props.put("mail.smtp.host", smtpServer);
 		if (smtpPort != null) props.put("mail.smtp.port", smtpPort);
+		if (tls) props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 		props.put("mail.smtp.starttls.enable", Boolean.toString(tls));
 		if ( (senderUsername != null) && (senderPassword != null) &&
 				!senderUsername.trim().equals("") && !senderPassword.trim().equals("") ) {
