@@ -92,7 +92,7 @@ public class DuplicateFilter extends AbstractPipelineStage implements Processor 
 	}
 
 	/**
-	 * Filter baserd on a FileObject's hash.
+	 * Filter based on a FileObject's hash.
 	 * @param fileObject the object to process.
 	 * @return the same FileObject if the hash has never been seen; otherwise null.
 	 */

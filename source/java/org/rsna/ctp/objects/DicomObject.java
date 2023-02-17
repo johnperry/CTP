@@ -289,9 +289,12 @@ public class DicomObject extends FileObject {
 				parser.setStreamPosition(streamPosition);
 				return;
 			}
+			
+			logger.debug("Dataset written up to the Pixels element");
 
 			//Write the pixels if the parser actually stopped at the pixeldata
             if (parser.getReadTag() == Tags.PixelData) {
+				logger.debug("Pixels element detected");
                 dataset.writeHeader(
                     out,
                     encoding,
@@ -328,8 +331,10 @@ public class DicomObject extends FileObject {
                 else {
                     writeValueTo(parser, buffer, out, swap && (parser.getReadVR() == VRs.OW));
                 }
+                logger.debug("Pixels element written");
 				parser.parseHeader(); //get ready for the next element
 			}
+			else logger.debug("No Pixels element found");
 			
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
@@ -337,9 +342,10 @@ public class DicomObject extends FileObject {
 			int tag;
 			long fileLength = file.length();
 			while (!parser.hasSeenEOF()
-					&& (parser.getStreamPosition() < fileLength)
+					//&& (parser.getStreamPosition() < fileLength)
 						&& ((tag=parser.getReadTag()) != -1)
 							&& (tag != 0xFFFCFFFC)) {
+				logger.debug("About to write "+String.format("%08x element", tag));
 				dataset.writeHeader(
 					out,
 					encoding,
@@ -347,13 +353,19 @@ public class DicomObject extends FileObject {
 					parser.getReadVR(),
 					parser.getReadLength());
 				writeValueTo(parser, buffer, out, swap);
+				logger.debug("Wrote "+String.format("%08x element", tag));
 				parser.parseHeader();
+				logger.debug("Parsed header for next element.");
+				if (parser.hasSeenEOF()) logger.debug("...got EOF");
+				else logger.debug("...got "+String.format("%08x", parser.getReadTag()));
 			}
+			logger.debug("Done writing dataset");
 			out.flush();
 			out.close();
 			parser.setStreamPosition(streamPosition);
 		}
 		catch (Exception ex) {
+			logger.debug("Exception caught in saveAS",ex);
 			if (out != null) {
 				try { out.close(); }
 				catch (Exception unable) { logger.warn("Unable to close the output stream."); }
