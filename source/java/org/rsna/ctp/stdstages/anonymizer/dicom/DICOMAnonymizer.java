@@ -268,7 +268,7 @@ public class DICOMAnonymizer {
 			logger.debug("fileLength = "+fileLength+" ("+Long.toHexString(fileLength)+")");
 			while (logPosition("About to seek post-pixels element:", parser)
 					&& !parser.hasSeenEOF()
-					&& (parser.getStreamPosition() < fileLength)
+//					&& (parser.getStreamPosition() < fileLength)
 					&& (suppress || (parser.parseHeader() != -1))
 					&& ((tag=parser.getReadTag()) != -1)
 					&& (tag != 0xFFFAFFFA)

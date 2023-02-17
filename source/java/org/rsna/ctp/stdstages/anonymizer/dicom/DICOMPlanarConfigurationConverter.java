@@ -174,7 +174,7 @@ public class DICOMPlanarConfigurationConverter {
 			//that occur above Tags.PixelData.
 			int tag;
 			while (!parser.hasSeenEOF()
-					&& (parser.getStreamPosition() < fileLength)
+//					&& (parser.getStreamPosition() < fileLength)
 						&& ((tag=parser.getReadTag()) != -1)
 							&& (tag != 0xFFFAFFFA)
 							&& (tag != 0xFFFCFFFC)) {

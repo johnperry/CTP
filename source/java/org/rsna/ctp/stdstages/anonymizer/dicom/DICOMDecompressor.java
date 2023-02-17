@@ -287,7 +287,9 @@ public class DICOMDecompressor {
 			//Now do any elements after the pixels one at a time.
 			//This is done to allow streaming of large raw data elements
 			//that occur above Tags.PixelData.
-			while (!parser.hasSeenEOF() && (parser.getStreamPosition() < fileLength) && parser.getReadTag() != -1) {
+			while (!parser.hasSeenEOF() 
+//					&& (parser.getStreamPosition() < fileLength) 
+					&& parser.getReadTag() != -1) {
 				dataset.writeHeader(
 					out,
 					encoding,
