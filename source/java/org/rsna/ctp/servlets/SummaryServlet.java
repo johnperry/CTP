@@ -128,8 +128,10 @@ public class SummaryServlet extends CTPServlet {
 			sb.append( "<h2>Status</h2>\n" );
 			sb.append( plugin.getStatusHTML() );
 			sb.append( getLinks(plugin.getLinks(user)) );
-			sb.append( "<h2>Configuration</h2>\n" );
-			sb.append( plugin.getConfigHTML(user) );
+			if (userIsAuthorized) {
+				sb.append( "<h2>Configuration</h2>\n" );
+				sb.append( plugin.getConfigHTML(user) );
+			}
 			sb.append("</div>");
 			sb.append("<center>");
 			sb.append( responseTail() );
@@ -192,8 +194,10 @@ public class SummaryServlet extends CTPServlet {
 				sb.append( "<h2>Status</h2>\n" );
 				sb.append( stage.getStatusHTML() );
 				sb.append( getLinks(stage.getLinks(user)) );
-				sb.append( "<h2>Configuration</h2>\n" );
-				sb.append( stage.getConfigHTML(user) );
+				if (userIsAuthorized) {
+					sb.append( "<h2>Configuration</h2>\n" );
+					sb.append( stage.getConfigHTML(user) );
+				}
 				sb.append("</div>");
 				sb.append("<center>");
 				sb.append( responseTail() );

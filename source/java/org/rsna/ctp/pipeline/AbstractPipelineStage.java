@@ -298,7 +298,7 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 			if (child.getNodeType() == Node.ELEMENT_NODE) {
 				Element e = (Element)child;
 				sb.append("<tr><td width=\"20%\" style=\"vertical-align:top\">"+e.getNodeName()+":</td>");
-				sb.append("<td>"+getTableFor(e)+"</td></tr>");
+				sb.append("<td>"+getTableFor(e, admin)+"</td></tr>");
 			}
 			child = child.getNextSibling();
 		}
@@ -307,14 +307,18 @@ public abstract class AbstractPipelineStage implements PipelineStage {
 	}
 
 	//Get a table for a configuration child element
-	private String getTableFor(Element element) {
+	private String getTableFor(Element element, boolean admin) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<table border=\"0\">");
 		NamedNodeMap attrs = element.getAttributes();
 		for (int i=0; i<attrs.getLength(); i++) {
 			Node n = attrs.item(i);
+			String attrName = n.getNodeName();
 			sb.append("<tr><td width=\"20%\">"+n.getNodeName()+":</td>");
-			sb.append("<td>"+n.getNodeValue()+"</td></tr>");
+			if (admin || (!attrName.equals("username") && !attrName.equals("password")))
+				sb.append("<td>"+n.getNodeValue()+"</td></tr>");
+			else
+				sb.append("<td>[suppressed]</td></tr>");
 		}
 		String text = element.getTextContent().trim();
 		if (!text.equals("")) {
