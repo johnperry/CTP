@@ -172,11 +172,24 @@ Philips
     Rows.equals("768") }
   (0,0,1024,49)
 
-  CX50
+ CX50
    { ManufacturerModelName.containsIgnoreCase("CX50") *
     Rows.equals("600") }
   (0,0,800,59)
 
+ Philips Sparq
+   { ManufacturerModelName.containsIgnoreCase("Sparq") *
+     Manufacturer.containsIgnoreCase("Philips") *
+    Rows.equals("600") }
+  (80,0,720,55)
+  
+ Philips Lumify
+   { ManufacturerModelName.containsIgnoreCase("Lumify") *
+     Manufacturer.containsIgnoreCase("Philips") *
+    Rows.equals("768") }
+  (0,0,768,35)
+
+ 
 Zonare
   { ManufacturerModelName.containsIgnoreCase("Z_ONE") }
   (0,0,800,65)
@@ -243,6 +256,30 @@ Toshiba Aplio 400
     Columns.equals("960") }
   (0,0,960,60)
 
+Toshiba AI600
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("TOSHIBA") *
+    ManufacturerModelName.containsIgnoreCase("AI600") *
+    Rows.equals("960") *
+    Columns.equals("1280") }
+  (0,0,1280,60)
+
+Toshiba Aplio 700
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("TOSHIBA") *
+    ManufacturerModelName.containsIgnoreCase("AI700") *
+    Rows.equals("960") *
+    Columns.equals("1280") }
+  (0,0,1280,60)
+
+Canon Aplio
+  { Modality.equals("US") *
+    Manufacturer.containsIgnoreCase("CANON") *
+    ManufacturerModelName.containsIgnoreCase("AA000") *
+    Rows.equals("960") *
+    Columns.equals("1280") }
+  (0,0,1280,70)
+
 Supersonic Imagine 5A
   { Modality.equals("US") *
     Manufacturer.containsIgnoreCase("SuperSonic Imagine SA") *
@@ -264,6 +301,20 @@ SENO Cine
     Rows.equals("1056") *
     Columns.equals("1920") }
   (161,0,1632,50)
+  
+Volcano Corp
+  { Manufacturer.containsIgnoreCase("Volcano") *
+    SeriesDescription.containsIgnoreCase ("FFR") *  
+    Rows.equals("1024") *
+    Columns.equals("1280") }
+  (404,9,580,40)
+  
+Philips  31-03-2023
+  { Manufacturer.containsIgnoreCase("Philips") *
+    SeriesDescription.containsIgnoreCase ("FFR") *
+    Rows.equals("1024") *
+    Columns.equals("1280") }
+  (470,5,600,70)  
 
 ************** 
      MRI
