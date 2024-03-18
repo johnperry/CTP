@@ -106,6 +106,9 @@ public class DICOMPixelAnonymizer {
 			Dataset dataset = oFact.newDataset();
 			parser.setDcmHandler(dataset.getDcmHandler());
 			parser.parseDcmFile(fileFormat, Tags.PixelData);
+			logger.debug("Stream position after parsing up to the Pixels element: "
+								+parser.getStreamPosition()+" ["+Long.toHexString(parser.getStreamPosition())+"]");
+
 			FileMetaInfo fmi = dataset.getFileMetaInfo();
 			DcmDecodeParam fileParam = parser.getDcmDecodeParam();
 
@@ -170,15 +173,20 @@ public class DICOMPixelAnonymizer {
 			//Write the dataset as far as was parsed
 			logger.debug("About to write the dataset up to the pixels");
 			dataset.writeDataset(out, encoding);
-
+			
 			//Process the pixels
 			if (parser.getReadTag() == Tags.PixelData) {
+				logger.debug("Processing the Pixels element: " + Integer.toHexString(parser.getReadTag()));
+				logger.debug("Stream position before the Pixels element: "
+								+parser.getStreamPosition()+" ["+Long.toHexString(parser.getStreamPosition())+"]");
 				dataset.writeHeader(
 					out,
 					encoding,
 					parser.getReadTag(),
 					parser.getReadVR(),
 					parser.getReadLength());
+				logger.debug("Stream position after writing the Pixels element header: "
+								+parser.getStreamPosition()+" ["+Long.toHexString(parser.getStreamPosition())+"]");
 				if (!encoding.encapsulated) {
 					//Handle the non-encapsulated case
 					processUnencapsulatedPixels(parser,
@@ -198,35 +206,47 @@ public class DICOMPixelAnonymizer {
 				}
 			}
 			logger.debug("Finished writing the pixels");
-			logger.debug("Stream position after processPixels = "+parser.getStreamPosition());
+			logger.debug("Stream position after processing the Pixels element: "
+								+parser.getStreamPosition()+" ["+Long.toHexString(parser.getStreamPosition())+"]");
 
-			if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
-
-			//Now do any elements after the pixels one at a time.
-			//This is done to allow streaming of large raw data elements
-			//that occur above Tags.PixelData.
-			int tag;
-			while (!parser.hasSeenEOF()
-//					&& (parser.getStreamPosition() < fileLength)
-						&& ((tag=parser.getReadTag()) != -1)
-							&& (tag != 0xFFFAFFFA)
-							&& (tag != 0xFFFCFFFC)) {
-				logger.debug("About to write post-pixels element "+Integer.toHexString(tag));
-				dataset.writeHeader(
-					out,
-					encoding,
-					parser.getReadTag(),
-					parser.getReadVR(),
-					parser.getReadLength());
-				writeValueTo(parser, buffer, out, swap);
-				parser.parseHeader();
+			
+			boolean processPostPixels = true;
+			if (processPostPixels) {
+				try {
+					if (parser.getStreamPosition() < fileLength) parser.parseHeader(); //get ready for the next element
+					//Now do any elements after the pixels one at a time.
+					//This is done to allow streaming of large raw data elements
+					//that occur above Tags.PixelData.
+					int tag;
+					while (!parser.hasSeenEOF()
+							&& (parser.getStreamPosition() < fileLength)
+								&& ((tag=parser.getReadTag()) != -1)
+									&& (tag != 0xFFFAFFFA)
+									&& (tag != 0xFFFCFFFC)) {
+						logger.debug("About to write post-pixels element "+Integer.toHexString(tag));
+						dataset.writeHeader(
+							out,
+							encoding,
+							parser.getReadTag(),
+							parser.getReadVR(),
+							parser.getReadLength());
+						writeValueTo(parser, buffer, out, swap);
+						parser.parseHeader();
+					}
+				}
+				catch (Exception e) {
+					//Log the Exception, but allow the process to finish up.
+					logger.warn("Exception caught while processing post-pixels elements", e);
+				}
 			}
+			
 			logger.debug("Done");
 			out.flush();
 			out.close();
 			in.close();
 			outFile.delete();
 			tempFile.renameTo(outFile);
+			logger.debug("Returning AnonymizerStatus.OK");
 			return AnonymizerStatus.OK(outFile,"");
 		}
 

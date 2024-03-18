@@ -133,12 +133,15 @@ public class IDMapServlet extends CTPServlet {
 			String keyTitle = (String)index.get("__keyTitle");
 			String valueTitle = (String)index.get("__valueTitle");
 			Pair[] data = getData(index, keys);
+			String filename = keyTitle.replaceAll("\\s","");
 			if (format.equals("xml")) {
+				String disposition = "attachment; filename="+filename+".xml";
+				res.setHeader("Content-Disposition",disposition);
 				res.setContentType("xml");
 				res.write(getXML(data, keyTitle, valueTitle));
 			}
 			else if (format.equals("csv")) {
-				String disposition = "attachment; filename=map.csv";
+				String disposition = "attachment; filename="+filename+".csv";
 				res.setHeader("Content-Disposition",disposition);
 				res.setContentType("txt");
 				res.write(getCSV(data, keyTitle, valueTitle));
@@ -295,7 +298,7 @@ public class IDMapServlet extends CTPServlet {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<Map>\n");
 		sb.append("  <KeyTitle>"+keyTitle+"</KeyTitle>\n");
-		sb.append("  <ValueTitle>"+keyTitle+"</ValueTitle>\n");
+		sb.append("  <ValueTitle>"+valueTitle+"</ValueTitle>\n");
 		for (int i=0; i<data.length; i++) {
 			sb.append("  <Pair>\n");
 			sb.append("    <Key>"+data[i].key+"</Key>\n");
