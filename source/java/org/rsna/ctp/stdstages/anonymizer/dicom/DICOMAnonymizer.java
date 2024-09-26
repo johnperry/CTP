@@ -1359,7 +1359,15 @@ public class DICOMAnonymizer {
 		String removeUID = "@remove()";
 		try {
 			if (fn.args.length < 2) return fn.getArgs();
-			String prefix = getParam(fn);
+			
+			//use prefix of anonymizer parameter, or from dicom tag
+			String prefix = "";
+			if(fn.args[0].startsWith("@")) {
+				prefix = getParam(fn);
+			} else {
+				prefix = fn.context.contentsNull(fn.args[0], fn.thisTag);
+			}
+			
 			String uid = fn.context.contentsNull(fn.args[1], fn.thisTag);
 			//If there is no UID in the dataset, then return @remove().
 			if (uid == null) return removeUID;
