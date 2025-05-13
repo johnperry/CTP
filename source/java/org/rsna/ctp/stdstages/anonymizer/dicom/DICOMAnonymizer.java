@@ -990,6 +990,7 @@ public class DICOMAnonymizer {
 				first = false;
 			}
 			key = key.replaceAll("\\\\","");
+			if ((fn.args.length > 2) && fn.args[2].equals("UC")) key = key.toUpperCase();
 			if (logger.isDebugEnabled()) {
 				logger.debug("Calling @lookup"+fn.getArgs());
 				logger.debug("   keytype: \""+fn.args[1]+"\"");
