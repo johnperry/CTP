@@ -263,7 +263,9 @@ public class PCTable extends Hashtable<String,LinkedList<String>> {
 	};
 
 	//SOP Classes not in the dcm4che UID dictionary
-	static PC[] ext_pcs = { };
+	static PC[] ext_pcs = {
+			new PC("1.2.246.352.70.1.70","$ts-native", true)
+	};
 	
 	static class SkipTable extends HashSet<String> {
 		public SkipTable() {
