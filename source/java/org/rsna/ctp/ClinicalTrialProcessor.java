@@ -146,13 +146,6 @@ public class ClinicalTrialProcessor {
 		//Initialize Log4J
 		File logs = new File("logs");
 		logs.mkdirs();
-		File logProps = new File("log4j.properties");
-		String propsPath = logProps.getAbsolutePath();
-		if (!logProps.exists()) {
-			System.out.println("Logger configuration file: "+propsPath);
-			System.out.println("Logger configuration file not found.");
-		}
-		PropertyConfigurator.configure(propsPath);
 		logger = Logger.getLogger(ClinicalTrialProcessor.class);
 		
 		//Instantiate the singleton Cache, clear it, and preload
