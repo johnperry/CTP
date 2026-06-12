@@ -4,7 +4,7 @@
         <RollingFile name="RootAppender" fileName="logs/ctp.log" filePattern="logs/ctp.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="%d{HH:mm:ss} %-5p [%c{1}] %m%n"/>
             <Policies>
-                <TimeBasedTriggeringPolicy modulate="true"/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
             </Policies>
             <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
         </RollingFile>
