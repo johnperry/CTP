@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <RollingFile name="RootAppender" fileName="logs/ctp.log" filePattern="logs/ctp.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="%d{HH:mm:ss} %-5p [%c{1}] %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="ERROR">
+            <AppenderRef ref="RootAppender"/>
+        </Root>
+        <Logger name="gov" level="WARN"/>
+        <Logger name="edu" level="INFO"/>
+        <Logger name="mirc" level="INFO"/>
+        <Logger name="com" level="INFO"/>
+        <Logger name="org.rsna" level="INFO"/>
+        <Logger name="org" level="WARN"/>
+    </Loggers>
+</Configuration>
